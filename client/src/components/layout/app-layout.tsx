@@ -53,7 +53,7 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
   }
   
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-gray-100">
       <Sidebar 
         user={user || null} 
         isCollapsed={sidebarCollapsed} 
@@ -63,7 +63,7 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
       <div className="flex-1 flex flex-col overflow-hidden">
         <TopNav user={user || null} toggleSidebar={toggleSidebar} />
         
-        <main className="flex-1 overflow-y-auto bg-neutral-50 p-4">
+        <main className="flex-1 overflow-y-auto p-4">
           {children}
         </main>
       </div>
