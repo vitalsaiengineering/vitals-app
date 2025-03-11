@@ -9,6 +9,11 @@ import { Strategy as LocalStrategy } from "passport-local";
 import MemoryStore from "memorystore";
 import { setupWealthboxOAuth } from "./oauth";
 import { aiQueryHandler } from "./ai";
+import { setupAuth } from "./auth";
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
 
 // Setup session store
 const MemoryStoreSession = MemoryStore(session);
@@ -17,7 +22,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup session
   app.use(
     session({
-      secret: "your-secret-key", // In production, use an environment variable
+      secret: process.env.AUTH_SECRET || "your-secret-key", // Use environment variable if available
       resave: false,
       saveUninitialized: false,
       cookie: { secure: process.env.NODE_ENV === "production" },
@@ -65,6 +70,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Setup OAuth routes
   setupWealthboxOAuth(app);
+  
+  // Setup Google OAuth
+  setupAuth(app);
 
   // Auth middleware
   const requireAuth = (req: Request, res: Response, next: any) => {

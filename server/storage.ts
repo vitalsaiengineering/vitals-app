@@ -246,8 +246,14 @@ export class MemStorage implements IStorage {
   async createUser(user: InsertUser): Promise<User> {
     const id = this.currentIds.users++;
     const newUser: User = {
-      ...user,
       id,
+      username: user.username,
+      password: user.password || null,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      createdAt: new Date(),
+      organizationId: user.organizationId,
       wealthboxConnected: false,
       wealthboxToken: null,
       wealthboxRefreshToken: null,
@@ -257,8 +263,7 @@ export class MemStorage implements IStorage {
       googleRefreshToken: null,
       microsoftId: null,
       microsoftToken: null,
-      microsoftRefreshToken: null,
-      createdAt: new Date()
+      microsoftRefreshToken: null
     };
     this.users.set(id, newUser);
     return newUser;
