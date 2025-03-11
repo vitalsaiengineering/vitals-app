@@ -9,8 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 const SUGGESTED_QUESTIONS = [
   "How many clients do I have in Texas?",
   "Who is my biggest client in Florida?",
-  "How many high-net-worth clients do I have?",
-  "What's my average client age?",
+  "What's my total assets under management?",
+  "Show me my client demographics",
+  "What's my current asset allocation?",
+  "What's my average revenue per client?",
 ];
 
 interface AiQueryProps {}
@@ -137,11 +139,69 @@ export function AiQuery({}: AiQueryProps) {
                         {i < item.content.split("\n").length - 1 && <br />}
                       </p>
                     ))}
-                    {item.role === "ai" && item.data && item.data.client && (
+                    {item.role === "ai" && item.data && (
                       <div className="mt-2 p-2 bg-neutral-100 rounded text-xs text-neutral-600">
-                        <div><strong>Client:</strong> {item.data.client.name}</div>
-                        {item.data.client.aum && (
-                          <div><strong>AUM:</strong> ${(item.data.client.aum / 100000000).toFixed(1)}M</div>
+                        {/* Client data */}
+                        {item.data.client && (
+                          <>
+                            <div><strong>Client:</strong> {item.data.client.name}</div>
+                            {item.data.client.aum && (
+                              <div><strong>AUM:</strong> ${(item.data.client.aum / 1000000).toFixed(1)}M</div>
+                            )}
+                          </>
+                        )}
+
+                        {/* Demographics data */}
+                        {item.data.demographics && (
+                          <div className="mt-1">
+                            <div><strong>Demographics:</strong></div>
+                            {item.data.demographics.averageAge && (
+                              <div>Average Age: {item.data.demographics.averageAge.toFixed(1)} years</div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Asset Allocation data */}
+                        {item.data.assetAllocation && item.data.assetAllocation.length > 0 && (
+                          <div className="mt-1">
+                            <div><strong>Asset Allocation:</strong></div>
+                            <div className="flex items-center gap-1 mt-1">
+                              {item.data.assetAllocation.map((asset: any, i: number) => (
+                                <div 
+                                  key={i}
+                                  className="h-2 rounded-sm" 
+                                  style={{
+                                    width: `${asset.percentage}%`,
+                                    backgroundColor: 
+                                      asset.class === "equities" ? "#4f46e5" :
+                                      asset.class === "fixed income" ? "#10b981" :
+                                      asset.class === "alternatives" ? "#f59e0b" :
+                                      asset.class === "cash" ? "#6b7280" : "#94a3b8"
+                                  }}
+                                  title={`${asset.class}: ${asset.percentage.toFixed(1)}%`}
+                                ></div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Metrics Summary */}
+                        {(item.data.totalAum !== undefined || item.data.totalRevenue !== undefined ||
+                         item.data.averageAum !== undefined || item.data.averageRevenue !== undefined) && (
+                          <div className="mt-1">
+                            {item.data.totalAum !== undefined && (
+                              <div><strong>Total AUM:</strong> ${(item.data.totalAum / 1000000).toFixed(1)}M</div>
+                            )}
+                            {item.data.totalRevenue !== undefined && (
+                              <div><strong>Total Revenue:</strong> ${(item.data.totalRevenue / 1000).toFixed(1)}K</div>
+                            )}
+                            {item.data.averageAum !== undefined && (
+                              <div><strong>Average AUM:</strong> ${(item.data.averageAum / 1000).toFixed(1)}K</div>
+                            )}
+                            {item.data.averageRevenue !== undefined && (
+                              <div><strong>Average Revenue:</strong> ${(item.data.averageRevenue).toFixed(2)}</div>
+                            )}
+                          </div>
                         )}
                       </div>
                     )}
