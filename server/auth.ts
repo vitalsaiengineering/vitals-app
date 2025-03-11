@@ -31,25 +31,32 @@ passport.use(new GoogleStrategy({
 
     if (user) {
       // User exists, update their Google details
-      user = await storage.updateUser(user.id, {
-        googleId: profile.id,
-        googleToken: accessToken,
-        googleRefreshToken: refreshToken || null,
-      });
+      user = await storage.updateUserGoogleConnection(
+        user.id,
+        profile.id,
+        accessToken,
+        refreshToken || null
+      );
     } else {
       // New user - create an account for them
       // By default, create as financial_advisor (you may want to change this based on your requirements)
-      user = await storage.createUser({
+      // First create the user with the basic information
+      const newUser = await storage.createUser({
         username: email.split('@')[0], // Generate username from email
         email: email,
         password: '', // No password for OAuth users
         fullName: profile.displayName || `${profile.name?.givenName || ''} ${profile.name?.familyName || ''}`.trim(),
         role: 'financial_advisor' as (typeof userRoleEnum.enumValues)[number],
         organizationId: 1, // Default organization
-        googleId: profile.id,
-        googleToken: accessToken,
-        googleRefreshToken: refreshToken || null,
       });
+      
+      // Then update with Google-specific information
+      user = await storage.updateUserGoogleConnection(
+        newUser.id,
+        profile.id,
+        accessToken,
+        refreshToken || null
+      );
     }
 
     return done(null, user);

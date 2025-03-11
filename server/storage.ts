@@ -19,6 +19,7 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByGoogleId(googleId: string): Promise<User | undefined>;
   getUsersByOrganization(organizationId: number): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
@@ -27,6 +28,12 @@ export interface IStorage {
     token: string, 
     refreshToken: string, 
     expiryDate: Date
+  ): Promise<User | undefined>;
+  updateUserGoogleConnection(
+    id: number,
+    googleId: string,
+    token: string,
+    refreshToken: string | null
   ): Promise<User | undefined>;
 
   // Client methods
@@ -123,6 +130,13 @@ export class MemStorage implements IStorage {
       wealthboxToken: null,
       wealthboxRefreshToken: null,
       wealthboxTokenExpiry: null,
+      // OAuth fields
+      googleId: null,
+      googleToken: null,
+      googleRefreshToken: null,
+      microsoftId: null,
+      microsoftToken: null,
+      microsoftRefreshToken: null,
       createdAt: new Date()
     };
     this.users.set(1, admin);
@@ -140,6 +154,13 @@ export class MemStorage implements IStorage {
       wealthboxToken: null,
       wealthboxRefreshToken: null,
       wealthboxTokenExpiry: null,
+      // OAuth fields
+      googleId: null,
+      googleToken: null,
+      googleRefreshToken: null,
+      microsoftId: null,
+      microsoftToken: null,
+      microsoftRefreshToken: null,
       createdAt: new Date()
     };
     this.users.set(2, clientAdmin);
@@ -157,6 +178,13 @@ export class MemStorage implements IStorage {
       wealthboxToken: "mock_token",
       wealthboxRefreshToken: "mock_refresh_token",
       wealthboxTokenExpiry: new Date(Date.now() + 3600000),
+      // OAuth fields
+      googleId: null,
+      googleToken: null,
+      googleRefreshToken: null,
+      microsoftId: null,
+      microsoftToken: null,
+      microsoftRefreshToken: null,
       createdAt: new Date()
     };
     this.users.set(3, advisor);
@@ -202,6 +230,12 @@ export class MemStorage implements IStorage {
       (user) => user.email === email
     );
   }
+  
+  async getUserByGoogleId(googleId: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.googleId === googleId
+    );
+  }
 
   async getUsersByOrganization(organizationId: number): Promise<User[]> {
     return Array.from(this.users.values()).filter(
@@ -215,6 +249,15 @@ export class MemStorage implements IStorage {
       ...user,
       id,
       wealthboxConnected: false,
+      wealthboxToken: null,
+      wealthboxRefreshToken: null,
+      wealthboxTokenExpiry: null,
+      googleId: null,
+      googleToken: null,
+      googleRefreshToken: null,
+      microsoftId: null,
+      microsoftToken: null,
+      microsoftRefreshToken: null,
       createdAt: new Date()
     };
     this.users.set(id, newUser);
@@ -245,6 +288,25 @@ export class MemStorage implements IStorage {
       wealthboxToken: token,
       wealthboxRefreshToken: refreshToken,
       wealthboxTokenExpiry: expiryDate
+    };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async updateUserGoogleConnection(
+    id: number,
+    googleId: string,
+    token: string,
+    refreshToken: string | null
+  ): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    
+    const updatedUser = { 
+      ...user, 
+      googleId,
+      googleToken: token,
+      googleRefreshToken: refreshToken
     };
     this.users.set(id, updatedUser);
     return updatedUser;
