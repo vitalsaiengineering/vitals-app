@@ -5,6 +5,7 @@ import { TopNav } from "@/components/ui/topnav";
 import { getCurrentUser } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { User } from "@shared/schema";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -54,13 +55,13 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar 
-        user={user} 
+        user={user || null} 
         isCollapsed={sidebarCollapsed} 
         toggleSidebar={toggleSidebar} 
       />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <TopNav user={user} toggleSidebar={toggleSidebar} />
+        <TopNav user={user || null} toggleSidebar={toggleSidebar} />
         
         <main className="flex-1 overflow-y-auto bg-neutral-50 p-4">
           {children}
