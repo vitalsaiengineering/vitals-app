@@ -20,7 +20,7 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
     <div 
       className={cn(
         "bg-primary-900 text-white flex-shrink-0 flex flex-col z-30 transition-all duration-300 ease-in-out fixed inset-y-0 left-0 md:relative h-full",
-        isCollapsed ? "w-0 md:w-16 overflow-hidden" : "w-64"
+        isCollapsed ? "w-0 md:w-16 overflow-hidden" : "w-64 shadow-lg"
       )}
     >
       <div className="p-4 flex items-center border-b border-primary-800">
@@ -157,16 +157,16 @@ interface SidebarLinkProps {
 function SidebarLink({ to, icon, label, isActive, isCollapsed }: SidebarLinkProps) {
   return (
     <Link href={to}>
-      <a className={cn(
-        "flex items-center py-2 rounded-lg transition-colors",
+      <div className={cn(
+        "flex items-center py-2 rounded-lg transition-colors cursor-pointer",
         isActive 
           ? "bg-primary-800 text-white" 
           : "text-primary-100 hover:bg-primary-800",
         isCollapsed ? "justify-center px-2" : "px-2"
       )}>
-        <span className="material-icons mr-3">{icon}</span>
+        <span className="material-icons text-lg mr-3">{icon}</span>
         {!isCollapsed && <span>{label}</span>}
-      </a>
+      </div>
     </Link>
   );
 }

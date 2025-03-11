@@ -12,8 +12,8 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const isMobile = useIsMobile();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(isMobile);
   
   // Set sidebar collapsed state based on screen size
   useEffect(() => {
@@ -24,7 +24,7 @@ export function AppLayout({ children, requireAuth = true }: AppLayoutProps) {
     setSidebarCollapsed(!sidebarCollapsed);
   };
   
-  const { data: user, isLoading, isError } = useQuery({
+  const { data: user, isLoading, isError } = useQuery<User | null>({
     queryKey: ['/api/me'],
     retry: false
   });
