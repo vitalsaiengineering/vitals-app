@@ -16,15 +16,24 @@ export const organizations = pgTable("organizations", {
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
-  password: text("password").notNull(),
+  password: text("password"), // Can be null for OAuth users
   email: text("email").notNull().unique(),
   fullName: text("full_name").notNull(),
   role: userRoleEnum("role").notNull(),
   organizationId: integer("organization_id").references(() => organizations.id),
+  // Wealthbox Connection
   wealthboxConnected: boolean("wealthbox_connected").default(false),
   wealthboxToken: text("wealthbox_token"),
   wealthboxRefreshToken: text("wealthbox_refresh_token"),
   wealthboxTokenExpiry: timestamp("wealthbox_token_expiry"),
+  // Google OAuth fields
+  googleId: text("google_id"),
+  googleToken: text("google_token"),
+  googleRefreshToken: text("google_refresh_token"),
+  // Microsoft OAuth fields (for future use)
+  microsoftId: text("microsoft_id"),
+  microsoftToken: text("microsoft_token"),
+  microsoftRefreshToken: text("microsoft_refresh_token"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -99,7 +108,20 @@ export const dataMappings = pgTable("data_mappings", {
 
 // Insert Schemas
 export const insertOrganizationSchema = createInsertSchema(organizations).omit({ id: true, createdAt: true });
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true, wealthboxConnected: true, wealthboxToken: true, wealthboxRefreshToken: true, wealthboxTokenExpiry: true });
+export const insertUserSchema = createInsertSchema(users).omit({ 
+  id: true, 
+  createdAt: true, 
+  wealthboxConnected: true, 
+  wealthboxToken: true, 
+  wealthboxRefreshToken: true, 
+  wealthboxTokenExpiry: true,
+  googleId: true,
+  googleToken: true,
+  googleRefreshToken: true,
+  microsoftId: true,
+  microsoftToken: true,
+  microsoftRefreshToken: true
+});
 export const insertClientSchema = createInsertSchema(clients).omit({ id: true, createdAt: true, wealthboxClientId: true, metadata: true });
 export const insertActivitySchema = createInsertSchema(activities).omit({ id: true, createdAt: true, wealthboxActivityId: true, metadata: true });
 export const insertPortfolioSchema = createInsertSchema(portfolios).omit({ id: true, createdAt: true, wealthboxPortfolioId: true, metadata: true });
