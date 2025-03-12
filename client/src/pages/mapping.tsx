@@ -6,6 +6,20 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+interface WealthboxStatus {
+  connected: boolean;
+  tokenExpiry: string | null;
+  authorized: boolean;
+}
+
+interface Mapping {
+  id: number;
+  userId: number;
+  sourceField: string;
+  targetField: string;
+  createdAt: string;
+}
+
 import {
   Card,
   CardContent,
@@ -100,14 +114,14 @@ export default function Mapping() {
   });
   
   // Fetch WealthBox connection status
-  const { data: wealthboxStatus, isLoading: isLoadingStatus } = useQuery({
+  const { data: wealthboxStatus, isLoading: isLoadingStatus } = useQuery<WealthboxStatus>({
     queryKey: ['/api/wealthbox/status'],
   });
 
   // Fetch existing mappings
-  const { data: mappings, isLoading: isLoadingMappings, isError: isMappingsError } = useQuery({
+  const { data: mappings, isLoading: isLoadingMappings, isError: isMappingsError } = useQuery<Mapping[]>({
     queryKey: ['/api/mappings'],
-    enabled: !!wealthboxStatus?.connected && wealthboxStatus?.authorized,
+    enabled: wealthboxStatus !== undefined && !!wealthboxStatus.connected && !!wealthboxStatus.authorized,
   });
 
   // Add new mapping
@@ -180,7 +194,7 @@ export default function Mapping() {
   }
   
   // Check if user is authorized
-  const isAuthorized = wealthboxStatus?.authorized || false;
+  const isAuthorized = wealthboxStatus !== undefined && !!wealthboxStatus.authorized;
   
   // If user is not authorized, show access restricted message
   if (!isAuthorized) {
@@ -209,7 +223,7 @@ export default function Mapping() {
     );
   }
 
-  if (!wealthboxStatus?.connected) {
+  if (!wealthboxStatus || !wealthboxStatus.connected) {
     return (
       <div className="container mx-auto py-8">
         <div className="mb-8">
@@ -356,7 +370,7 @@ export default function Mapping() {
           <CardDescription>Your configured data field mappings</CardDescription>
         </CardHeader>
         <CardContent>
-          {mappings && mappings.length > 0 ? (
+          {mappings && Array.isArray(mappings) && mappings.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -366,7 +380,7 @@ export default function Mapping() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mappings.map((mapping) => (
+                {mappings.map((mapping: Mapping) => (
                   <TableRow key={mapping.id}>
                     <TableCell>
                       {sourceFields.find(f => f.value === mapping.sourceField)?.label || mapping.sourceField}
