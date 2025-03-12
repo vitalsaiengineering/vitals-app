@@ -86,7 +86,7 @@ export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
   
   // Set first pipeline as selected when data loads
   useEffect(() => {
-    if (opportunitiesData?.data?.pipelines?.length > 0 && !selectedPipeline) {
+    if (opportunitiesData?.data?.pipelines && opportunitiesData.data.pipelines.length > 0 && !selectedPipeline) {
       setSelectedPipeline(opportunitiesData.data.pipelines[0].pipeline);
     }
   }, [opportunitiesData, selectedPipeline]);
@@ -131,10 +131,12 @@ export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
   if (opportunitiesData?.success && opportunitiesData?.data) {
     if (viewMode === 'pipeline') {
       // For pipeline view, get all pipelines
-      pipelines = opportunitiesData.data.pipelines.map((p: OpportunityPipeline) => p.pipeline);
+      if (opportunitiesData.data.pipelines && Array.isArray(opportunitiesData.data.pipelines)) {
+        pipelines = opportunitiesData.data.pipelines.map((p: OpportunityPipeline) => p.pipeline);
+      }
       
       // If a pipeline is selected, show the stages for that pipeline
-      if (selectedPipeline) {
+      if (selectedPipeline && opportunitiesData.data.pipelines && Array.isArray(opportunitiesData.data.pipelines)) {
         const pipeline = opportunitiesData.data.pipelines.find(
           (p: OpportunityPipeline) => p.pipeline === selectedPipeline
         );

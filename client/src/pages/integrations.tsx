@@ -17,6 +17,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Redirect } from "wouter";
 
+interface WealthboxStatus {
+  connected: boolean;
+  tokenExpiry: string | null;
+  authorized: boolean;
+}
+
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  fullName: string;
+  role: string;
+  organizationId: number;
+  wealthboxConnected?: boolean;
+  wealthboxTokenExpiry?: string | null;
+}
+
 export default function Integrations() {
   const { toast } = useToast();
   const [isConnecting, setIsConnecting] = useState(false);
@@ -31,7 +48,7 @@ export default function Integrations() {
   });
   
   // Get WealthBox status
-  const { data: wealthboxStatus, isLoading: isLoadingStatus } = useQuery({
+  const { data: wealthboxStatus, isLoading: isLoadingStatus } = useQuery<WealthboxStatus>({
     queryKey: ['/api/wealthbox/status'],
     retry: false,
   });
@@ -69,7 +86,7 @@ export default function Integrations() {
 
   // Import WealthBox data
   const importMutation = useMutation({
-    mutationFn: importWealthboxData,
+    mutationFn: () => importWealthboxData(),
     onSuccess: (data) => {
       if (data.success) {
         toast({
@@ -120,7 +137,7 @@ export default function Integrations() {
     }
 
     setIsImporting(true);
-    importMutation.mutate(accessToken);
+    importMutation.mutate();
   };
 
   // Check if user is loading
