@@ -82,14 +82,14 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
       <div className="filter-item">
         <span className="text-xs font-medium text-neutral-500 mb-1 block">Firm</span>
         <Select
-          value={selectedFirm ? selectedFirm.toString() : ""}
-          onValueChange={(value) => setSelectedFirm(value ? parseInt(value) : null)}
+          value={selectedFirm ? selectedFirm.toString() : "all"}
+          onValueChange={(value) => setSelectedFirm(value && value !== "all" ? parseInt(value) : null)}
         >
           <SelectTrigger className="h-9 w-[180px]">
             <SelectValue placeholder="All Firms" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Firms</SelectItem>
+            <SelectItem value="all">All Firms</SelectItem>
             {firms.map((firm) => (
               <SelectItem key={firm.id} value={firm.id.toString()}>
                 {firm.name}
@@ -110,14 +110,14 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
       <div className="filter-item">
         <span className="text-xs font-medium text-neutral-500 mb-1 block">Advisor</span>
         <Select
-          value={selectedAdvisor ? selectedAdvisor.toString() : ""}
-          onValueChange={(value) => setSelectedAdvisor(value ? parseInt(value) : null)}
+          value={selectedAdvisor ? selectedAdvisor.toString() : "all"}
+          onValueChange={(value) => setSelectedAdvisor(value && value !== "all" ? parseInt(value) : null)}
         >
           <SelectTrigger className="h-9 w-[180px]">
             <SelectValue placeholder="All Advisors" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Advisors</SelectItem>
+            <SelectItem value="all">All Advisors</SelectItem>
             {advisors.map((advisor) => (
               <SelectItem key={advisor.id} value={advisor.id.toString()}>
                 {advisor.fullName}
