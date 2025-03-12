@@ -48,24 +48,13 @@ export const deleteMapping = async (id: number) => {
 };
 
 // WealthBox Integration
-export const getWealthboxAuthUrl = async () => {
-  const response = await fetch("/api/wealthbox/auth", { credentials: "include" });
-  if (!response.ok) {
-    throw new Error("Failed to get auth URL");
-  }
+export const testWealthboxConnection = async (accessToken: string) => {
+  const response = await apiRequest("POST", "/api/wealthbox/test-connection", { accessToken });
   return response.json();
 };
 
-export const getWealthboxStatus = async () => {
-  const response = await fetch("/api/wealthbox/status", { credentials: "include" });
-  if (!response.ok) {
-    throw new Error("Failed to get status");
-  }
-  return response.json();
-};
-
-export const importWealthboxData = async () => {
-  const response = await apiRequest("POST", "/api/wealthbox/import");
+export const importWealthboxData = async (accessToken: string) => {
+  const response = await apiRequest("POST", "/api/wealthbox/import-data", { accessToken });
   return response.json();
 };
 

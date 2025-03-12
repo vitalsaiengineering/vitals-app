@@ -10,6 +10,7 @@ import MemoryStore from "memorystore";
 import { setupWealthboxOAuth } from "./oauth";
 import { aiQueryHandler } from "./ai";
 import { setupAuth } from "./auth";
+import { testWealthboxConnectionHandler, importWealthboxDataHandler } from "./wealthbox";
 import dotenv from "dotenv";
 
 // Load environment variables
@@ -249,6 +250,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // AI query route
   app.post("/api/ai/query", requireAuth, aiQueryHandler);
+  
+  // Wealthbox integration routes
+  app.post("/api/wealthbox/test-connection", requireAuth, testWealthboxConnectionHandler);
+  app.post("/api/wealthbox/import-data", requireAuth, importWealthboxDataHandler);
 
   const httpServer = createServer(app);
   return httpServer;

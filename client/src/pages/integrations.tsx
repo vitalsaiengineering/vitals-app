@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { getWealthboxAuthUrl, getWealthboxStatus, importWealthboxData } from "@/lib/api";
+import { testWealthboxConnection, importWealthboxData } from "@/lib/api";
 import {
   Card,
   CardContent,
@@ -13,100 +13,115 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function Integrations() {
   const { toast } = useToast();
+  const [isConnecting, setIsConnecting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [accessToken, setAccessToken] = useState("a362b9c57ca349e5af99a6d8d4af6b3a"); // Default to provided token
+  const [connectionStatus, setConnectionStatus] = useState<'none' | 'success' | 'error'>('none');
 
-  // Get WealthBox status
-  const { 
-    data: wealthboxStatus,
-    isLoading: isLoadingStatus,
-    refetch: refetchStatus
-  } = useQuery({
-    queryKey: ['/api/wealthbox/status'],
-  });
-
-  // Get WealthBox auth URL
-  const authUrlQuery = useQuery({
-    queryKey: ['/api/wealthbox/auth'],
-    enabled: false
+  // Test WealthBox connection
+  const testConnectionMutation = useMutation({
+    mutationFn: testWealthboxConnection,
+    onSuccess: (data) => {
+      if (data.success) {
+        setConnectionStatus('success');
+        toast({
+          title: "Connection successful",
+          description: "Successfully connected to WealthBox API.",
+        });
+      } else {
+        setConnectionStatus('error');
+        toast({
+          title: "Connection failed",
+          description: data.message || "Failed to connect to WealthBox API.",
+          variant: "destructive",
+        });
+      }
+      setIsConnecting(false);
+    },
+    onError: (error: any) => {
+      setConnectionStatus('error');
+      toast({
+        title: "Connection error",
+        description: error.message || "An error occurred while connecting to WealthBox.",
+        variant: "destructive",
+      });
+      setIsConnecting(false);
+    },
   });
 
   // Import WealthBox data
   const importMutation = useMutation({
     mutationFn: importWealthboxData,
-    onSuccess: () => {
-      toast({
-        title: "Data imported successfully",
-        description: "Your WealthBox data has been imported and synchronized.",
-      });
+    onSuccess: (data) => {
+      if (data.success) {
+        toast({
+          title: "Data imported successfully",
+          description: `Imported ${data.contacts.imported} contacts and ${data.activities.imported} activities.`,
+        });
+      } else {
+        toast({
+          title: "Import partially failed",
+          description: data.message || "Some data could not be imported.",
+          variant: "destructive",
+        });
+      }
       setIsImporting(false);
-      refetchStatus();
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Import failed",
-        description: "There was a problem importing your WealthBox data.",
+        description: error.message || "There was a problem importing your WealthBox data.",
         variant: "destructive",
       });
       setIsImporting(false);
     },
   });
 
-  const handleConnect = async () => {
-    try {
-      const data = await authUrlQuery.refetch();
-      if (data.data && data.data.authUrl) {
-        window.location.href = data.data.authUrl;
-      } else {
-        toast({
-          title: "Connection failed",
-          description: "Unable to get authorization URL from WealthBox.",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
+  const handleTestConnection = async () => {
+    if (!accessToken.trim()) {
       toast({
-        title: "Connection error",
-        description: "An error occurred while connecting to WealthBox.",
+        title: "Access token required",
+        description: "Please enter your WealthBox API access token.",
         variant: "destructive",
       });
+      return;
     }
+
+    setIsConnecting(true);
+    testConnectionMutation.mutate(accessToken);
   };
 
   const handleImport = () => {
+    if (!accessToken.trim()) {
+      toast({
+        title: "Access token required",
+        description: "Please enter your WealthBox API access token.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsImporting(true);
-    importMutation.mutate();
+    importMutation.mutate(accessToken);
   };
-
-  // Get connection status from URL query params (for OAuth callback)
-  const urlParams = new URLSearchParams(window.location.search);
-  const connectionStatus = urlParams.get('status');
-
-  if (isLoadingStatus) {
-    return (
-      <div className="p-8 flex justify-center items-center">
-        <div className="text-center">
-          <div className="animate-spin h-10 w-10 border-4 border-primary-500 border-t-transparent rounded-full inline-block mb-4"></div>
-          <p>Loading integration status...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-neutral-900">Integrations</h1>
-        <p className="mt-1 text-sm text-neutral-500">Connect and manage your external data sources</p>
+        <h1 className="text-2xl font-semibold">Integrations</h1>
+        <p className="mt-1 text-sm text-gray-500">Connect and manage your external data sources</p>
       </div>
 
       {connectionStatus === 'success' && (
         <Alert className="mb-6 bg-green-50 border-green-200">
           <AlertTitle className="text-green-800">Success!</AlertTitle>
           <AlertDescription className="text-green-700">
-            Your WealthBox account has been successfully connected.
+            Your WealthBox API connection was successful. You can now import your data.
           </AlertDescription>
         </Alert>
       )}
@@ -115,7 +130,7 @@ export default function Integrations() {
         <Alert className="mb-6 bg-red-50 border-red-200">
           <AlertTitle className="text-red-800">Connection Failed</AlertTitle>
           <AlertDescription className="text-red-700">
-            There was a problem connecting your WealthBox account. Please try again.
+            There was a problem connecting to the WealthBox API. Please check your access token and try again.
           </AlertDescription>
         </Alert>
       )}
@@ -123,110 +138,124 @@ export default function Integrations() {
       <Card className="mb-6">
         <CardHeader>
           <div className="flex items-center">
-            <svg className="w-8 h-8 mr-3 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg className="w-8 h-8 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
             </svg>
             <div>
               <CardTitle>WealthBox Integration</CardTitle>
-              <CardDescription>Connect to your WealthBox account to import client data</CardDescription>
+              <CardDescription>Connect to your WealthBox account using a Personal API Access Token</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg">
-            <div className="flex items-center">
-              <div className={`w-3 h-3 rounded-full mr-2 ${wealthboxStatus?.connected ? 'bg-green-500' : 'bg-neutral-300'}`}></div>
-              <span className="font-medium">
-                {wealthboxStatus?.connected ? 'Connected' : 'Not Connected'}
-              </span>
-            </div>
-            {wealthboxStatus?.connected && wealthboxStatus.expiresAt && (
-              <div className="text-sm text-neutral-500">
-                Token expires: {new Date(wealthboxStatus.expiresAt).toLocaleString()}
+          <div className="space-y-6">
+            <div>
+              <Label htmlFor="api-token">WealthBox API Access Token</Label>
+              <div className="mt-1 flex">
+                <Input
+                  id="api-token"
+                  type="text"
+                  value={accessToken}
+                  onChange={(e) => setAccessToken(e.target.value)}
+                  placeholder="Enter your WealthBox API access token"
+                  className="flex-1"
+                />
+                <Button 
+                  onClick={handleTestConnection} 
+                  disabled={isConnecting}
+                  className="ml-2"
+                >
+                  {isConnecting ? 'Testing...' : 'Test Connection'}
+                </Button>
               </div>
-            )}
-          </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Your personal API token can be found in your WealthBox account settings under API Access Tokens.
+              </p>
+            </div>
 
-          <Separator className="my-6" />
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-sm font-medium mb-2">About Personal API Tokens</h3>
+              <p className="text-xs text-gray-600">
+                Personal API access tokens are used for building personal integrations and testing. 
+                The token should be passed as an HTTP Header with the name 'ACCESS_TOKEN' in all requests to the API.
+              </p>
+            </div>
 
-          <div className="space-y-4">
+            <Separator />
+
             <div>
               <h3 className="text-lg font-medium mb-2">Integration Features</h3>
-              <ul className="list-disc list-inside text-sm text-neutral-600 space-y-1">
+              <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
                 <li>Import client profiles and contact information</li>
-                <li>Sync client portfolios and holdings</li>
-                <li>Track client activities and interactions</li>
-                <li>Maintain up-to-date client demographics</li>
+                <li>Sync client activities and interactions</li>
+                <li>Maintain up-to-date client records</li>
+                <li>Get real-time financial advisor data</li>
               </ul>
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-between">
-          {wealthboxStatus?.connected ? (
-            <>
-              <Button variant="outline" onClick={handleConnect}>
-                Reconnect Account
-              </Button>
-              <Button 
-                onClick={handleImport}
-                disabled={isImporting}
-              >
-                {isImporting ? (
-                  <>
-                    <span className="material-icons animate-spin mr-2">refresh</span>
-                    Importing...
-                  </>
-                ) : (
-                  <>
-                    <span className="material-icons mr-2">download</span>
-                    Import Data
-                  </>
-                )}
-              </Button>
-            </>
-          ) : (
-            <Button 
-              onClick={handleConnect}
-              disabled={authUrlQuery.isLoading}
-              className="ml-auto"
-            >
-              {authUrlQuery.isLoading ? 'Loading...' : 'Connect WealthBox'}
-            </Button>
-          )}
+        <CardFooter className="flex justify-end">
+          <Button 
+            onClick={handleImport}
+            disabled={isImporting || connectionStatus !== 'success'}
+          >
+            {isImporting ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Importing...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                </svg>
+                Import Data
+              </>
+            )}
+          </Button>
         </CardFooter>
       </Card>
 
       <Card>
         <CardHeader>
           <div className="flex items-center">
-            <span className="material-icons w-8 h-8 mr-3 text-primary-600">help_outline</span>
+            <svg className="w-8 h-8 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
             <div>
               <CardTitle>Need Help?</CardTitle>
-              <CardDescription>Resources for setting up your integrations</CardDescription>
+              <CardDescription>Resources for setting up your WealthBox integration</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div>
-              <h3 className="text-md font-medium mb-2">WealthBox Integration Guide</h3>
-              <p className="text-sm text-neutral-600">
-                To connect your WealthBox account, click the Connect button above and follow the 
-                authorization process. Once connected, you can import your client data and keep 
-                it synchronized with regular imports.
+              <h3 className="text-md font-medium mb-2">WealthBox API Integration Guide</h3>
+              <p className="text-sm text-gray-600">
+                To use this integration, you need a personal API access token from your WealthBox account.
+                Enter your token in the field above, test the connection, and then import your data.
+                This integration will synchronize your client data between WealthBox and FinAdvisor Pro.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button variant="outline" className="flex items-center" asChild>
-                <a href="#" target="_blank" rel="noopener noreferrer">
-                  <span className="material-icons mr-2 text-sm">description</span>
-                  View Documentation
+                <a href="https://api.crmworkspace.com/docs" target="_blank" rel="noopener noreferrer">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                  WealthBox API Docs
                 </a>
               </Button>
               <Button variant="outline" className="flex items-center" asChild>
-                <a href="#" target="_blank" rel="noopener noreferrer">
-                  <span className="material-icons mr-2 text-sm">video_library</span>
-                  Watch Tutorial
+                <a href="https://help.wealthbox.com/en/articles/2344281-api-access-token" target="_blank" rel="noopener noreferrer">
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                  </svg>
+                  Access Token Guide
                 </a>
               </Button>
             </div>
