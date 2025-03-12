@@ -1,10 +1,16 @@
-import { useEffect, useState } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from '@/components/ui/label';
-import { Card, CardContent } from "@/components/ui/card";
-import { User, Organization } from '@shared/schema';
-import { apiRequest } from '@/lib/queryClient';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { apiRequest } from "@/lib/queryClient";
+import { User, Organization } from "@shared/schema";
 
 interface FilterBarProps {
   user: User;
@@ -29,26 +35,30 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
   const [selectedFirm, setSelectedFirm] = useState<number | null>(null);
   const [selectedAdvisor, setSelectedAdvisor] = useState<number | null>(null);
   
-  // Fetch firms (only for home_office users)
+  // Fetch firms based on user role
   const { data: firms = [] } = useQuery<Firm[]>({
-    queryKey: ['/api/organizations/firms'],
-    enabled: user?.role === 'home_office',
+    queryKey: [user.role === 'home_office' ? '/api/organizations/firms' : '/api/organizations'],
+    enabled: !!user && (user.role === 'home_office' || user.role === 'global_admin'),
   });
   
-  // Fetch advisors based on selected firm or user's organization
-  const { data: advisors = [], refetch: refetchAdvisors } = useQuery<Advisor[]>({
-    queryKey: ['/api/users/advisors', selectedFirm],
-    enabled: user?.role === 'home_office' || user?.role === 'firm_admin',
+  // Fetch advisors based on selected firm or user role
+  const { data: advisors = [] } = useQuery<Advisor[]>({
+    queryKey: [
+      selectedFirm 
+        ? `/api/organizations/${selectedFirm}/advisors` 
+        : user.role === 'firm_admin' 
+          ? `/api/organizations/${user.organizationId}/advisors`
+          : `/api/advisors`
+    ],
+    enabled: !!user && (selectedFirm !== null || user.role === 'firm_admin' || user.role === 'home_office' || user.role === 'global_admin'),
   });
   
-  // Update advisors list when firm selection changes
+  // Reset advisor selection when firm changes
   useEffect(() => {
-    if (selectedFirm) {
-      refetchAdvisors();
-    }
-  }, [selectedFirm, refetchAdvisors]);
+    setSelectedAdvisor(null);
+  }, [selectedFirm]);
   
-  // Notify parent component when filters change
+  // Apply filters when selections change
   useEffect(() => {
     onFilterChange({
       firmId: selectedFirm,
@@ -56,71 +66,117 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
     });
   }, [selectedFirm, selectedAdvisor, onFilterChange]);
   
-  // Don't show filter bar for financial advisors
-  if (user?.role === 'financial_advisor') {
-    return null;
-  }
-  
-  // Reset advisor selection when firm changes
-  const handleFirmChange = (firmId: string) => {
-    const id = firmId ? parseInt(firmId) : null;
-    setSelectedFirm(id);
+  // Reset all filters
+  const handleReset = () => {
+    setSelectedFirm(null);
     setSelectedAdvisor(null);
   };
   
-  const handleAdvisorChange = (advisorId: string) => {
-    setSelectedAdvisor(advisorId ? parseInt(advisorId) : null);
+  // Render filter options based on user role
+  const renderFirmFilter = () => {
+    if (!user || (user.role !== 'home_office' && user.role !== 'global_admin')) {
+      return null;
+    }
+    
+    return (
+      <div className="filter-item">
+        <span className="text-xs font-medium text-neutral-500 mb-1 block">Firm</span>
+        <Select
+          value={selectedFirm ? selectedFirm.toString() : ""}
+          onValueChange={(value) => setSelectedFirm(value ? parseInt(value) : null)}
+        >
+          <SelectTrigger className="h-9 w-[180px]">
+            <SelectValue placeholder="All Firms" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All Firms</SelectItem>
+            {firms.map((firm) => (
+              <SelectItem key={firm.id} value={firm.id.toString()}>
+                {firm.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  };
+  
+  const renderAdvisorFilter = () => {
+    if (!user || user.role === 'financial_advisor') {
+      return null;
+    }
+    
+    return (
+      <div className="filter-item">
+        <span className="text-xs font-medium text-neutral-500 mb-1 block">Advisor</span>
+        <Select
+          value={selectedAdvisor ? selectedAdvisor.toString() : ""}
+          onValueChange={(value) => setSelectedAdvisor(value ? parseInt(value) : null)}
+        >
+          <SelectTrigger className="h-9 w-[180px]">
+            <SelectValue placeholder="All Advisors" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All Advisors</SelectItem>
+            {advisors.map((advisor) => (
+              <SelectItem key={advisor.id} value={advisor.id.toString()}>
+                {advisor.fullName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  };
+  
+  // Show active filters
+  const renderActiveFilters = () => {
+    const activeFilters = [];
+    
+    if (selectedFirm) {
+      const firm = firms.find(f => f.id === selectedFirm);
+      if (firm) {
+        activeFilters.push(`Firm: ${firm.name}`);
+      }
+    }
+    
+    if (selectedAdvisor) {
+      const advisor = advisors.find(a => a.id === selectedAdvisor);
+      if (advisor) {
+        activeFilters.push(`Advisor: ${advisor.fullName}`);
+      }
+    }
+    
+    if (activeFilters.length === 0) {
+      return null;
+    }
+    
+    return (
+      <div className="flex flex-wrap gap-2 mt-2">
+        {activeFilters.map((filter, index) => (
+          <Badge key={index} variant="outline" className="bg-primary-50 text-primary-800 border-primary-200">
+            {filter}
+          </Badge>
+        ))}
+        <Button 
+          variant="link" 
+          size="sm" 
+          className="text-neutral-500 h-6 px-2"
+          onClick={handleReset}
+        >
+          Reset
+        </Button>
+      </div>
+    );
   };
   
   return (
-    <Card className="mb-6">
-      <CardContent className="pt-6">
-        <div className="flex flex-col md:flex-row gap-4 items-end">
-          {user?.role === 'home_office' && (
-            <div className="w-full md:w-1/3">
-              <Label htmlFor="firm-filter" className="mb-2 block">
-                Firm
-              </Label>
-              <Select onValueChange={handleFirmChange} value={selectedFirm?.toString() || ''}>
-                <SelectTrigger id="firm-filter">
-                  <SelectValue placeholder="All Firms" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">All Firms</SelectItem>
-                  {firms.map((firm) => (
-                    <SelectItem key={firm.id} value={firm.id.toString()}>
-                      {firm.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          
-          <div className="w-full md:w-1/3">
-            <Label htmlFor="advisor-filter" className="mb-2 block">
-              Financial Advisor
-            </Label>
-            <Select 
-              onValueChange={handleAdvisorChange} 
-              value={selectedAdvisor?.toString() || ''}
-              disabled={user?.role === 'home_office' && !selectedFirm}
-            >
-              <SelectTrigger id="advisor-filter">
-                <SelectValue placeholder="All Advisors" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Advisors</SelectItem>
-                {advisors.map((advisor) => (
-                  <SelectItem key={advisor.id} value={advisor.id.toString()}>
-                    {advisor.fullName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="filter-bar mt-4 p-3 bg-white rounded-lg border border-neutral-200">
+      <div className="flex flex-wrap gap-4">
+        {renderFirmFilter()}
+        {renderAdvisorFilter()}
+      </div>
+      {renderActiveFilters()}
+    </div>
   );
 }

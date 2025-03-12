@@ -12,29 +12,47 @@ import { RevenueCard } from "@/components/dashboard/revenue-card";
 import { ActivitiesCard } from "@/components/dashboard/activities-card";
 import { PortfolioCard } from "@/components/dashboard/portfolio-card";
 import { DemographicsCard } from "@/components/dashboard/demographics-card";
+import { FilterBar } from "@/components/dashboard/filter-bar";
 import { AiQuery } from "@/components/dashboard/ai-query";
-import { importWealthboxData, getWealthboxStatus } from "@/lib/api";
+import { importWealthboxData, getWealthboxStatus, getCurrentUser } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
   const { toast } = useToast();
   const [lastSynced, setLastSynced] = useState<string>("Today at 9:30 AM");
-  
-  // Fetch advisor metrics
-  const { data: metrics, isLoading: isLoadingMetrics, refetch: refetchMetrics } = useQuery({
-    queryKey: ['/api/analytics/advisor-metrics'],
+  const [filters, setFilters] = useState<{ firmId: number | null; advisorId: number | null }>({
+    firmId: null,
+    advisorId: null
   });
   
-  // Fetch client demographics
+  // Fetch current user
+  const { data: currentUser, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['/api/me'],
+  });
+  
+  // Fetch advisor metrics with filter parameters
+  const { data: metrics, isLoading: isLoadingMetrics, refetch: refetchMetrics } = useQuery({
+    queryKey: ['/api/analytics/advisor-metrics', filters.firmId, filters.advisorId],
+    enabled: !!currentUser,
+  });
+  
+  // Fetch client demographics with filter parameters
   const { data: demographics, isLoading: isLoadingDemographics, refetch: refetchDemographics } = useQuery({
-    queryKey: ['/api/analytics/client-demographics'],
+    queryKey: ['/api/analytics/client-demographics', filters.firmId, filters.advisorId],
+    enabled: !!currentUser,
   });
   
   // Fetch WealthBox connection status
   const { data: wealthboxStatus } = useQuery({
     queryKey: ['/api/wealthbox/status'],
+    enabled: !!currentUser,
   });
+  
+  // Handle filter changes
+  const handleFilterChange = (newFilters: { firmId: number | null; advisorId: number | null }) => {
+    setFilters(newFilters);
+  };
   
   // Import data from WealthBox
   const importMutation = useMutation({
@@ -201,6 +219,9 @@ export default function Dashboard() {
             </Button>
           </div>
         </div>
+        
+        {/* Add Filter Bar */}
+        {currentUser && <FilterBar user={currentUser} onFilterChange={handleFilterChange} />}
         
         {/* Integration Status */}
         <div className="mt-3 bg-white p-3 rounded-lg border border-neutral-200 flex items-center">

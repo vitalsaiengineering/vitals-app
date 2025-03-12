@@ -53,8 +53,13 @@ export const testWealthboxConnection = async (accessToken: string) => {
   return response.json();
 };
 
-export const importWealthboxData = async (accessToken: string) => {
-  const response = await apiRequest("POST", "/api/wealthbox/import-data", { accessToken });
+export const getWealthboxStatus = async () => {
+  const response = await apiRequest("GET", "/api/wealthbox/status");
+  return response.json();
+};
+
+export const importWealthboxData = async () => {
+  const response = await apiRequest("POST", "/api/wealthbox/import-data");
   return response.json();
 };
 

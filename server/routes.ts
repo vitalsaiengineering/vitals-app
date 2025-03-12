@@ -301,6 +301,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Wealthbox integration routes
   app.post("/api/wealthbox/test-connection", requireAuth, testWealthboxConnectionHandler);
   app.post("/api/wealthbox/import-data", requireAuth, importWealthboxDataHandler);
+  app.get("/api/wealthbox/status", requireAuth, (req, res) => {
+    const user = req.user as any;
+    res.json({ 
+      connected: user?.wealthboxConnected || false,
+      tokenExpiry: user?.wealthboxTokenExpiry || null
+    });
+  });
 
   const httpServer = createServer(app);
   return httpServer;
