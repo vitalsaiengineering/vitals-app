@@ -132,36 +132,36 @@ export default function Dashboard() {
   
   // Data for Assets Under Management card
   const assetsData = {
-    totalAum: metrics?.totalAum || 0,
+    totalAum: metrics?.totalAum ?? 0,
     aumChange: 5.2, // Example change percentage
     aumByClientType: [
-      { name: "Enterprise Clients", value: metrics?.totalAum * 0.5 || 0, color: "hsl(var(--primary-500))" },
-      { name: "Mid-size Clients", value: metrics?.totalAum * 0.35 || 0, color: "hsl(var(--secondary-400))" },
-      { name: "Small Clients", value: metrics?.totalAum * 0.15 || 0, color: "hsl(var(--chart-3))" },
+      { name: "Enterprise Clients", value: (metrics?.totalAum ?? 0) * 0.5, color: "hsl(var(--primary-500))" },
+      { name: "Mid-size Clients", value: (metrics?.totalAum ?? 0) * 0.35, color: "hsl(var(--secondary-400))" },
+      { name: "Small Clients", value: (metrics?.totalAum ?? 0) * 0.15, color: "hsl(var(--chart-3))" },
     ]
   };
   
   // Data for Revenue card
   const revenueData = {
-    totalRevenue: metrics?.totalRevenue || 0,
+    totalRevenue: metrics?.totalRevenue ?? 0,
     revenueChange: 3.8, // Example change percentage
     revenueByQuarter: [
-      { quarter: "Q1", revenue: metrics?.totalRevenue * 0.2 || 0 },
-      { quarter: "Q2", revenue: metrics?.totalRevenue * 0.25 || 0 },
-      { quarter: "Q3", revenue: metrics?.totalRevenue * 0.15 || 0 },
-      { quarter: "Q4", revenue: metrics?.totalRevenue * 0.4 || 0 },
+      { quarter: "Q1", revenue: (metrics?.totalRevenue ?? 0) * 0.2 },
+      { quarter: "Q2", revenue: (metrics?.totalRevenue ?? 0) * 0.25 },
+      { quarter: "Q3", revenue: (metrics?.totalRevenue ?? 0) * 0.15 },
+      { quarter: "Q4", revenue: (metrics?.totalRevenue ?? 0) * 0.4 },
     ],
     topClient: {
       name: "GlobalTech Inc.",
-      revenue: metrics?.totalRevenue * 0.3 || 0,
+      revenue: (metrics?.totalRevenue ?? 0) * 0.3,
       percentage: 30,
     },
-    averageRevenue: metrics?.totalRevenue / (metrics?.totalClients || 1) || 0,
+    averageRevenue: (metrics?.totalRevenue ?? 0) / (metrics?.totalClients ?? 1),
   };
   
   // Data for Activities card
   const activitiesData = {
-    totalActivities: metrics?.totalActivities || 0,
+    totalActivities: metrics?.totalActivities ?? 0,
     activityChange: 12.4, // Example change percentage
     activityTrend: [
       { date: "Mon", emails: 42, calls: 24 },
@@ -173,9 +173,9 @@ export default function Dashboard() {
       { date: "Sun", emails: 10, calls: 5 },
     ],
     activityBreakdown: [
-      { type: "Emails", count: Math.round(metrics?.totalActivities * 0.42) || 0 },
-      { type: "Calls", count: Math.round(metrics?.totalActivities * 0.25) || 0 },
-      { type: "Meetings", count: Math.round(metrics?.totalActivities * 0.33) || 0 },
+      { type: "Emails", count: Math.round((metrics?.totalActivities ?? 0) * 0.42) },
+      { type: "Calls", count: Math.round((metrics?.totalActivities ?? 0) * 0.25) },
+      { type: "Meetings", count: Math.round((metrics?.totalActivities ?? 0) * 0.33) },
     ],
   };
   
@@ -185,28 +185,28 @@ export default function Dashboard() {
       { 
         assetClass: "Equities", 
         allocation: 45, 
-        value: metrics?.totalAum * 0.45 || 0, 
+        value: (metrics?.totalAum ?? 0) * 0.45, 
         performance: 8.2,
         color: "hsl(var(--primary-500))"
       },
       { 
         assetClass: "Fixed Income", 
         allocation: 30, 
-        value: metrics?.totalAum * 0.3 || 0, 
+        value: (metrics?.totalAum ?? 0) * 0.3, 
         performance: 2.5,
         color: "hsl(var(--secondary-400))"
       },
       { 
         assetClass: "Alternatives", 
         allocation: 15, 
-        value: metrics?.totalAum * 0.15 || 0, 
+        value: (metrics?.totalAum ?? 0) * 0.15, 
         performance: -1.3,
         color: "hsl(var(--chart-3))"
       },
       { 
         assetClass: "Cash", 
         allocation: 10, 
-        value: metrics?.totalAum * 0.1 || 0, 
+        value: (metrics?.totalAum ?? 0) * 0.1, 
         performance: 0.3,
         color: "hsl(var(--chart-4))"
       },
