@@ -243,6 +243,64 @@ export default function Dashboard() {
     );
   }
   
+  // Role-based dashboard display
+  if (currentUser) {
+    if (currentUser.role === 'client_admin') {
+      return (
+        <div className="container mx-auto py-8">
+          <div className="mb-8">
+            <h1 className="text-2xl font-semibold text-neutral-900">Dashboard</h1>
+            <p className="mt-1 text-sm text-neutral-500">Welcome, {currentUser.username}</p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Financial Advisors</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>Financial advisor management features will be shown here</p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      );
+    }
+    
+    if (currentUser.role === 'firm_admin') {
+      return (
+        <div className="container mx-auto py-8">
+          <div className="mb-8">
+            <h1 className="text-2xl font-semibold text-neutral-900">Firm Dashboard</h1>
+            <p className="mt-1 text-sm text-neutral-500">Welcome, {currentUser.username}</p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Firm Overview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex justify-between items-center">
+                  <p>Firm performance metrics will be shown here</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-primary-700 bg-primary-100 hover:bg-primary-200 border-primary-200"
+                    asChild
+                  >
+                    <a href="/integrations">Manage Integrations</a>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      );
+    }
+  }
+  
+  // Default dashboard for financial advisors and other roles
   return (
     <div>
       {/* Dashboard Header */}
@@ -316,80 +374,6 @@ export default function Dashboard() {
       
       {/* AI Query Section */}
       <AiQuery />
-    </div>
-  );
-}
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/providers/auth-provider';
-import { AdvisorsList } from '@/components/AdvisorsList';
-
-export default function Dashboard() {
-  const { user } = useAuth();
-  
-  return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-neutral-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-neutral-500">Welcome, {user?.fullName}</p>
-      </div>
-
-      {user?.role === 'client_admin' && (
-        <div className="grid grid-cols-1 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Financial Advisors</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AdvisorsList />
-            </CardContent>
-          </Card>
-        </div>
-      )}
-      
-      {user?.role === 'financial_advisor' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Client Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Client metrics will be shown here</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activities</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Recent client activities will be shown here</p>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Portfolio Performance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Portfolio metrics will be shown here</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-      
-      {user?.role === 'firm_admin' && (
-        <div className="grid grid-cols-1 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Firm Overview</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>Firm metrics will be shown here</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
   );
 }
