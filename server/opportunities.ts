@@ -17,8 +17,20 @@ interface WealthboxOpportunity {
   updated_at: string;
 }
 
+// Map numeric stage IDs to descriptive names
+// This would typically come from WealthBox's API, but we're hardcoding for the demo
+const stageNameMap: Record<string, string> = {
+  '422586': 'Lead',
+  '422584': 'Qualified',
+  '621628': 'Proposal',
+  '621629': 'Negotiation',
+  '621631': 'Closed Won',
+  // Add more mappings as needed
+};
+
 interface OpportunityStageCount {
   stage: string;
+  stageId: string;
   count: number;
 }
 
@@ -140,9 +152,10 @@ function aggregateOpportunitiesByPipeline(
       stagesMap.set(stage, (stagesMap.get(stage) || 0) + 1);
     });
     
-    // Convert map to array of stage counts
+    // Convert map to array of stage counts with friendly names
     const stages = Array.from(stagesMap.entries()).map(([stage, count]) => ({
-      stage,
+      stage: stageNameMap[stage] || stage, // Use friendly name if available
+      stageId: stage, // Keep the original ID for reference
       count
     }));
     
@@ -179,9 +192,10 @@ export async function getOpportunityStagesHandler(req: Request, res: Response) {
       stagesMap.set(stage, (stagesMap.get(stage) || 0) + 1);
     });
     
-    // Convert map to array of stage counts
+    // Convert map to array of stage counts with friendly names
     const stages = Array.from(stagesMap.entries()).map(([stage, count]) => ({
-      stage,
+      stage: stageNameMap[stage] || stage, // Use friendly name if available
+      stageId: stage, // Keep the original ID for reference
       count
     }));
     
