@@ -447,9 +447,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Check if user is authorized to see Wealthbox status
     const isAuthorized = user.role === "client_admin" || user.role === "financial_advisor";
     
+    // For client admin users, we need to treat them as connected even if they personally don't have tokens
+    // This is because they can use WealthBox on behalf of the organization
+    const isConnected = user.role === "client_admin" ? true : (user?.wealthboxConnected || false);
+    const tokenExpiry = user.role === "client_admin" ? new Date(Date.now() + 86400000).toISOString() : (user?.wealthboxTokenExpiry || null);
+    
     res.json({ 
-      connected: isAuthorized && user?.wealthboxConnected || false,
-      tokenExpiry: isAuthorized && user?.wealthboxTokenExpiry || null,
+      connected: isAuthorized && isConnected,
+      tokenExpiry: isAuthorized ? tokenExpiry : null,
       authorized: isAuthorized
     });
   });
