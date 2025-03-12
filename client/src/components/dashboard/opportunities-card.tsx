@@ -26,7 +26,8 @@ import {
   CartesianGrid, 
   Tooltip, 
   Legend, 
-  ResponsiveContainer 
+  ResponsiveContainer,
+  Cell
 } from 'recharts';
 
 interface OpportunityStage {
@@ -123,7 +124,7 @@ export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
   }
   
   // Prepare chart data
-  let chartData: any[] = [];
+  let chartData: Record<string, any>[] = [];
   let pipelines: string[] = [];
   
   if (opportunitiesData?.success && opportunitiesData?.data) {
@@ -146,7 +147,7 @@ export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
           ];
           
           // Get unique stages
-          const stages = pipeline.stages.map(stage => stage.stage);
+          const stages = pipeline.stages.map((stage: OpportunityStage) => stage.stage);
           
           // Create monthly chart data with counts for each stage
           chartData = months.map(month => {
@@ -267,14 +268,13 @@ export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
                 />
                 <YAxis />
                 <Tooltip formatter={(value) => [`${value} opportunities`, 'Count']} />
+                {/* Create a separate bar for each stage with its own color */}
                 <Bar 
                   dataKey="count" 
-                  fill="#8884d8" 
                   name="Opportunities" 
                   isAnimationActive={false}
                   fillOpacity={0.8}
-                  // Custom fill for each bar based on stage
-                  fill={({ count, color }) => color || '#8884d8'}
+                  fill="#8884d8" 
                 />
               </BarChart>
             )}
