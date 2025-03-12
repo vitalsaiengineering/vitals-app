@@ -29,6 +29,12 @@ export default function Dashboard() {
     advisorId: null
   });
   
+  // Handle filter changes from the filter bar
+  const handleFilterChange = (newFilters: { firmId: number | null; advisorId: number | null }) => {
+    console.log("Filters changed:", newFilters);
+    setFilters(newFilters);
+  };
+  
   // Define types for metrics and demographics data
   interface AdvisorMetrics {
     totalAum: number;
@@ -100,10 +106,7 @@ export default function Dashboard() {
     enabled: !!currentUser,
   });
   
-  // Handle filter changes
-  const handleFilterChange = (newFilters: { firmId: number | null; advisorId: number | null }) => {
-    setFilters(newFilters);
-  };
+
   
   // Import data from WealthBox
   const importMutation = useMutation({
@@ -247,69 +250,97 @@ export default function Dashboard() {
   
   // Role-based dashboard display
   if (currentUser) {
+    // For client admins, we'll show the advisor list with a filter bar AND the advisor dashboard
     if (currentUser.role === 'client_admin') {
       return (
         <div className="container mx-auto py-8">
-          <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-neutral-900">Client Admin Dashboard</h1>
-            <p className="mt-1 text-sm text-neutral-500">Welcome, {currentUser.username}</p>
-          </div>
-
-          {/* Integration Status */}
-          <div className="mb-6 bg-white p-3 rounded-lg border border-neutral-200 flex items-center">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-              <span className="material-icons text-green-600">link</span>
+          <div className="mb-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+              <div>
+                <h1 className="text-2xl font-semibold text-neutral-900">Client Admin Dashboard</h1>
+                <p className="mt-1 text-sm text-neutral-500">Welcome, {currentUser.username}</p>
+              </div>
+              <div className="mt-4 md:mt-0 flex space-x-3">
+                <Button variant="outline" size="sm" className="flex items-center">
+                  <span className="material-icons text-sm mr-2">file_download</span>
+                  Export
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="flex items-center"
+                  onClick={handleRefreshData}
+                  disabled={importMutation.isPending}
+                >
+                  <span className="material-icons text-sm mr-2">refresh</span>
+                  {importMutation.isPending ? "Refreshing..." : "Refresh Data"}
+                </Button>
+              </div>
             </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-neutral-900">
-                WealthBox {wealthboxStatus?.connected ? "Connected" : "Not Connected"}
-              </h3>
-              <p className="text-xs text-neutral-500">Last synced: {lastSynced}</p>
-            </div>
-            <div className="ml-auto">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-primary-700 bg-primary-100 hover:bg-primary-200 border-primary-200"
-                asChild
-              >
-                <a href="/integrations">Manage</a>
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Financial Advisors</CardTitle>
-                <Button size="sm" variant="outline">Add Advisor</Button>
-              </CardHeader>
-              <CardContent>
-                <AdvisorsList />
-              </CardContent>
-            </Card>
             
-            <Card>
-              <CardHeader>
-                <CardTitle>Activity Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h3 className="text-sm font-medium text-blue-900 mb-1">Total Advisors</h3>
-                    <p className="text-2xl font-bold text-blue-700">5</p>
-                  </div>
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <h3 className="text-sm font-medium text-green-900 mb-1">Total Clients</h3>
-                    <p className="text-2xl font-bold text-green-700">{metrics?.totalClients ?? 0}</p>
-                  </div>
-                  <div className="bg-purple-50 p-4 rounded-lg">
-                    <h3 className="text-sm font-medium text-purple-900 mb-1">Total AUM</h3>
-                    <p className="text-2xl font-bold text-purple-700">${(metrics?.totalAum ?? 0).toLocaleString()}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Add Filter Bar for client admin to filter by advisor */}
+            <FilterBar user={currentUser} onFilterChange={handleFilterChange} />
+            
+            {/* Integration Status */}
+            <div className="mt-3 bg-white p-3 rounded-lg border border-neutral-200 flex items-center">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                <span className="material-icons text-green-600">link</span>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-neutral-900">
+                  WealthBox {wealthboxStatus?.connected ? "Connected" : "Not Connected"}
+                </h3>
+                <p className="text-xs text-neutral-500">Last synced: {lastSynced}</p>
+              </div>
+              <div className="ml-auto">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-primary-700 bg-primary-100 hover:bg-primary-200 border-primary-200"
+                  asChild
+                >
+                  <a href="/integrations">Manage</a>
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Advisors List */}
+          <Card className="mb-6">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Financial Advisors</CardTitle>
+              <Button size="sm" variant="outline">Add Advisor</Button>
+            </CardHeader>
+            <CardContent>
+              <AdvisorsList />
+            </CardContent>
+          </Card>
+          
+          {/* Dashboard Grid - showing the same dashboard as advisors see */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* AUM by Client */}
+            <AssetsCard {...assetsData} />
+            
+            {/* Revenue by Client */}
+            <RevenueCard {...revenueData} />
+            
+            {/* Total Activities by Client */}
+            <ActivitiesCard {...activitiesData} />
+            
+            {/* Portfolio Allocation & Holdings */}
+            <PortfolioCard {...portfolioData} />
+            
+            {/* Client Demographics */}
+            <DemographicsCard {...demographicsData} />
+          </div>
+          
+          {/* Opportunities Section - Full Width */}
+          <div className="mt-6">
+            <OpportunitiesCard wealthboxToken={wealthboxStatus?.connected ? "a362b9c57ca349e5af99a6d8d4af6b3a" : undefined} />
+          </div>
+          
+          {/* AI Query Section */}
+          <div className="mt-6">
+            <AiQuery />
           </div>
         </div>
       );

@@ -43,14 +43,16 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
   
   // Fetch advisors based on selected firm or user role
   const { data: advisors = [] } = useQuery<Advisor[]>({
-    queryKey: [
-      selectedFirm 
-        ? `/api/organizations/${selectedFirm}/advisors` 
-        : user.role === 'firm_admin' 
-          ? `/api/organizations/${user.organizationId}/advisors`
-          : `/api/advisors`
-    ],
-    enabled: !!user && (selectedFirm !== null || user.role === 'firm_admin' || user.role === 'home_office' || user.role === 'global_admin'),
+    queryKey: ['/api/users/advisors', selectedFirm],
+    queryFn: async () => {
+      const url = new URL('/api/users/advisors', window.location.origin);
+      if (selectedFirm) url.searchParams.append('firmId', selectedFirm.toString());
+      
+      const response = await fetch(url.toString(), { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch advisors');
+      return response.json();
+    },
+    enabled: !!user && (user.role === 'client_admin' || user.role === 'firm_admin' || user.role === 'home_office' || user.role === 'global_admin'),
   });
   
   // Reset advisor selection when firm changes
