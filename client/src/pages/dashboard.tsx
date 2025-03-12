@@ -17,6 +17,7 @@ import { AiQuery } from "@/components/dashboard/ai-query";
 import { importWealthboxData, getWealthboxStatus, getCurrentUser } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { User } from "@shared/schema";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -26,25 +27,73 @@ export default function Dashboard() {
     advisorId: null
   });
   
+  // Define types for metrics and demographics data
+  interface AdvisorMetrics {
+    totalAum: number;
+    totalRevenue: number;
+    totalClients: number;
+    totalActivities: number;
+    assetAllocation: {
+      class: string;
+      value: number;
+      percentage: number;
+    }[];
+  }
+  
+  interface ClientDemographics {
+    ageGroups: {
+      range: string;
+      count: number;
+    }[];
+    stateDistribution: {
+      state: string;
+      count: number;
+      percentage: number;
+    }[];
+  }
+  
+  interface WealthboxStatus {
+    connected: boolean;
+    tokenExpiry: string | null;
+  }
+  
   // Fetch current user
-  const { data: currentUser, isLoading: isLoadingUser } = useQuery({
+  const { data: currentUser, isLoading: isLoadingUser } = useQuery<User>({
     queryKey: ['/api/me'],
   });
   
   // Fetch advisor metrics with filter parameters
-  const { data: metrics, isLoading: isLoadingMetrics, refetch: refetchMetrics } = useQuery({
+  const { data: metrics, isLoading: isLoadingMetrics, refetch: refetchMetrics } = useQuery<AdvisorMetrics>({
     queryKey: ['/api/analytics/advisor-metrics', filters.firmId, filters.advisorId],
+    queryFn: async () => {
+      const url = new URL('/api/analytics/advisor-metrics', window.location.origin);
+      if (filters.firmId) url.searchParams.append('firmId', filters.firmId.toString());
+      if (filters.advisorId) url.searchParams.append('advisorId', filters.advisorId.toString());
+      
+      const response = await fetch(url.toString(), { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch metrics');
+      return response.json();
+    },
     enabled: !!currentUser,
   });
   
   // Fetch client demographics with filter parameters
-  const { data: demographics, isLoading: isLoadingDemographics, refetch: refetchDemographics } = useQuery({
+  const { data: demographics, isLoading: isLoadingDemographics, refetch: refetchDemographics } = useQuery<ClientDemographics>({
     queryKey: ['/api/analytics/client-demographics', filters.firmId, filters.advisorId],
+    queryFn: async () => {
+      const url = new URL('/api/analytics/client-demographics', window.location.origin);
+      if (filters.firmId) url.searchParams.append('firmId', filters.firmId.toString());
+      if (filters.advisorId) url.searchParams.append('advisorId', filters.advisorId.toString());
+      
+      const response = await fetch(url.toString(), { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch demographics');
+      return response.json();
+    },
     enabled: !!currentUser,
   });
   
   // Fetch WealthBox connection status
-  const { data: wealthboxStatus } = useQuery({
+  const { data: wealthboxStatus } = useQuery<WealthboxStatus>({
     queryKey: ['/api/wealthbox/status'],
     enabled: !!currentUser,
   });
