@@ -149,7 +149,7 @@ export default function Integrations() {
         <Alert className="mb-6 bg-yellow-50 border-yellow-200">
           <AlertTitle className="text-yellow-800">Access Restricted</AlertTitle>
           <AlertDescription className="text-yellow-700">
-            WealthBox integration is only available to firm administrators. Please contact your firm administrator for assistance.
+            WealthBox integration is only available to client administrators. Please contact your client administrator for assistance.
           </AlertDescription>
         </Alert>
       )}
@@ -277,7 +277,7 @@ export default function Integrations() {
               <p className="text-sm text-gray-600">
                 {isAuthorized 
                   ? "To use this integration, you need a personal API access token from your WealthBox account. Enter your token in the field above, test the connection, and then import your data. This integration will synchronize your client data between WealthBox and FinAdvisor Pro."
-                  : "WealthBox integration is only available to firm administrators. As a firm administrator, you can connect to your WealthBox account, import client data, and make it available to your advisors."}
+                  : "WealthBox integration is only available to client administrators. As a client administrator, you can connect to your WealthBox account, import client data, and make it available to your advisors."}
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">

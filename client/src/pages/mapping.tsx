@@ -198,7 +198,7 @@ export default function Mapping() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m0 0v2m0-2h2m-2 0H9m3-10v4m0 0H9m3 0h3m-3 8h.01M12 3a9 9 0 110 18 9 9 0 010-18z"></path>
               </svg>
               <h3 className="text-lg font-medium text-neutral-800 mb-2">Access Restricted</h3>
-              <p className="text-neutral-500 mb-6">Data mapping is only available to firm administrators. Please contact your firm administrator for assistance.</p>
+              <p className="text-neutral-500 mb-6">Data mapping is only available to client administrators. Please contact your client administrator for assistance.</p>
               <Button asChild variant="outline">
                 <a href="/dashboard">Return to Dashboard</a>
               </Button>

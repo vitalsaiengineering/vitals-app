@@ -255,14 +255,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Data Mapping routes - Only firm-level users (firm_admin) can access
-  app.get("/api/mappings", requireRole(["firm_admin"]), async (req, res) => {
+  // Data Mapping routes - Only client_admin users can access
+  app.get("/api/mappings", requireRole(["client_admin"]), async (req, res) => {
     const user = req.user as any;
     const mappings = await storage.getDataMappings(user.id);
     res.json(mappings);
   });
 
-  app.post("/api/mappings", requireRole(["firm_admin"]), async (req, res) => {
+  app.post("/api/mappings", requireRole(["client_admin"]), async (req, res) => {
     try {
       const user = req.user as any;
       const validatedData = insertDataMappingSchema.parse({
@@ -277,7 +277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/mappings/:id", requireRole(["firm_admin"]), async (req, res) => {
+  app.delete("/api/mappings/:id", requireRole(["client_admin"]), async (req, res) => {
     const id = parseInt(req.params.id);
     await storage.deleteDataMapping(id);
     res.status(204).send();
@@ -437,14 +437,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI query route
   app.post("/api/ai/query", requireAuth, aiQueryHandler);
   
-  // Wealthbox integration routes - Only firm-level users (firm_admin) can access
-  app.post("/api/wealthbox/test-connection", requireRole(["firm_admin"]), testWealthboxConnectionHandler);
-  app.post("/api/wealthbox/import-data", requireRole(["firm_admin"]), importWealthboxDataHandler);
+  // Wealthbox integration routes - Only client_admin users can access
+  app.post("/api/wealthbox/test-connection", requireRole(["client_admin"]), testWealthboxConnectionHandler);
+  app.post("/api/wealthbox/import-data", requireRole(["client_admin"]), importWealthboxDataHandler);
   app.get("/api/wealthbox/status", requireAuth, (req, res) => {
     const user = req.user as any;
     
     // Check if user is authorized to see Wealthbox status
-    const isAuthorized = user.role === "firm_admin";
+    const isAuthorized = user.role === "client_admin";
     
     res.json({ 
       connected: isAuthorized && user?.wealthboxConnected || false,
