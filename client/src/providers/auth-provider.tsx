@@ -1,12 +1,18 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import { User } from '@shared/schema';
+import { getCurrentUser } from '../lib/api';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  refetchUser: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: false });
+const AuthContext = createContext<AuthContextType>({ 
+  user: null, 
+  loading: false,
+  refetchUser: async () => {}
+});
 
 export function useAuth() {
   return useContext(AuthContext);
@@ -20,38 +26,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Check if user is already logged in
-    async function fetchUser() {
-      try {
-        const response = await fetch('/api/me');
-        if (response.ok) {
-          const userData = await response.json();
-          console.log('User data:', userData);
-          setUser(userData);
-        }
-      } catch (error) {
-        console.error('Error fetching user:', error);
-      } finally {
-        setLoading(false);
-      }
+  const fetchUser = async () => {
+    try {
+      setLoading(true);
+      const userData = await getCurrentUser();
+      console.log('User data:', userData);
+      setUser(userData);
+    } catch (error) {
+      console.error('Error fetching user:', error);
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     fetchUser();
   }, []);
 
   const value = {
     user,
-    loading
+    loading,
+    refetchUser: fetchUser
   };
-
-  if (loading) {
-    return <p>Loading...</p>; // Or a more sophisticated loading indicator
-  }
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {loading ? (
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Loading...</p>
+          </div>
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 }

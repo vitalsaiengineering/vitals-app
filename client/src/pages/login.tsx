@@ -7,6 +7,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { login } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "../providers/auth-provider";
 import { Separator } from "@/components/ui/separator";
 
 import {
@@ -38,6 +39,7 @@ type LoginValues = z.infer<typeof loginSchema>;
 export default function Login() {
   const [_, setLocation] = useLocation();
   const { toast } = useToast();
+  const { refetchUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [googleAuthAvailable, setGoogleAuthAvailable] = useState(false);
   
@@ -73,7 +75,10 @@ export default function Login() {
 
   const loginMutation = useMutation({
     mutationFn: ({ username, password }: LoginValues) => login(username, password),
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Get the latest user data after login
+      await refetchUser();
+      
       toast({
         title: "Login successful",
         description: "Redirecting to dashboard...",

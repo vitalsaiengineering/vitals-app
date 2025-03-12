@@ -28,7 +28,7 @@ interface User {
 }
 
 export function AdvisorsList() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [advisors, setAdvisors] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +37,9 @@ export function AdvisorsList() {
     async function fetchAdvisors() {
       try {
         setLoading(true);
-        const response = await fetch('/api/users/advisors');
+        const response = await fetch('/api/users/advisors', {
+          credentials: 'include'  // Important: include credentials for auth
+        });
         
         if (!response.ok) {
           throw new Error('Failed to fetch advisors');
@@ -53,10 +55,10 @@ export function AdvisorsList() {
       }
     }
 
-    if (user) {
+    if (user && !authLoading) {
       fetchAdvisors();
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   if (loading) {
     return <div className="text-center py-8">Loading advisors...</div>;
