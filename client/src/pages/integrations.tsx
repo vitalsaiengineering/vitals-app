@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { testWealthboxConnection, importWealthboxData } from "@/lib/api";
+import { testWealthboxConnection, importWealthboxData, getCurrentUser, getWealthboxStatus } from "@/lib/api";
 import {
   Card,
   CardContent,
@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Redirect } from "wouter";
 
 export default function Integrations() {
   const { toast } = useToast();
@@ -22,6 +23,18 @@ export default function Integrations() {
   const [isImporting, setIsImporting] = useState(false);
   const [accessToken, setAccessToken] = useState("a362b9c57ca349e5af99a6d8d4af6b3a"); // Default to provided token
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'success' | 'error'>('none');
+  
+  // Get current user
+  const { data: user, isLoading: isLoadingUser } = useQuery({
+    queryKey: ['/api/me'],
+    retry: false,
+  });
+  
+  // Get WealthBox status
+  const { data: wealthboxStatus, isLoading: isLoadingStatus } = useQuery({
+    queryKey: ['/api/wealthbox/status'],
+    retry: false,
+  });
 
   // Test WealthBox connection
   const testConnectionMutation = useMutation({
@@ -110,14 +123,38 @@ export default function Integrations() {
     importMutation.mutate(accessToken);
   };
 
+  // Check if user is loading
+  if (isLoadingUser || isLoadingStatus) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-semibold">Integrations</h1>
+          <p className="mt-1 text-sm text-gray-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Check if user is authorized
+  const isAuthorized = wealthboxStatus?.authorized || false;
+  
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
         <h1 className="text-2xl font-semibold">Integrations</h1>
         <p className="mt-1 text-sm text-gray-500">Connect and manage your external data sources</p>
       </div>
-
-      {connectionStatus === 'success' && (
+      
+      {!isAuthorized && (
+        <Alert className="mb-6 bg-yellow-50 border-yellow-200">
+          <AlertTitle className="text-yellow-800">Access Restricted</AlertTitle>
+          <AlertDescription className="text-yellow-700">
+            WealthBox integration is only available to firm administrators. Please contact your firm administrator for assistance.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {isAuthorized && connectionStatus === 'success' && (
         <Alert className="mb-6 bg-green-50 border-green-200">
           <AlertTitle className="text-green-800">Success!</AlertTitle>
           <AlertDescription className="text-green-700">
@@ -126,7 +163,7 @@ export default function Integrations() {
         </Alert>
       )}
 
-      {connectionStatus === 'error' && (
+      {isAuthorized && connectionStatus === 'error' && (
         <Alert className="mb-6 bg-red-50 border-red-200">
           <AlertTitle className="text-red-800">Connection Failed</AlertTitle>
           <AlertDescription className="text-red-700">
@@ -135,89 +172,91 @@ export default function Integrations() {
         </Alert>
       )}
 
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="flex items-center">
-            <svg className="w-8 h-8 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
-            </svg>
-            <div>
-              <CardTitle>WealthBox Integration</CardTitle>
-              <CardDescription>Connect to your WealthBox account using a Personal API Access Token</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <div>
-              <Label htmlFor="api-token">WealthBox API Access Token</Label>
-              <div className="mt-1 flex">
-                <Input
-                  id="api-token"
-                  type="text"
-                  value={accessToken}
-                  onChange={(e) => setAccessToken(e.target.value)}
-                  placeholder="Enter your WealthBox API access token"
-                  className="flex-1"
-                />
-                <Button 
-                  onClick={handleTestConnection} 
-                  disabled={isConnecting}
-                  className="ml-2"
-                >
-                  {isConnecting ? 'Testing...' : 'Test Connection'}
-                </Button>
+      {isAuthorized && (
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center">
+              <svg className="w-8 h-8 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+              </svg>
+              <div>
+                <CardTitle>WealthBox Integration</CardTitle>
+                <CardDescription>Connect to your WealthBox account using a Personal API Access Token</CardDescription>
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Your personal API token can be found in your WealthBox account settings under API Access Tokens.
-              </p>
             </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div>
+                <Label htmlFor="api-token">WealthBox API Access Token</Label>
+                <div className="mt-1 flex">
+                  <Input
+                    id="api-token"
+                    type="text"
+                    value={accessToken}
+                    onChange={(e) => setAccessToken(e.target.value)}
+                    placeholder="Enter your WealthBox API access token"
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={handleTestConnection} 
+                    disabled={isConnecting}
+                    className="ml-2"
+                  >
+                    {isConnecting ? 'Testing...' : 'Test Connection'}
+                  </Button>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  Your personal API token can be found in your WealthBox account settings under API Access Tokens.
+                </p>
+              </div>
 
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-sm font-medium mb-2">About Personal API Tokens</h3>
-              <p className="text-xs text-gray-600">
-                Personal API access tokens are used for building personal integrations and testing. 
-                The token should be passed as an HTTP Header with the name 'ACCESS_TOKEN' in all requests to the API.
-              </p>
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h3 className="text-sm font-medium mb-2">About Personal API Tokens</h3>
+                <p className="text-xs text-gray-600">
+                  Personal API access tokens are used for building personal integrations and testing. 
+                  The token should be passed as an HTTP Header with the name 'ACCESS_TOKEN' in all requests to the API.
+                </p>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h3 className="text-lg font-medium mb-2">Integration Features</h3>
+                <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                  <li>Import client profiles and contact information</li>
+                  <li>Sync client activities and interactions</li>
+                  <li>Maintain up-to-date client records</li>
+                  <li>Get real-time financial advisor data</li>
+                </ul>
+              </div>
             </div>
-
-            <Separator />
-
-            <div>
-              <h3 className="text-lg font-medium mb-2">Integration Features</h3>
-              <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-                <li>Import client profiles and contact information</li>
-                <li>Sync client activities and interactions</li>
-                <li>Maintain up-to-date client records</li>
-                <li>Get real-time financial advisor data</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-end">
-          <Button 
-            onClick={handleImport}
-            disabled={isImporting || connectionStatus !== 'success'}
-          >
-            {isImporting ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Importing...
-              </>
-            ) : (
-              <>
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                </svg>
-                Import Data
-              </>
-            )}
-          </Button>
-        </CardFooter>
-      </Card>
+          </CardContent>
+          <CardFooter className="flex justify-end">
+            <Button 
+              onClick={handleImport}
+              disabled={isImporting || connectionStatus !== 'success'}
+            >
+              {isImporting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Importing...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                  </svg>
+                  Import Data
+                </>
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -236,9 +275,9 @@ export default function Integrations() {
             <div>
               <h3 className="text-md font-medium mb-2">WealthBox API Integration Guide</h3>
               <p className="text-sm text-gray-600">
-                To use this integration, you need a personal API access token from your WealthBox account.
-                Enter your token in the field above, test the connection, and then import your data.
-                This integration will synchronize your client data between WealthBox and FinAdvisor Pro.
+                {isAuthorized 
+                  ? "To use this integration, you need a personal API access token from your WealthBox account. Enter your token in the field above, test the connection, and then import your data. This integration will synchronize your client data between WealthBox and FinAdvisor Pro."
+                  : "WealthBox integration is only available to firm administrators. As a firm administrator, you can connect to your WealthBox account, import client data, and make it available to your advisors."}
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
