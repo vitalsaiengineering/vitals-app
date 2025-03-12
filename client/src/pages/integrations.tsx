@@ -153,7 +153,8 @@ export default function Integrations() {
   }
   
   // Check if user is authorized
-  const isAuthorized = wealthboxStatus !== undefined && !!wealthboxStatus.authorized;
+  // Client admin users should always be authorized
+  const isAuthorized = (user && (user as any).role === "client_admin") || (wealthboxStatus !== undefined && !!wealthboxStatus.authorized);
   
   return (
     <div className="container mx-auto py-8">
