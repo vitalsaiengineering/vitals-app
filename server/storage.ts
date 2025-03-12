@@ -13,6 +13,8 @@ export interface IStorage {
   // Organization methods
   getOrganization(id: number): Promise<Organization | undefined>;
   getOrganizations(): Promise<Organization[]>;
+  getOrganizationsByType(type: string): Promise<Organization[]>;
+  getFirmsByHomeOffice(homeOfficeId: number): Promise<Organization[]>;
   createOrganization(org: InsertOrganization): Promise<Organization>;
 
   // User methods
@@ -21,6 +23,10 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
   getUsersByOrganization(organizationId: number): Promise<User[]>;
+  getUsersByRoleAndOrganization(role: string, organizationId: number): Promise<User[]>;
+  getUsersByHomeOffice(homeOfficeId: number): Promise<User[]>;
+  getAdvisorsByFirm(firmId: number): Promise<User[]>;
+  getAdvisorsByHomeOffice(homeOfficeId: number): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
   updateUserWealthboxConnection(

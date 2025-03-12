@@ -114,19 +114,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User routes
-  app.get("/api/users", requireRole(["global_admin", "client_admin"]), async (req, res) => {
+  app.get("/api/users", requireRole(["global_admin", "client_admin", "home_office", "firm_admin"]), async (req, res) => {
     const user = req.user as any;
     let users;
     
     if (user.role === "global_admin") {
       users = await storage.getUsersByOrganization(user.organizationId);
+    } else if (user.role === "home_office") {
+      // Home office can see users from all firms under them
+      users = await storage.getUsersByHomeOffice(user.organizationId);
     } else {
       users = await storage.getUsersByOrganization(user.organizationId);
-      // Filter out global_admin users for client_admin
+      // Filter out global_admin users for client_admin and firm_admin
       users = users.filter(u => u.role !== "global_admin");
     }
     
     res.json(users);
+  });
+  
+  // Get financial advisors (filtered by firm if specified)
+  app.get("/api/users/advisors", requireRole(["home_office", "firm_admin", "client_admin"]), async (req, res) => {
+    const user = req.user as any;
+    const firmId = req.query.firmId ? parseInt(req.query.firmId as string) : null;
+    
+    let advisors;
+    
+    if (user.role === "home_office" && firmId) {
+      // Get advisors for a specific firm under this home office
+      advisors = await storage.getAdvisorsByFirm(firmId);
+    } else if (user.role === "home_office") {
+      // Get all advisors across all firms under this home office
+      advisors = await storage.getAdvisorsByHomeOffice(user.organizationId);
+    } else {
+      // Firm admin or client admin - get advisors in their organization
+      advisors = await storage.getUsersByRoleAndOrganization("financial_advisor", user.organizationId);
+    }
+    
+    res.json(advisors);
   });
 
   app.post("/api/users", requireRole(["global_admin", "client_admin"]), async (req, res) => {
@@ -166,9 +190,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(organizations);
   });
 
-  app.post("/api/organizations", requireRole(["global_admin"]), async (req, res) => {
+  app.get("/api/organizations/firms", requireRole(["home_office", "global_admin"]), async (req, res) => {
+    const user = req.user as any;
+    let firms;
+    
+    if (user.role === "home_office") {
+      // Get all firms associated with this home office organization
+      firms = await storage.getFirmsByHomeOffice(user.organizationId);
+    } else {
+      // Global admin can see all firms
+      firms = await storage.getOrganizationsByType("firm");
+    }
+    
+    res.json(firms);
+  });
+
+  app.post("/api/organizations", requireRole(["global_admin", "home_office"]), async (req, res) => {
     try {
-      const newOrg = await storage.createOrganization(req.body);
+      const user = req.user as any;
+      const orgData = req.body;
+      
+      // If home_office user is creating a firm, set parent ID
+      if (user.role === "home_office" && orgData.type === "firm") {
+        orgData.parentId = user.organizationId;
+      }
+      
+      const newOrg = await storage.createOrganization(orgData);
       res.status(201).json(newOrg);
     } catch (error: any) {
       res.status(400).json({ message: error.message });

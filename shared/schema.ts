@@ -3,12 +3,14 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Enums for our schema
-export const userRoleEnum = pgEnum('user_role', ['global_admin', 'client_admin', 'financial_advisor']);
+export const userRoleEnum = pgEnum('user_role', ['global_admin', 'client_admin', 'financial_advisor', 'home_office', 'firm_admin']);
 
 // Organizations table
 export const organizations = pgTable("organizations", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  type: text("type").notNull().default('firm'), // 'home_office', 'firm'
+  parentId: integer("parent_id").references(() => organizations.id), // For home_office -> firm relationship
   createdAt: timestamp("created_at").defaultNow(),
 });
 
