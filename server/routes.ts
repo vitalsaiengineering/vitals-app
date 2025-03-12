@@ -454,9 +454,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
-  // Wealthbox Opportunities routes
-  app.get("/api/wealthbox/opportunities/by-pipeline", requireAuth, getOpportunitiesByPipelineHandler);
-  app.get("/api/wealthbox/opportunities/by-stage", requireAuth, getOpportunityStagesHandler);
+  // Wealthbox Opportunities routes - Direct token-based access for dashboard widget
+  app.get("/api/wealthbox/opportunities/by-pipeline", getOpportunitiesByPipelineHandler);
+  app.get("/api/wealthbox/opportunities/by-stage", getOpportunityStagesHandler);
 
   const httpServer = createServer(app);
   return httpServer;
