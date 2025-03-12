@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '@/providers/auth-provider';
+import { useAuth } from '../providers/auth-provider';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,

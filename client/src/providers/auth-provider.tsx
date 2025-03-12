@@ -1,5 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { User } from './types'; // Assuming this type is defined elsewhere
+import React, { useState, useEffect, createContext, useContext } from 'react';
+import { User } from '@shared/schema';
+
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+}
+
+const AuthContext = createContext<AuthContextType>({ user: null, loading: false });
+
+export function useAuth() {
+  return useContext(AuthContext);
+}
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -16,7 +27,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const response = await fetch('/api/me');
         if (response.ok) {
           const userData = await response.json();
-          console.log('User data:', userData); // Add logging to debug
+          console.log('User data:', userData);
           setUser(userData);
         }
       } catch (error) {
@@ -29,9 +40,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     fetchUser();
   }, []);
 
+  const value = {
+    user,
+    loading
+  };
+
   if (loading) {
     return <p>Loading...</p>; // Or a more sophisticated loading indicator
   }
 
-  return <>{children}</>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
