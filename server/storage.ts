@@ -115,13 +115,45 @@ export class MemStorage implements IStorage {
   }
 
   private seedInitialData() {
-    // Create default organization
-    const org: Organization = {
+    // Create default global organization
+    const globalOrg: Organization = {
       id: 1,
-      name: "Default Financial Group",
+      name: "Global Financial Services",
+      type: "global",
+      parentId: null,
       createdAt: new Date()
     };
-    this.organizations.set(1, org);
+    this.organizations.set(1, globalOrg);
+    
+    // Create home office organization
+    const homeOfficeOrg: Organization = {
+      id: 2,
+      name: "Eastern Region Home Office",
+      type: "home_office",
+      parentId: null,
+      createdAt: new Date()
+    };
+    this.organizations.set(2, homeOfficeOrg);
+    
+    // Create firm 1 under home office
+    const firm1Org: Organization = {
+      id: 3,
+      name: "New York Financial Group",
+      type: "firm",
+      parentId: 2, // Parent is home office
+      createdAt: new Date()
+    };
+    this.organizations.set(3, firm1Org);
+    
+    // Create firm 2 under home office
+    const firm2Org: Organization = {
+      id: 4,
+      name: "Boston Wealth Advisors",
+      type: "firm",
+      parentId: 2, // Parent is home office
+      createdAt: new Date()
+    };
+    this.organizations.set(4, firm2Org);
 
     // Create default global admin
     const admin: User = {
@@ -131,7 +163,7 @@ export class MemStorage implements IStorage {
       email: "admin@example.com",
       fullName: "System Administrator",
       role: "global_admin",
-      organizationId: 1,
+      organizationId: 1, // Global org
       wealthboxConnected: false,
       wealthboxToken: null,
       wealthboxRefreshToken: null,
@@ -147,15 +179,15 @@ export class MemStorage implements IStorage {
     };
     this.users.set(1, admin);
     
-    // Create a client admin
-    const clientAdmin: User = {
+    // Create a home office admin
+    const homeOfficeAdmin: User = {
       id: 2,
-      username: "clientadmin",
+      username: "homeoffice",
       password: "password", // In a real app, this would be hashed
-      email: "clientadmin@example.com",
-      fullName: "Client Administrator",
-      role: "client_admin",
-      organizationId: 1,
+      email: "homeoffice@example.com",
+      fullName: "Home Office Manager",
+      role: "home_office",
+      organizationId: 2, // Home office org
       wealthboxConnected: false,
       wealthboxToken: null,
       wealthboxRefreshToken: null,
@@ -169,17 +201,65 @@ export class MemStorage implements IStorage {
       microsoftRefreshToken: null,
       createdAt: new Date()
     };
-    this.users.set(2, clientAdmin);
+    this.users.set(2, homeOfficeAdmin);
     
-    // Create a financial advisor
-    const advisor: User = {
+    // Create a firm admin
+    const firmAdmin: User = {
       id: 3,
+      username: "firmadmin",
+      password: "password", // In a real app, this would be hashed
+      email: "firmadmin@example.com",
+      fullName: "Firm Administrator",
+      role: "firm_admin",
+      organizationId: 3, // Firm 1
+      wealthboxConnected: false,
+      wealthboxToken: null,
+      wealthboxRefreshToken: null,
+      wealthboxTokenExpiry: null,
+      // OAuth fields
+      googleId: null,
+      googleToken: null,
+      googleRefreshToken: null,
+      microsoftId: null,
+      microsoftToken: null,
+      microsoftRefreshToken: null,
+      createdAt: new Date()
+    };
+    this.users.set(3, firmAdmin);
+    
+    // Create a client admin
+    const clientAdmin: User = {
+      id: 4,
+      username: "clientadmin",
+      password: "password", // In a real app, this would be hashed
+      email: "clientadmin@example.com",
+      fullName: "Client Administrator",
+      role: "client_admin",
+      organizationId: 3, // Firm 1
+      wealthboxConnected: false,
+      wealthboxToken: null,
+      wealthboxRefreshToken: null,
+      wealthboxTokenExpiry: null,
+      // OAuth fields
+      googleId: null,
+      googleToken: null,
+      googleRefreshToken: null,
+      microsoftId: null,
+      microsoftToken: null,
+      microsoftRefreshToken: null,
+      createdAt: new Date()
+    };
+    this.users.set(4, clientAdmin);
+    
+    // Create a financial advisor in firm 1
+    const advisor1: User = {
+      id: 5,
       username: "advisor",
       password: "password", // In a real app, this would be hashed
       email: "advisor@example.com",
       fullName: "Sarah Johnson",
       role: "financial_advisor",
-      organizationId: 1,
+      organizationId: 3, // Firm 1
       wealthboxConnected: true,
       wealthboxToken: "mock_token",
       wealthboxRefreshToken: "mock_refresh_token",
@@ -193,11 +273,35 @@ export class MemStorage implements IStorage {
       microsoftRefreshToken: null,
       createdAt: new Date()
     };
-    this.users.set(3, advisor);
+    this.users.set(5, advisor1);
+    
+    // Create a financial advisor in firm 2
+    const advisor2: User = {
+      id: 6,
+      username: "advisor2",
+      password: "password", // In a real app, this would be hashed
+      email: "advisor2@example.com",
+      fullName: "John Smith",
+      role: "financial_advisor",
+      organizationId: 4, // Firm 2
+      wealthboxConnected: false,
+      wealthboxToken: null,
+      wealthboxRefreshToken: null,
+      wealthboxTokenExpiry: null,
+      // OAuth fields
+      googleId: null,
+      googleToken: null,
+      googleRefreshToken: null,
+      microsoftId: null,
+      microsoftToken: null,
+      microsoftRefreshToken: null,
+      createdAt: new Date()
+    };
+    this.users.set(6, advisor2);
 
     // Set next ID
-    this.currentIds.organizations = 2;
-    this.currentIds.users = 4;
+    this.currentIds.organizations = 5;
+    this.currentIds.users = 7;
   }
 
   // Organization methods
@@ -208,12 +312,26 @@ export class MemStorage implements IStorage {
   async getOrganizations(): Promise<Organization[]> {
     return Array.from(this.organizations.values());
   }
+  
+  async getOrganizationsByType(type: string): Promise<Organization[]> {
+    return Array.from(this.organizations.values()).filter(
+      (org) => org.type === type
+    );
+  }
+  
+  async getFirmsByHomeOffice(homeOfficeId: number): Promise<Organization[]> {
+    return Array.from(this.organizations.values()).filter(
+      (org) => org.type === "firm" && org.parentId === homeOfficeId
+    );
+  }
 
   async createOrganization(org: InsertOrganization): Promise<Organization> {
     const id = this.currentIds.organizations++;
     const newOrg: Organization = { 
-      ...org, 
-      id, 
+      id,
+      name: org.name,
+      type: org.type || 'firm',
+      parentId: org.parentId || null,
       createdAt: new Date() 
     };
     this.organizations.set(id, newOrg);
@@ -246,6 +364,40 @@ export class MemStorage implements IStorage {
   async getUsersByOrganization(organizationId: number): Promise<User[]> {
     return Array.from(this.users.values()).filter(
       (user) => user.organizationId === organizationId
+    );
+  }
+  
+  async getUsersByRoleAndOrganization(role: string, organizationId: number): Promise<User[]> {
+    return Array.from(this.users.values()).filter(
+      (user) => user.organizationId === organizationId && user.role === role
+    );
+  }
+  
+  async getUsersByHomeOffice(homeOfficeId: number): Promise<User[]> {
+    // Get all firms under this home office
+    const firms = await this.getFirmsByHomeOffice(homeOfficeId);
+    const firmIds = firms.map(firm => firm.id);
+    
+    // Get all users from these firms
+    return Array.from(this.users.values()).filter(
+      (user) => firmIds.includes(user.organizationId) || user.organizationId === homeOfficeId
+    );
+  }
+  
+  async getAdvisorsByFirm(firmId: number): Promise<User[]> {
+    return Array.from(this.users.values()).filter(
+      (user) => user.organizationId === firmId && user.role === "financial_advisor"
+    );
+  }
+  
+  async getAdvisorsByHomeOffice(homeOfficeId: number): Promise<User[]> {
+    // Get all firms under this home office
+    const firms = await this.getFirmsByHomeOffice(homeOfficeId);
+    const firmIds = firms.map(firm => firm.id);
+    
+    // Get all advisors from these firms
+    return Array.from(this.users.values()).filter(
+      (user) => firmIds.includes(user.organizationId) && user.role === "financial_advisor"
     );
   }
 
@@ -345,7 +497,9 @@ export class MemStorage implements IStorage {
     const newClient: Client = {
       ...client,
       id,
-      createdAt: new Date()
+      createdAt: new Date(),
+      wealthboxClientId: null,
+      metadata: null
     };
     this.clients.set(id, newClient);
     return newClient;
@@ -418,7 +572,9 @@ export class MemStorage implements IStorage {
     const newActivity: Activity = {
       ...activity,
       id,
-      createdAt: new Date()
+      createdAt: new Date(),
+      wealthboxActivityId: null,
+      metadata: null
     };
     this.activities.set(id, newActivity);
     return newActivity;
@@ -476,7 +632,9 @@ export class MemStorage implements IStorage {
     const newPortfolio: Portfolio = {
       ...portfolio,
       id,
-      createdAt: new Date()
+      createdAt: new Date(),
+      wealthboxPortfolioId: null,
+      metadata: null
     };
     this.portfolios.set(id, newPortfolio);
     return newPortfolio;
@@ -526,7 +684,9 @@ export class MemStorage implements IStorage {
     const newHolding: Holding = {
       ...holding,
       id,
-      createdAt: new Date()
+      createdAt: new Date(),
+      wealthboxHoldingId: null,
+      metadata: null
     };
     this.holdings.set(id, newHolding);
     return newHolding;
