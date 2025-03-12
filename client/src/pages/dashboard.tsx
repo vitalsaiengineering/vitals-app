@@ -12,6 +12,7 @@ import { RevenueCard } from "@/components/dashboard/revenue-card";
 import { ActivitiesCard } from "@/components/dashboard/activities-card";
 import { PortfolioCard } from "@/components/dashboard/portfolio-card";
 import { DemographicsCard } from "@/components/dashboard/demographics-card";
+import { OpportunitiesCard } from "@/components/dashboard/opportunities-card";
 import { FilterBar } from "@/components/dashboard/filter-bar";
 import { AiQuery } from "@/components/dashboard/ai-query";
 import { importWealthboxData, getWealthboxStatus, getCurrentUser } from "@/lib/api";
@@ -370,6 +371,11 @@ export default function Dashboard() {
         
         {/* Client Demographics */}
         <DemographicsCard {...demographicsData} />
+      </div>
+      
+      {/* Opportunities Section - Full Width */}
+      <div className="mt-6">
+        <OpportunitiesCard wealthboxToken={wealthboxStatus?.connected ? "a362b9c57ca349e5af99a6d8d4af6b3a" : undefined} />
       </div>
       
       {/* AI Query Section */}

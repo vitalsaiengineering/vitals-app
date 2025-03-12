@@ -11,6 +11,7 @@ import { setupWealthboxOAuth } from "./oauth";
 import { aiQueryHandler } from "./ai";
 import { setupAuth } from "./auth";
 import { testWealthboxConnectionHandler, importWealthboxDataHandler } from "./wealthbox";
+import { getOpportunitiesByPipelineHandler, getOpportunityStagesHandler } from "./opportunities";
 import dotenv from "dotenv";
 
 // Load environment variables
@@ -452,6 +453,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       authorized: isAuthorized
     });
   });
+  
+  // Wealthbox Opportunities routes
+  app.get("/api/wealthbox/opportunities/by-pipeline", requireAuth, getOpportunitiesByPipelineHandler);
+  app.get("/api/wealthbox/opportunities/by-stage", requireAuth, getOpportunityStagesHandler);
 
   const httpServer = createServer(app);
   return httpServer;
