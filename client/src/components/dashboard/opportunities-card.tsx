@@ -225,79 +225,79 @@ export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               {viewMode === 'pipeline' ? (
-              <BarChart
-                data={chartData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 65 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="month" 
-                  angle={-45} 
-                  textAnchor="end"
-                  tick={{ fontSize: 12 }}
-                  height={60}
-                />
-                <YAxis />
-                <Tooltip formatter={(value, name) => [
-                  `${value} opportunities`, 
-                  name
-                ]} />
-                <Legend 
-                  verticalAlign="top" 
-                  wrapperStyle={{ paddingBottom: 10 }} 
-                  formatter={(value) => <span style={{ color: getStageColor(value) }}>{value}</span>}
-                />
-                {chartData.length > 0 && 
-                  Object.keys(chartData[0])
-                    .filter(key => 
-                      !['month', 'date'].includes(key) && 
-                      !key.endsWith('Color') && 
-                      !key.endsWith('Id')
-                    )
-                    .map((stage) => (
-                      <Bar 
-                        key={stage} 
-                        dataKey={stage} 
-                        stackId="a" 
-                        fill={getStageColor(stage)} 
-                        name={stage}
-                      />
-                    ))
-                }
-              </BarChart>
-            ) : (
-              <BarChart
-                data={chartData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 65 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="stage" 
-                  angle={-45} 
-                  textAnchor="end"
-                  tick={{ fontSize: 12 }}
-                  height={60}
-                />
-                <YAxis />
-                <Tooltip 
-                  formatter={(value, name, props) => {
-                    const stageId = props.payload[0]?.payload.stageId;
-                    return [`${value} opportunities`, `${props.payload[0]?.payload.stage}${stageId ? ` (ID: ${stageId})` : ''}`];
-                  }} 
-                />
-                {/* Create a separate bar for each stage with its own color */}
-                <Bar 
-                  dataKey="count" 
-                  name="Opportunities" 
-                  isAnimationActive={false}
-                  fillOpacity={0.8}
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 65 }}
                 >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            )}
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="month" 
+                    angle={-45} 
+                    textAnchor="end"
+                    tick={{ fontSize: 12 }}
+                    height={60}
+                  />
+                  <YAxis />
+                  <Tooltip formatter={(value, name) => [
+                    `${value} opportunities`, 
+                    name
+                  ]} />
+                  <Legend 
+                    verticalAlign="top" 
+                    wrapperStyle={{ paddingBottom: 10 }} 
+                    formatter={(value) => <span style={{ color: getStageColor(value) }}>{value}</span>}
+                  />
+                  {chartData.length > 0 && 
+                    Object.keys(chartData[0])
+                      .filter(key => 
+                        !['month', 'date'].includes(key) && 
+                        !key.endsWith('Color') && 
+                        !key.endsWith('Id')
+                      )
+                      .map((stage) => (
+                        <Bar 
+                          key={stage} 
+                          dataKey={stage} 
+                          stackId="a" 
+                          fill={getStageColor(stage)} 
+                          name={stage}
+                        />
+                      ))
+                  }
+                </BarChart>
+              ) : (
+                <BarChart
+                  data={chartData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 65 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="stage" 
+                    angle={-45} 
+                    textAnchor="end"
+                    tick={{ fontSize: 12 }}
+                    height={60}
+                  />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value, name, props) => {
+                      const stageId = props.payload[0]?.payload.stageId;
+                      return [`${value} opportunities`, `${props.payload[0]?.payload.stage}${stageId ? ` (ID: ${stageId})` : ''}`];
+                    }} 
+                  />
+                  {/* Create a separate bar for each stage with its own color */}
+                  <Bar 
+                    dataKey="count" 
+                    name="Opportunities" 
+                    isAnimationActive={false}
+                    fillOpacity={0.8}
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              )}
             </ResponsiveContainer>
           )}
         </div>
