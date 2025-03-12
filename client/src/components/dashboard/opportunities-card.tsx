@@ -32,6 +32,7 @@ import {
 
 interface OpportunityStage {
   stage: string;
+  stageId: string;
   count: number;
 }
 
@@ -146,7 +147,7 @@ export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
             'Jul 2023', 'Aug 2023', 'Sep 2023', 'Oct 2023', 'Nov 2023', 'Dec 2023'
           ];
           
-          // Get unique stages
+          // Get unique stages (now with human-readable names)
           const stages = pipeline.stages.map((stage: OpportunityStage) => stage.stage);
           
           // Create monthly chart data with counts for each stage
@@ -162,6 +163,8 @@ export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
               monthData[stageData.stage] = Math.round(baseCount * randomFactor);
               // Add color mapping
               monthData[`${stageData.stage}Color`] = getStageColor(stageData.stage);
+              // Store the stageId for reference if needed
+              monthData[`${stageData.stage}Id`] = stageData.stageId;
             });
             
             return monthData;
@@ -169,18 +172,13 @@ export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
         }
       }
     } else {
-      // For stage view, show all stages across all pipelines
-      const stagesMap = new Map<string, number>();
-      
-      opportunitiesData.data.stages.forEach((stage: OpportunityStage) => {
-        stagesMap.set(stage.stage, stage.count);
-      });
-      
-      // Convert to chart format
-      chartData = Array.from(stagesMap.entries()).map(([stage, count]) => ({
-        stage,
-        count,
-        color: getStageColor(stage)
+      // For stage view, we now have human-readable stage names directly from the API
+      // Convert the stages array directly to chart format
+      chartData = opportunitiesData.data.stages.map((stage: OpportunityStage) => ({
+        stage: stage.stage, // This is now the human-readable name
+        count: stage.count,
+        stageId: stage.stageId, // Keep the stageId for reference
+        color: getStageColor(stage.stage)
       }));
     }
   }
@@ -218,8 +216,15 @@ export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
       </CardHeader>
       <CardContent>
         <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            {viewMode === 'pipeline' ? (
+          {chartData.length === 0 ? (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center text-gray-500">
+                <p>No opportunities data available for the selected view.</p>
+              </div>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              {viewMode === 'pipeline' ? (
               <BarChart
                 data={chartData}
                 margin={{ top: 20, right: 30, left: 20, bottom: 65 }}
@@ -233,7 +238,10 @@ export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
                   height={60}
                 />
                 <YAxis />
-                <Tooltip formatter={(value, name) => [value, name]} />
+                <Tooltip formatter={(value, name) => [
+                  `${value} opportunities`, 
+                  name
+                ]} />
                 <Legend 
                   verticalAlign="top" 
                   wrapperStyle={{ paddingBottom: 10 }} 
@@ -241,7 +249,11 @@ export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
                 />
                 {chartData.length > 0 && 
                   Object.keys(chartData[0])
-                    .filter(key => !['month', 'date'].includes(key) && !key.endsWith('Color'))
+                    .filter(key => 
+                      !['month', 'date'].includes(key) && 
+                      !key.endsWith('Color') && 
+                      !key.endsWith('Id')
+                    )
                     .map((stage) => (
                       <Bar 
                         key={stage} 
@@ -267,18 +279,27 @@ export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
                   height={60}
                 />
                 <YAxis />
-                <Tooltip formatter={(value) => [`${value} opportunities`, 'Count']} />
+                <Tooltip 
+                  formatter={(value, name, props) => {
+                    const stageId = props.payload[0]?.payload.stageId;
+                    return [`${value} opportunities`, `${props.payload[0]?.payload.stage}${stageId ? ` (ID: ${stageId})` : ''}`];
+                  }} 
+                />
                 {/* Create a separate bar for each stage with its own color */}
                 <Bar 
                   dataKey="count" 
                   name="Opportunities" 
                   isAnimationActive={false}
                   fillOpacity={0.8}
-                  fill="#8884d8" 
-                />
+                >
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
               </BarChart>
             )}
-          </ResponsiveContainer>
+            </ResponsiveContainer>
+          )}
         </div>
         {opportunitiesData?.data?.totalCount > 0 && (
           <div className="text-sm text-gray-500 mt-4 text-center">
