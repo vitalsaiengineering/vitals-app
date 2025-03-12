@@ -148,6 +148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } else {
       // Firm admin or client admin - get advisors in their organization
       advisors = await storage.getUsersByRoleAndOrganization("financial_advisor", user.organizationId);
+      console.log(`Found ${advisors.length} advisors for ${user.username} in organization ${user.organizationId}`);
     }
     
     res.json(advisors);
