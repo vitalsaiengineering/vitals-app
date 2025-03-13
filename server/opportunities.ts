@@ -15,7 +15,7 @@ interface WealthboxOpportunity {
   custom_fields?: Record<string, any>;
   created_at: string;
   updated_at: string;
-  assigned_to_id?: string; // ID of the WealthBox user who owns this opportunity
+  assigned_to_id?: string | number; // ID of the WealthBox user who owns this opportunity - can be string or number
 }
 
 // Map numeric stage IDs to descriptive names
@@ -64,9 +64,11 @@ export async function getOpportunitiesByPipelineHandler(req: Request, res: Respo
     // First check if we should filter by Wealthbox user ID (this takes precedence)
     if (wealthboxUserId) {
       // Filter opportunities by Wealthbox user ID
+      // Note: wealthboxUserId is received as a string from query params, but we need to confirm if
+      // assigned_to_id in the opportunity is stored as a string or number
       filteredOpportunities = opportunities.filter(opp => {
         // Check if the opportunity is assigned to this Wealthbox user
-        return opp.assigned_to_id === wealthboxUserId;
+        return opp.assigned_to_id === wealthboxUserId.toString();
       });
       
       console.log(`Filtered opportunities for Wealthbox user ${wealthboxUserId}: ${filteredOpportunities.length}`);
@@ -352,9 +354,10 @@ export async function getOpportunityStagesHandler(req: Request, res: Response) {
     // First check if we should filter by Wealthbox user ID (this takes precedence)
     if (wealthboxUserId) {
       // Filter opportunities by Wealthbox user ID
+      // Note: wealthboxUserId is received as a string from query params, but we need to convert to string
       filteredOpportunities = opportunities.filter(opp => {
         // Check if the opportunity is assigned to this Wealthbox user
-        return opp.assigned_to_id === wealthboxUserId;
+        return opp.assigned_to_id === wealthboxUserId.toString();
       });
       
       console.log(`Filtered stage opportunities for Wealthbox user ${wealthboxUserId}: ${filteredOpportunities.length}`);

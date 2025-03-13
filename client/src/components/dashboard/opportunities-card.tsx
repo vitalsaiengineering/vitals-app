@@ -51,7 +51,7 @@ interface OpportunityPipeline {
 interface OpportunitiesCardProps {
   wealthboxToken?: string;
   advisorId?: number | null;
-  wealthboxUserId?: string | null;
+  wealthboxUserId?: number | null;
   currentUser?: any; // Using any here since the User type might vary
 }
 
@@ -88,7 +88,7 @@ export function OpportunitiesCard({ wealthboxToken, advisorId, wealthboxUserId, 
       
       // First priority: Filter by Wealthbox user ID if available
       if (wealthboxUserId) {
-        url.searchParams.append('wealthboxUserId', wealthboxUserId);
+        url.searchParams.append('wealthboxUserId', wealthboxUserId.toString());
       }
       // Second priority: Filter by advisor ID from our system 
       else if (currentUser?.role === 'client_admin' && advisorId) {
