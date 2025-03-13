@@ -24,13 +24,18 @@ import { User } from "@shared/schema";
 export default function Dashboard() {
   const { toast } = useToast();
   const [lastSynced, setLastSynced] = useState<string>("Today at 9:30 AM");
-  const [filters, setFilters] = useState<{ firmId: number | null; advisorId: number | null }>({
+  const [filters, setFilters] = useState<{ 
+    firmId: number | null; 
+    advisorId: number | null;
+    wealthboxUserId: string | null 
+  }>({
     firmId: null,
-    advisorId: null
+    advisorId: null,
+    wealthboxUserId: null
   });
   
   // Handle filter changes from the filter bar
-  const handleFilterChange = (newFilters: { firmId: number | null; advisorId: number | null }) => {
+  const handleFilterChange = (newFilters: { firmId: number | null; advisorId: number | null; wealthboxUserId: string | null }) => {
     console.log("Filters changed:", newFilters);
     setFilters(newFilters);
   };
@@ -329,6 +334,7 @@ export default function Dashboard() {
             <OpportunitiesCard 
               wealthboxToken={"a362b9c57ca349e5af99a6d8d4af6b3a"} // Always use token for client admin
               advisorId={filters.advisorId || 5} // Default to advisor ID 5 (Sarah) if none selected
+              wealthboxUserId={filters.wealthboxUserId} // Pass the selected Wealthbox user ID
               currentUser={currentUser}
             />
           </div>
@@ -451,6 +457,7 @@ export default function Dashboard() {
         <OpportunitiesCard 
           wealthboxToken={wealthboxStatus?.connected ? "a362b9c57ca349e5af99a6d8d4af6b3a" : undefined}
           advisorId={currentUser?.id ?? null}
+          wealthboxUserId={filters.wealthboxUserId}
           currentUser={currentUser}
         />
       </div>

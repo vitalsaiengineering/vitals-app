@@ -98,14 +98,9 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
   useEffect(() => {
     onFilterChange({
       firmId: selectedFirm,
-      advisorId: selectedAdvisor
+      advisorId: selectedAdvisor,
+      wealthboxUserId: selectedWealthboxUser
     });
-    
-    // If we have wealthbox integration, we could pass this to a parent component as well
-    // Currently just logging it
-    if (selectedWealthboxUser) {
-      console.log('Selected Wealthbox User:', selectedWealthboxUser);
-    }
   }, [selectedFirm, selectedAdvisor, selectedWealthboxUser, onFilterChange]);
   
   // Reset all filters
