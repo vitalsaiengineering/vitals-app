@@ -12,6 +12,7 @@ const ENDPOINTS = {
   WORKFLOWS: `${WEALTHBOX_API_BASE_URL}/workflows`,
   PORTFOLIOS: `${WEALTHBOX_API_BASE_URL}/portfolios`,  // Assuming this exists
   HOLDINGS: `${WEALTHBOX_API_BASE_URL}/holdings`,      // Assuming this exists
+  USERS: `${WEALTHBOX_API_BASE_URL}/users`,            // Users endpoint from API docs
 };
 
 /**
@@ -317,4 +318,63 @@ function mapWealthboxActivityToActivity(activity: any, advisorId: number, client
     wealthboxActivityId: activity.id.toString(),
     metadata: activity // Store the full Wealthbox activity for reference
   };
+}
+
+/**
+ * Fetches all users from Wealthbox API
+ */
+export async function fetchWealthboxUsers(accessToken: string): Promise<any[]> {
+  try {
+    const response = await fetch(`${ENDPOINTS.USERS}`, {
+      method: 'GET',
+      headers: {
+        'ACCESS_TOKEN': accessToken,
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch users: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return data.users || [];
+  } catch (error) {
+    console.error('Error fetching Wealthbox users:', error);
+    throw error;
+  }
+}
+
+/**
+ * Handler for retrieving Wealthbox users
+ */
+export async function getWealthboxUsersHandler(req: Request, res: Response) {
+  try {
+    const { access_token } = req.query;
+    
+    if (!access_token) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'WealthBox access token is required' 
+      });
+    }
+
+    // Fetch users from Wealthbox API
+    const users = await fetchWealthboxUsers(access_token as string);
+    
+    // Return the users
+    res.json({
+      success: true,
+      data: {
+        users,
+        count: users.length
+      }
+    });
+  } catch (error: any) {
+    console.error('Error fetching Wealthbox users:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Failed to fetch Wealthbox users' 
+    });
+  }
 }

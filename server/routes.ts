@@ -10,7 +10,7 @@ import MemoryStore from "memorystore";
 import { setupWealthboxOAuth } from "./oauth";
 import { aiQueryHandler } from "./ai";
 import { setupAuth } from "./auth";
-import { testWealthboxConnectionHandler, importWealthboxDataHandler } from "./wealthbox";
+import { testWealthboxConnectionHandler, importWealthboxDataHandler, getWealthboxUsersHandler } from "./wealthbox";
 import { getOpportunitiesByPipelineHandler, getOpportunityStagesHandler } from "./opportunities";
 import dotenv from "dotenv";
 
