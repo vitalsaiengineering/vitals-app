@@ -43,7 +43,7 @@ interface WealthboxUser {
 
 export function FilterBar({ user, onFilterChange }: FilterBarProps) {
   const [selectedFirm, setSelectedFirm] = useState<number | null>(null);
-  const [selectedAdvisor, setSelectedAdvisor] = useState<number | null>(null);
+  // Removed selectedAdvisor state since we're only using WealthBox users now
   const [selectedWealthboxUser, setSelectedWealthboxUser] = useState<number | null>(null);
   
   // Fetch firms based on user role
@@ -94,24 +94,18 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
   // Extract the users from the response
   const wealthboxUsers = wealthboxUsersResponse?.success ? wealthboxUsersResponse.data.users : [];
   
-  // Reset advisor selection when firm changes
-  useEffect(() => {
-    setSelectedAdvisor(null);
-  }, [selectedFirm]);
-  
   // Apply filters when selections change
   useEffect(() => {
     onFilterChange({
       firmId: selectedFirm,
-      advisorId: selectedAdvisor,
+      advisorId: null, // No longer using the advisorId filter
       wealthboxUserId: selectedWealthboxUser
     });
-  }, [selectedFirm, selectedAdvisor, selectedWealthboxUser, onFilterChange]);
+  }, [selectedFirm, selectedWealthboxUser, onFilterChange]);
   
   // Reset all filters
   const handleReset = () => {
     setSelectedFirm(null);
-    setSelectedAdvisor(null);
     setSelectedWealthboxUser(null);
   };
   
@@ -144,7 +138,7 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
     );
   };
   
-  // Render Wealthbox users filter
+  // Render Wealthbox users filter (now labeled simply as "Advisor")
   const renderWealthboxUsersFilter = () => {
     console.log("Rendering Wealthbox users filter, users:", wealthboxUsers);
     
@@ -155,16 +149,16 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
     
     return (
       <div className="filter-item">
-        <span className="text-xs font-medium text-neutral-500 mb-1 block">Wealthbox User</span>
+        <span className="text-xs font-medium text-neutral-500 mb-1 block">Advisor</span>
         <Select
           value={selectedWealthboxUser ? selectedWealthboxUser.toString() : "all"}
           onValueChange={(value) => setSelectedWealthboxUser(value && value !== "all" ? parseInt(value) : null)}
         >
           <SelectTrigger className="h-9 w-[180px]">
-            <SelectValue placeholder="All Wealthbox Users" />
+            <SelectValue placeholder="All Advisors" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Wealthbox Users</SelectItem>
+            <SelectItem value="all">All Advisors</SelectItem>
             {wealthboxUsers.map((wbUser) => (
               <SelectItem key={wbUser.id} value={wbUser.id.toString()}>
                 {wbUser.name}
@@ -176,33 +170,7 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
     );
   };
   
-  const renderAdvisorFilter = () => {
-    if (!user || user.role === 'financial_advisor') {
-      return null;
-    }
-    
-    return (
-      <div className="filter-item">
-        <span className="text-xs font-medium text-neutral-500 mb-1 block">Advisor</span>
-        <Select
-          value={selectedAdvisor ? selectedAdvisor.toString() : "all"}
-          onValueChange={(value) => setSelectedAdvisor(value && value !== "all" ? parseInt(value) : null)}
-        >
-          <SelectTrigger className="h-9 w-[180px]">
-            <SelectValue placeholder="All Advisors" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Advisors</SelectItem>
-            {advisors.map((advisor) => (
-              <SelectItem key={advisor.id} value={advisor.id.toString()}>
-                {advisor.fullName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    );
-  };
+  // Removed the renderAdvisorFilter function as requested
   
   // Show active filters
   const renderActiveFilters = () => {
@@ -215,17 +183,12 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
       }
     }
     
-    if (selectedAdvisor) {
-      const advisor = advisors.find(a => a.id === selectedAdvisor);
-      if (advisor) {
-        activeFilters.push(`Advisor: ${advisor.fullName}`);
-      }
-    }
+    // Removed selectedAdvisor code since we're only using WealthBox users now
     
     if (selectedWealthboxUser) {
       const wbUser = wealthboxUsers.find(u => u.id === selectedWealthboxUser);
       if (wbUser) {
-        activeFilters.push(`Wealthbox: ${wbUser.name}`);
+        activeFilters.push(`Advisor: ${wbUser.name}`);
       }
     }
     
@@ -256,7 +219,6 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
     <div className="filter-bar mt-4 p-3 bg-white rounded-lg border border-neutral-200">
       <div className="flex flex-wrap gap-4">
         {renderFirmFilter()}
-        {renderAdvisorFilter()}
         {renderWealthboxUsersFilter()}
       </div>
       {renderActiveFilters()}
