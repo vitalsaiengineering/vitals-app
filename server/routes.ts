@@ -462,6 +462,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Wealthbox Opportunities routes - Direct token-based access for dashboard widget
   app.get("/api/wealthbox/opportunities/by-pipeline", getOpportunitiesByPipelineHandler);
   app.get("/api/wealthbox/opportunities/by-stage", getOpportunityStagesHandler);
+  
+  // Wealthbox Users route - Direct token-based access for advisors dropdown
+  app.get("/api/wealthbox/users", getWealthboxUsersHandler);
 
   const httpServer = createServer(app);
   return httpServer;

@@ -63,6 +63,14 @@ export const importWealthboxData = async () => {
   return response.json();
 };
 
+export const getWealthboxUsers = async (accessToken: string) => {
+  const response = await fetch(`/api/wealthbox/users?access_token=${accessToken}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch Wealthbox users');
+  }
+  return response.json();
+};
+
 // AI Query
 export const executeAiQuery = async (query: string) => {
   const response = await apiRequest("POST", "/api/ai/query", { query });

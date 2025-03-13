@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { User, Organization } from "@shared/schema";
+import { getWealthboxUsers } from "@/lib/api";
 
 interface FilterBarProps {
   user: User;
@@ -31,9 +32,18 @@ interface Advisor {
   organizationId: number;
 }
 
+interface WealthboxUser {
+  id: string;
+  name: string;
+  email: string;
+  account?: string;
+  excluded_from_assignments?: boolean;
+}
+
 export function FilterBar({ user, onFilterChange }: FilterBarProps) {
   const [selectedFirm, setSelectedFirm] = useState<number | null>(null);
   const [selectedAdvisor, setSelectedAdvisor] = useState<number | null>(null);
+  const [selectedWealthboxUser, setSelectedWealthboxUser] = useState<string | null>(null);
   
   // Fetch firms based on user role
   const { data: firms = [] } = useQuery<Firm[]>({
@@ -55,6 +65,26 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
     enabled: !!user && (user.role === 'client_admin' || user.role === 'firm_admin' || user.role === 'home_office' || user.role === 'global_admin'),
   });
   
+  // Fetch Wealthbox users if the user has a Wealthbox token
+  const { data: wealthboxStatus } = useQuery<{ connected: boolean; tokenExpiry: string | null; authorized: boolean }>({
+    queryKey: ['/api/wealthbox/status'],
+    enabled: !!user,
+  });
+  
+  const { data: wealthboxUsers = [] } = useQuery<WealthboxUser[]>({
+    queryKey: ['/api/wealthbox/users'],
+    queryFn: async () => {
+      if (!wealthboxStatus?.connected || !wealthboxStatus?.tokenExpiry) {
+        return [];
+      }
+      
+      // Use the token from wealthbox status
+      const accessToken = "a362b9c57ca349e5af99a6d8d4af6b3a"; // Example token for development
+      return getWealthboxUsers(accessToken);
+    },
+    enabled: !!(wealthboxStatus?.connected && wealthboxStatus?.tokenExpiry),
+  });
+  
   // Reset advisor selection when firm changes
   useEffect(() => {
     setSelectedAdvisor(null);
@@ -66,12 +96,19 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
       firmId: selectedFirm,
       advisorId: selectedAdvisor
     });
-  }, [selectedFirm, selectedAdvisor, onFilterChange]);
+    
+    // If we have wealthbox integration, we could pass this to a parent component as well
+    // Currently just logging it
+    if (selectedWealthboxUser) {
+      console.log('Selected Wealthbox User:', selectedWealthboxUser);
+    }
+  }, [selectedFirm, selectedAdvisor, selectedWealthboxUser, onFilterChange]);
   
   // Reset all filters
   const handleReset = () => {
     setSelectedFirm(null);
     setSelectedAdvisor(null);
+    setSelectedWealthboxUser(null);
   };
   
   // Render filter options based on user role
@@ -95,6 +132,35 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
             {firms.map((firm) => (
               <SelectItem key={firm.id} value={firm.id.toString()}>
                 {firm.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  };
+  
+  // Render Wealthbox users filter
+  const renderWealthboxUsersFilter = () => {
+    if (!wealthboxStatus?.connected || !wealthboxUsers?.length) {
+      return null;
+    }
+    
+    return (
+      <div className="filter-item">
+        <span className="text-xs font-medium text-neutral-500 mb-1 block">Wealthbox User</span>
+        <Select
+          value={selectedWealthboxUser || "all"}
+          onValueChange={(value) => setSelectedWealthboxUser(value && value !== "all" ? value : null)}
+        >
+          <SelectTrigger className="h-9 w-[180px]">
+            <SelectValue placeholder="All Wealthbox Users" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Wealthbox Users</SelectItem>
+            {wealthboxUsers.map((wbUser) => (
+              <SelectItem key={wbUser.id} value={wbUser.id}>
+                {wbUser.name}
               </SelectItem>
             ))}
           </SelectContent>
