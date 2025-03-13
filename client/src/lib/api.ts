@@ -71,6 +71,20 @@ export const getWealthboxUsers = async (accessToken: string) => {
   return response.json();
 };
 
+export const getClientsByState = async (wealthboxUserId?: number) => {
+  let url = '/api/wealthbox/clients/by-state';
+  if (wealthboxUserId) {
+    url += `?wealthboxUserId=${wealthboxUserId}`;
+  }
+  
+  console.log('Fetching clients by state:', url);
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error('Failed to fetch clients by state');
+  }
+  return response.json();
+};
+
 // AI Query
 export const executeAiQuery = async (query: string) => {
   const response = await apiRequest("POST", "/api/ai/query", { query });
