@@ -15,6 +15,7 @@ interface WealthboxOpportunity {
   custom_fields?: Record<string, any>;
   created_at: string;
   updated_at: string;
+  assigned_to_id?: string; // ID of the WealthBox user who owns this opportunity
 }
 
 // Map numeric stage IDs to descriptive names
@@ -45,7 +46,7 @@ interface OpportunityPipelineData {
  */
 export async function getOpportunitiesByPipelineHandler(req: Request, res: Response) {
   try {
-    const { access_token, advisorId } = req.query;
+    const { access_token, advisorId, wealthboxUserId } = req.query;
     
     if (!access_token) {
       return res.status(400).json({ 
@@ -57,11 +58,21 @@ export async function getOpportunitiesByPipelineHandler(req: Request, res: Respo
     // Get all opportunities from WealthBox
     const opportunities = await fetchWealthboxOpportunities(access_token as string);
     
-    // Filter by advisorId if specified (for client admin view)
-    // In a real implementation, you would filter by advisorId before or after the API call
-    // based on your data structure. This is a simplified example.
+    // Filter by advisorId or wealthboxUserId if specified (for client admin view)
     let filteredOpportunities = opportunities;
-    if (advisorId) {
+    
+    // First check if we should filter by Wealthbox user ID (this takes precedence)
+    if (wealthboxUserId) {
+      // Filter opportunities by Wealthbox user ID
+      filteredOpportunities = opportunities.filter(opp => {
+        // Check if the opportunity is assigned to this Wealthbox user
+        return opp.assigned_to_id === wealthboxUserId;
+      });
+      
+      console.log(`Filtered opportunities for Wealthbox user ${wealthboxUserId}: ${filteredOpportunities.length}`);
+    }
+    // If no Wealthbox user ID specified, try filtering by advisor ID from our system
+    else if (advisorId) {
       const advisorIdNum = parseInt(advisorId as string);
       // Filter opportunities by advisorId
       filteredOpportunities = opportunities.filter(opp => {
@@ -117,7 +128,8 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
         expected_close_date: '2023-12-31',
         created_at: '2023-01-01',
         updated_at: '2023-01-05',
-        custom_fields: { advisorId: '5' }
+        custom_fields: { advisorId: '5' },
+        assigned_to_id: 'wb_user_1' // Sample Wealthbox user ID
       },
       {
         id: '1002',
@@ -131,7 +143,8 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
         expected_close_date: '2023-11-30',
         created_at: '2023-02-01',
         updated_at: '2023-02-10',
-        custom_fields: { advisorId: '5' }
+        custom_fields: { advisorId: '5' },
+        assigned_to_id: 'wb_user_1' // Same Wealthbox user ID
       },
       {
         id: '1003',
@@ -145,7 +158,8 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
         expected_close_date: '2023-10-15',
         created_at: '2023-03-01',
         updated_at: '2023-03-15',
-        custom_fields: { advisorId: '5' }
+        custom_fields: { advisorId: '5' },
+        assigned_to_id: 'wb_user_1'
       },
       {
         id: '1004',
@@ -159,7 +173,8 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
         expected_close_date: '2023-09-30',
         created_at: '2023-04-01',
         updated_at: '2023-04-10',
-        custom_fields: { advisorId: '5' }
+        custom_fields: { advisorId: '5' },
+        assigned_to_id: 'wb_user_1'
       },
       {
         id: '1005',
@@ -173,7 +188,8 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
         expected_close_date: '2023-08-15',
         created_at: '2023-05-01',
         updated_at: '2023-05-20',
-        custom_fields: { advisorId: '5' }
+        custom_fields: { advisorId: '5' },
+        assigned_to_id: 'wb_user_1'
       },
       
       // Other opportunities for different advisors
@@ -189,7 +205,8 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
         expected_close_date: '2023-11-30',
         created_at: '2023-02-15',
         updated_at: '2023-02-20',
-        custom_fields: { advisorId: '6' }
+        custom_fields: { advisorId: '6' },
+        assigned_to_id: 'wb_user_2' // Different Wealthbox user
       },
       {
         id: '2002',
@@ -203,7 +220,8 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
         expected_close_date: '2023-10-30',
         created_at: '2023-03-15',
         updated_at: '2023-03-25',
-        custom_fields: { advisorId: '6' }
+        custom_fields: { advisorId: '6' },
+        assigned_to_id: 'wb_user_2' // Different Wealthbox user
       },
       {
         id: '3001',
@@ -217,7 +235,8 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
         expected_close_date: '2023-09-15',
         created_at: '2023-04-10',
         updated_at: '2023-04-20',
-        custom_fields: { advisorId: '7' }
+        custom_fields: { advisorId: '7' },
+        assigned_to_id: 'wb_user_3' // Another Wealthbox user
       }
     ];
 
@@ -315,7 +334,7 @@ function aggregateOpportunitiesByPipeline(
  */
 export async function getOpportunityStagesHandler(req: Request, res: Response) {
   try {
-    const { access_token, advisorId } = req.query;
+    const { access_token, advisorId, wealthboxUserId } = req.query;
     
     if (!access_token) {
       return res.status(400).json({ 
@@ -329,7 +348,19 @@ export async function getOpportunityStagesHandler(req: Request, res: Response) {
     
     // Filter by advisorId if specified (for client admin view)
     let filteredOpportunities = opportunities;
-    if (advisorId) {
+    
+    // First check if we should filter by Wealthbox user ID (this takes precedence)
+    if (wealthboxUserId) {
+      // Filter opportunities by Wealthbox user ID
+      filteredOpportunities = opportunities.filter(opp => {
+        // Check if the opportunity is assigned to this Wealthbox user
+        return opp.assigned_to_id === wealthboxUserId;
+      });
+      
+      console.log(`Filtered stage opportunities for Wealthbox user ${wealthboxUserId}: ${filteredOpportunities.length}`);
+    }
+    // If no Wealthbox user ID specified, try filtering by advisor ID from our system
+    else if (advisorId) {
       const advisorIdNum = parseInt(advisorId as string);
       // Filter opportunities by advisorId using the same logic as in getOpportunitiesByPipelineHandler
       filteredOpportunities = opportunities.filter(opp => {
