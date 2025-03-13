@@ -46,6 +46,7 @@ export function AdvisorsList() {
         }
         
         const data = await response.json();
+        console.log("Advisor data received:", data);
         setAdvisors(data);
       } catch (err) {
         console.error('Error fetching advisors:', err);
