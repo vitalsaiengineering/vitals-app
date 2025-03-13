@@ -473,19 +473,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Wealthbox sync routes
   app.post("/api/wealthbox/sync", requireRole(["client_admin", "financial_advisor"]), async (req, res) => {
     const user = req.user as any;
+    const { accessToken } = req.body;
     
     // For client admins, we'll use a default development token
-    let token = user.wealthboxToken;
+    let token = accessToken || user.wealthboxToken;
     
     // If user is client_admin, we'll allow them to sync even without a personal token
-    if (user.role === "client_admin") {
+    if (user.role === "client_admin" && !token) {
       // Use a default development token for client admins
       token = "a362b9c57ca349e5af99a6d8d4af6b3a"; // Default development token
       console.log("Using default development token for client admin sync");
-    } else if (!user.wealthboxConnected || !user.wealthboxToken) {
+    } else if (!token) {
       return res.status(400).json({ 
         success: false, 
-        message: "Wealthbox not connected" 
+        message: "Wealthbox access token required" 
       });
     }
     

@@ -94,7 +94,7 @@ export default function Integrations() {
 
   // Import WealthBox data
   const importMutation = useMutation({
-    mutationFn: () => importWealthboxData(),
+    mutationFn: (token: string) => importWealthboxData(token),
     onSuccess: (data) => {
       if (data.success) {
         toast({
@@ -122,7 +122,7 @@ export default function Integrations() {
   
   // Sync WealthBox data
   const syncMutation = useMutation({
-    mutationFn: () => syncWealthboxData(),
+    mutationFn: (token: string) => syncWealthboxData(token),
     onSuccess: (data) => {
       if (data.success) {
         toast({
@@ -173,7 +173,7 @@ export default function Integrations() {
     }
 
     setIsImporting(true);
-    importMutation.mutate();
+    importMutation.mutate(accessToken);
   };
   
   const handleSync = () => {
@@ -187,7 +187,7 @@ export default function Integrations() {
     }
 
     setIsSyncing(true);
-    syncMutation.mutate();
+    syncMutation.mutate(accessToken);
   };
 
   // Check if user is loading
