@@ -378,9 +378,26 @@ export async function fetchActiveClientsByState(accessToken: string): Promise<an
     data.contacts.forEach((contact: any) => {
       // Check for street addresses
       let state = 'Unknown';
+      
+      // Log the contact structure to debug address fields
+      console.log(`Processing contact: ${contact.id} - ${contact.first_name} ${contact.last_name}`);
+      console.log('Address fields:', JSON.stringify({
+        hasStreetAddresses: !!contact.street_addresses,
+        hasAddresses: !!contact.addresses,
+        email: contact.email || contact.email_address || (contact.email_addresses && contact.email_addresses.length > 0 ? contact.email_addresses[0].address : null)
+      }));
+      
+      // Try street_addresses first (as per API docs)
       if (contact.street_addresses && contact.street_addresses.length > 0) {
         const principalAddress = contact.street_addresses.find((addr: any) => addr.principal) || contact.street_addresses[0];
         state = principalAddress.state || 'Unknown';
+        console.log(`Found state in street_addresses: ${state}`);
+      }
+      // Fall back to addresses if available
+      else if (contact.addresses && contact.addresses.length > 0) {
+        const principalAddress = contact.addresses.find((addr: any) => addr.principal) || contact.addresses[0];
+        state = principalAddress.state || 'Unknown';
+        console.log(`Found state in addresses: ${state}`);
       }
       
       // Increment count for this state
@@ -416,8 +433,20 @@ export async function fetchActiveClientsByState(accessToken: string): Promise<an
  */
 export async function getActiveClientsByStateHandler(req: Request, res: Response) {
   try {
-    // Default to our development token if not provided
-    const accessToken = "a362b9c57ca349e5af99a6d8d4af6b3a";
+    // Get the user's token if they're authenticated
+    let accessToken = null;
+    if (req.user && (req.user as any).wealthboxToken) {
+      accessToken = (req.user as any).wealthboxToken;
+    } else {
+      // Try to use access_token parameter if provided
+      accessToken = req.query.access_token as string;
+    }
+    
+    // If no token available, fall back to development token
+    if (!accessToken) {
+      accessToken = "a362b9c57ca349e5af99a6d8d4af6b3a";
+      console.log("Using default development token for Wealthbox API");
+    }
     
     // Check for Wealthbox user filter
     const { wealthboxUserId } = req.query;
