@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { testWealthboxConnection, importWealthboxData, getCurrentUser, getWealthboxStatus } from "@/lib/api";
+import { testWealthboxConnection, importWealthboxData, syncWealthboxData, getCurrentUser, getWealthboxStatus } from "@/lib/api";
 import {
   Card,
   CardContent,
@@ -38,6 +38,7 @@ export default function Integrations() {
   const { toast } = useToast();
   const [isConnecting, setIsConnecting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [accessToken, setAccessToken] = useState("a362b9c57ca349e5af99a6d8d4af6b3a"); // Default to provided token
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'success' | 'error'>('none');
   
@@ -111,6 +112,34 @@ export default function Integrations() {
       setIsImporting(false);
     },
   });
+  
+  // Sync WealthBox data
+  const syncMutation = useMutation({
+    mutationFn: () => syncWealthboxData(),
+    onSuccess: (data) => {
+      if (data.success) {
+        toast({
+          title: "Data synchronized successfully",
+          description: `Updated ${data.contacts?.updated || 0} contacts and ${data.activities?.updated || 0} activities.`,
+        });
+      } else {
+        toast({
+          title: "Synchronization partially failed",
+          description: data.message || "Some data could not be synchronized.",
+          variant: "destructive",
+        });
+      }
+      setIsSyncing(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Synchronization failed",
+        description: error.message || "There was a problem synchronizing your WealthBox data.",
+        variant: "destructive",
+      });
+      setIsSyncing(false);
+    },
+  });
 
   const handleTestConnection = async () => {
     if (!accessToken.trim()) {
@@ -138,6 +167,20 @@ export default function Integrations() {
 
     setIsImporting(true);
     importMutation.mutate();
+  };
+  
+  const handleSync = () => {
+    if (!accessToken.trim()) {
+      toast({
+        title: "Access token required",
+        description: "Please enter your WealthBox API access token.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSyncing(true);
+    syncMutation.mutate();
   };
 
   // Check if user is loading
@@ -250,28 +293,57 @@ export default function Integrations() {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-end">
-            <Button 
-              onClick={handleImport}
-              disabled={isImporting || connectionStatus !== 'success'}
-            >
-              {isImporting ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Importing...
-                </>
-              ) : (
-                <>
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-                  </svg>
-                  Import Data
-                </>
+          <CardFooter className="flex justify-between">
+            <div className="text-sm text-gray-500">
+              {wealthboxStatus?.connected && (
+                <span>Connected to WealthBox • {wealthboxStatus.tokenExpiry ? `Expires: ${new Date(wealthboxStatus.tokenExpiry).toLocaleDateString()}` : ''}</span>
               )}
-            </Button>
+            </div>
+            <div className="flex space-x-2">
+              <Button 
+                onClick={handleSync}
+                disabled={isSyncing || connectionStatus !== 'success'}
+                variant="outline"
+              >
+                {isSyncing ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Syncing...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Sync Data
+                  </>
+                )}
+              </Button>
+              <Button 
+                onClick={handleImport}
+                disabled={isImporting || connectionStatus !== 'success'}
+              >
+                {isImporting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Importing...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    Import Data
+                  </>
+                )}
+              </Button>
+            </div>
           </CardFooter>
         </Card>
       )}
