@@ -116,7 +116,7 @@ export default function Dashboard() {
   
   // Import data from WealthBox
   const importMutation = useMutation({
-    mutationFn: importWealthboxData,
+    mutationFn: () => importWealthboxData(),
     onSuccess: () => {
       toast({
         title: "Data imported successfully",
@@ -137,7 +137,7 @@ export default function Dashboard() {
   });
   
   const handleRefreshData = () => {
-    importMutation.mutate();
+    importMutation.mutate(undefined);
   };
   
   // Data for Assets Under Management card
