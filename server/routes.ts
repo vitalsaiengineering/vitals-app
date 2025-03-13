@@ -11,6 +11,7 @@ import { setupWealthboxOAuth } from "./oauth";
 import { aiQueryHandler } from "./ai";
 import { setupAuth } from "./auth";
 import { testWealthboxConnectionHandler, importWealthboxDataHandler, getWealthboxUsersHandler, getActiveClientsByStateHandler } from "./wealthbox";
+import { synchronizeWealthboxData } from "./sync-service";
 import { getOpportunitiesByPipelineHandler, getOpportunityStagesHandler } from "./opportunities";
 import dotenv from "dotenv";
 
@@ -468,6 +469,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Wealthbox Users route - Direct token-based access for advisors dropdown
   app.get("/api/wealthbox/users", getWealthboxUsersHandler);
+  
+  // Wealthbox sync routes
+  app.post("/api/wealthbox/sync", requireRole(["client_admin", "financial_advisor"]), async (req, res) => {
+    const user = req.user as any;
+    
+    if (!user.wealthboxConnected || !user.wealthboxToken) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Wealthbox not connected" 
+      });
+    }
+    
+    // Start synchronization
+    try {
+      const syncResult = await synchronizeWealthboxData(
+        user.wealthboxToken,
+        user.id,
+        user.organizationId
+      );
+      
+      res.json({ 
+        success: true, 
+        message: "Synchronization completed", 
+        results: syncResult 
+      });
+    } catch (error) {
+      console.error("Error during synchronization:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Synchronization failed", 
+        error: error.message 
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
