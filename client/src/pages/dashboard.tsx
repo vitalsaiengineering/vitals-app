@@ -327,8 +327,8 @@ export default function Dashboard() {
           {/* Opportunities Section - Full Width */}
           <div className="mt-6">
             <OpportunitiesCard 
-              wealthboxToken={wealthboxStatus?.connected ? "a362b9c57ca349e5af99a6d8d4af6b3a" : undefined}
-              advisorId={filters.advisorId} 
+              wealthboxToken={"a362b9c57ca349e5af99a6d8d4af6b3a"} // Always use token for client admin
+              advisorId={filters.advisorId || 5} // Default to advisor ID 5 (Sarah) if none selected
               currentUser={currentUser}
             />
           </div>

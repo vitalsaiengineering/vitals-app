@@ -108,7 +108,8 @@ export function OpportunitiesCard({ wealthboxToken, advisorId, currentUser }: Op
     }
   }, [opportunitiesData, selectedPipeline]);
   
-  if (!wealthboxToken) {
+  // For client admin viewing advisor opportunities, don't require wealthbox connection
+  if (!wealthboxToken && currentUser?.role !== 'client_admin') {
     return (
       <Card>
         <CardHeader>
