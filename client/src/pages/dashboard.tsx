@@ -304,16 +304,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Advisors List */}
-          <Card className="mb-6">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Financial Advisors</CardTitle>
-              <Button size="sm" variant="outline">Add Advisor</Button>
-            </CardHeader>
-            <CardContent>
-              <AdvisorsList />
-            </CardContent>
-          </Card>
+          {/* Removed Financial Advisors list as requested */}
           
           {/* Dashboard Grid - showing the same dashboard as advisors see */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
