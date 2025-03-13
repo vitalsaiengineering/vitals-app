@@ -51,16 +51,17 @@ interface OpportunityPipeline {
 interface OpportunitiesCardProps {
   wealthboxToken?: string;
   advisorId?: number | null;
+  wealthboxUserId?: string | null;
   currentUser?: any; // Using any here since the User type might vary
 }
 
-export function OpportunitiesCard({ wealthboxToken, advisorId, currentUser }: OpportunitiesCardProps) {
+export function OpportunitiesCard({ wealthboxToken, advisorId, wealthboxUserId, currentUser }: OpportunitiesCardProps) {
   const [viewMode, setViewMode] = useState<'pipeline' | 'stage'>('pipeline');
   const [selectedPipeline, setSelectedPipeline] = useState<string | null>(null);
   const [chartType, setChartType] = useState<'bar' | 'pie'>('bar');
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   
-  // Fetch opportunities data based on view mode and selected advisor (if client admin)
+  // Fetch opportunities data based on view mode and selected advisor/Wealthbox user
   const { 
     data: opportunitiesData, 
     isLoading 
@@ -71,6 +72,7 @@ export function OpportunitiesCard({ wealthboxToken, advisorId, currentUser }: Op
         : '/api/wealthbox/opportunities/by-stage',
       wealthboxToken,
       advisorId,
+      wealthboxUserId,
       currentUser?.role
     ],
     queryFn: async () => {
@@ -84,8 +86,12 @@ export function OpportunitiesCard({ wealthboxToken, advisorId, currentUser }: Op
       const url = new URL(endpoint, window.location.origin);
       url.searchParams.append('access_token', wealthboxToken);
       
-      // If we're a client admin and an advisor is selected, filter by that advisor
-      if (currentUser?.role === 'client_admin' && advisorId) {
+      // First priority: Filter by Wealthbox user ID if available
+      if (wealthboxUserId) {
+        url.searchParams.append('wealthboxUserId', wealthboxUserId);
+      }
+      // Second priority: Filter by advisor ID from our system 
+      else if (currentUser?.role === 'client_admin' && advisorId) {
         url.searchParams.append('advisorId', advisorId.toString());
       }
       

@@ -18,6 +18,7 @@ interface FilterBarProps {
   onFilterChange: (filters: { 
     firmId: number | null; 
     advisorId: number | null;
+    wealthboxUserId: string | null;
   }) => void;
 }
 
