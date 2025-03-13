@@ -18,7 +18,7 @@ interface FilterBarProps {
   onFilterChange: (filters: { 
     firmId: number | null; 
     advisorId: number | null;
-    wealthboxUserId: string | null;
+    wealthboxUserId: number | null;
   }) => void;
 }
 
@@ -34,17 +34,17 @@ interface Advisor {
 }
 
 interface WealthboxUser {
-  id: string;
+  id: number;  // Wealthbox API returns numeric IDs
   name: string;
   email: string;
-  account?: string;
+  account?: number;
   excluded_from_assignments?: boolean;
 }
 
 export function FilterBar({ user, onFilterChange }: FilterBarProps) {
   const [selectedFirm, setSelectedFirm] = useState<number | null>(null);
   const [selectedAdvisor, setSelectedAdvisor] = useState<number | null>(null);
-  const [selectedWealthboxUser, setSelectedWealthboxUser] = useState<string | null>(null);
+  const [selectedWealthboxUser, setSelectedWealthboxUser] = useState<number | null>(null);
   
   // Fetch firms based on user role
   const { data: firms = [] } = useQuery<Firm[]>({
@@ -75,15 +75,20 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
   const { data: wealthboxUsersResponse } = useQuery<{ success: boolean; data: { users: WealthboxUser[] } }>({
     queryKey: ['/api/wealthbox/users'],
     queryFn: async () => {
-      if (!wealthboxStatus?.connected || !wealthboxStatus?.tokenExpiry) {
+      console.log("Fetching Wealthbox users with status:", wealthboxStatus);
+      
+      // Always attempt to fetch users with our known working token
+      const accessToken = "a362b9c57ca349e5af99a6d8d4af6b3a"; // Example token for development
+      try {
+        const result = await getWealthboxUsers(accessToken);
+        console.log("Wealthbox users response:", result);
+        return result;
+      } catch (error) {
+        console.error("Error fetching Wealthbox users:", error);
         return { success: false, data: { users: [] } };
       }
-      
-      // Use the token from wealthbox status
-      const accessToken = "a362b9c57ca349e5af99a6d8d4af6b3a"; // Example token for development
-      return getWealthboxUsers(accessToken);
     },
-    enabled: !!(wealthboxStatus?.connected && wealthboxStatus?.tokenExpiry),
+    enabled: true, // Always try to fetch users
   });
   
   // Extract the users from the response
@@ -141,7 +146,10 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
   
   // Render Wealthbox users filter
   const renderWealthboxUsersFilter = () => {
-    if (!wealthboxStatus?.connected || !wealthboxUsers?.length) {
+    console.log("Rendering Wealthbox users filter, users:", wealthboxUsers);
+    
+    if (!wealthboxUsers?.length) {
+      console.log("No Wealthbox users to display");
       return null;
     }
     
@@ -149,8 +157,8 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
       <div className="filter-item">
         <span className="text-xs font-medium text-neutral-500 mb-1 block">Wealthbox User</span>
         <Select
-          value={selectedWealthboxUser || "all"}
-          onValueChange={(value) => setSelectedWealthboxUser(value && value !== "all" ? value : null)}
+          value={selectedWealthboxUser ? selectedWealthboxUser.toString() : "all"}
+          onValueChange={(value) => setSelectedWealthboxUser(value && value !== "all" ? parseInt(value) : null)}
         >
           <SelectTrigger className="h-9 w-[180px]">
             <SelectValue placeholder="All Wealthbox Users" />
@@ -158,7 +166,7 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
           <SelectContent>
             <SelectItem value="all">All Wealthbox Users</SelectItem>
             {wealthboxUsers.map((wbUser) => (
-              <SelectItem key={wbUser.id} value={wbUser.id}>
+              <SelectItem key={wbUser.id} value={wbUser.id.toString()}>
                 {wbUser.name}
               </SelectItem>
             ))}

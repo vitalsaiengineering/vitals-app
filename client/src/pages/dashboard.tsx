@@ -27,7 +27,7 @@ export default function Dashboard() {
   const [filters, setFilters] = useState<{ 
     firmId: number | null; 
     advisorId: number | null;
-    wealthboxUserId: string | null 
+    wealthboxUserId: number | null 
   }>({
     firmId: null,
     advisorId: null,
@@ -35,7 +35,7 @@ export default function Dashboard() {
   });
   
   // Handle filter changes from the filter bar
-  const handleFilterChange = (newFilters: { firmId: number | null; advisorId: number | null; wealthboxUserId: string | null }) => {
+  const handleFilterChange = (newFilters: { firmId: number | null; advisorId: number | null; wealthboxUserId: number | null }) => {
     console.log("Filters changed:", newFilters);
     setFilters(newFilters);
   };
