@@ -71,11 +71,11 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
     enabled: !!user,
   });
   
-  const { data: wealthboxUsers = [] } = useQuery<WealthboxUser[]>({
+  const { data: wealthboxUsersResponse } = useQuery<{ success: boolean; data: { users: WealthboxUser[] } }>({
     queryKey: ['/api/wealthbox/users'],
     queryFn: async () => {
       if (!wealthboxStatus?.connected || !wealthboxStatus?.tokenExpiry) {
-        return [];
+        return { success: false, data: { users: [] } };
       }
       
       // Use the token from wealthbox status
@@ -84,6 +84,9 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
     },
     enabled: !!(wealthboxStatus?.connected && wealthboxStatus?.tokenExpiry),
   });
+  
+  // Extract the users from the response
+  const wealthboxUsers = wealthboxUsersResponse?.success ? wealthboxUsersResponse.data.users : [];
   
   // Reset advisor selection when firm changes
   useEffect(() => {
@@ -215,6 +218,13 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
       }
     }
     
+    if (selectedWealthboxUser) {
+      const wbUser = wealthboxUsers.find(u => u.id === selectedWealthboxUser);
+      if (wbUser) {
+        activeFilters.push(`Wealthbox: ${wbUser.name}`);
+      }
+    }
+    
     if (activeFilters.length === 0) {
       return null;
     }
@@ -243,6 +253,7 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
       <div className="flex flex-wrap gap-4">
         {renderFirmFilter()}
         {renderAdvisorFilter()}
+        {renderWealthboxUsersFilter()}
       </div>
       {renderActiveFilters()}
     </div>
