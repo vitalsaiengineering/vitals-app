@@ -174,12 +174,16 @@ export async function testWealthboxConnectionHandler(req: Request, res: Response
  */
 export async function importWealthboxDataHandler(req: Request, res: Response) {
   try {
-    const { accessToken } = req.body;
+    let { accessToken } = req.body;
     const user = req.user as any;
     const userId = user?.id;
     const organizationId = user?.organizationId;
     
-    if (!accessToken) {
+    // For client admins, we'll use a default development token if none is provided
+    if (user.role === "client_admin" && !accessToken) {
+      accessToken = "a362b9c57ca349e5af99a6d8d4af6b3a"; // Default development token
+      console.log("Using default development token for Wealthbox import");
+    } else if (!accessToken) {
       return res.status(400).json({ success: false, message: 'Access token is required' });
     }
 
