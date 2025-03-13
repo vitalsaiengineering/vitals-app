@@ -492,14 +492,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         success: true, 
         message: "Synchronization completed", 
-        results: syncResult 
+        contacts: syncResult.results.contacts,
+        activities: syncResult.results.activities,
+        opportunities: syncResult.results.opportunities
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error during synchronization:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json({ 
         success: false, 
         message: "Synchronization failed", 
-        error: error.message 
+        error: errorMessage
       });
     }
   });
