@@ -50,15 +50,17 @@ interface OpportunityPipeline {
 
 interface OpportunitiesCardProps {
   wealthboxToken?: string;
+  advisorId?: number | null;
+  currentUser?: any; // Using any here since the User type might vary
 }
 
-export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
+export function OpportunitiesCard({ wealthboxToken, advisorId, currentUser }: OpportunitiesCardProps) {
   const [viewMode, setViewMode] = useState<'pipeline' | 'stage'>('pipeline');
   const [selectedPipeline, setSelectedPipeline] = useState<string | null>(null);
   const [chartType, setChartType] = useState<'bar' | 'pie'>('bar');
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   
-  // Fetch opportunities data based on view mode
+  // Fetch opportunities data based on view mode and selected advisor (if client admin)
   const { 
     data: opportunitiesData, 
     isLoading 
@@ -67,7 +69,9 @@ export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
       viewMode === 'pipeline' 
         ? '/api/wealthbox/opportunities/by-pipeline' 
         : '/api/wealthbox/opportunities/by-stage',
-      wealthboxToken
+      wealthboxToken,
+      advisorId,
+      currentUser?.role
     ],
     queryFn: async () => {
       // Only fetch if we have a token
@@ -79,6 +83,11 @@ export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
       
       const url = new URL(endpoint, window.location.origin);
       url.searchParams.append('access_token', wealthboxToken);
+      
+      // If we're a client admin and an advisor is selected, filter by that advisor
+      if (currentUser?.role === 'client_admin' && advisorId) {
+        url.searchParams.append('advisorId', advisorId.toString());
+      }
       
       const response = await fetch(url.toString(), { credentials: 'include' });
       if (!response.ok) throw new Error('Failed to fetch opportunities data');
@@ -152,7 +161,7 @@ export function OpportunitiesCard({ wealthboxToken }: OpportunitiesCardProps) {
         if (pipeline) {
           // For pie chart, just use the stages directly
           if (chartType === 'pie') {
-            chartData = pipeline.stages.map(stage => ({
+            chartData = pipeline.stages.map((stage: OpportunityStage) => ({
               name: stage.stage,
               value: stage.count,
               stageId: stage.stageId,

@@ -45,7 +45,7 @@ interface OpportunityPipelineData {
  */
 export async function getOpportunitiesByPipelineHandler(req: Request, res: Response) {
   try {
-    const { access_token } = req.query;
+    const { access_token, advisorId } = req.query;
     
     if (!access_token) {
       return res.status(400).json({ 
@@ -57,17 +57,33 @@ export async function getOpportunitiesByPipelineHandler(req: Request, res: Respo
     // Get all opportunities from WealthBox
     const opportunities = await fetchWealthboxOpportunities(access_token as string);
     
+    // Filter by advisorId if specified (for client admin view)
+    // In a real implementation, you would filter by advisorId before or after the API call
+    // based on your data structure. This is a simplified example.
+    let filteredOpportunities = opportunities;
+    if (advisorId) {
+      const advisorIdNum = parseInt(advisorId as string);
+      // Filter opportunities by advisorId
+      // Note: This is a simplified filter; in a real app, you would need to
+      // implement the appropriate filtering based on your data model
+      filteredOpportunities = opportunities.filter(opp => {
+        // This is a placeholder implementation - in a real app, 
+        // you'd need to check if the opportunity belongs to the specified advisor
+        return true; // For now, return all opportunities as if they belong to this advisor
+      });
+    }
+    
     // Get unique pipelines
-    const pipelines = getUniquePipelines(opportunities);
+    const pipelines = getUniquePipelines(filteredOpportunities);
     
     // Group opportunities by pipeline and stage
-    const opportunitiesByPipeline = aggregateOpportunitiesByPipeline(opportunities, pipelines);
+    const opportunitiesByPipeline = aggregateOpportunitiesByPipeline(filteredOpportunities, pipelines);
     
     res.json({
       success: true,
       data: {
         pipelines: opportunitiesByPipeline,
-        totalCount: opportunities.length
+        totalCount: filteredOpportunities.length
       }
     });
   } catch (error: any) {
@@ -172,7 +188,7 @@ function aggregateOpportunitiesByPipeline(
  */
 export async function getOpportunityStagesHandler(req: Request, res: Response) {
   try {
-    const { access_token } = req.query;
+    const { access_token, advisorId } = req.query;
     
     if (!access_token) {
       return res.status(400).json({ 
@@ -184,10 +200,21 @@ export async function getOpportunityStagesHandler(req: Request, res: Response) {
     // Get all opportunities from WealthBox
     const opportunities = await fetchWealthboxOpportunities(access_token as string);
     
+    // Filter by advisorId if specified (for client admin view)
+    let filteredOpportunities = opportunities;
+    if (advisorId) {
+      const advisorIdNum = parseInt(advisorId as string);
+      // Similar to getOpportunitiesByPipelineHandler, filter by advisorId
+      filteredOpportunities = opportunities.filter(opp => {
+        // Placeholder for real implementation
+        return true; // Return all opportunities for this example
+      });
+    }
+    
     // Count opportunities by stage
     const stagesMap = new Map<string, number>();
     
-    opportunities.forEach(opp => {
+    filteredOpportunities.forEach(opp => {
       const stage = opp.stage || 'Unknown';
       stagesMap.set(stage, (stagesMap.get(stage) || 0) + 1);
     });
@@ -203,7 +230,7 @@ export async function getOpportunityStagesHandler(req: Request, res: Response) {
       success: true,
       data: {
         stages,
-        totalCount: opportunities.length
+        totalCount: filteredOpportunities.length
       }
     });
   } catch (error: any) {

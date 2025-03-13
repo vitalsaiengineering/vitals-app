@@ -326,7 +326,11 @@ export default function Dashboard() {
           
           {/* Opportunities Section - Full Width */}
           <div className="mt-6">
-            <OpportunitiesCard wealthboxToken={wealthboxStatus?.connected ? "a362b9c57ca349e5af99a6d8d4af6b3a" : undefined} />
+            <OpportunitiesCard 
+              wealthboxToken={wealthboxStatus?.connected ? "a362b9c57ca349e5af99a6d8d4af6b3a" : undefined}
+              advisorId={filters.advisorId} 
+              currentUser={currentUser}
+            />
           </div>
           
           {/* AI Query Section */}
@@ -444,7 +448,11 @@ export default function Dashboard() {
       
       {/* Opportunities Section - Full Width */}
       <div className="mt-6">
-        <OpportunitiesCard wealthboxToken={wealthboxStatus?.connected ? "a362b9c57ca349e5af99a6d8d4af6b3a" : undefined} />
+        <OpportunitiesCard 
+          wealthboxToken={wealthboxStatus?.connected ? "a362b9c57ca349e5af99a6d8d4af6b3a" : undefined}
+          advisorId={currentUser?.id ?? null}
+          currentUser={currentUser}
+        />
       </div>
       
       {/* AI Query Section */}
