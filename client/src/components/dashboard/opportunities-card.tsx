@@ -108,6 +108,7 @@ export function OpportunitiesCard({ wealthboxToken, advisorId, currentUser }: Op
     }
   }, [opportunitiesData, selectedPipeline]);
   
+  // Client admin needs to connect to Wealthbox just like regular advisors
   if (!wealthboxToken) {
     return (
       <Card>
@@ -118,6 +119,12 @@ export function OpportunitiesCard({ wealthboxToken, advisorId, currentUser }: Op
         <CardContent className="h-80 flex items-center justify-center">
           <div className="text-center text-gray-500">
             <p>No data available. Connect your WealthBox account to view opportunities.</p>
+            <Link to="/integrations" className="mt-4 inline-block">
+              <Button variant="outline" className="mt-2">
+                <LinkIcon className="w-4 h-4 mr-2" />
+                Go to Integrations
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
