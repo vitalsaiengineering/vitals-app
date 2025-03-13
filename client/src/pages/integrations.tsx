@@ -84,6 +84,13 @@ export default function Integrations() {
       setIsConnecting(false);
     },
   });
+  
+  // Set initial connection status based on wealthboxStatus
+  React.useEffect(() => {
+    if (wealthboxStatus?.connected) {
+      setConnectionStatus('success');
+    }
+  }, [wealthboxStatus]);
 
   // Import WealthBox data
   const importMutation = useMutation({
