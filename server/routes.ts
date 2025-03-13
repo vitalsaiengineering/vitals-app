@@ -10,7 +10,7 @@ import MemoryStore from "memorystore";
 import { setupWealthboxOAuth } from "./oauth";
 import { aiQueryHandler } from "./ai";
 import { setupAuth } from "./auth";
-import { testWealthboxConnectionHandler, importWealthboxDataHandler, getWealthboxUsersHandler } from "./wealthbox";
+import { testWealthboxConnectionHandler, importWealthboxDataHandler, getWealthboxUsersHandler, getActiveClientsByStateHandler } from "./wealthbox";
 import { getOpportunitiesByPipelineHandler, getOpportunityStagesHandler } from "./opportunities";
 import dotenv from "dotenv";
 
@@ -462,6 +462,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Wealthbox Opportunities routes - Direct token-based access for dashboard widget
   app.get("/api/wealthbox/opportunities/by-pipeline", getOpportunitiesByPipelineHandler);
   app.get("/api/wealthbox/opportunities/by-stage", getOpportunityStagesHandler);
+  
+  // Wealthbox Clients by State route for geographic distribution
+  app.get("/api/wealthbox/clients/by-state", getActiveClientsByStateHandler);
   
   // Wealthbox Users route - Direct token-based access for advisors dropdown
   app.get("/api/wealthbox/users", getWealthboxUsersHandler);

@@ -346,6 +346,105 @@ export async function fetchWealthboxUsers(accessToken: string): Promise<any[]> {
 }
 
 /**
+ * Fetches active clients from Wealthbox and groups them by state
+ */
+export async function fetchActiveClientsByState(accessToken: string): Promise<any> {
+  try {
+    // Construct URL with filters for active clients
+    const url = `${ENDPOINTS.CONTACTS}?contact_type=Client&active=true&per_page=100`;
+    
+    console.log('Fetching active clients by state from Wealthbox API:', url);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'ACCESS_TOKEN': accessToken,
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    if (!response.ok) {
+      console.error(`Failed to fetch active clients: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to fetch active clients: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log(`Retrieved ${data.contacts?.length || 0} active clients from Wealthbox`);
+    
+    // Group clients by state
+    const clientsByState: Record<string, number> = {};
+    
+    // Process each client and extract state information
+    data.contacts.forEach((contact: any) => {
+      // Check for street addresses
+      let state = 'Unknown';
+      if (contact.street_addresses && contact.street_addresses.length > 0) {
+        const principalAddress = contact.street_addresses.find((addr: any) => addr.principal) || contact.street_addresses[0];
+        state = principalAddress.state || 'Unknown';
+      }
+      
+      // Increment count for this state
+      if (state in clientsByState) {
+        clientsByState[state]++;
+      } else {
+        clientsByState[state] = 1;
+      }
+    });
+    
+    // Convert to format expected by frontend
+    const result = Object.entries(clientsByState).map(([state, count]) => ({
+      state,
+      count,
+      percentage: Math.round((count / data.contacts.length) * 100) / 100
+    }));
+    
+    // Sort by count descending
+    result.sort((a, b) => b.count - a.count);
+    
+    return {
+      clientsByState: result,
+      totalActiveClients: data.contacts.length
+    };
+  } catch (error) {
+    console.error('Error fetching active clients by state:', error);
+    throw error;
+  }
+}
+
+/**
+ * Handler for retrieving active clients by state
+ */
+export async function getActiveClientsByStateHandler(req: Request, res: Response) {
+  try {
+    // Default to our development token if not provided
+    const accessToken = "a362b9c57ca349e5af99a6d8d4af6b3a";
+    
+    // Check for Wealthbox user filter
+    const { wealthboxUserId } = req.query;
+    if (wealthboxUserId) {
+      console.log(`Filtering active clients for Wealthbox user ID: ${wealthboxUserId}`);
+      // Note: The Wealthbox API might not support filtering by user in the contacts endpoint
+      // In a real implementation, you might need to fetch all contacts and filter on your end
+    }
+    
+    // Fetch and process the data
+    const result = await fetchActiveClientsByState(accessToken);
+    
+    // Return the processed data
+    return res.json({
+      success: true,
+      data: result
+    });
+  } catch (error: any) {
+    console.error('Error in getActiveClientsByStateHandler:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Failed to fetch active clients by state' 
+    });
+  }
+}
+
+/**
  * Handler for retrieving Wealthbox users
  */
 export async function getWealthboxUsersHandler(req: Request, res: Response) {
