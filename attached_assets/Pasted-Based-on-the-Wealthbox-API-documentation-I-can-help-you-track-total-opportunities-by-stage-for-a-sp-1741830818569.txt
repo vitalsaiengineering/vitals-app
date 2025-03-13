@@ -1,0 +1,34 @@
+Based on the Wealthbox API documentation, I can help you track total opportunities by stage for a specific pipeline. Here's how you can accomplish this:
+
+To retrieve opportunities by stage within a pipeline, you'll need to:
+
+1. First, retrieve all opportunities using the GET `/v1/opportunities` endpoint
+2. Then filter these opportunities based on the pipeline and stage information
+
+Looking at the API documentation, here's the approach you should take:
+
+1. Use the GET `/v1/opportunities` endpoint to retrieve all opportunities
+   - This endpoint accepts parameters like `resource_id`, `resource_type`, `order`, and `include_closed`
+   - Set `include_closed` to `true` if you want to include won and lost opportunities
+
+2. The API returns opportunity data that includes the `stage` field, which is what you'll need to categorize opportunities by stage
+
+3. Since the API doesn't have a direct filter for pipeline, you'll need to:
+   - First get all opportunities
+   - Then identify which pipeline each opportunity belongs to (this might be through the `custom_fields` or by analyzing the `stage` value)
+   - Group and count the opportunities by stage within your target pipeline
+
+The main challenge is that the API documentation doesn't explicitly show a pipeline field in the opportunity response. In many CRMs, pipelines contain stages, so you may need to:
+
+1. Use the `/v1/categories/opportunity_pipelines` endpoint to get all pipelines
+2. Use the `/v1/categories/opportunity_stages` endpoint to get all stages
+3. Determine the relationship between stages and pipelines
+4. Filter opportunities based on their stage, and then group them by pipeline
+
+If you need to track this data regularly, you might want to create a script that:
+1. Pulls all opportunities
+2. Filters them by the pipeline you're interested in
+3. Groups and counts them by stage
+4. Stores or displays the results
+
+Would you like me to provide code examples for implementing this tracking system, or do you need further clarification on any part of this approach?
