@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { testWealthboxConnection, importWealthboxData, syncWealthboxData, getCurrentUser, getWealthboxStatus } from "@/lib/api";
@@ -86,7 +86,7 @@ export default function Integrations() {
   });
   
   // Set initial connection status based on wealthboxStatus
-  React.useEffect(() => {
+  useEffect(() => {
     if (wealthboxStatus?.connected) {
       setConnectionStatus('success');
     }
