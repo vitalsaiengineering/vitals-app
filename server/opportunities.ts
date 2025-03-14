@@ -28,6 +28,7 @@ const stageNameMap: Record<string, string> = {
   '621628': 'Proposal',
   '621629': 'Negotiation',
   '621631': 'Closed Won',
+  '622837': 'Qualification', // Added from the API response we saw
   // Add more mappings as needed
 };
 
@@ -106,10 +107,10 @@ export async function getOpportunitiesByPipelineHandler(req: Request, res: Respo
       const advisorIdStr = advisorIdNum.toString();
       console.log(`Filtering by advisor ID: ${advisorIdStr}`);
       
-      // For client admin role, we need to show specific opportunities
-      // Let's select just the first opportunity for this role as specified
-      console.log(`For client admin view, showing the first opportunity to advisor ${advisorIdStr}`);
-      filteredOpportunities = opportunities.slice(0, 1);
+      // For client admin role, we already have exactly one opportunity from the API 
+      // (verified through direct API call)
+      console.log(`For client admin view, showing all opportunities to advisor ${advisorIdStr}`);
+      filteredOpportunities = opportunities; // All opportunities (just 1 for now)
       
       // Uncomment and implement this logic once we have proper mapping between
       // advisors in our system and Wealthbox users
@@ -209,24 +210,36 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
         console.log(`Raw creator field: ${JSON.stringify(opp.creator)}`);
       }
       
-      // Transform API response to match our interface if needed
+      // Extract amount from the amounts array if present
+      let amount = 0;
+      if (opp.amounts && opp.amounts.length > 0) {
+        // Try to extract and parse the amount from the first amount entry
+        const amountStr = opp.amounts[0].amount;
+        if (amountStr) {
+          // Handle amounts like "$50,000" by removing currency symbol and commas
+          const cleanAmount = amountStr.replace(/[$,]/g, '');
+          amount = parseFloat(cleanAmount) || 0;
+        }
+      }
+      
+      // Transform API response to match our interface for the actual Wealthbox API format
       return {
         id: opp.id.toString(),
         name: opp.name,
-        stage: opp.stage_id || opp.stage || 'Unknown',
+        stage: opp.stage?.toString() || 'Unknown',
         status: opp.status || 'open',
-        pipeline: opp.pipeline || 'Default',
-        pipeline_id: opp.pipeline_id || 'default_pipeline',
-        amount: opp.amount || 0,
+        pipeline: 'Default Pipeline', // Wealthbox doesn't seem to have a pipeline field in the API
+        pipeline_id: 'default_pipeline',
+        amount: amount,
         probability: opp.probability || 0,
-        expected_close_date: opp.expected_close_date || opp.close_date || new Date().toISOString(),
+        expected_close_date: opp.target_close || opp.expected_close_date || new Date().toISOString(),
         created_at: opp.created_at || new Date().toISOString(),
         updated_at: opp.updated_at || new Date().toISOString(),
-        custom_fields: opp.custom_fields || {},
-        // These fields can be either a direct ID (number) or a complex object
-        manager_id: typeof opp.manager === 'object' ? (opp.manager?.id || null) : opp.manager || null,
-        creator_id: typeof opp.creator === 'object' ? (opp.creator?.id || null) : opp.creator || null,
-        assigned_to_id: opp.assigned_to_id || opp.user_id || null
+        custom_fields: opp.custom_fields || [],
+        // These fields are directly available as IDs in the response
+        manager_id: opp.manager?.toString() || null,
+        creator_id: opp.creator?.toString() || null,
+        assigned_to_id: opp.assigned_to_id || null
       };
     });
     
