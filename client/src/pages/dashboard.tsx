@@ -13,7 +13,7 @@ import { ActivitiesCard } from "@/components/dashboard/activities-card";
 import { PortfolioCard } from "@/components/dashboard/portfolio-card";
 import { DemographicsCard } from "@/components/dashboard/demographics-card";
 import { OpportunitiesCard } from "@/components/dashboard/opportunities-card";
-
+import { GeographicDistributionCard } from "@/components/dashboard/geographic-distribution-card";
 import { FilterBar } from "@/components/dashboard/filter-bar";
 import { AiQuery } from "@/components/dashboard/ai-query";
 import { importWealthboxData, getWealthboxStatus, getCurrentUser } from "@/lib/api";
@@ -328,6 +328,9 @@ export default function Dashboard() {
             
             {/* Client Demographics */}
             <DemographicsCard {...demographicsData} />
+            
+            {/* Geographic Distribution */}
+            <GeographicDistributionCard wealthboxUserId={filters.wealthboxUserId} />
           </div>
           
           {/* Opportunities Section - Full Width */}
@@ -451,6 +454,9 @@ export default function Dashboard() {
         
         {/* Client Demographics */}
         <DemographicsCard {...demographicsData} />
+        
+        {/* Geographic Distribution */}
+        <GeographicDistributionCard wealthboxUserId={filters.wealthboxUserId} />
       </div>
       
       {/* Opportunities Section - Full Width */}

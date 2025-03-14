@@ -77,6 +77,14 @@ export function DemographicsCard({
         {/* Geographic Distribution */}
         <div>
           <h3 className="text-sm font-medium text-neutral-700 mb-2">Geographic Distribution</h3>
+          <div className="chart-container bg-neutral-50 rounded-lg flex items-center justify-center">
+            <div className="text-center p-4">
+              <span className="material-icons text-5xl text-neutral-300">public</span>
+              <p className="text-sm text-neutral-400 mt-2">US Map Visualization</p>
+              <p className="text-xs text-neutral-400 mt-1">Detailed state breakdown below</p>
+            </div>
+          </div>
+
           <div className="mt-2">
             <h4 className="text-sm font-medium text-neutral-700 mb-1">Top States</h4>
             <div className="grid grid-cols-2 gap-2">
@@ -92,26 +100,6 @@ export function DemographicsCard({
                   <span className="ml-auto text-sm font-medium">{state.percentage.toFixed(0)}%</span>
                 </div>
               ))}
-            </div>
-          </div>
-          
-          <div className="mt-4">
-            <div className="p-4 bg-neutral-50 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm text-neutral-500">Top State</div>
-                  <div className="text-lg font-semibold">
-                    {stateDistribution.length > 0 ? stateDistribution[0].state : 'N/A'}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm text-neutral-500">Percentage</div>
-                  <div className="text-lg font-semibold">
-                    {stateDistribution.length > 0 ? 
-                      `${stateDistribution[0].percentage.toFixed(0)}%` : 'N/A'}
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
