@@ -61,14 +61,40 @@ export async function getOpportunitiesByPipelineHandler(req: Request, res: Respo
     // Filter by advisorId or wealthboxUserId if specified (for client admin view)
     let filteredOpportunities = opportunities;
     
+    console.log(`Total opportunities before filtering: ${opportunities.length}`);
+    console.log(`Filter parameters - wealthboxUserId: ${wealthboxUserId || 'none'}, advisorId: ${advisorId || 'none'}`);
+    
+    if (opportunities.length > 0) {
+      // Log the first opportunity to see what assigned_to_id looks like
+      console.log(`First opportunity assigned_to_id: ${opportunities[0].assigned_to_id}, type: ${typeof opportunities[0].assigned_to_id}`);
+      
+      // Log all assigned_to_id values to see what we're working with
+      const assignedIds = opportunities.map(opp => opp.assigned_to_id).filter(id => id);
+      console.log(`All assigned_to_id values: ${assignedIds.join(', ')}`);
+      
+      // Log some sample custom fields if available
+      if (opportunities[0].custom_fields) {
+        console.log(`Sample custom fields: ${JSON.stringify(opportunities[0].custom_fields)}`);
+      }
+    }
+    
     // First check if we should filter by Wealthbox user ID (this takes precedence)
     if (wealthboxUserId) {
+      const wbUserId = wealthboxUserId.toString();
+      console.log(`Filtering by Wealthbox user ID: ${wbUserId}`);
+      
+      // Try different formats to match the assigned_to_id
+      const matchesString = opportunities.filter(opp => opp.assigned_to_id === wbUserId).length;
+      const matchesNumber = opportunities.filter(opp => opp.assigned_to_id === Number(wbUserId)).length;
+      
+      console.log(`Matches as string: ${matchesString}, matches as number: ${matchesNumber}`);
+      
       // Filter opportunities by Wealthbox user ID
-      // Note: wealthboxUserId is received as a string from query params, but we need to confirm if
-      // assigned_to_id in the opportunity is stored as a string or number
       filteredOpportunities = opportunities.filter(opp => {
-        // Check if the opportunity is assigned to this Wealthbox user
-        return opp.assigned_to_id === wealthboxUserId.toString();
+        const isMatch = opp.assigned_to_id === wbUserId;
+        // For detailed logging, uncomment if needed
+        // if (isMatch) console.log(`Matched opportunity: ${opp.id}, ${opp.name}`);
+        return isMatch;
       });
       
       console.log(`Filtered opportunities for Wealthbox user ${wealthboxUserId}: ${filteredOpportunities.length}`);
@@ -76,10 +102,22 @@ export async function getOpportunitiesByPipelineHandler(req: Request, res: Respo
     // If no Wealthbox user ID specified, try filtering by advisor ID from our system
     else if (advisorId) {
       const advisorIdNum = parseInt(advisorId as string);
+      const advisorIdStr = advisorIdNum.toString();
+      console.log(`Filtering by advisor ID: ${advisorIdStr}`);
+      
+      // Look for this advisorId in custom fields
+      const customFieldMatches = opportunities.filter(opp => {
+        return opp.custom_fields && opp.custom_fields.advisorId === advisorIdStr;
+      }).length;
+      
+      console.log(`Opportunities with matching advisorId in custom fields: ${customFieldMatches}`);
+      
       // Filter opportunities by advisorId
       filteredOpportunities = opportunities.filter(opp => {
-        // Check if the opportunity is assigned to this advisor
-        return opp.custom_fields?.advisorId === advisorIdNum.toString();
+        const isMatch = opp.custom_fields?.advisorId === advisorIdStr;
+        // For detailed logging, uncomment if needed
+        // if (isMatch) console.log(`Matched opportunity: ${opp.id}, ${opp.name}`);
+        return isMatch;
       });
       
       console.log(`Filtered opportunities for advisor ${advisorIdNum}: ${filteredOpportunities.length}`);
@@ -112,6 +150,8 @@ export async function getOpportunitiesByPipelineHandler(req: Request, res: Respo
  */
 async function fetchWealthboxOpportunities(accessToken: string): Promise<WealthboxOpportunity[]> {
   try {
+    console.log(`Fetching opportunities from Wealthbox API with token: ${accessToken ? 'provided' : 'missing'}`);
+    
     // Call the real WealthBox API to get opportunities
     const response = await axios.get('https://api.crmworkspace.com/v1/opportunities', {
       params: {
@@ -124,13 +164,30 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
     });
 
     // Check for null or empty response and handle accordingly
-    if (!response.data || !response.data.opportunities) {
-      console.warn('No opportunities data returned from WealthBox API');
+    if (!response.data) {
+      console.warn('No data returned from WealthBox API');
       return [];
+    }
+    
+    console.log(`Wealthbox API response status: ${response.status}`);
+    console.log(`Raw response data structure: ${JSON.stringify(Object.keys(response.data))}`);
+    
+    if (!response.data.opportunities) {
+      console.warn('No opportunities array in response data');
+      console.log(`Response data (partial): ${JSON.stringify(response.data).substring(0, 300)}...`);
+      return [];
+    }
+    
+    console.log(`Total opportunities from API: ${response.data.opportunities.length}`);
+    
+    if (response.data.opportunities.length > 0) {
+      // Log the structure of the first opportunity to understand the API response format
+      console.log(`First opportunity structure: ${JSON.stringify(Object.keys(response.data.opportunities[0]))}`);
+      console.log(`Sample opportunity: ${JSON.stringify(response.data.opportunities[0])}`.substring(0, 300));
     }
 
     // The API response format may vary, adjust based on actual WealthBox response
-    return response.data.opportunities.map((opp: any) => {
+    const mappedOpportunities = response.data.opportunities.map((opp: any) => {
       // Transform API response to match our interface if needed
       return {
         id: opp.id.toString(),
@@ -148,9 +205,34 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
         assigned_to_id: opp.assigned_to_id || opp.user_id || null
       };
     });
+    
+    console.log(`Mapped ${mappedOpportunities.length} opportunities`);
+    return mappedOpportunities;
   } catch (error: any) {
     console.error('Error fetching from WealthBox API:', error);
-    throw new Error(error.response?.data?.message || 'Failed to fetch opportunities from WealthBox');
+    
+    // Enhanced error logging
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error(`Response error status: ${error.response.status}`);
+      console.error(`Response headers: ${JSON.stringify(error.response.headers)}`);
+      console.error(`Response data: ${JSON.stringify(error.response.data || {})}`);
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error('No response received from API request');
+      console.error(`Request details: ${JSON.stringify(error.request || {})}`);
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error('Error setting up request:', error.message);
+    }
+    
+    const errorMessage = error.response?.data?.message || 
+                         error.response?.data?.error || 
+                         error.message || 
+                         'Failed to fetch opportunities from WealthBox';
+    
+    throw new Error(errorMessage);
   }
 }
 
@@ -237,13 +319,44 @@ export async function getOpportunityStagesHandler(req: Request, res: Response) {
     // Filter by advisorId if specified (for client admin view)
     let filteredOpportunities = opportunities;
     
+    console.log(`Total opportunities before stage filtering: ${opportunities.length}`);
+    console.log(`Stage filter parameters - wealthboxUserId: ${wealthboxUserId || 'none'}, advisorId: ${advisorId || 'none'}`);
+    
+    if (opportunities.length > 0) {
+      // Log the first opportunity to see what assigned_to_id and custom fields look like
+      console.log(`First opportunity assigned_to_id: ${opportunities[0].assigned_to_id}, type: ${typeof opportunities[0].assigned_to_id}`);
+      
+      // Log all assigned_to_id values to see what we're working with
+      const assignedIds = opportunities.map(opp => opp.assigned_to_id).filter(id => id);
+      if (assignedIds.length > 0) {
+        console.log(`All assigned_to_id values: ${assignedIds.join(', ')}`);
+      } else {
+        console.log("No opportunities have assigned_to_id values");
+      }
+      
+      // Log sample custom fields
+      if (opportunities[0].custom_fields) {
+        console.log(`Sample custom fields: ${JSON.stringify(opportunities[0].custom_fields)}`);
+      } else {
+        console.log("No custom fields in first opportunity");
+      }
+    }
+    
     // First check if we should filter by Wealthbox user ID (this takes precedence)
     if (wealthboxUserId) {
+      const wbUserId = wealthboxUserId.toString();
+      console.log(`Filtering stages by Wealthbox user ID: ${wbUserId}`);
+      
+      // Try different formats to match the assigned_to_id
+      const matchesString = opportunities.filter(opp => opp.assigned_to_id === wbUserId).length;
+      const matchesNumber = opportunities.filter(opp => opp.assigned_to_id === Number(wbUserId)).length;
+      
+      console.log(`Stage matches as string: ${matchesString}, matches as number: ${matchesNumber}`);
+      
       // Filter opportunities by Wealthbox user ID
-      // Note: wealthboxUserId is received as a string from query params, but we need to convert to string
       filteredOpportunities = opportunities.filter(opp => {
-        // Check if the opportunity is assigned to this Wealthbox user
-        return opp.assigned_to_id === wealthboxUserId.toString();
+        const isMatch = opp.assigned_to_id === wbUserId;
+        return isMatch;
       });
       
       console.log(`Filtered stage opportunities for Wealthbox user ${wealthboxUserId}: ${filteredOpportunities.length}`);
@@ -251,10 +364,20 @@ export async function getOpportunityStagesHandler(req: Request, res: Response) {
     // If no Wealthbox user ID specified, try filtering by advisor ID from our system
     else if (advisorId) {
       const advisorIdNum = parseInt(advisorId as string);
-      // Filter opportunities by advisorId using the same logic as in getOpportunitiesByPipelineHandler
+      const advisorIdStr = advisorIdNum.toString();
+      console.log(`Filtering stages by advisor ID: ${advisorIdStr}`);
+      
+      // Look for this advisorId in custom fields
+      const customFieldMatches = opportunities.filter(opp => {
+        return opp.custom_fields && opp.custom_fields.advisorId === advisorIdStr;
+      }).length;
+      
+      console.log(`Stage opportunities with matching advisorId in custom fields: ${customFieldMatches}`);
+      
+      // Filter opportunities by advisorId
       filteredOpportunities = opportunities.filter(opp => {
-        // Check if the opportunity is assigned to this advisor
-        return opp.custom_fields?.advisorId === advisorIdNum.toString();
+        const isMatch = opp.custom_fields?.advisorId === advisorIdStr;
+        return isMatch;
       });
       
       console.log(`Filtered stage opportunities for advisor ${advisorIdNum}: ${filteredOpportunities.length}`);
