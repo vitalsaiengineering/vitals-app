@@ -262,7 +262,7 @@ export class MemStorage implements IStorage {
     const clientAdmin: User = {
       id: 4,
       username: "clientadmin",
-      password: "mpcs12345!", // In a real app, this would be hashed
+      password: "mpjc12345!", // In a real app, this would be hashed
       email: "clientadmin@example.com",
       fullName: "Client Administrator",
       role: "client_admin",
