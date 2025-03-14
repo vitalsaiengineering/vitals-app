@@ -45,9 +45,9 @@ export function DemographicsCard({
   return (
     <MetricCard
       title="Client Demographics"
-      subtitle="Age and Location"
+      subtitle="Age Distribution"
       actions={actions}
-      className="md:col-span-2 lg:col-span-3"
+      className="md:col-span-2 lg:col-span-2"
     >
       <div>
         {/* Age Distribution */}
