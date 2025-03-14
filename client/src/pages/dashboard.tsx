@@ -328,9 +328,6 @@ export default function Dashboard() {
             
             {/* Client Demographics */}
             <DemographicsCard {...demographicsData} />
-            
-            {/* Geographic Distribution */}
-            <GeographicDistributionCard wealthboxUserId={filters.wealthboxUserId} />
           </div>
           
           {/* Opportunities Section - Full Width */}
@@ -454,9 +451,6 @@ export default function Dashboard() {
         
         {/* Client Demographics */}
         <DemographicsCard {...demographicsData} />
-        
-        {/* Geographic Distribution */}
-        <GeographicDistributionCard wealthboxUserId={filters.wealthboxUserId} />
       </div>
       
       {/* Opportunities Section - Full Width */}
