@@ -152,6 +152,11 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
   try {
     console.log(`Fetching opportunities from Wealthbox API with token: ${accessToken ? 'provided' : 'missing'}`);
     
+    // Check if this is the specific token the user mentioned
+    const specificToken = "34b27e49093743a9ad58b9b793c12bc9";
+    const isSpecificToken = accessToken === specificToken;
+    console.log(`Is this the specific token? ${isSpecificToken ? 'Yes' : 'No'}`);
+    
     // Call the real WealthBox API to get opportunities
     const response = await axios.get('https://api.crmworkspace.com/v1/opportunities', {
       params: {
