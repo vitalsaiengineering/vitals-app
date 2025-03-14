@@ -220,8 +220,9 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
         created_at: opp.created_at || new Date().toISOString(),
         updated_at: opp.updated_at || new Date().toISOString(),
         custom_fields: opp.custom_fields || {},
-        manager_id: opp.manager || null,
-        creator_id: opp.creator || null,
+        // These fields can be either a direct ID (number) or a complex object
+        manager_id: typeof opp.manager === 'object' ? (opp.manager?.id || null) : opp.manager || null,
+        creator_id: typeof opp.creator === 'object' ? (opp.creator?.id || null) : opp.creator || null,
         assigned_to_id: opp.assigned_to_id || opp.user_id || null
       };
     });
