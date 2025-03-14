@@ -481,7 +481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // If user is client_admin, we'll allow them to sync even without a personal token
     if (user.role === "client_admin" && !token) {
       // Use a default development token for client admins
-      token = "a362b9c57ca349e5af99a6d8d4af6b3a"; // Default development token
+      token = "34b27e49093743a9ad58b9b793c12bc9"; // Updated API key
       console.log("Using default development token for client admin sync");
     } else if (!token) {
       return res.status(400).json({ 

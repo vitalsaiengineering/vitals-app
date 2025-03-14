@@ -77,8 +77,8 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
     queryFn: async () => {
       console.log("Fetching Wealthbox users with status:", wealthboxStatus);
       
-      // Always attempt to fetch users with our known working token
-      const accessToken = "a362b9c57ca349e5af99a6d8d4af6b3a"; // Example token for development
+      // Use the new token provided by the user
+      const accessToken = "34b27e49093743a9ad58b9b793c12bc9"; // Updated API key
       try {
         const result = await getWealthboxUsers(accessToken);
         console.log("Wealthbox users response:", result);

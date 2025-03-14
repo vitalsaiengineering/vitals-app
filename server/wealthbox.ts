@@ -181,7 +181,7 @@ export async function importWealthboxDataHandler(req: Request, res: Response) {
     
     // For client admins, we'll use a default development token if none is provided
     if (user.role === "client_admin" && !accessToken) {
-      accessToken = "a362b9c57ca349e5af99a6d8d4af6b3a"; // Default development token
+      accessToken = "34b27e49093743a9ad58b9b793c12bc9"; // Updated API key
       console.log("Using default development token for Wealthbox import");
     } else if (!accessToken) {
       return res.status(400).json({ success: false, message: 'Access token is required' });
@@ -448,7 +448,7 @@ export async function getActiveClientsByStateHandler(req: Request, res: Response
     
     // If no token available, fall back to development token
     if (!accessToken) {
-      accessToken = "a362b9c57ca349e5af99a6d8d4af6b3a";
+      accessToken = "34b27e49093743a9ad58b9b793c12bc9";
       console.log("Using default development token for Wealthbox API");
     }
     
