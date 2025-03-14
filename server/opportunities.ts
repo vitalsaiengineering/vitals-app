@@ -110,7 +110,7 @@ export async function getOpportunitiesByPipelineHandler(req: Request, res: Respo
       
       // For client admin role, we show all opportunities without filtering
       // Since client admins should have access to all opportunities
-      console.log(`For client admin view, showing all opportunities to advisor ${advisorIdStr}`);
+      console.log(`For client admin view, showing all ${opportunities.length} opportunities to advisor ${advisorIdStr}`);
       filteredOpportunities = opportunities;
       
       // Uncomment and implement this logic once we have proper mapping between
