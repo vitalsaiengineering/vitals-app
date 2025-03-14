@@ -32,7 +32,7 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
               </svg>
             </div>
-            <span className="ml-3 font-bold text-lg">FinAdvisor</span>
+            <span className="ml-3 font-bold text-lg">VitalsAI</span>
           </div>
         )}
         
