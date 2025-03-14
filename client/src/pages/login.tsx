@@ -112,7 +112,7 @@ export default function Login() {
               <img 
                 src="/Vitals-AI-logo.png" 
                 alt="Vitals AI" 
-                className="h-16"
+                className="h-24"
               />
             </div>
             <CardTitle className="text-2xl font-bold">VitalsAI</CardTitle>
