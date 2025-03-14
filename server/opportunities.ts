@@ -224,6 +224,11 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
         }
       }
       
+      // Log all stage IDs from the responses to ensure we're mapping correctly
+      if (response.data.opportunities.indexOf(opp) < 5) {
+        console.log(`Stage from API for opportunity ${opp.id}: ${opp.stage}`);
+      }
+      
       // Transform API response to match our interface for the actual Wealthbox API format
       return {
         id: opp.id.toString(),
