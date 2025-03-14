@@ -92,6 +92,11 @@ export const getClientsByState = async (wealthboxUserId?: number) => {
   return response.json();
 };
 
+export const getWealthboxToken = async () => {
+  const response = await apiRequest("GET", "/api/wealthbox/token");
+  return response.json();
+};
+
 // AI Query
 export const executeAiQuery = async (query: string) => {
   const response = await apiRequest("POST", "/api/ai/query", { query });

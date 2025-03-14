@@ -1,10 +1,9 @@
 /**
  * Global application configuration
  */
+import dotenv from "dotenv";
 
-import dotenv from 'dotenv';
-
-// Load environment variables
+// Load environment variables from .env file
 dotenv.config();
 
 interface AppConfig {
@@ -21,18 +20,17 @@ interface AppConfig {
   };
 }
 
-// Application configuration
 const config: AppConfig = {
   wealthbox: {
-    apiBaseUrl: 'https://api.crmworkspace.com/v1',
-    clientId: process.env.WEALTHBOX_CLIENT_ID || '',
-    clientSecret: process.env.WEALTHBOX_CLIENT_SECRET || '',
-    redirectUri: process.env.WEALTHBOX_REDIRECT_URI || 'http://localhost:5000/api/wealthbox/callback',
-    defaultToken: process.env.WEALTHBOX_DEFAULT_TOKEN || null,
+    apiBaseUrl: "https://api.crmworkspace.com/v1",
+    clientId: process.env.WEALTHBOX_CLIENT_ID || "",
+    clientSecret: process.env.WEALTHBOX_CLIENT_SECRET || "",
+    redirectUri: process.env.WEALTHBOX_REDIRECT_URI || "http://localhost:5000/api/wealthbox/callback",
+    defaultToken: process.env.WEALTHBOX_API_TOKEN || null,
   },
   server: {
-    port: parseInt(process.env.PORT || '5000', 10),
-    sessionSecret: process.env.SESSION_SECRET || 'your-secret-key',
+    port: parseInt(process.env.PORT || "5000"),
+    sessionSecret: process.env.SESSION_SECRET || "your-secret-key",
   }
 };
 

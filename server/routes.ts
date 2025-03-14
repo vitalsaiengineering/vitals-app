@@ -13,6 +13,7 @@ import { setupAuth } from "./auth";
 import { testWealthboxConnectionHandler, importWealthboxDataHandler, getWealthboxUsersHandler, getActiveClientsByStateHandler } from "./wealthbox";
 import { synchronizeWealthboxData } from "./sync-service";
 import { getOpportunitiesByPipelineHandler, getOpportunityStagesHandler } from "./opportunities";
+import { getWealthboxTokenHandler } from "./api/wealthbox-token";
 import dotenv from "dotenv";
 
 // Load environment variables
@@ -442,6 +443,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Wealthbox integration routes - client_admin and financial_advisor users can access
   app.post("/api/wealthbox/test-connection", requireRole(["client_admin", "financial_advisor"]), testWealthboxConnectionHandler);
   app.post("/api/wealthbox/import-data", requireRole(["client_admin", "financial_advisor"]), importWealthboxDataHandler);
+  app.get("/api/wealthbox/token", requireAuth, getWealthboxTokenHandler);
   app.get("/api/wealthbox/status", requireAuth, (req, res) => {
     const user = req.user as any;
     
