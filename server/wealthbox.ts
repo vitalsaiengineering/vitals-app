@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { User, Client, Activity, Portfolio, Holding } from '@shared/schema';
 import { storage } from './storage';
+import { getWealthboxToken } from './utils/wealthbox-token';
 
 // Wealthbox API base URL
 const WEALTHBOX_API_BASE_URL = 'https://api.crmworkspace.com/v1';
@@ -179,12 +180,13 @@ export async function importWealthboxDataHandler(req: Request, res: Response) {
     const userId = user?.id;
     const organizationId = user?.organizationId;
     
-    // For client admins, we'll use a default development token if none is provided
-    if (user.role === "client_admin" && !accessToken) {
-      accessToken = "34b27e49093743a9ad58b9b793c12bc9"; // Updated API key
-      console.log("Using default development token for Wealthbox import");
-    } else if (!accessToken) {
-      return res.status(400).json({ success: false, message: 'Access token is required' });
+    // If no token provided, try to get from configuration
+    if (!accessToken) {
+      accessToken = await getWealthboxToken(userId);
+      if (!accessToken) {
+        return res.status(400).json({ success: false, message: 'Access token is required' });
+      }
+      console.log("Using configured Wealthbox token for import");
     }
 
     if (!userId || !organizationId) {
@@ -446,10 +448,17 @@ export async function getActiveClientsByStateHandler(req: Request, res: Response
       accessToken = req.query.access_token as string;
     }
     
-    // If no token available, fall back to development token
+    // If no token available, get from configuration
     if (!accessToken) {
-      accessToken = "34b27e49093743a9ad58b9b793c12bc9";
-      console.log("Using default development token for Wealthbox API");
+      const userId = (req.user as any)?.id;
+      accessToken = await getWealthboxToken(userId);
+      if (!accessToken) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'WealthBox access token is required' 
+        });
+      }
+      console.log("Using configured Wealthbox token for API");
     }
     
     // Check for Wealthbox user filter
@@ -482,17 +491,27 @@ export async function getActiveClientsByStateHandler(req: Request, res: Response
  */
 export async function getWealthboxUsersHandler(req: Request, res: Response) {
   try {
-    const { access_token } = req.query;
+    // Get token from query parameter, user token, or configuration
+    let accessToken = req.query.access_token as string;
     
-    if (!access_token) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'WealthBox access token is required' 
-      });
+    if (!accessToken && req.user) {
+      accessToken = (req.user as any).wealthboxToken;
+    }
+    
+    if (!accessToken) {
+      const userId = (req.user as any)?.id;
+      accessToken = await getWealthboxToken(userId);
+      if (!accessToken) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'WealthBox access token is required' 
+        });
+      }
+      console.log("Using configured Wealthbox token for users API");
     }
 
     // Fetch users from Wealthbox API
-    const users = await fetchWealthboxUsers(access_token as string);
+    const users = await fetchWealthboxUsers(accessToken);
     
     // Return the users
     res.json({

@@ -14,6 +14,7 @@ import { testWealthboxConnectionHandler, importWealthboxDataHandler, getWealthbo
 import { synchronizeWealthboxData } from "./sync-service";
 import { getOpportunitiesByPipelineHandler, getOpportunityStagesHandler } from "./opportunities";
 import { getWealthboxTokenHandler } from "./api/wealthbox-token";
+import { getWealthboxToken } from "./utils/wealthbox-token";
 import dotenv from "dotenv";
 
 // Load environment variables
@@ -477,19 +478,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const user = req.user as any;
     const { accessToken } = req.body;
     
-    // For client admins, we'll use a default development token
+    // Get token from user, request, or default configuration
     let token = accessToken || user.wealthboxToken;
     
-    // If user is client_admin, we'll allow them to sync even without a personal token
-    if (user.role === "client_admin" && !token) {
-      // Use a default development token for client admins
-      token = "34b27e49093743a9ad58b9b793c12bc9"; // Updated API key
-      console.log("Using default development token for client admin sync");
-    } else if (!token) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Wealthbox access token required" 
-      });
+    // If no token available, try to get from configuration
+    if (!token) {
+      token = await getWealthboxToken(user.id);
+      if (!token) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Wealthbox access token required" 
+        });
+      }
+      console.log("Using configured Wealthbox token for sync");
     }
     
     // Start synchronization
