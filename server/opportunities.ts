@@ -440,21 +440,19 @@ export async function getOpportunityStagesHandler(req: Request, res: Response) {
       const advisorIdStr = advisorIdNum.toString();
       console.log(`Filtering stages by advisor ID: ${advisorIdStr}`);
       
-      // For client admin role, show all opportunities
-      // This is consistent with the by-pipeline handler
-      console.log(`For client admin view (stages), showing all opportunities to advisor ${advisorIdStr}`);
+      // For client admin role, show all opportunities without filtering
+      console.log(`For client admin view (stages), showing all ${opportunities.length} opportunities to advisor ${advisorIdStr}`);
       filteredOpportunities = opportunities;
       
-      // Keep this code for future implementation of custom field matching
+      // NOTE: In the future, we may want to filter by custom fields when they're populated
+      // This code is commented out but kept for reference
       /*
       // Look for this advisorId in custom fields
       const customFieldMatches = opportunities.filter(opp => {
         return opp.custom_fields && opp.custom_fields.advisorId === advisorIdStr;
       }).length;
       
-      console.log(`Stage opportunities with matching advisorId in custom fields: ${customFieldMatches}`);
-      
-      // Filter opportunities by advisorId
+      // Filter opportunities by advisorId in custom fields
       filteredOpportunities = opportunities.filter(opp => {
         const isMatch = opp.custom_fields?.advisorId === advisorIdStr;
         return isMatch;
