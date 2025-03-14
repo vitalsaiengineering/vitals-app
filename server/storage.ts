@@ -1,12 +1,21 @@
 import {
-  Organization, InsertOrganization,
-  User, InsertUser,
-  Client, InsertClient,
-  Activity, InsertActivity,
-  Portfolio, InsertPortfolio,
-  Holding, InsertHolding,
-  DataMapping, InsertDataMapping,
-  ClientWithMetrics, AdvisorMetrics, ClientDemographics
+  Organization,
+  InsertOrganization,
+  User,
+  InsertUser,
+  Client,
+  InsertClient,
+  Activity,
+  InsertActivity,
+  Portfolio,
+  InsertPortfolio,
+  Holding,
+  InsertHolding,
+  DataMapping,
+  InsertDataMapping,
+  ClientWithMetrics,
+  AdvisorMetrics,
+  ClientDemographics,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -23,23 +32,26 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByGoogleId(googleId: string): Promise<User | undefined>;
   getUsersByOrganization(organizationId: number): Promise<User[]>;
-  getUsersByRoleAndOrganization(role: string, organizationId: number): Promise<User[]>;
+  getUsersByRoleAndOrganization(
+    role: string,
+    organizationId: number,
+  ): Promise<User[]>;
   getUsersByHomeOffice(homeOfficeId: number): Promise<User[]>;
   getAdvisorsByFirm(firmId: number): Promise<User[]>;
   getAdvisorsByHomeOffice(homeOfficeId: number): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
   updateUserWealthboxConnection(
-    id: number, 
-    token: string, 
-    refreshToken: string, 
-    expiryDate: Date
+    id: number,
+    token: string,
+    refreshToken: string,
+    expiryDate: Date,
   ): Promise<User | undefined>;
   updateUserGoogleConnection(
     id: number,
     googleId: string,
     token: string,
-    refreshToken: string | null
+    refreshToken: string | null,
   ): Promise<User | undefined>;
 
   // Client methods
@@ -47,28 +59,43 @@ export interface IStorage {
   getClientsByOrganization(organizationId: number): Promise<Client[]>;
   getClientsByAdvisor(advisorId: number): Promise<Client[]>;
   createClient(client: InsertClient): Promise<Client>;
-  updateClient(id: number, client: Partial<Client>): Promise<Client | undefined>;
-  upsertClientByWealthboxId(wealthboxClientId: string, client: Partial<Client>): Promise<Client>;
+  updateClient(
+    id: number,
+    client: Partial<Client>,
+  ): Promise<Client | undefined>;
+  upsertClientByWealthboxId(
+    wealthboxClientId: string,
+    client: Partial<Client>,
+  ): Promise<Client>;
 
   // Activity methods
   getActivity(id: number): Promise<Activity | undefined>;
   getActivitiesByClient(clientId: number): Promise<Activity[]>;
   getActivitiesByAdvisor(advisorId: number): Promise<Activity[]>;
   createActivity(activity: InsertActivity): Promise<Activity>;
-  upsertActivityByWealthboxId(wealthboxActivityId: string, activity: Partial<Activity>): Promise<Activity>;
+  upsertActivityByWealthboxId(
+    wealthboxActivityId: string,
+    activity: Partial<Activity>,
+  ): Promise<Activity>;
 
   // Portfolio methods
   getPortfolio(id: number): Promise<Portfolio | undefined>;
   getPortfoliosByClient(clientId: number): Promise<Portfolio[]>;
   getPortfoliosByAdvisor(advisorId: number): Promise<Portfolio[]>;
   createPortfolio(portfolio: InsertPortfolio): Promise<Portfolio>;
-  upsertPortfolioByWealthboxId(wealthboxPortfolioId: string, portfolio: Partial<Portfolio>): Promise<Portfolio>;
+  upsertPortfolioByWealthboxId(
+    wealthboxPortfolioId: string,
+    portfolio: Partial<Portfolio>,
+  ): Promise<Portfolio>;
 
   // Holding methods
   getHolding(id: number): Promise<Holding | undefined>;
   getHoldingsByPortfolio(portfolioId: number): Promise<Holding[]>;
   createHolding(holding: InsertHolding): Promise<Holding>;
-  upsertHoldingByWealthboxId(wealthboxHoldingId: string, holding: Partial<Holding>): Promise<Holding>;
+  upsertHoldingByWealthboxId(
+    wealthboxHoldingId: string,
+    holding: Partial<Holding>,
+  ): Promise<Holding>;
 
   // Data Mapping methods
   getDataMappings(userId: number): Promise<DataMapping[]>;
@@ -76,8 +103,12 @@ export interface IStorage {
   deleteDataMapping(id: number): Promise<void>;
 
   // Analytics methods
-  getClientWithMetrics(clientId: number): Promise<ClientWithMetrics | undefined>;
-  getClientsByAdvisorWithMetrics(advisorId: number): Promise<ClientWithMetrics[]>;
+  getClientWithMetrics(
+    clientId: number,
+  ): Promise<ClientWithMetrics | undefined>;
+  getClientsByAdvisorWithMetrics(
+    advisorId: number,
+  ): Promise<ClientWithMetrics[]>;
   getAdvisorMetrics(advisorId: number): Promise<AdvisorMetrics>;
   getClientDemographics(advisorId: number): Promise<ClientDemographics>;
 }
@@ -107,7 +138,7 @@ export class MemStorage implements IStorage {
       activities: 1,
       portfolios: 1,
       holdings: 1,
-      dataMappings: 1
+      dataMappings: 1,
     };
 
     // Initialize with default organization and admin user
@@ -121,37 +152,37 @@ export class MemStorage implements IStorage {
       name: "Global Financial Services",
       type: "global",
       parentId: null,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     this.organizations.set(1, globalOrg);
-    
+
     // Create home office organization
     const homeOfficeOrg: Organization = {
       id: 2,
       name: "Eastern Region Home Office",
       type: "home_office",
       parentId: null,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     this.organizations.set(2, homeOfficeOrg);
-    
+
     // Create firm 1 under home office
     const firm1Org: Organization = {
       id: 3,
       name: "New York Financial Group",
       type: "firm",
       parentId: 2, // Parent is home office
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     this.organizations.set(3, firm1Org);
-    
+
     // Create firm 2 under home office
     const firm2Org: Organization = {
       id: 4,
       name: "Boston Wealth Advisors",
       type: "firm",
       parentId: 2, // Parent is home office
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     this.organizations.set(4, firm2Org);
 
@@ -175,10 +206,10 @@ export class MemStorage implements IStorage {
       microsoftId: null,
       microsoftToken: null,
       microsoftRefreshToken: null,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     this.users.set(1, admin);
-    
+
     // Create a home office admin
     const homeOfficeAdmin: User = {
       id: 2,
@@ -199,10 +230,10 @@ export class MemStorage implements IStorage {
       microsoftId: null,
       microsoftToken: null,
       microsoftRefreshToken: null,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     this.users.set(2, homeOfficeAdmin);
-    
+
     // Create a firm admin
     const firmAdmin: User = {
       id: 3,
@@ -223,15 +254,15 @@ export class MemStorage implements IStorage {
       microsoftId: null,
       microsoftToken: null,
       microsoftRefreshToken: null,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     this.users.set(3, firmAdmin);
-    
+
     // Create a client admin
     const clientAdmin: User = {
       id: 4,
-      username: "clientadmin",
-      password: "password", // In a real app, this would be hashed
+      username: "c",
+      password: "p", // In a real app, this would be hashed
       email: "clientadmin@example.com",
       fullName: "Client Administrator",
       role: "client_admin",
@@ -247,10 +278,10 @@ export class MemStorage implements IStorage {
       microsoftId: null,
       microsoftToken: null,
       microsoftRefreshToken: null,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     this.users.set(4, clientAdmin);
-    
+
     // Create a financial advisor in firm 1
     const advisor1: User = {
       id: 5,
@@ -271,10 +302,10 @@ export class MemStorage implements IStorage {
       microsoftId: null,
       microsoftToken: null,
       microsoftRefreshToken: null,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     this.users.set(5, advisor1);
-    
+
     // Create a financial advisor in firm 2
     const advisor2: User = {
       id: 6,
@@ -295,7 +326,7 @@ export class MemStorage implements IStorage {
       microsoftId: null,
       microsoftToken: null,
       microsoftRefreshToken: null,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     this.users.set(6, advisor2);
 
@@ -312,27 +343,27 @@ export class MemStorage implements IStorage {
   async getOrganizations(): Promise<Organization[]> {
     return Array.from(this.organizations.values());
   }
-  
+
   async getOrganizationsByType(type: string): Promise<Organization[]> {
     return Array.from(this.organizations.values()).filter(
-      (org) => org.type === type
+      (org) => org.type === type,
     );
   }
-  
+
   async getFirmsByHomeOffice(homeOfficeId: number): Promise<Organization[]> {
     return Array.from(this.organizations.values()).filter(
-      (org) => org.type === "firm" && org.parentId === homeOfficeId
+      (org) => org.type === "firm" && org.parentId === homeOfficeId,
     );
   }
 
   async createOrganization(org: InsertOrganization): Promise<Organization> {
     const id = this.currentIds.organizations++;
-    const newOrg: Organization = { 
+    const newOrg: Organization = {
       id,
       name: org.name,
-      type: org.type || 'firm',
+      type: org.type || "firm",
       parentId: org.parentId || null,
-      createdAt: new Date() 
+      createdAt: new Date(),
     };
     this.organizations.set(id, newOrg);
     return newOrg;
@@ -345,59 +376,65 @@ export class MemStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
-      (user) => user.username === username
+      (user) => user.username === username,
     );
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email === email
-    );
+    return Array.from(this.users.values()).find((user) => user.email === email);
   }
-  
+
   async getUserByGoogleId(googleId: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
-      (user) => user.googleId === googleId
+      (user) => user.googleId === googleId,
     );
   }
 
   async getUsersByOrganization(organizationId: number): Promise<User[]> {
     return Array.from(this.users.values()).filter(
-      (user) => user.organizationId === organizationId
+      (user) => user.organizationId === organizationId,
     );
   }
-  
-  async getUsersByRoleAndOrganization(role: string, organizationId: number): Promise<User[]> {
+
+  async getUsersByRoleAndOrganization(
+    role: string,
+    organizationId: number,
+  ): Promise<User[]> {
     return Array.from(this.users.values()).filter(
-      (user) => user.organizationId === organizationId && user.role === role
+      (user) => user.organizationId === organizationId && user.role === role,
     );
   }
-  
+
   async getUsersByHomeOffice(homeOfficeId: number): Promise<User[]> {
     // Get all firms under this home office
     const firms = await this.getFirmsByHomeOffice(homeOfficeId);
-    const firmIds = firms.map(firm => firm.id);
-    
+    const firmIds = firms.map((firm) => firm.id);
+
     // Get all users from these firms
     return Array.from(this.users.values()).filter(
-      (user) => firmIds.includes(user.organizationId) || user.organizationId === homeOfficeId
+      (user) =>
+        firmIds.includes(user.organizationId) ||
+        user.organizationId === homeOfficeId,
     );
   }
-  
+
   async getAdvisorsByFirm(firmId: number): Promise<User[]> {
     return Array.from(this.users.values()).filter(
-      (user) => user.organizationId === firmId && user.role === "financial_advisor"
+      (user) =>
+        user.organizationId === firmId && user.role === "financial_advisor",
     );
   }
-  
+
   async getAdvisorsByHomeOffice(homeOfficeId: number): Promise<User[]> {
     // Get all firms under this home office
     const firms = await this.getFirmsByHomeOffice(homeOfficeId);
-    const firmIds = firms.map(firm => firm.id);
-    
+    const firmIds = firms.map((firm) => firm.id);
+
     // Get all advisors from these firms
     return Array.from(this.users.values()).filter(
-      (user) => firmIds.includes(user.organizationId) && user.role === "financial_advisor"
+      (user) =>
+        firmIds.includes(user.organizationId) &&
+        user.role === "financial_advisor",
     );
   }
 
@@ -421,55 +458,58 @@ export class MemStorage implements IStorage {
       googleRefreshToken: null,
       microsoftId: null,
       microsoftToken: null,
-      microsoftRefreshToken: null
+      microsoftRefreshToken: null,
     };
     this.users.set(id, newUser);
     return newUser;
   }
 
-  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
+  async updateUser(
+    id: number,
+    userData: Partial<User>,
+  ): Promise<User | undefined> {
     const user = this.users.get(id);
     if (!user) return undefined;
-    
+
     const updatedUser = { ...user, ...userData };
     this.users.set(id, updatedUser);
     return updatedUser;
   }
 
   async updateUserWealthboxConnection(
-    id: number, 
-    token: string, 
-    refreshToken: string, 
-    expiryDate: Date
+    id: number,
+    token: string,
+    refreshToken: string,
+    expiryDate: Date,
   ): Promise<User | undefined> {
     const user = this.users.get(id);
     if (!user) return undefined;
-    
-    const updatedUser = { 
-      ...user, 
+
+    const updatedUser = {
+      ...user,
       wealthboxConnected: true,
       wealthboxToken: token,
       wealthboxRefreshToken: refreshToken,
-      wealthboxTokenExpiry: expiryDate
+      wealthboxTokenExpiry: expiryDate,
     };
     this.users.set(id, updatedUser);
     return updatedUser;
   }
-  
+
   async updateUserGoogleConnection(
     id: number,
     googleId: string,
     token: string,
-    refreshToken: string | null
+    refreshToken: string | null,
   ): Promise<User | undefined> {
     const user = this.users.get(id);
     if (!user) return undefined;
-    
-    const updatedUser = { 
-      ...user, 
+
+    const updatedUser = {
+      ...user,
       googleId,
       googleToken: token,
-      googleRefreshToken: refreshToken
+      googleRefreshToken: refreshToken,
     };
     this.users.set(id, updatedUser);
     return updatedUser;
@@ -482,13 +522,13 @@ export class MemStorage implements IStorage {
 
   async getClientsByOrganization(organizationId: number): Promise<Client[]> {
     return Array.from(this.clients.values()).filter(
-      (client) => client.organizationId === organizationId
+      (client) => client.organizationId === organizationId,
     );
   }
 
   async getClientsByAdvisor(advisorId: number): Promise<Client[]> {
     return Array.from(this.clients.values()).filter(
-      (client) => client.advisorId === advisorId
+      (client) => client.advisorId === advisorId,
     );
   }
 
@@ -499,27 +539,33 @@ export class MemStorage implements IStorage {
       id,
       createdAt: new Date(),
       wealthboxClientId: null,
-      metadata: null
+      metadata: null,
     };
     this.clients.set(id, newClient);
     return newClient;
   }
 
-  async updateClient(id: number, clientData: Partial<Client>): Promise<Client | undefined> {
+  async updateClient(
+    id: number,
+    clientData: Partial<Client>,
+  ): Promise<Client | undefined> {
     const client = this.clients.get(id);
     if (!client) return undefined;
-    
+
     const updatedClient = { ...client, ...clientData };
     this.clients.set(id, updatedClient);
     return updatedClient;
   }
 
-  async upsertClientByWealthboxId(wealthboxClientId: string, clientData: Partial<Client>): Promise<Client> {
+  async upsertClientByWealthboxId(
+    wealthboxClientId: string,
+    clientData: Partial<Client>,
+  ): Promise<Client> {
     // Find if client with this wealthboxId exists
     const existingClient = Array.from(this.clients.values()).find(
-      (client) => client.wealthboxClientId === wealthboxClientId
+      (client) => client.wealthboxClientId === wealthboxClientId,
     );
-    
+
     if (existingClient) {
       const updatedClient = { ...existingClient, ...clientData };
       this.clients.set(existingClient.id, updatedClient);
@@ -543,7 +589,7 @@ export class MemStorage implements IStorage {
         advisorId: clientData.advisorId,
         wealthboxClientId,
         metadata: clientData.metadata,
-        createdAt: new Date()
+        createdAt: new Date(),
       };
       this.clients.set(id, newClient);
       return newClient;
@@ -557,13 +603,13 @@ export class MemStorage implements IStorage {
 
   async getActivitiesByClient(clientId: number): Promise<Activity[]> {
     return Array.from(this.activities.values()).filter(
-      (activity) => activity.clientId === clientId
+      (activity) => activity.clientId === clientId,
     );
   }
 
   async getActivitiesByAdvisor(advisorId: number): Promise<Activity[]> {
     return Array.from(this.activities.values()).filter(
-      (activity) => activity.advisorId === advisorId
+      (activity) => activity.advisorId === advisorId,
     );
   }
 
@@ -574,18 +620,21 @@ export class MemStorage implements IStorage {
       id,
       createdAt: new Date(),
       wealthboxActivityId: null,
-      metadata: null
+      metadata: null,
     };
     this.activities.set(id, newActivity);
     return newActivity;
   }
 
-  async upsertActivityByWealthboxId(wealthboxActivityId: string, activityData: Partial<Activity>): Promise<Activity> {
+  async upsertActivityByWealthboxId(
+    wealthboxActivityId: string,
+    activityData: Partial<Activity>,
+  ): Promise<Activity> {
     // Find if activity with this wealthboxId exists
     const existingActivity = Array.from(this.activities.values()).find(
-      (activity) => activity.wealthboxActivityId === wealthboxActivityId
+      (activity) => activity.wealthboxActivityId === wealthboxActivityId,
     );
-    
+
     if (existingActivity) {
       const updatedActivity = { ...existingActivity, ...activityData };
       this.activities.set(existingActivity.id, updatedActivity);
@@ -603,7 +652,7 @@ export class MemStorage implements IStorage {
         advisorId: activityData.advisorId!,
         wealthboxActivityId,
         metadata: activityData.metadata,
-        createdAt: new Date()
+        createdAt: new Date(),
       };
       this.activities.set(id, newActivity);
       return newActivity;
@@ -617,13 +666,13 @@ export class MemStorage implements IStorage {
 
   async getPortfoliosByClient(clientId: number): Promise<Portfolio[]> {
     return Array.from(this.portfolios.values()).filter(
-      (portfolio) => portfolio.clientId === clientId
+      (portfolio) => portfolio.clientId === clientId,
     );
   }
 
   async getPortfoliosByAdvisor(advisorId: number): Promise<Portfolio[]> {
     return Array.from(this.portfolios.values()).filter(
-      (portfolio) => portfolio.advisorId === advisorId
+      (portfolio) => portfolio.advisorId === advisorId,
     );
   }
 
@@ -634,18 +683,21 @@ export class MemStorage implements IStorage {
       id,
       createdAt: new Date(),
       wealthboxPortfolioId: null,
-      metadata: null
+      metadata: null,
     };
     this.portfolios.set(id, newPortfolio);
     return newPortfolio;
   }
 
-  async upsertPortfolioByWealthboxId(wealthboxPortfolioId: string, portfolioData: Partial<Portfolio>): Promise<Portfolio> {
+  async upsertPortfolioByWealthboxId(
+    wealthboxPortfolioId: string,
+    portfolioData: Partial<Portfolio>,
+  ): Promise<Portfolio> {
     // Find if portfolio with this wealthboxId exists
     const existingPortfolio = Array.from(this.portfolios.values()).find(
-      (portfolio) => portfolio.wealthboxPortfolioId === wealthboxPortfolioId
+      (portfolio) => portfolio.wealthboxPortfolioId === wealthboxPortfolioId,
     );
-    
+
     if (existingPortfolio) {
       const updatedPortfolio = { ...existingPortfolio, ...portfolioData };
       this.portfolios.set(existingPortfolio.id, updatedPortfolio);
@@ -661,7 +713,7 @@ export class MemStorage implements IStorage {
         totalValue: portfolioData.totalValue || 0,
         wealthboxPortfolioId,
         metadata: portfolioData.metadata,
-        createdAt: new Date()
+        createdAt: new Date(),
       };
       this.portfolios.set(id, newPortfolio);
       return newPortfolio;
@@ -675,7 +727,7 @@ export class MemStorage implements IStorage {
 
   async getHoldingsByPortfolio(portfolioId: number): Promise<Holding[]> {
     return Array.from(this.holdings.values()).filter(
-      (holding) => holding.portfolioId === portfolioId
+      (holding) => holding.portfolioId === portfolioId,
     );
   }
 
@@ -686,18 +738,21 @@ export class MemStorage implements IStorage {
       id,
       createdAt: new Date(),
       wealthboxHoldingId: null,
-      metadata: null
+      metadata: null,
     };
     this.holdings.set(id, newHolding);
     return newHolding;
   }
 
-  async upsertHoldingByWealthboxId(wealthboxHoldingId: string, holdingData: Partial<Holding>): Promise<Holding> {
+  async upsertHoldingByWealthboxId(
+    wealthboxHoldingId: string,
+    holdingData: Partial<Holding>,
+  ): Promise<Holding> {
     // Find if holding with this wealthboxId exists
     const existingHolding = Array.from(this.holdings.values()).find(
-      (holding) => holding.wealthboxHoldingId === wealthboxHoldingId
+      (holding) => holding.wealthboxHoldingId === wealthboxHoldingId,
     );
-    
+
     if (existingHolding) {
       const updatedHolding = { ...existingHolding, ...holdingData };
       this.holdings.set(existingHolding.id, updatedHolding);
@@ -715,7 +770,7 @@ export class MemStorage implements IStorage {
         portfolioId: holdingData.portfolioId!,
         wealthboxHoldingId,
         metadata: holdingData.metadata,
-        createdAt: new Date()
+        createdAt: new Date(),
       };
       this.holdings.set(id, newHolding);
       return newHolding;
@@ -725,7 +780,7 @@ export class MemStorage implements IStorage {
   // Data Mapping methods
   async getDataMappings(userId: number): Promise<DataMapping[]> {
     return Array.from(this.dataMappings.values()).filter(
-      (mapping) => mapping.userId === userId
+      (mapping) => mapping.userId === userId,
     );
   }
 
@@ -734,7 +789,7 @@ export class MemStorage implements IStorage {
     const newMapping: DataMapping = {
       ...mapping,
       id,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     this.dataMappings.set(id, newMapping);
     return newMapping;
@@ -745,30 +800,34 @@ export class MemStorage implements IStorage {
   }
 
   // Analytics methods
-  async getClientWithMetrics(clientId: number): Promise<ClientWithMetrics | undefined> {
+  async getClientWithMetrics(
+    clientId: number,
+  ): Promise<ClientWithMetrics | undefined> {
     const client = this.clients.get(clientId);
     if (!client) return undefined;
-    
+
     const clientActivities = await this.getActivitiesByClient(clientId);
-    
+
     return {
       ...client,
-      activityCount: clientActivities.length
+      activityCount: clientActivities.length,
     };
   }
 
-  async getClientsByAdvisorWithMetrics(advisorId: number): Promise<ClientWithMetrics[]> {
+  async getClientsByAdvisorWithMetrics(
+    advisorId: number,
+  ): Promise<ClientWithMetrics[]> {
     const clients = await this.getClientsByAdvisor(advisorId);
     const clientsWithMetrics: ClientWithMetrics[] = [];
-    
+
     for (const client of clients) {
       const clientActivities = await this.getActivitiesByClient(client.id);
       clientsWithMetrics.push({
         ...client,
-        activityCount: clientActivities.length
+        activityCount: clientActivities.length,
       });
     }
-    
+
     return clientsWithMetrics;
   }
 
@@ -776,101 +835,109 @@ export class MemStorage implements IStorage {
     const clients = await this.getClientsByAdvisor(advisorId);
     const activities = await this.getActivitiesByAdvisor(advisorId);
     const portfolios = await this.getPortfoliosByAdvisor(advisorId);
-    
+
     let totalAum = 0;
     let totalRevenue = 0;
-    
+
     // Calculate total AUM and revenue
     for (const client of clients) {
       totalAum += client.aum || 0;
       totalRevenue += client.revenue || 0;
     }
-    
+
     // Calculate asset allocation
     const assetAllocation: { [key: string]: number } = {
       equities: 0,
-      'fixed income': 0,
+      "fixed income": 0,
       alternatives: 0,
-      cash: 0
+      cash: 0,
     };
-    
+
     for (const portfolio of portfolios) {
       const holdings = await this.getHoldingsByPortfolio(portfolio.id);
       for (const holding of holdings) {
-        assetAllocation[holding.assetClass] = (assetAllocation[holding.assetClass] || 0) + holding.value;
+        assetAllocation[holding.assetClass] =
+          (assetAllocation[holding.assetClass] || 0) + holding.value;
       }
     }
-    
-    const totalAssetValue = Object.values(assetAllocation).reduce((sum, value) => sum + value, 0);
-    
+
+    const totalAssetValue = Object.values(assetAllocation).reduce(
+      (sum, value) => sum + value,
+      0,
+    );
+
     // Convert asset allocation to the required format
-    const formattedAssetAllocation = Object.entries(assetAllocation).map(([className, value]) => ({
-      class: className,
-      value,
-      percentage: totalAssetValue > 0 ? (value / totalAssetValue) * 100 : 0
-    }));
-    
+    const formattedAssetAllocation = Object.entries(assetAllocation).map(
+      ([className, value]) => ({
+        class: className,
+        value,
+        percentage: totalAssetValue > 0 ? (value / totalAssetValue) * 100 : 0,
+      }),
+    );
+
     return {
       totalAum,
       totalRevenue,
       totalClients: clients.length,
       totalActivities: activities.length,
-      assetAllocation: formattedAssetAllocation
+      assetAllocation: formattedAssetAllocation,
     };
   }
 
   async getClientDemographics(advisorId: number): Promise<ClientDemographics> {
     const clients = await this.getClientsByAdvisor(advisorId);
-    
+
     // Calculate age groups
     const ageGroups: { [key: string]: number } = {
-      '18-30': 0,
-      '31-40': 0,
-      '41-50': 0,
-      '51-60': 0,
-      '61-70': 0,
-      '71+': 0
+      "18-30": 0,
+      "31-40": 0,
+      "41-50": 0,
+      "51-60": 0,
+      "61-70": 0,
+      "71+": 0,
     };
-    
+
     // Calculate state distribution
     const states: { [key: string]: number } = {};
-    
+
     for (const client of clients) {
       // Age grouping
       if (client.age) {
-        if (client.age <= 30) ageGroups['18-30']++;
-        else if (client.age <= 40) ageGroups['31-40']++;
-        else if (client.age <= 50) ageGroups['41-50']++;
-        else if (client.age <= 60) ageGroups['51-60']++;
-        else if (client.age <= 70) ageGroups['61-70']++;
-        else ageGroups['71+']++;
+        if (client.age <= 30) ageGroups["18-30"]++;
+        else if (client.age <= 40) ageGroups["31-40"]++;
+        else if (client.age <= 50) ageGroups["41-50"]++;
+        else if (client.age <= 60) ageGroups["51-60"]++;
+        else if (client.age <= 70) ageGroups["61-70"]++;
+        else ageGroups["71+"]++;
       }
-      
+
       // State counting
       if (client.state) {
         states[client.state] = (states[client.state] || 0) + 1;
       }
     }
-    
+
     // Format age groups
-    const formattedAgeGroups = Object.entries(ageGroups).map(([range, count]) => ({
-      range,
-      count
-    }));
-    
+    const formattedAgeGroups = Object.entries(ageGroups).map(
+      ([range, count]) => ({
+        range,
+        count,
+      }),
+    );
+
     // Format state distribution
     const totalClients = clients.length;
     const formattedStateDistribution = Object.entries(states)
       .map(([state, count]) => ({
         state,
         count,
-        percentage: totalClients > 0 ? (count / totalClients) * 100 : 0
+        percentage: totalClients > 0 ? (count / totalClients) * 100 : 0,
       }))
       .sort((a, b) => b.count - a.count);
-    
+
     return {
       ageGroups: formattedAgeGroups,
-      stateDistribution: formattedStateDistribution
+      stateDistribution: formattedStateDistribution,
     };
   }
 }
