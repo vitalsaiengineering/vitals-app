@@ -19,7 +19,12 @@ const ENDPOINTS = {
 /**
  * Tests connection to Wealthbox API with the provided access token
  */
-export async function testWealthboxConnection(accessToken: string): Promise<boolean> {
+export async function testWealthboxConnection(accessToken: string | null): Promise<boolean> {
+  if (!accessToken) {
+    console.error('No Wealthbox access token provided to test connection');
+    return false;
+  }
+  
   try {
     const response = await fetch(`${ENDPOINTS.CONTACTS}?limit=1`, {
       method: 'GET',
@@ -45,10 +50,15 @@ export async function testWealthboxConnection(accessToken: string): Promise<bool
  * Import contacts from Wealthbox and store them as clients
  */
 export async function importWealthboxContacts(
-  accessToken: string, 
+  accessToken: string | null, 
   userId: number, 
   organizationId: number
 ): Promise<{ success: boolean; imported: number; failed: number; }> {
+  if (!accessToken) {
+    console.error('No Wealthbox access token provided for importing contacts');
+    return { success: false, imported: 0, failed: 0 };
+  }
+  
   try {
     // Get all contacts from Wealthbox (paginated)
     let allContacts = await fetchAllContacts(accessToken);
@@ -87,9 +97,14 @@ export async function importWealthboxContacts(
  * Import activities from Wealthbox
  */
 export async function importWealthboxActivities(
-  accessToken: string, 
+  accessToken: string | null, 
   userId: number
 ): Promise<{ success: boolean; imported: number; failed: number; }> {
+  if (!accessToken) {
+    console.error('No Wealthbox access token provided for importing activities');
+    return { success: false, imported: 0, failed: 0 };
+  }
+  
   try {
     // Get all activities from Wealthbox (paginated)
     let allActivities = await fetchAllActivities(accessToken);
@@ -182,10 +197,11 @@ export async function importWealthboxDataHandler(req: Request, res: Response) {
     
     // If no token provided, try to get from configuration
     if (!accessToken) {
-      accessToken = await getWealthboxToken(userId);
-      if (!accessToken) {
+      const token = await getWealthboxToken(userId);
+      if (!token) {
         return res.status(400).json({ success: false, message: 'Access token is required' });
       }
+      accessToken = token;
       console.log("Using configured Wealthbox token for import");
     }
 
@@ -329,7 +345,12 @@ function mapWealthboxActivityToActivity(activity: any, advisorId: number, client
 /**
  * Fetches all users from Wealthbox API
  */
-export async function fetchWealthboxUsers(accessToken: string): Promise<any[]> {
+export async function fetchWealthboxUsers(accessToken: string | null): Promise<any[]> {
+  if (!accessToken) {
+    console.error('No Wealthbox access token provided');
+    return [];
+  }
+  
   try {
     const response = await fetch(`${ENDPOINTS.USERS}`, {
       method: 'GET',
@@ -354,7 +375,12 @@ export async function fetchWealthboxUsers(accessToken: string): Promise<any[]> {
 /**
  * Fetches active clients from Wealthbox and groups them by state
  */
-export async function fetchActiveClientsByState(accessToken: string): Promise<any> {
+export async function fetchActiveClientsByState(accessToken: string | null): Promise<any> {
+  if (!accessToken) {
+    console.error('No Wealthbox access token provided for fetching clients');
+    return { clientsByState: [], totalActiveClients: 0 };
+  }
+  
   try {
     // Construct URL with filters for active clients
     const url = `${ENDPOINTS.CONTACTS}?contact_type=Client&active=true&per_page=100`;
@@ -451,13 +477,14 @@ export async function getActiveClientsByStateHandler(req: Request, res: Response
     // If no token available, get from configuration
     if (!accessToken) {
       const userId = (req.user as any)?.id;
-      accessToken = await getWealthboxToken(userId);
-      if (!accessToken) {
+      const token = await getWealthboxToken(userId);
+      if (!token) {
         return res.status(400).json({ 
           success: false, 
           error: 'WealthBox access token is required' 
         });
       }
+      accessToken = token;
       console.log("Using configured Wealthbox token for API");
     }
     
@@ -500,13 +527,14 @@ export async function getWealthboxUsersHandler(req: Request, res: Response) {
     
     if (!accessToken) {
       const userId = (req.user as any)?.id;
-      accessToken = await getWealthboxToken(userId);
-      if (!accessToken) {
+      const token = await getWealthboxToken(userId);
+      if (!token) {
         return res.status(400).json({ 
           success: false, 
           error: 'WealthBox access token is required' 
         });
       }
+      accessToken = token;
       console.log("Using configured Wealthbox token for users API");
     }
 
