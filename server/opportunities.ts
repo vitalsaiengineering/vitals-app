@@ -30,8 +30,20 @@ const stageNameMap: Record<string, string> = {
   '622840': 'Review',
   '622841': 'Proposal',
   '622842': 'Lost',
-  '622843': 'Won'
+  '622843': 'Won',
+  // Adding string versions of the names in case API returns names directly
+  'Evaluation': 'Evaluation',
+  'Identify Decision Makers': 'Identify Decision Makers',
+  'Qualification': 'Qualification',
+  'Needs Analysis': 'Needs Analysis',
+  'Review': 'Review',
+  'Proposal': 'Proposal',
+  'Lost': 'Lost',
+  'Won': 'Won'
 };
+
+// Print the stage map to confirm initialization
+console.log('Stage name map initialized:', Object.keys(stageNameMap));
 
 interface OpportunityStageCount {
   stage: string;
