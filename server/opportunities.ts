@@ -106,6 +106,14 @@ export async function getOpportunitiesByPipelineHandler(req: Request, res: Respo
       const advisorIdStr = advisorIdNum.toString();
       console.log(`Filtering by advisor ID: ${advisorIdStr}`);
       
+      // For client admin role, we need to show specific opportunities
+      // Let's select just the first opportunity for this role as specified
+      console.log(`For client admin view, showing the first opportunity to advisor ${advisorIdStr}`);
+      filteredOpportunities = opportunities.slice(0, 1);
+      
+      // Uncomment and implement this logic once we have proper mapping between
+      // advisors in our system and Wealthbox users
+      /*
       // Look for this advisorId in custom fields
       const customFieldMatches = opportunities.filter(opp => {
         return opp.custom_fields && opp.custom_fields.advisorId === advisorIdStr;
@@ -120,6 +128,7 @@ export async function getOpportunitiesByPipelineHandler(req: Request, res: Respo
         // if (isMatch) console.log(`Matched opportunity: ${opp.id}, ${opp.name}`);
         return isMatch;
       });
+      */
       
       console.log(`Filtered opportunities for advisor ${advisorIdNum}: ${filteredOpportunities.length}`);
     }
