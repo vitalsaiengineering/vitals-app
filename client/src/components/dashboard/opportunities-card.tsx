@@ -153,10 +153,19 @@ export function OpportunitiesCard({ wealthboxToken, advisorId, wealthboxUserId, 
   let pipelines: string[] = [];
   
   if (opportunitiesData?.success && opportunitiesData?.data) {
+    console.log('Processing opportunities data:', opportunitiesData.data);
+    
     if (viewMode === 'pipeline') {
       // For pipeline view, get all pipelines
       if (opportunitiesData.data.pipelines && Array.isArray(opportunitiesData.data.pipelines)) {
         pipelines = opportunitiesData.data.pipelines.map((p: OpportunityPipeline) => p.pipeline);
+        console.log('Available pipelines:', pipelines);
+        
+        // Log the first pipeline's stages to debug
+        if (opportunitiesData.data.pipelines.length > 0) {
+          console.log('First pipeline stages:', 
+            opportunitiesData.data.pipelines[0].stages.map(s => `${s.stage} (${s.count})`));
+        }
       }
       
       // If a pipeline is selected, show the stages for that pipeline
@@ -203,13 +212,21 @@ export function OpportunitiesCard({ wealthboxToken, advisorId, wealthboxUserId, 
       }
     } else {
       // For stage view, use the stages data
+      if (opportunitiesData.data.stages && Array.isArray(opportunitiesData.data.stages)) {
+        console.log('Stage view data:', opportunitiesData.data.stages);
+        console.log('Available stages:', opportunitiesData.data.stages.map((s: OpportunityStage) => `${s.stage} (${s.count})`));
+      }
+      
       if (chartType === 'pie') {
-        chartData = opportunitiesData.data.stages.map((stage: OpportunityStage) => ({
-          name: stage.stage,
-          value: stage.count,
-          // stageId removed per request to not show IDs
-          color: getStageColor(stage.stage)
-        }));
+        chartData = opportunitiesData.data.stages.map((stage: OpportunityStage) => {
+          console.log(`Creating pie chart data for stage: "${stage.stage}" (count: ${stage.count})`);
+          return {
+            name: stage.stage,
+            value: stage.count,
+            // stageId removed per request to not show IDs
+            color: getStageColor(stage.stage)
+          };
+        });
       } else {
         // Bar chart format
         chartData = opportunitiesData.data.stages.map((stage: OpportunityStage) => ({
