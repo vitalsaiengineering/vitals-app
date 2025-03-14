@@ -10,7 +10,7 @@ import MemoryStore from "memorystore";
 import { setupWealthboxOAuth } from "./oauth";
 import { aiQueryHandler } from "./ai";
 import { setupAuth } from "./auth";
-import { testWealthboxConnectionHandler, importWealthboxDataHandler, getWealthboxUsersHandler, getActiveClientsByStateHandler } from "./wealthbox";
+import { testWealthboxConnectionHandler, importWealthboxDataHandler, getWealthboxUsersHandler, getActiveClientsByStateHandler, getActiveClientsByAgeHandler } from "./wealthbox";
 import { synchronizeWealthboxData } from "./sync-service";
 import { getOpportunitiesByPipelineHandler, getOpportunityStagesHandler } from "./opportunities";
 import { getWealthboxTokenHandler } from "./api/wealthbox-token";
@@ -469,6 +469,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Wealthbox Clients by State route for geographic distribution
   app.get("/api/wealthbox/clients/by-state", getActiveClientsByStateHandler);
+  
+  // Wealthbox Clients by Age route for age distribution
+  app.get("/api/wealthbox/clients/by-age", getActiveClientsByAgeHandler);
   
   // Wealthbox Users route - Direct token-based access for advisors dropdown
   app.get("/api/wealthbox/users", getWealthboxUsersHandler);

@@ -92,6 +92,20 @@ export const getClientsByState = async (wealthboxUserId?: number) => {
   return response.json();
 };
 
+export const getClientsByAge = async (wealthboxUserId?: number) => {
+  let url = '/api/wealthbox/clients/by-age';
+  if (wealthboxUserId) {
+    url += `?wealthboxUserId=${wealthboxUserId}`;
+  }
+  
+  console.log('Fetching clients by age:', url);
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error('Failed to fetch clients by age');
+  }
+  return response.json();
+};
+
 export const getWealthboxToken = async () => {
   const response = await apiRequest("GET", "/api/wealthbox/token");
   return response.json();

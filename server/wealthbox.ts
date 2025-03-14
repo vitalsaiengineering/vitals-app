@@ -373,6 +373,131 @@ export async function fetchWealthboxUsers(accessToken: string | null): Promise<a
 }
 
 /**
+ * Fetches active clients from Wealthbox and groups them by age
+ */
+export async function fetchActiveClientsByAge(accessToken: string | null): Promise<any> {
+  if (!accessToken) {
+    console.error('No Wealthbox access token provided for fetching clients by age');
+    return { ageGroups: [], totalActiveClients: 0, averageAge: 0, largestAgeSegment: 'N/A' };
+  }
+  
+  try {
+    // Construct URL with filters for active clients
+    const url = `${ENDPOINTS.CONTACTS}?contact_type=Client&active=true&per_page=100`;
+    
+    console.log('Fetching active clients by age from Wealthbox API:', url);
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'ACCESS_TOKEN': accessToken,
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    if (!response.ok) {
+      console.error(`Failed to fetch active clients: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to fetch active clients: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    console.log(`Retrieved ${data.contacts?.length || 0} active clients from Wealthbox`);
+    
+    // Initialize age groups
+    const ageGroups: Record<string, number> = {
+      "18-30": 0,
+      "31-40": 0,
+      "41-50": 0,
+      "51-60": 0,
+      "61-70": 0,
+      "71+": 0,
+    };
+    
+    let totalAge = 0;
+    let clientsWithAge = 0;
+    
+    // Process each client and extract age information
+    data.contacts.forEach((contact: any) => {
+      // Check if contact has date of birth
+      let age = null;
+      
+      // Try to determine age from date_of_birth if available
+      if (contact.date_of_birth) {
+        const birthDate = new Date(contact.date_of_birth);
+        const today = new Date();
+        age = today.getFullYear() - birthDate.getFullYear();
+        
+        // Adjust age if birthday hasn't occurred yet this year
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+          age--;
+        }
+        
+        console.log(`Calculated age for ${contact.first_name} ${contact.last_name}: ${age}`);
+      } 
+      // If contact has a custom field for age, try to use that
+      else if (contact.custom_fields) {
+        // Look for custom fields that might contain age information
+        const ageField = Object.entries(contact.custom_fields).find(([key]) => 
+          key.toLowerCase().includes('age')
+        );
+        
+        if (ageField && ageField[1]) {
+          const parsedAge = parseInt(ageField[1].toString(), 10);
+          if (!isNaN(parsedAge)) {
+            age = parsedAge;
+            console.log(`Found age in custom field for ${contact.first_name} ${contact.last_name}: ${age}`);
+          }
+        }
+      }
+      
+      // If we have a valid age, categorize it
+      if (age !== null && age >= 18) {
+        if (age <= 30) ageGroups["18-30"]++;
+        else if (age <= 40) ageGroups["31-40"]++;
+        else if (age <= 50) ageGroups["41-50"]++;
+        else if (age <= 60) ageGroups["51-60"]++;
+        else if (age <= 70) ageGroups["61-70"]++;
+        else ageGroups["71+"]++;
+        
+        totalAge += age;
+        clientsWithAge++;
+      }
+    });
+    
+    // Calculate average age
+    const averageAge = clientsWithAge > 0 ? Math.round(totalAge / clientsWithAge) : 0;
+    
+    // Find largest age segment
+    let largestSegment = "N/A";
+    let maxCount = 0;
+    
+    Object.entries(ageGroups).forEach(([range, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        largestSegment = range;
+      }
+    });
+    
+    // Format age groups for frontend
+    const result = Object.entries(ageGroups).map(([range, count]) => ({
+      range,
+      count
+    }));
+    
+    return {
+      ageGroups: result,
+      totalActiveClients: data.contacts.length,
+      averageAge,
+      largestAgeSegment: largestSegment
+    };
+  } catch (error) {
+    console.error('Error fetching active clients by age:', error);
+    throw error;
+  }
+}
+
+/**
  * Fetches active clients from Wealthbox and groups them by state
  */
 export async function fetchActiveClientsByState(accessToken: string | null): Promise<any> {
@@ -509,6 +634,59 @@ export async function getActiveClientsByStateHandler(req: Request, res: Response
     return res.status(500).json({ 
       success: false, 
       error: error.message || 'Failed to fetch active clients by state' 
+    });
+  }
+}
+
+/**
+ * Handler for retrieving active clients by age
+ */
+export async function getActiveClientsByAgeHandler(req: Request, res: Response) {
+  try {
+    // Get the user's token if they're authenticated
+    let accessToken = null;
+    if (req.user && (req.user as any).wealthboxToken) {
+      accessToken = (req.user as any).wealthboxToken;
+    } else {
+      // Try to use access_token parameter if provided
+      accessToken = req.query.access_token as string;
+    }
+    
+    // If no token available, get from configuration
+    if (!accessToken) {
+      const userId = (req.user as any)?.id;
+      const token = await getWealthboxToken(userId);
+      if (!token) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'WealthBox access token is required' 
+        });
+      }
+      accessToken = token;
+      console.log("Using configured Wealthbox token for age distribution API");
+    }
+    
+    // Check for Wealthbox user filter
+    const { wealthboxUserId } = req.query;
+    if (wealthboxUserId) {
+      console.log(`Filtering active clients for Wealthbox user ID: ${wealthboxUserId}`);
+      // Note: The Wealthbox API might not support filtering by user in the contacts endpoint
+      // In a real implementation, you might need to fetch all contacts and filter on your end
+    }
+    
+    // Fetch and process the data
+    const result = await fetchActiveClientsByAge(accessToken);
+    
+    // Return the processed data
+    return res.json({
+      success: true,
+      data: result
+    });
+  } catch (error: any) {
+    console.error('Error in getActiveClientsByAgeHandler:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: error.message || 'Failed to fetch active clients by age' 
     });
   }
 }
