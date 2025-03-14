@@ -643,27 +643,37 @@ export async function getActiveClientsByStateHandler(req: Request, res: Response
  */
 export async function getActiveClientsByAgeHandler(req: Request, res: Response) {
   try {
+    // Check if a specific Wealthbox user ID is provided (for filtering)
+    const requestedWealthboxUserId = req.query.wealthboxUserId ? Number(req.query.wealthboxUserId) : undefined;
+    console.log(`Age Distribution API - WealthboxUserId parameter: ${requestedWealthboxUserId}`);
+    
     // Get the user's token if they're authenticated
     let accessToken = null;
     if (req.user && (req.user as any).wealthboxToken) {
       accessToken = (req.user as any).wealthboxToken;
+      console.log("Using user's Wealthbox token");
     } else {
       // Try to use access_token parameter if provided
       accessToken = req.query.access_token as string;
+      if (accessToken) {
+        console.log("Using provided access_token parameter");
+      }
     }
     
     // If no token available, get from configuration
     if (!accessToken) {
       const userId = (req.user as any)?.id;
+      console.log(`Attempting to get token for user ID: ${userId || 'none'}`);
       const token = await getWealthboxToken(userId);
-      if (!token) {
+      if (token) {
+        console.log("Using token from configuration for age distribution API");
+        accessToken = token;
+      } else {
         return res.status(400).json({ 
           success: false, 
           error: 'WealthBox access token is required' 
         });
       }
-      accessToken = token;
-      console.log("Using configured Wealthbox token for age distribution API");
     }
     
     // Check for Wealthbox user filter
