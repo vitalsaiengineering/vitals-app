@@ -21,15 +21,16 @@ interface WealthboxOpportunity {
 }
 
 // Map numeric stage IDs to descriptive names
-// This would typically come from WealthBox's API, but we're hardcoding for the demo
+// These are the actual Wealthbox stage IDs and names
 const stageNameMap: Record<string, string> = {
-  '422586': 'Lead',
-  '422584': 'Qualified',
-  '621628': 'Proposal',
-  '621629': 'Negotiation',
-  '621631': 'Closed Won',
-  '622837': 'Qualification', // Added from the API response we saw
-  // Add more mappings as needed
+  '622836': 'Evaluation',
+  '622837': 'Identify Decision Makers',
+  '622838': 'Qualification',
+  '622839': 'Needs Analysis',
+  '622840': 'Review',
+  '622841': 'Proposal',
+  '622842': 'Lost',
+  '622843': 'Won'
 };
 
 interface OpportunityStageCount {
@@ -107,10 +108,10 @@ export async function getOpportunitiesByPipelineHandler(req: Request, res: Respo
       const advisorIdStr = advisorIdNum.toString();
       console.log(`Filtering by advisor ID: ${advisorIdStr}`);
       
-      // For client admin role, we already have exactly one opportunity from the API 
-      // (verified through direct API call)
+      // For client admin role, we show all opportunities without filtering
+      // Since client admins should have access to all opportunities
       console.log(`For client admin view, showing all opportunities to advisor ${advisorIdStr}`);
-      filteredOpportunities = opportunities; // All opportunities (just 1 for now)
+      filteredOpportunities = opportunities;
       
       // Uncomment and implement this logic once we have proper mapping between
       // advisors in our system and Wealthbox users
@@ -163,10 +164,11 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
   try {
     console.log(`Fetching opportunities from Wealthbox API with token: ${accessToken ? 'provided' : 'missing'}`);
     
-    // Check if this is the specific token the user mentioned
-    const specificToken = "34b27e49093743a9ad58b9b793c12bc9";
-    const isSpecificToken = accessToken === specificToken;
-    console.log(`Is this the specific token? ${isSpecificToken ? 'Yes' : 'No'}`);
+    // Log the token (hiding most characters)
+    if (accessToken) {
+      const tokenPreview = accessToken.substring(0, 4) + '...' + accessToken.substring(accessToken.length - 4);
+      console.log(`Using Wealthbox token: ${tokenPreview}`);
+    }
     
     // Call the real WealthBox API to get opportunities
     const response = await axios.get('https://api.crmworkspace.com/v1/opportunities', {
@@ -438,6 +440,13 @@ export async function getOpportunityStagesHandler(req: Request, res: Response) {
       const advisorIdStr = advisorIdNum.toString();
       console.log(`Filtering stages by advisor ID: ${advisorIdStr}`);
       
+      // For client admin role, show all opportunities
+      // This is consistent with the by-pipeline handler
+      console.log(`For client admin view (stages), showing all opportunities to advisor ${advisorIdStr}`);
+      filteredOpportunities = opportunities;
+      
+      // Keep this code for future implementation of custom field matching
+      /*
       // Look for this advisorId in custom fields
       const customFieldMatches = opportunities.filter(opp => {
         return opp.custom_fields && opp.custom_fields.advisorId === advisorIdStr;
@@ -450,6 +459,7 @@ export async function getOpportunityStagesHandler(req: Request, res: Response) {
         const isMatch = opp.custom_fields?.advisorId === advisorIdStr;
         return isMatch;
       });
+      */
       
       console.log(`Filtered stage opportunities for advisor ${advisorIdNum}: ${filteredOpportunities.length}`);
     }

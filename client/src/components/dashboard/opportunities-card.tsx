@@ -454,23 +454,27 @@ export function OpportunitiesCard({ wealthboxToken, advisorId, wealthboxUserId, 
 
 // Helper function to get a color for a stage
 function getStageColor(stage: string): string {
-  // Map common pipeline stages to specific colors
+  // Map Wealthbox opportunity stages to specific colors
   const stageColorMap: Record<string, string> = {
-    'Lead': 'hsl(var(--primary-500))',
-    'Qualified': 'hsl(var(--primary-600))',
-    'Discovery': 'hsl(var(--primary-700))',
-    'Demo': 'hsl(var(--chart-3))',
+    // Actual Wealthbox stage names
+    'Evaluation': 'hsl(var(--primary-300))',
+    'Identify Decision Makers': 'hsl(var(--primary-400))',
+    'Qualification': 'hsl(var(--primary-500))',
+    'Needs Analysis': 'hsl(var(--primary-600))',
+    'Review': 'hsl(var(--primary-700))',
     'Proposal': 'hsl(var(--chart-2))',
-    'Negotiation': 'hsl(var(--chart-4))',
-    'Closed Won': 'hsl(var(--success-600))',
-    'Closed Lost': 'hsl(var(--destructive-600))',
-    // Add additional mappings for our actual API data
-    'Qualification': 'hsl(var(--primary-400))',
-    '622837': 'hsl(var(--primary-400))', // Stage ID from API
-    // Default colors for marketing, sales and customer success
-    'Marketing': 'hsl(212, 72%, 59%)',
-    'Sales': 'hsl(48, 96%, 53%)',
-    'Customer Success': 'hsl(358, 75%, 59%)'
+    'Lost': 'hsl(var(--destructive-600))',
+    'Won': 'hsl(var(--success-600))',
+    
+    // Wealthbox stage IDs (for direct ID references)
+    '622836': 'hsl(var(--primary-300))', // Evaluation
+    '622837': 'hsl(var(--primary-400))', // Identify Decision Makers
+    '622838': 'hsl(var(--primary-500))', // Qualification
+    '622839': 'hsl(var(--primary-600))', // Needs Analysis
+    '622840': 'hsl(var(--primary-700))', // Review
+    '622841': 'hsl(var(--chart-2))',     // Proposal
+    '622842': 'hsl(var(--destructive-600))', // Lost
+    '622843': 'hsl(var(--success-600))'  // Won
   };
   
   // Use a deterministic color based on the stage name if not found in map
