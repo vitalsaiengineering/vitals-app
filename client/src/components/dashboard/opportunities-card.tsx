@@ -464,11 +464,26 @@ function getStageColor(stage: string): string {
     'Negotiation': 'hsl(var(--chart-4))',
     'Closed Won': 'hsl(var(--success-600))',
     'Closed Lost': 'hsl(var(--destructive-600))',
+    // Add additional mappings for our actual API data
+    'Qualification': 'hsl(var(--primary-400))',
+    '622837': 'hsl(var(--primary-400))', // Stage ID from API
     // Default colors for marketing, sales and customer success
     'Marketing': 'hsl(212, 72%, 59%)',
     'Sales': 'hsl(48, 96%, 53%)',
     'Customer Success': 'hsl(358, 75%, 59%)'
   };
   
-  return stageColorMap[stage] || `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`;
+  // Use a deterministic color based on the stage name if not found in map
+  // This will ensure the same stage always gets the same color
+  if (!stageColorMap[stage]) {
+    // Simple hash function for deterministic color
+    let hash = 0;
+    for (let i = 0; i < stage.length; i++) {
+      hash = stage.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = hash % 360;
+    return `hsl(${hue}, 70%, 50%)`;
+  }
+  
+  return stageColorMap[stage];
 }
