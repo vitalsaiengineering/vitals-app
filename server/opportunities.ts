@@ -35,7 +35,7 @@ const stageNameMap: Record<string, string> = {
 
 interface OpportunityStageCount {
   stage: string;
-  stageId: string;
+  // stageId field removed per request to not show IDs
   count: number;
 }
 
@@ -356,10 +356,10 @@ function aggregateOpportunitiesByPipeline(
       stagesMap.set(stage, (stagesMap.get(stage) || 0) + 1);
     });
     
-    // Convert map to array of stage counts with friendly names
+    // Convert map to array of stage counts with friendly names only (no IDs)
     const stages = Array.from(stagesMap.entries()).map(([stage, count]) => ({
       stage: stageNameMap[stage] || stage, // Use friendly name if available
-      stageId: stage, // Keep the original ID for reference
+      // stageId removed per request to not show IDs
       count
     }));
     
@@ -470,10 +470,10 @@ export async function getOpportunityStagesHandler(req: Request, res: Response) {
       stagesMap.set(stage, (stagesMap.get(stage) || 0) + 1);
     });
     
-    // Convert map to array of stage counts with friendly names
+    // Convert map to array of stage counts with friendly names only (no IDs)
     const stages = Array.from(stagesMap.entries()).map(([stage, count]) => ({
       stage: stageNameMap[stage] || stage, // Use friendly name if available
-      stageId: stage, // Keep the original ID for reference
+      // stageId removed per request to not show IDs
       count
     }));
     

@@ -38,7 +38,7 @@ import {
 
 interface OpportunityStage {
   stage: string;
-  stageId: string;
+  // stageId removed per request to not show IDs
   count: number;
 }
 
