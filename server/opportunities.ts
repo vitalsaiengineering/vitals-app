@@ -112,143 +112,7 @@ export async function getOpportunitiesByPipelineHandler(req: Request, res: Respo
  */
 async function fetchWealthboxOpportunities(accessToken: string): Promise<WealthboxOpportunity[]> {
   try {
-    // For demo purposes, we'll return a static set of sample data
-    // This would normally be an API call to WealthBox
-    
-    // Sample data to ensure Sarah (advisor ID 5) has exactly 5 opportunities
-    const sampleOpportunities: WealthboxOpportunity[] = [
-      // Sarah's opportunities (for client admin view)
-      {
-        id: '1001',
-        name: 'Retirement Planning',
-        stage: '422586', // Lead
-        status: 'open',
-        pipeline: 'Sales',
-        pipeline_id: 'sales_pipeline',
-        amount: 50000,
-        probability: 0.2,
-        expected_close_date: '2023-12-31',
-        created_at: '2023-01-01',
-        updated_at: '2023-01-05',
-        custom_fields: { advisorId: '5' },
-        assigned_to_id: 'wb_user_1' // Sample Wealthbox user ID
-      },
-      {
-        id: '1002',
-        name: 'Investment Strategy',
-        stage: '422584', // Qualified
-        status: 'open',
-        pipeline: 'Sales',
-        pipeline_id: 'sales_pipeline',
-        amount: 75000,
-        probability: 0.4,
-        expected_close_date: '2023-11-30',
-        created_at: '2023-02-01',
-        updated_at: '2023-02-10',
-        custom_fields: { advisorId: '5' },
-        assigned_to_id: 'wb_user_1' // Same Wealthbox user ID
-      },
-      {
-        id: '1003',
-        name: 'Tax Planning',
-        stage: '621628', // Proposal
-        status: 'open',
-        pipeline: 'Sales',
-        pipeline_id: 'sales_pipeline',
-        amount: 30000,
-        probability: 0.6,
-        expected_close_date: '2023-10-15',
-        created_at: '2023-03-01',
-        updated_at: '2023-03-15',
-        custom_fields: { advisorId: '5' },
-        assigned_to_id: 'wb_user_1'
-      },
-      {
-        id: '1004',
-        name: 'Estate Planning',
-        stage: '621629', // Negotiation
-        status: 'open',
-        pipeline: 'Sales',
-        pipeline_id: 'sales_pipeline',
-        amount: 100000,
-        probability: 0.8,
-        expected_close_date: '2023-09-30',
-        created_at: '2023-04-01',
-        updated_at: '2023-04-10',
-        custom_fields: { advisorId: '5' },
-        assigned_to_id: 'wb_user_1'
-      },
-      {
-        id: '1005',
-        name: 'Insurance Review',
-        stage: '621631', // Closed Won
-        status: 'won',
-        pipeline: 'Sales',
-        pipeline_id: 'sales_pipeline',
-        amount: 25000,
-        probability: 1.0,
-        expected_close_date: '2023-08-15',
-        created_at: '2023-05-01',
-        updated_at: '2023-05-20',
-        custom_fields: { advisorId: '5' },
-        assigned_to_id: 'wb_user_1'
-      },
-      
-      // Other opportunities for different advisors
-      {
-        id: '2001',
-        name: 'Wealth Management',
-        stage: '422586', // Lead
-        status: 'open',
-        pipeline: 'Marketing',
-        pipeline_id: 'marketing_pipeline',
-        amount: 150000,
-        probability: 0.3,
-        expected_close_date: '2023-11-30',
-        created_at: '2023-02-15',
-        updated_at: '2023-02-20',
-        custom_fields: { advisorId: '6' },
-        assigned_to_id: 'wb_user_2' // Different Wealthbox user
-      },
-      {
-        id: '2002',
-        name: 'Financial Planning',
-        stage: '621628', // Proposal
-        status: 'open',
-        pipeline: 'Marketing',
-        pipeline_id: 'marketing_pipeline',
-        amount: 80000,
-        probability: 0.7,
-        expected_close_date: '2023-10-30',
-        created_at: '2023-03-15',
-        updated_at: '2023-03-25',
-        custom_fields: { advisorId: '6' },
-        assigned_to_id: 'wb_user_2' // Different Wealthbox user
-      },
-      {
-        id: '3001',
-        name: 'Portfolio Review',
-        stage: '422584', // Qualified
-        status: 'open',
-        pipeline: 'Customer Success',
-        pipeline_id: 'cs_pipeline',
-        amount: 45000,
-        probability: 0.5,
-        expected_close_date: '2023-09-15',
-        created_at: '2023-04-10',
-        updated_at: '2023-04-20',
-        custom_fields: { advisorId: '7' },
-        assigned_to_id: 'wb_user_3' // Another Wealthbox user
-      }
-    ];
-
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 150));
-    
-    return sampleOpportunities;
-    
-    /* 
-    // This is what the real API call would look like
+    // Call the real WealthBox API to get opportunities
     const response = await axios.get('https://api.crmworkspace.com/v1/opportunities', {
       params: {
         per_page: 100,  // Max per page to reduce API calls
@@ -259,9 +123,31 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
       }
     });
 
+    // Check for null or empty response and handle accordingly
+    if (!response.data || !response.data.opportunities) {
+      console.warn('No opportunities data returned from WealthBox API');
+      return [];
+    }
+
     // The API response format may vary, adjust based on actual WealthBox response
-    return response.data.opportunities || [];
-    */
+    return response.data.opportunities.map((opp: any) => {
+      // Transform API response to match our interface if needed
+      return {
+        id: opp.id.toString(),
+        name: opp.name,
+        stage: opp.stage_id || opp.stage || 'Unknown',
+        status: opp.status || 'open',
+        pipeline: opp.pipeline || 'Default',
+        pipeline_id: opp.pipeline_id || 'default_pipeline',
+        amount: opp.amount || 0,
+        probability: opp.probability || 0,
+        expected_close_date: opp.expected_close_date || opp.close_date || new Date().toISOString(),
+        created_at: opp.created_at || new Date().toISOString(),
+        updated_at: opp.updated_at || new Date().toISOString(),
+        custom_fields: opp.custom_fields || {},
+        assigned_to_id: opp.assigned_to_id || opp.user_id || null
+      };
+    });
   } catch (error: any) {
     console.error('Error fetching from WealthBox API:', error);
     throw new Error(error.response?.data?.message || 'Failed to fetch opportunities from WealthBox');
