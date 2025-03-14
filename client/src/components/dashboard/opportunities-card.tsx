@@ -171,7 +171,7 @@ export function OpportunitiesCard({ wealthboxToken, advisorId, wealthboxUserId, 
             chartData = pipeline.stages.map((stage: OpportunityStage) => ({
               name: stage.stage,
               value: stage.count,
-              stageId: stage.stageId,
+              // stageId removed per request to not show IDs
               color: getStageColor(stage.stage)
             }));
           } else {
@@ -192,8 +192,8 @@ export function OpportunitiesCard({ wealthboxToken, advisorId, wealthboxUserId, 
                 monthData[stageData.stage] = Math.round(baseCount * randomFactor);
                 // Add color mapping
                 monthData[`${stageData.stage}Color`] = getStageColor(stageData.stage);
-                // Store the stageId for reference if needed
-                monthData[`${stageData.stage}Id`] = stageData.stageId;
+                // No longer storing stageId per request to not show IDs
+                // monthData[`${stageData.stage}Id`] = stageData.stageId;
               });
               
               return monthData;
@@ -207,7 +207,7 @@ export function OpportunitiesCard({ wealthboxToken, advisorId, wealthboxUserId, 
         chartData = opportunitiesData.data.stages.map((stage: OpportunityStage) => ({
           name: stage.stage,
           value: stage.count,
-          stageId: stage.stageId,
+          // stageId removed per request to not show IDs
           color: getStageColor(stage.stage)
         }));
       } else {
@@ -215,7 +215,7 @@ export function OpportunitiesCard({ wealthboxToken, advisorId, wealthboxUserId, 
         chartData = opportunitiesData.data.stages.map((stage: OpportunityStage) => ({
           stage: stage.stage,
           count: stage.count,
-          stageId: stage.stageId,
+          // stageId removed per request to not show IDs
           color: getStageColor(stage.stage)
         }));
       }
@@ -349,8 +349,8 @@ export function OpportunitiesCard({ wealthboxToken, advisorId, wealthboxUserId, 
                       if (viewMode === 'pipeline') {
                         return [`${value} opportunities`, name];
                       } else {
-                        const stageId = props.payload[0]?.payload.stageId;
-                        return [`${value} opportunities`, `${props.payload[0]?.payload.stage}${stageId ? ` (ID: ${stageId})` : ''}`];
+                        // No longer showing stageId per request
+                        return [`${value} opportunities`, `${props.payload[0]?.payload.stage}`];
                       }
                     }}
                   />
