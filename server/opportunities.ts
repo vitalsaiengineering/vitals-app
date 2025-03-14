@@ -91,15 +91,9 @@ export async function getOpportunitiesByPipelineHandler(req: Request, res: Respo
       
       console.log(`Matches as string: ${matchesString}, matches as number: ${matchesNumber}`);
       
-      // Filter opportunities by Wealthbox user ID
+      // Filter opportunities by Wealthbox user ID using our helper function
       filteredOpportunities = opportunities.filter(opp => {
-        // Check if it matches assigned_to_id, manager_id, or creator_id
-        const isMatch = 
-          (opp.assigned_to_id === wbUserId) || 
-          (opp.assigned_to_id && opp.assigned_to_id.toString() === wbUserId) ||
-          (opp.manager_id === wbUserId) ||
-          (opp.manager_id && opp.manager_id.toString() === wbUserId);
-        
+        const isMatch = opportunityBelongsToUser(opp, wbUserId);
         if (isMatch) console.log(`Matched opportunity by ID: ${opp.id}, ${opp.name}`);
         return isMatch;
       });
@@ -258,6 +252,39 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
 }
 
 /**
+ * Helper function to check if an opportunity belongs to a specific user ID
+ * Checks all possible ID fields for a match
+ * @param opportunity The opportunity to check
+ * @param userId The user ID to match against
+ * @returns True if the opportunity belongs to the user, false otherwise
+ */
+function opportunityBelongsToUser(opportunity: WealthboxOpportunity, userId: string): boolean {
+  // Convert to string for consistent comparison
+  const idToMatch = userId.toString();
+  
+  // Check assigned_to_id (direct assignment)
+  if (opportunity.assigned_to_id === idToMatch || 
+      (opportunity.assigned_to_id && opportunity.assigned_to_id.toString() === idToMatch)) {
+    return true;
+  }
+  
+  // Check manager_id (opportunity manager)
+  if (opportunity.manager_id === idToMatch || 
+      (opportunity.manager_id && opportunity.manager_id.toString() === idToMatch)) {
+    return true;
+  }
+  
+  // Check creator_id (opportunity creator)
+  if (opportunity.creator_id === idToMatch || 
+      (opportunity.creator_id && opportunity.creator_id.toString() === idToMatch)) {
+    return true;
+  }
+  
+  // No match found
+  return false;
+}
+
+/**
  * Extract unique pipelines from opportunities list
  */
 function getUniquePipelines(opportunities: WealthboxOpportunity[]): string[] {
@@ -374,15 +401,9 @@ export async function getOpportunityStagesHandler(req: Request, res: Response) {
       
       console.log(`Stage matches as string: ${matchesString}, matches as number: ${matchesNumber}`);
       
-      // Filter opportunities by Wealthbox user ID
+      // Filter opportunities by Wealthbox user ID using our helper function
       filteredOpportunities = opportunities.filter(opp => {
-        // Check if it matches assigned_to_id, manager_id, or creator_id
-        const isMatch = 
-          (opp.assigned_to_id === wbUserId) || 
-          (opp.assigned_to_id && opp.assigned_to_id.toString() === wbUserId) ||
-          (opp.manager_id === wbUserId) ||
-          (opp.manager_id && opp.manager_id.toString() === wbUserId);
-        
+        const isMatch = opportunityBelongsToUser(opp, wbUserId);
         if (isMatch) console.log(`Matched stage opportunity by ID: ${opp.id}, ${opp.name}`);
         return isMatch;
       });
