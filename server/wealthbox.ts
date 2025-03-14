@@ -590,35 +590,56 @@ export async function fetchActiveClientsByState(accessToken: string | null): Pro
  */
 export async function getActiveClientsByStateHandler(req: Request, res: Response) {
   try {
+    // Check if a specific Wealthbox user ID is provided (for filtering)
+    const requestedUserId = req.query.wealthboxUserId ? Number(req.query.wealthboxUserId) : undefined;
+    console.log(`Geographic Distribution API - WealthboxUserId parameter: ${requestedUserId}`);
+    
     // Get the user's token if they're authenticated
     let accessToken = null;
-    if (req.user && (req.user as any).wealthboxToken) {
-      accessToken = (req.user as any).wealthboxToken;
-    } else {
-      // Try to use access_token parameter if provided
-      accessToken = req.query.access_token as string;
-    }
     
-    // If no token available, get from configuration
-    if (!accessToken) {
+    // 1. Try to use access_token parameter if provided
+    if (req.query.access_token) {
+      accessToken = req.query.access_token as string;
+      console.log("Using access_token from query parameters");
+    } 
+    // 2. Try to use the authenticated user's token
+    else if (req.user && (req.user as any).wealthboxToken) {
+      accessToken = (req.user as any).wealthboxToken;
+      console.log("Using authenticated user's Wealthbox token");
+    } 
+    // 3. Fall back to default token from configuration
+    else {
       const userId = (req.user as any)?.id;
-      const token = await getWealthboxToken(userId);
-      if (!token) {
+      console.log(`Attempting to get token for user ID: ${userId || 'none'}`);
+      const configToken = await getWealthboxToken(userId);
+      
+      if (configToken) {
+        accessToken = configToken;
+        console.log("Using token from configuration for geographic distribution API");
+      } else {
+        console.error("No Wealthbox token available for geographic distribution API");
         return res.status(400).json({ 
           success: false, 
           error: 'WealthBox access token is required' 
         });
       }
-      accessToken = token;
-      console.log("Using configured Wealthbox token for API");
     }
     
-    // Check for Wealthbox user filter
-    const { wealthboxUserId } = req.query;
-    if (wealthboxUserId) {
-      console.log(`Filtering active clients for Wealthbox user ID: ${wealthboxUserId}`);
+    // Log additional information for filtering
+    if (requestedUserId) {
+      console.log(`Will attempt to filter results for Wealthbox user ID: ${requestedUserId}`);
       // Note: The Wealthbox API might not support filtering by user in the contacts endpoint
       // In a real implementation, you might need to fetch all contacts and filter on your end
+    }
+    
+    // Test the token before proceeding
+    const isConnected = await testWealthboxConnection(accessToken);
+    if (!isConnected) {
+      console.error("Token authentication failed when attempting to fetch geographic distribution data");
+      return res.status(401).json({
+        success: false,
+        error: 'WealthBox authentication failed'
+      });
     }
     
     // Fetch and process the data
@@ -644,31 +665,33 @@ export async function getActiveClientsByStateHandler(req: Request, res: Response
 export async function getActiveClientsByAgeHandler(req: Request, res: Response) {
   try {
     // Check if a specific Wealthbox user ID is provided (for filtering)
-    const requestedWealthboxUserId = req.query.wealthboxUserId ? Number(req.query.wealthboxUserId) : undefined;
-    console.log(`Age Distribution API - WealthboxUserId parameter: ${requestedWealthboxUserId}`);
+    const requestedUserId = req.query.wealthboxUserId ? Number(req.query.wealthboxUserId) : undefined;
+    console.log(`Age Distribution API - WealthboxUserId parameter: ${requestedUserId}`);
     
     // Get the user's token if they're authenticated
     let accessToken = null;
-    if (req.user && (req.user as any).wealthboxToken) {
-      accessToken = (req.user as any).wealthboxToken;
-      console.log("Using user's Wealthbox token");
-    } else {
-      // Try to use access_token parameter if provided
-      accessToken = req.query.access_token as string;
-      if (accessToken) {
-        console.log("Using provided access_token parameter");
-      }
-    }
     
-    // If no token available, get from configuration
-    if (!accessToken) {
+    // 1. Try to use access_token parameter if provided
+    if (req.query.access_token) {
+      accessToken = req.query.access_token as string;
+      console.log("Using access_token from query parameters");
+    } 
+    // 2. Try to use the authenticated user's token
+    else if (req.user && (req.user as any).wealthboxToken) {
+      accessToken = (req.user as any).wealthboxToken;
+      console.log("Using authenticated user's Wealthbox token");
+    } 
+    // 3. Fall back to default token from configuration
+    else {
       const userId = (req.user as any)?.id;
       console.log(`Attempting to get token for user ID: ${userId || 'none'}`);
-      const token = await getWealthboxToken(userId);
-      if (token) {
+      const configToken = await getWealthboxToken(userId);
+      
+      if (configToken) {
+        accessToken = configToken;
         console.log("Using token from configuration for age distribution API");
-        accessToken = token;
       } else {
+        console.error("No Wealthbox token available for age distribution API");
         return res.status(400).json({ 
           success: false, 
           error: 'WealthBox access token is required' 
@@ -676,12 +699,21 @@ export async function getActiveClientsByAgeHandler(req: Request, res: Response) 
       }
     }
     
-    // Check for Wealthbox user filter
-    const { wealthboxUserId } = req.query;
-    if (wealthboxUserId) {
-      console.log(`Filtering active clients for Wealthbox user ID: ${wealthboxUserId}`);
+    // Log additional information for filtering
+    if (requestedUserId) {
+      console.log(`Will attempt to filter results for Wealthbox user ID: ${requestedUserId}`);
       // Note: The Wealthbox API might not support filtering by user in the contacts endpoint
       // In a real implementation, you might need to fetch all contacts and filter on your end
+    }
+    
+    // Test the token before proceeding
+    const isConnected = await testWealthboxConnection(accessToken);
+    if (!isConnected) {
+      console.error("Token authentication failed when attempting to fetch age distribution data");
+      return res.status(401).json({
+        success: false,
+        error: 'WealthBox authentication failed'
+      });
     }
     
     // Fetch and process the data
@@ -706,24 +738,47 @@ export async function getActiveClientsByAgeHandler(req: Request, res: Response) 
  */
 export async function getWealthboxUsersHandler(req: Request, res: Response) {
   try {
-    // Get token from query parameter, user token, or configuration
-    let accessToken = req.query.access_token as string;
+    console.log("Wealthbox Users API - Fetching all users");
     
-    if (!accessToken && req.user) {
+    // Get the user's token if they're authenticated
+    let accessToken = null;
+    
+    // 1. Try to use access_token parameter if provided
+    if (req.query.access_token) {
+      accessToken = req.query.access_token as string;
+      console.log("Using access_token from query parameters");
+    } 
+    // 2. Try to use the authenticated user's token
+    else if (req.user && (req.user as any).wealthboxToken) {
       accessToken = (req.user as any).wealthboxToken;
-    }
-    
-    if (!accessToken) {
+      console.log("Using authenticated user's Wealthbox token");
+    } 
+    // 3. Fall back to default token from configuration
+    else {
       const userId = (req.user as any)?.id;
-      const token = await getWealthboxToken(userId);
-      if (!token) {
+      console.log(`Attempting to get token for user ID: ${userId || 'none'}`);
+      const configToken = await getWealthboxToken(userId);
+      
+      if (configToken) {
+        accessToken = configToken;
+        console.log("Using token from configuration for users API");
+      } else {
+        console.error("No Wealthbox token available for users API");
         return res.status(400).json({ 
           success: false, 
           error: 'WealthBox access token is required' 
         });
       }
-      accessToken = token;
-      console.log("Using configured Wealthbox token for users API");
+    }
+    
+    // Test the token before proceeding
+    const isConnected = await testWealthboxConnection(accessToken);
+    if (!isConnected) {
+      console.error("Token authentication failed when attempting to fetch Wealthbox users");
+      return res.status(401).json({
+        success: false,
+        error: 'WealthBox authentication failed'
+      });
     }
 
     // Fetch users from Wealthbox API
