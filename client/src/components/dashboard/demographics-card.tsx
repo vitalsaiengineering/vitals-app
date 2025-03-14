@@ -45,11 +45,11 @@ export function DemographicsCard({
   return (
     <MetricCard
       title="Client Demographics"
-      subtitle="Age Distribution"
+      subtitle="Age and Location"
       actions={actions}
-      className="md:col-span-2 lg:col-span-2"
+      className="md:col-span-2 lg:col-span-3"
     >
-      <div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Age Distribution */}
         <div>
           <h3 className="text-sm font-medium text-neutral-700 mb-2">Age Distribution</h3>
@@ -58,11 +58,11 @@ export function DemographicsCard({
               data={ageChartData}
               xAxisDataKey="range"
               series={ageChartSeries}
-              height={250}
+              height={200}
             />
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-6">
+          <div className="mt-2 grid grid-cols-2 gap-4">
             <div>
               <div className="text-sm text-neutral-500">Average Age</div>
               <div className="text-lg font-semibold">{averageAge} years</div>
@@ -70,6 +70,48 @@ export function DemographicsCard({
             <div>
               <div className="text-sm text-neutral-500">Largest Segment</div>
               <div className="text-lg font-semibold">{largestAgeSegment}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Geographic Distribution */}
+        <div>
+          <h3 className="text-sm font-medium text-neutral-700 mb-2">Geographic Distribution</h3>
+          <div className="mt-2">
+            <h4 className="text-sm font-medium text-neutral-700 mb-1">Top States</h4>
+            <div className="grid grid-cols-2 gap-2">
+              {stateDistribution.slice(0, 4).map((state, index) => (
+                <div key={index} className="flex items-center">
+                  <span 
+                    className="h-2 w-2 rounded-full mr-1"
+                    style={{ 
+                      backgroundColor: `hsl(var(--primary-${700 - (index * 100)}))` 
+                    }}
+                  ></span>
+                  <span className="text-sm">{state.state}</span>
+                  <span className="ml-auto text-sm font-medium">{state.percentage.toFixed(0)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="mt-4">
+            <div className="p-4 bg-neutral-50 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm text-neutral-500">Top State</div>
+                  <div className="text-lg font-semibold">
+                    {stateDistribution.length > 0 ? stateDistribution[0].state : 'N/A'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-neutral-500">Percentage</div>
+                  <div className="text-lg font-semibold">
+                    {stateDistribution.length > 0 ? 
+                      `${stateDistribution[0].percentage.toFixed(0)}%` : 'N/A'}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
