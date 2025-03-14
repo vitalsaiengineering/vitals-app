@@ -261,8 +261,8 @@ export class MemStorage implements IStorage {
     // Create a client admin
     const clientAdmin: User = {
       id: 4,
-      username: "c",
-      password: "p", // In a real app, this would be hashed
+      username: "clientadmin",
+      password: "mpcs12345!", // In a real app, this would be hashed
       email: "clientadmin@example.com",
       fullName: "Client Administrator",
       role: "client_admin",
@@ -286,7 +286,7 @@ export class MemStorage implements IStorage {
     const advisor1: User = {
       id: 5,
       username: "advisor",
-      password: "password", // In a real app, this would be hashed
+      password: "mpjc12345!", // In a real app, this would be hashed
       email: "advisor@example.com",
       fullName: "Sarah Johnson",
       role: "financial_advisor",
