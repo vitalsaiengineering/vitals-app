@@ -15,7 +15,9 @@ interface WealthboxOpportunity {
   custom_fields?: Record<string, any>;
   created_at: string;
   updated_at: string;
-  assigned_to_id?: string | number; // ID of the WealthBox user who owns this opportunity - can be string or number
+  assigned_to_id?: string | number; // ID of the WealthBox user who owns this opportunity
+  manager_id?: string | number;     // ID of the manager for this opportunity 
+  creator_id?: string | number;     // ID of the user who created this opportunity
 }
 
 // Map numeric stage IDs to descriptive names
@@ -91,9 +93,14 @@ export async function getOpportunitiesByPipelineHandler(req: Request, res: Respo
       
       // Filter opportunities by Wealthbox user ID
       filteredOpportunities = opportunities.filter(opp => {
-        const isMatch = opp.assigned_to_id === wbUserId;
-        // For detailed logging, uncomment if needed
-        // if (isMatch) console.log(`Matched opportunity: ${opp.id}, ${opp.name}`);
+        // Check if it matches assigned_to_id, manager_id, or creator_id
+        const isMatch = 
+          (opp.assigned_to_id === wbUserId) || 
+          (opp.assigned_to_id && opp.assigned_to_id.toString() === wbUserId) ||
+          (opp.manager_id === wbUserId) ||
+          (opp.manager_id && opp.manager_id.toString() === wbUserId);
+        
+        if (isMatch) console.log(`Matched opportunity by ID: ${opp.id}, ${opp.name}`);
         return isMatch;
       });
       
@@ -193,6 +200,12 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
 
     // The API response format may vary, adjust based on actual WealthBox response
     const mappedOpportunities = response.data.opportunities.map((opp: any) => {
+      // Log raw data from the first opportunity to help with debugging
+      if (response.data.opportunities.indexOf(opp) === 0) {
+        console.log(`Raw manager field: ${JSON.stringify(opp.manager)}`);
+        console.log(`Raw creator field: ${JSON.stringify(opp.creator)}`);
+      }
+      
       // Transform API response to match our interface if needed
       return {
         id: opp.id.toString(),
@@ -207,6 +220,8 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
         created_at: opp.created_at || new Date().toISOString(),
         updated_at: opp.updated_at || new Date().toISOString(),
         custom_fields: opp.custom_fields || {},
+        manager_id: opp.manager || null,
+        creator_id: opp.creator || null,
         assigned_to_id: opp.assigned_to_id || opp.user_id || null
       };
     });
@@ -360,7 +375,14 @@ export async function getOpportunityStagesHandler(req: Request, res: Response) {
       
       // Filter opportunities by Wealthbox user ID
       filteredOpportunities = opportunities.filter(opp => {
-        const isMatch = opp.assigned_to_id === wbUserId;
+        // Check if it matches assigned_to_id, manager_id, or creator_id
+        const isMatch = 
+          (opp.assigned_to_id === wbUserId) || 
+          (opp.assigned_to_id && opp.assigned_to_id.toString() === wbUserId) ||
+          (opp.manager_id === wbUserId) ||
+          (opp.manager_id && opp.manager_id.toString() === wbUserId);
+        
+        if (isMatch) console.log(`Matched stage opportunity by ID: ${opp.id}, ${opp.name}`);
         return isMatch;
       });
       

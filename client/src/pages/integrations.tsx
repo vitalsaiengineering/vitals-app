@@ -39,7 +39,7 @@ export default function Integrations() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [accessToken, setAccessToken] = useState("a362b9c57ca349e5af99a6d8d4af6b3a"); // Default to provided token
+  const [accessToken, setAccessToken] = useState("34b27e49093743a9ad58b9b793c12bc9"); // Default to provided token
   const [connectionStatus, setConnectionStatus] = useState<'none' | 'success' | 'error'>('none');
   
   // Get current user
