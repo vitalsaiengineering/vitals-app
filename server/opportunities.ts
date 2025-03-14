@@ -30,20 +30,8 @@ const stageNameMap: Record<string, string> = {
   '622840': 'Review',
   '622841': 'Proposal',
   '622842': 'Lost',
-  '622843': 'Won',
-  // Adding string versions of the names in case API returns names directly
-  'Evaluation': 'Evaluation',
-  'Identify Decision Makers': 'Identify Decision Makers',
-  'Qualification': 'Qualification',
-  'Needs Analysis': 'Needs Analysis',
-  'Review': 'Review',
-  'Proposal': 'Proposal',
-  'Lost': 'Lost',
-  'Won': 'Won'
+  '622843': 'Won'
 };
-
-// Print the stage map to confirm initialization
-console.log('Stage name map initialized:', Object.keys(stageNameMap));
 
 interface OpportunityStageCount {
   stage: string;
@@ -236,11 +224,6 @@ async function fetchWealthboxOpportunities(accessToken: string): Promise<Wealthb
         }
       }
       
-      // Log all stage IDs from the responses to ensure we're mapping correctly
-      if (response.data.opportunities.indexOf(opp) < 5) {
-        console.log(`Stage from API for opportunity ${opp.id}: ${opp.stage}`);
-      }
-      
       // Transform API response to match our interface for the actual Wealthbox API format
       return {
         id: opp.id.toString(),
@@ -370,25 +353,15 @@ function aggregateOpportunitiesByPipeline(
     
     pipelineOpportunities.forEach(opp => {
       const stage = opp.stage || 'Unknown';
-      console.log(`Opportunity stage value: "${stage}" (type: ${typeof stage})`);
       stagesMap.set(stage, (stagesMap.get(stage) || 0) + 1);
     });
     
-    // Log the raw stages we found before mapping
-    console.log('Raw stages before mapping:', Array.from(stagesMap.keys()));
-    
     // Convert map to array of stage counts with friendly names only (no IDs)
-    const stages = Array.from(stagesMap.entries()).map(([stage, count]) => {
-      // Determine the friendly name for this stage
-      const friendlyName = stageNameMap[stage] || stage;
-      console.log(`Mapping stage "${stage}" to friendly name: "${friendlyName}"`);
-      
-      return {
-        stage: friendlyName, // Use friendly name if available
-        // stageId field intentionally omitted per request to not show IDs
-        count
-      };
-    });
+    const stages = Array.from(stagesMap.entries()).map(([stage, count]) => ({
+      stage: stageNameMap[stage] || stage, // Use friendly name if available
+      // stageId removed per request to not show IDs
+      count
+    }));
     
     return {
       pipeline,
@@ -497,21 +470,12 @@ export async function getOpportunityStagesHandler(req: Request, res: Response) {
       stagesMap.set(stage, (stagesMap.get(stage) || 0) + 1);
     });
     
-    // Log the raw stages we found before mapping
-    console.log('Raw opportunity stages before mapping:', Array.from(stagesMap.keys()));
-    
     // Convert map to array of stage counts with friendly names only (no IDs)
-    const stages = Array.from(stagesMap.entries()).map(([stage, count]) => {
-      // Determine the friendly name for this stage
-      const friendlyName = stageNameMap[stage] || stage;
-      console.log(`Mapping opportunity stage "${stage}" to friendly name: "${friendlyName}"`);
-      
-      return {
-        stage: friendlyName, // Use friendly name if available
-        // stageId field intentionally omitted per request to not show IDs
-        count
-      };
-    });
+    const stages = Array.from(stagesMap.entries()).map(([stage, count]) => ({
+      stage: stageNameMap[stage] || stage, // Use friendly name if available
+      // stageId removed per request to not show IDs
+      count
+    }));
     
     res.json({
       success: true,
