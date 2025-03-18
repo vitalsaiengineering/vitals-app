@@ -258,30 +258,6 @@ export class MemStorage implements IStorage {
     };
     this.users.set(3, firmAdmin);
 
-    // Create a client admin
-    const clientAdmin: User = {
-      id: 4,
-      username: "clientadmin",
-      password: "mpjc12345!", // In a real app, this would be hashed
-      email: "clientadmin@example.com",
-      fullName: "Client Administrator",
-      role: "client_admin",
-      organizationId: 3, // Firm 1
-      wealthboxConnected: false,
-      wealthboxToken: null,
-      wealthboxRefreshToken: null,
-      wealthboxTokenExpiry: null,
-      // OAuth fields
-      googleId: null,
-      googleToken: null,
-      googleRefreshToken: null,
-      microsoftId: null,
-      microsoftToken: null,
-      microsoftRefreshToken: null,
-      createdAt: new Date(),
-    };
-    this.users.set(4, clientAdmin);
-
     // Create a financial advisor in firm 1
     const advisor1: User = {
       id: 5,
