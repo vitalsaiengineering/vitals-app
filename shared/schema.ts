@@ -1,171 +1,428 @@
-import { pgTable, text, serial, integer, boolean, jsonb, timestamp, pgEnum } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
+// schema.ts
+import {
+  pgTable,
+  serial,
+  varchar,
+  timestamp,
+  integer,
+  boolean,
+  json,
+  text,
+  pgEnum,
+} from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
-// Enums for our schema
-export const userRoleEnum = pgEnum('user_role', ['global_admin', 'client_admin', 'financial_advisor', 'home_office', 'firm_admin']);
+// Enums
+export const organizationTypeEnum = pgEnum("organization_type", [
+  "global",
+  "multi_network",
+  "network",
+  "firm",
+]);
+export const roleNameEnum = pgEnum("role_name", [
+  "global_admin",
+  "multi_network_admin",
+  "network_admin",
+  "firm_admin",
+  "advisor",
+]);
+export const statusEnum = pgEnum("status", [
+  "active",
+  "inactive",
+  "pending",
+  "suspended",
+]);
+export const accessLevelEnum = pgEnum("access_level", [
+  "read",
+  "write",
+  "admin",
+]);
 
-// Organizations table
+// Tables
+export const roles = pgTable("roles", {
+  id: serial("id").primaryKey(),
+  name: roleNameEnum("name").notNull(),
+  permissions: json("permissions").notNull().default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const organizations = pgTable("organizations", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  type: text("type").notNull().default('firm'), // 'home_office', 'firm'
-  parentId: integer("parent_id").references(() => organizations.id), // For home_office -> firm relationship
-  createdAt: timestamp("created_at").defaultNow(),
+  name: varchar("name", { length: 100 }).notNull(),
+  type: organizationTypeEnum("type").notNull(),
+  parentId: integer("parent_id").references(() => organizations.id),
+  status: statusEnum("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Users table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password"), // Can be null for OAuth users
-  email: text("email").notNull().unique(),
-  fullName: text("full_name").notNull(),
-  role: userRoleEnum("role").notNull(),
-  organizationId: integer("organization_id").references(() => organizations.id),
-  // Wealthbox Connection
-  wealthboxConnected: boolean("wealthbox_connected").default(false),
-  wealthboxToken: text("wealthbox_token"),
-  wealthboxRefreshToken: text("wealthbox_refresh_token"),
-  wealthboxTokenExpiry: timestamp("wealthbox_token_expiry"),
-  // Google OAuth fields
-  googleId: text("google_id"),
-  googleToken: text("google_token"),
-  googleRefreshToken: text("google_refresh_token"),
-  // Microsoft OAuth fields (for future use)
-  microsoftId: text("microsoft_id"),
-  microsoftToken: text("microsoft_token"),
-  microsoftRefreshToken: text("microsoft_refresh_token"),
-  createdAt: timestamp("created_at").defaultNow(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+  firstName: varchar("first_name", { length: 100 }).notNull(),
+  lastName: varchar("last_name", { length: 100 }).notNull(),
+  roleId: integer("role_id")
+    .notNull()
+    .references(() => roles.id),
+  organizationId: integer("organization_id")
+    .notNull()
+    .references(() => organizations.id),
+  status: statusEnum("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Clients table
+export const organizationHierarchy = pgTable("organization_hierarchy", {
+  id: serial("id").primaryKey(),
+  parentOrgId: integer("parent_org_id")
+    .notNull()
+    .references(() => organizations.id),
+  childOrgId: integer("child_org_id")
+    .notNull()
+    .references(() => organizations.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const integrationTypes = pgTable("integration_types", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 50 }).notNull().unique(),
+  apiVersion: varchar("api_version", { length: 20 }).notNull(),
+  endpointBaseUrl: varchar("endpoint_base_url", { length: 255 }).notNull(),
+  requiredCredentials: json("required_credentials").notNull(),
+  defaultFieldMappings: json("default_field_mappings").notNull().default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const firmIntegrationConfigs = pgTable("firm_integration_configs", {
+  id: serial("id").primaryKey(),
+  integrationTypeId: integer("integration_type_id")
+    .notNull()
+    .references(() => integrationTypes.id),
+  firmId: integer("firm_id")
+    .notNull()
+    .references(() => organizations.id),
+  credentials: json("credentials").notNull(),
+  settings: json("settings").notNull().default({}),
+  status: statusEnum("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const firmDataMappings = pgTable("firm_data_mappings", {
+  id: serial("id").primaryKey(),
+  firmId: integer("firm_id")
+    .notNull()
+    .references(() => organizations.id),
+  integrationTypeId: integer("integration_type_id")
+    .notNull()
+    .references(() => integrationTypes.id),
+  entityType: varchar("entity_type", { length: 50 }).notNull(),
+  sourceField: varchar("source_field", { length: 100 }).notNull(),
+  targetField: varchar("target_field", { length: 100 }).notNull(),
+  transformationRule: text("transformation_rule"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const advisorIntegrationAccess = pgTable("advisor_integration_access", {
+  id: serial("id").primaryKey(),
+  advisorId: integer("advisor_id")
+    .notNull()
+    .references(() => users.id),
+  firmIntegrationConfigId: integer("firm_integration_config_id")
+    .notNull()
+    .references(() => firmIntegrationConfigs.id),
+  canAccess: boolean("can_access").notNull().default(false),
+  accessScope: json("access_scope").default({}),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const integrationDataStorage = pgTable("integration_data_storage", {
+  id: serial("id").primaryKey(),
+  firmIntegrationConfigId: integer("firm_integration_config_id")
+    .notNull()
+    .references(() => firmIntegrationConfigs.id),
+  dataType: varchar("data_type", { length: 50 }).notNull(),
+  externalId: varchar("external_id", { length: 100 }),
+  rawData: json("raw_data").notNull(),
+  mappedData: json("mapped_data").notNull(),
+  lastSyncedAt: timestamp("last_synced_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const clients = pgTable("clients", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email"),
-  phone: text("phone"),
-  address: text("address"),
-  city: text("city"),
-  state: text("state"),
-  zip: text("zip"),
-  age: integer("age"),
-  aum: integer("aum"), // Assets Under Management in cents
-  revenue: integer("revenue"), // Revenue in cents
-  organizationId: integer("organization_id").references(() => organizations.id).notNull(),
-  advisorId: integer("advisor_id").references(() => users.id),
-  wealthboxClientId: text("wealthbox_client_id"),
-  metadata: jsonb("metadata"), // Additional client data from WealthBox
-  createdAt: timestamp("created_at").defaultNow(),
+  externalId: varchar("external_id", { length: 100 }),
+  firmId: integer("firm_id")
+    .notNull()
+    .references(() => organizations.id),
+  primaryAdvisorId: integer("primary_advisor_id").references(() => users.id),
+  firstName: varchar("first_name", { length: 100 }).notNull(),
+  lastName: varchar("last_name", { length: 100 }).notNull(),
+  contactInfo: json("contact_info").notNull().default({}),
+  source: varchar("source", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Activities table
-export const activities = pgTable("activities", {
-  id: serial("id").primaryKey(),
-  type: text("type").notNull(), // email, call, meeting, etc.
-  title: text("title").notNull(),
-  description: text("description"),
-  date: timestamp("date").notNull(),
-  clientId: integer("client_id").references(() => clients.id).notNull(),
-  advisorId: integer("advisor_id").references(() => users.id).notNull(),
-  wealthboxActivityId: text("wealthbox_activity_id"),
-  metadata: jsonb("metadata"), // Additional activity data from WealthBox
-  createdAt: timestamp("created_at").defaultNow(),
-});
+export const clientAdvisorRelationships = pgTable(
+  "client_advisor_relationships",
+  {
+    id: serial("id").primaryKey(),
+    clientId: integer("client_id")
+      .notNull()
+      .references(() => clients.id),
+    advisorId: integer("advisor_id")
+      .notNull()
+      .references(() => users.id),
+    relationshipType: varchar("relationship_type", { length: 50 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+);
 
-// Portfolio table
 export const portfolios = pgTable("portfolios", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  clientId: integer("client_id").references(() => clients.id).notNull(),
-  advisorId: integer("advisor_id").references(() => users.id).notNull(),
-  totalValue: integer("total_value").notNull(), // in cents
-  wealthboxPortfolioId: text("wealthbox_portfolio_id"),
-  metadata: jsonb("metadata"), // Additional portfolio data from WealthBox
-  createdAt: timestamp("created_at").defaultNow(),
+  externalId: varchar("external_id", { length: 100 }),
+  clientId: integer("client_id")
+    .notNull()
+    .references(() => clients.id),
+  name: varchar("name", { length: 100 }).notNull(),
+  accountNumber: varchar("account_number", { length: 50 }),
+  accountType: varchar("account_type", { length: 50 }),
+  source: varchar("source", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Holdings table
-export const holdings = pgTable("holdings", {
+export const assets = pgTable("assets", {
   id: serial("id").primaryKey(),
-  assetClass: text("asset_class").notNull(), // equities, fixed income, alternatives, cash
-  name: text("name").notNull(),
-  value: integer("value").notNull(), // in cents
-  allocation: integer("allocation").notNull(), // percentage x 100 (e.g. 10.5% = 1050)
-  performance: integer("performance").notNull(), // percentage x 100 (e.g. 5.2% = 520)
-  portfolioId: integer("portfolio_id").references(() => portfolios.id).notNull(),
-  wealthboxHoldingId: text("wealthbox_holding_id"),
-  metadata: jsonb("metadata"), // Additional holding data from WealthBox
-  createdAt: timestamp("created_at").defaultNow(),
+  portfolioId: integer("portfolio_id")
+    .notNull()
+    .references(() => portfolios.id),
+  symbol: varchar("symbol", { length: 20 }),
+  assetType: varchar("asset_type", { length: 50 }).notNull(),
+  quantity: varchar("quantity", { length: 50 }).notNull(),
+  marketValue: varchar("market_value", { length: 50 }).notNull(),
+  valuationDate: timestamp("valuation_date").notNull(),
+  source: varchar("source", { length: 50 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Data Mapping table
-export const dataMappings = pgTable("data_mappings", {
+export const dataAccessPolicies = pgTable("data_access_policies", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
-  sourceField: text("source_field").notNull(),
-  targetField: text("target_field").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  organizationId: integer("organization_id")
+    .notNull()
+    .references(() => organizations.id),
+  dataType: varchar("data_type", { length: 50 }).notNull(),
+  accessRules: json("access_rules").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Insert Schemas
-export const insertOrganizationSchema = createInsertSchema(organizations).omit({ id: true, createdAt: true });
-export const insertUserSchema = createInsertSchema(users).omit({ 
-  id: true, 
-  createdAt: true, 
-  wealthboxConnected: true, 
-  wealthboxToken: true, 
-  wealthboxRefreshToken: true, 
-  wealthboxTokenExpiry: true,
-  googleId: true,
-  googleToken: true,
-  googleRefreshToken: true,
-  microsoftId: true,
-  microsoftToken: true,
-  microsoftRefreshToken: true
+export const userDataAccess = pgTable("user_data_access", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  dataAccessPolicyId: integer("data_access_policy_id")
+    .notNull()
+    .references(() => dataAccessPolicies.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
-export const insertClientSchema = createInsertSchema(clients).omit({ id: true, createdAt: true, wealthboxClientId: true, metadata: true });
-export const insertActivitySchema = createInsertSchema(activities).omit({ id: true, createdAt: true, wealthboxActivityId: true, metadata: true });
-export const insertPortfolioSchema = createInsertSchema(portfolios).omit({ id: true, createdAt: true, wealthboxPortfolioId: true, metadata: true });
-export const insertHoldingSchema = createInsertSchema(holdings).omit({ id: true, createdAt: true, wealthboxHoldingId: true, metadata: true });
-export const insertDataMappingSchema = createInsertSchema(dataMappings).omit({ id: true, createdAt: true });
 
-// Types
-export type Organization = typeof organizations.$inferSelect;
-export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
+// Relations
+export const rolesRelations = relations(roles, ({ many }) => ({
+  users: many(users),
+}));
 
-export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
+export const organizationsRelations = relations(
+  organizations,
+  ({ one, many }) => ({
+    parent: one(organizations, {
+      fields: [organizations.parentId],
+      references: [organizations.id],
+    }),
+    children: many(organizations),
+    users: many(users),
+    parentInHierarchy: many(organizationHierarchy, {
+      relationName: "parentOrgs",
+    }),
+    childInHierarchy: many(organizationHierarchy, {
+      relationName: "childOrgs",
+    }),
+    firmIntegrationConfigs: many(firmIntegrationConfigs),
+    firmDataMappings: many(firmDataMappings),
+    clients: many(clients),
+    dataAccessPolicies: many(dataAccessPolicies),
+  }),
+);
 
-export type Client = typeof clients.$inferSelect;
-export type InsertClient = z.infer<typeof insertClientSchema>;
+export const usersRelations = relations(users, ({ one, many }) => ({
+  role: one(roles, {
+    fields: [users.roleId],
+    references: [roles.id],
+  }),
+  organization: one(organizations, {
+    fields: [users.organizationId],
+    references: [organizations.id],
+  }),
+  advisorIntegrationAccess: many(advisorIntegrationAccess),
+  primaryAdvisorForClients: many(clients, { relationName: "primaryAdvisor" }),
+  clientAdvisorRelationships: many(clientAdvisorRelationships, {
+    relationName: "advisor",
+  }),
+  userDataAccess: many(userDataAccess),
+}));
 
-export type Activity = typeof activities.$inferSelect;
-export type InsertActivity = z.infer<typeof insertActivitySchema>;
+export const organizationHierarchyRelations = relations(
+  organizationHierarchy,
+  ({ one }) => ({
+    parentOrg: one(organizations, {
+      fields: [organizationHierarchy.parentOrgId],
+      references: [organizations.id],
+      relationName: "parentOrgs",
+    }),
+    childOrg: one(organizations, {
+      fields: [organizationHierarchy.childOrgId],
+      references: [organizations.id],
+      relationName: "childOrgs",
+    }),
+  }),
+);
 
-export type Portfolio = typeof portfolios.$inferSelect;
-export type InsertPortfolio = z.infer<typeof insertPortfolioSchema>;
+export const integrationTypesRelations = relations(
+  integrationTypes,
+  ({ many }) => ({
+    firmIntegrationConfigs: many(firmIntegrationConfigs),
+    firmDataMappings: many(firmDataMappings),
+  }),
+);
 
-export type Holding = typeof holdings.$inferSelect;
-export type InsertHolding = z.infer<typeof insertHoldingSchema>;
+export const firmIntegrationConfigsRelations = relations(
+  firmIntegrationConfigs,
+  ({ one, many }) => ({
+    integrationType: one(integrationTypes, {
+      fields: [firmIntegrationConfigs.integrationTypeId],
+      references: [integrationTypes.id],
+    }),
+    firm: one(organizations, {
+      fields: [firmIntegrationConfigs.firmId],
+      references: [organizations.id],
+    }),
+    advisorIntegrationAccess: many(advisorIntegrationAccess),
+    integrationDataStorage: many(integrationDataStorage),
+  }),
+);
 
-export type DataMapping = typeof dataMappings.$inferSelect;
-export type InsertDataMapping = z.infer<typeof insertDataMappingSchema>;
+export const firmDataMappingsRelations = relations(
+  firmDataMappings,
+  ({ one }) => ({
+    firm: one(organizations, {
+      fields: [firmDataMappings.firmId],
+      references: [organizations.id],
+    }),
+    integrationType: one(integrationTypes, {
+      fields: [firmDataMappings.integrationTypeId],
+      references: [integrationTypes.id],
+    }),
+  }),
+);
 
-// Extended types for the frontend
-export type ClientWithMetrics = Client & {
-  activityCount: number;
-};
+export const advisorIntegrationAccessRelations = relations(
+  advisorIntegrationAccess,
+  ({ one }) => ({
+    advisor: one(users, {
+      fields: [advisorIntegrationAccess.advisorId],
+      references: [users.id],
+    }),
+    firmIntegrationConfig: one(firmIntegrationConfigs, {
+      fields: [advisorIntegrationAccess.firmIntegrationConfigId],
+      references: [firmIntegrationConfigs.id],
+    }),
+  }),
+);
 
-export type ClientDemographics = {
-  ageGroups: { range: string; count: number }[];
-  stateDistribution: { state: string; count: number; percentage: number }[];
-};
+export const integrationDataStorageRelations = relations(
+  integrationDataStorage,
+  ({ one }) => ({
+    firmIntegrationConfig: one(firmIntegrationConfigs, {
+      fields: [integrationDataStorage.firmIntegrationConfigId],
+      references: [firmIntegrationConfigs.id],
+    }),
+  }),
+);
 
-export type AdvisorMetrics = {
-  totalAum: number;
-  totalRevenue: number;
-  totalClients: number;
-  totalActivities: number;
-  assetAllocation: { class: string; value: number; percentage: number }[];
-};
+export const clientsRelations = relations(clients, ({ one, many }) => ({
+  firm: one(organizations, {
+    fields: [clients.firmId],
+    references: [organizations.id],
+  }),
+  primaryAdvisor: one(users, {
+    fields: [clients.primaryAdvisorId],
+    references: [users.id],
+    relationName: "primaryAdvisor",
+  }),
+  clientAdvisorRelationships: many(clientAdvisorRelationships),
+  portfolios: many(portfolios),
+}));
+
+export const clientAdvisorRelationshipsRelations = relations(
+  clientAdvisorRelationships,
+  ({ one }) => ({
+    client: one(clients, {
+      fields: [clientAdvisorRelationships.clientId],
+      references: [clients.id],
+    }),
+    advisor: one(users, {
+      fields: [clientAdvisorRelationships.advisorId],
+      references: [users.id],
+      relationName: "advisor",
+    }),
+  }),
+);
+
+export const portfoliosRelations = relations(portfolios, ({ one, many }) => ({
+  client: one(clients, {
+    fields: [portfolios.clientId],
+    references: [clients.id],
+  }),
+  assets: many(assets),
+}));
+
+export const assetsRelations = relations(assets, ({ one }) => ({
+  portfolio: one(portfolios, {
+    fields: [assets.portfolioId],
+    references: [portfolios.id],
+  }),
+}));
+
+export const dataAccessPoliciesRelations = relations(
+  dataAccessPolicies,
+  ({ one, many }) => ({
+    organization: one(organizations, {
+      fields: [dataAccessPolicies.organizationId],
+      references: [organizations.id],
+    }),
+    userDataAccess: many(userDataAccess),
+  }),
+);
+
+export const userDataAccessRelations = relations(userDataAccess, ({ one }) => ({
+  user: one(users, {
+    fields: [userDataAccess.userId],
+    references: [users.id],
+  }),
+  dataAccessPolicy: one(dataAccessPolicies, {
+    fields: [userDataAccess.dataAccessPolicyId],
+    references: [dataAccessPolicies.id],
+  }),
+}));
