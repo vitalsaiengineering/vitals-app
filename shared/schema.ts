@@ -11,6 +11,8 @@ import {
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
 
 // Enums
 export const organizationTypeEnum = pgEnum("organization_type", [
@@ -426,3 +428,37 @@ export const userDataAccessRelations = relations(userDataAccess, ({ one }) => ({
     references: [dataAccessPolicies.id],
   }),
 }));
+
+// Create insert schemas for Zod validation
+export const insertUserSchema = createInsertSchema(users).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertClientSchema = createInsertSchema(clients).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertDataMappingSchema = createInsertSchema(firmDataMappings).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+
+// Create insert types
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertClient = z.infer<typeof insertClientSchema>;
+export type InsertDataMapping = z.infer<typeof insertDataMappingSchema>;
+
+// Create select types
+export type User = typeof users.$inferSelect;
+export type Client = typeof clients.$inferSelect;
+export type Organization = typeof organizations.$inferSelect;
+export type Role = typeof roles.$inferSelect;
+export type DataMapping = typeof firmDataMappings.$inferSelect;
+export type Activity = { id: number; clientId: number; type: string; details: any; date: Date; createdAt: Date; advisorId: number; };
+export type Portfolio = typeof portfolios.$inferSelect;
+export type Holding = typeof assets.$inferSelect;

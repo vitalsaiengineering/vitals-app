@@ -7,7 +7,9 @@ export default {
   driver: "pg",
   dbCredentials: {
     // Use environment variables for credentials
-    connectionString: process.env.DATABASE_URL || "",
+    connectionString:
+      process.env.DATABASE_URL ||
+      "postgresql://neondb_owner:npg_aUXJv9fEBcp8@ep-holy-boat-a48nuqqm.us-east-1.aws.neon.tech/neondb?sslmode=require",
   },
 } satisfies Config;
 
