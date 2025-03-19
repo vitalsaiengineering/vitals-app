@@ -45,7 +45,7 @@ const SignupForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -147,7 +147,7 @@ const SignupForm = () => {
 
     // Redirect to dashboard after successful signup
     setTimeout(() => {
-      navigate("/dashboard");
+      setLocation("/dashboard");
     }, 1000);
   };
 

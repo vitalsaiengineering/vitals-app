@@ -51,7 +51,7 @@ const Login = () => {
         description: "You have successfully logged in",
       });
 
-      setLocation("/");
+      setLocation("/dashboard");
     } catch (error: any) {
       setIsLoading(false);
       toast({
