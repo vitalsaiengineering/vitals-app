@@ -34,7 +34,7 @@ const VitalsLogo: React.FC<VitalsLogoProps> = ({
     >
       <div className="flex items-center">
         <img
-          src="/lovable-uploads/7b71aa46-b1c6-4928-a142-af7aad7b1906.png"
+          src="/images/vitals-ai-logo.png"
           alt="Vitals AI Logo"
           className={cn(logoSizes[variant])}
         />
