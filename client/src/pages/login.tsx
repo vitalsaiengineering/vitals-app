@@ -31,17 +31,35 @@ const Login = () => {
 
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-    setIsLoading(false);
-    toast({
-      title: "Welcome back",
-      description: "You have successfully logged in",
-    });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Login failed');
+      }
 
-    // Redirect to dashboard
-    setTimeout(() => navigate("/dashboard"), 500);
+      setIsLoading(false);
+      toast({
+        title: "Welcome back",
+        description: "You have successfully logged in",
+      });
+
+      navigate("/dashboard");
+    } catch (error: any) {
+      setIsLoading(false);
+      toast({
+        title: "Login failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const toggleShowPassword = () => {
