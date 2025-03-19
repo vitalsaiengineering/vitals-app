@@ -45,17 +45,13 @@ const Login = () => {
         throw new Error(error.message || 'Login failed');
       }
 
-      const userData = await response.json();
       setIsLoading(false);
       toast({
         title: "Welcome back",
         description: "You have successfully logged in",
       });
 
-      // Ensure we have user data before navigating
-      if (userData) {
-        navigate("/dashboard", { replace: true });
-      }
+      navigate("/dashboard");
     } catch (error: any) {
       setIsLoading(false);
       toast({
