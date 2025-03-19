@@ -23,6 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import BackgroundGradient from "@/components/BackgroundGradient";
+import VitalsLogo from "@/components/VitalsLogo";
 
 interface FormData {
   name: string;
@@ -358,20 +360,54 @@ const SignupForm = () => {
 // Wrap SignupForm in a Signup component to maintain expected naming conventions
 export default function Signup() {
   return (
-    <div className="container mx-auto max-w-md px-4 py-8">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">Create your account</h1>
-        <p className="text-muted-foreground">
-          Join Vitals AI to start managing your clients more efficiently
-        </p>
+    <>
+      <BackgroundGradient />
+
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
+        <div className="fixed top-6 left-6">
+          <Link to="/">
+            <VitalsLogo variant="extra-large" showText={false} />
+          </Link>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-md glass-panel rounded-2xl p-6 sm:p-10 shadow-xl"
+        >
+          <div className="text-center mb-8">
+            <motion.h1
+              className="text-2xl sm:text-3xl font-medium tracking-tight"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, duration: 0.5 }}
+            >
+              Create your account
+            </motion.h1>
+            <motion.p
+              className="text-muted-foreground mt-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+            >
+              Join Vitals AI to start managing your clients more efficiently
+            </motion.p>
+          </div>
+          
+          <SignupForm />
+          
+          <div className="mt-8 text-center text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="text-primary font-medium hover:underline transition-colors"
+            >
+              Sign in
+            </Link>
+          </div>
+        </motion.div>
       </div>
-      <SignupForm />
-      <div className="text-center mt-6 text-sm">
-        <span className="text-muted-foreground">Already have an account? </span>
-        <Link href="/login" className="text-primary font-medium hover:underline">
-          Sign in
-        </Link>
-      </div>
-    </div>
+    </>
   );
 }
