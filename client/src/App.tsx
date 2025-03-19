@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Login from "@/pages/login";
+import Signup from "@/pages/signup";
 import Integrations from "@/pages/integrations";
 import Mapping from "@/pages/mapping";
 import Clients from "@/pages/clients";
@@ -17,6 +18,10 @@ function Router() {
     <Switch>
       <Route path="/login">
         <Login />
+      </Route>
+
+      <Route path="/signup">
+        <Signup />
       </Route>
       
       <Route path="/">

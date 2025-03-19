@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useLocation, Link } from "wouter";
 import {
   UserIcon,
   MailIcon,
@@ -355,4 +355,23 @@ const SignupForm = () => {
   );
 };
 
-export default SignupForm;
+// Wrap SignupForm in a Signup component to maintain expected naming conventions
+export default function Signup() {
+  return (
+    <div className="container mx-auto max-w-md px-4 py-8">
+      <div className="text-center mb-8">
+        <h1 className="text-3xl font-bold mb-2">Create your account</h1>
+        <p className="text-muted-foreground">
+          Join Vitals AI to start managing your clients more efficiently
+        </p>
+      </div>
+      <SignupForm />
+      <div className="text-center mt-6 text-sm">
+        <span className="text-muted-foreground">Already have an account? </span>
+        <Link href="/login" className="text-primary font-medium hover:underline">
+          Sign in
+        </Link>
+      </div>
+    </div>
+  );
+}
