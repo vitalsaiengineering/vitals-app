@@ -194,7 +194,7 @@ const Login = () => {
           <div className="mt-8 text-center text-sm text-muted-foreground">
             Don't have an account yet?{" "}
             <Link
-              to="/signup"
+              href="/signup"
               className="text-primary font-medium hover:underline transition-colors"
             >
               Create an account
