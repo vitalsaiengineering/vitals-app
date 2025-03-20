@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { User, Client, Activity, Portfolio, Holding } from '@shared/schema';
+import { User, Client, Activity } from '@shared/schema';
 import { storage } from './storage';
 import { getWealthboxToken } from './utils/wealthbox-token';
 
@@ -10,10 +10,7 @@ const WEALTHBOX_API_BASE_URL = 'https://api.crmworkspace.com/v1';
 const ENDPOINTS = {
   CONTACTS: `${WEALTHBOX_API_BASE_URL}/contacts`,
   ACTIVITIES: `${WEALTHBOX_API_BASE_URL}/activities`,
-  WORKFLOWS: `${WEALTHBOX_API_BASE_URL}/workflows`,
-  PORTFOLIOS: `${WEALTHBOX_API_BASE_URL}/portfolios`,  // Assuming this exists
-  HOLDINGS: `${WEALTHBOX_API_BASE_URL}/holdings`,      // Assuming this exists
-  USERS: `${WEALTHBOX_API_BASE_URL}/users`,            // Users endpoint from API docs
+  USERS: `${WEALTHBOX_API_BASE_URL}/users`,
 };
 
 /**
@@ -307,7 +304,6 @@ async function fetchAllActivities(accessToken: string, limit: number = 100): Pro
  * Maps a Wealthbox contact to our client model
  */
 function mapWealthboxContactToClient(contact: any, organizationId: number, advisorId: number): Partial<Client> {
-  // Example mapping - adjust based on actual Wealthbox API response structure
   return {
     name: `${contact.first_name || ''} ${contact.last_name || ''}`.trim(),
     email: contact.email || null,
@@ -317,11 +313,11 @@ function mapWealthboxContactToClient(contact: any, organizationId: number, advis
       `${contact.addresses[0].street || ''}, ${contact.addresses[0].city || ''}, ${contact.addresses[0].state || ''} ${contact.addresses[0].zip || ''}`.trim() : 
       null,
     state: contact.addresses && contact.addresses.length > 0 ? contact.addresses[0].state || null : null,
-    age: contact.age || null, // Assuming Wealthbox has this field
-    aum: contact.aum || null, // Assuming Wealthbox has this field
-    revenue: contact.revenue || null, // Assuming Wealthbox has this field
+    age: contact.age || null,
+    aum: contact.aum || null,
+    revenue: contact.revenue || null,
     wealthboxClientId: contact.id.toString(),
-    metadata: contact // Store the full Wealthbox contact for reference
+    metadata: contact
   };
 }
 
@@ -329,7 +325,6 @@ function mapWealthboxContactToClient(contact: any, organizationId: number, advis
  * Maps a Wealthbox activity to our activity model
  */
 function mapWealthboxActivityToActivity(activity: any, advisorId: number, clientId: number): Partial<Activity> {
-  // Example mapping - adjust based on actual Wealthbox API response structure
   return {
     date: new Date(activity.created_at || activity.date || Date.now()),
     title: activity.title || activity.summary || 'Untitled Activity',
@@ -338,7 +333,7 @@ function mapWealthboxActivityToActivity(activity: any, advisorId: number, client
     clientId,
     description: activity.description || activity.notes || null,
     wealthboxActivityId: activity.id.toString(),
-    metadata: activity // Store the full Wealthbox activity for reference
+    metadata: activity
   };
 }
 
@@ -382,7 +377,6 @@ export async function fetchActiveClientsByAge(accessToken: string | null): Promi
   }
   
   try {
-    // Construct URL with filters for active clients
     const url = `${ENDPOINTS.CONTACTS}?contact_type=Client&active=true&per_page=100`;
     
     console.log('Fetching active clients by age from Wealthbox API:', url);
@@ -418,26 +412,19 @@ export async function fetchActiveClientsByAge(accessToken: string | null): Promi
     
     // Process each client and extract age information
     data.contacts.forEach((contact: any) => {
-      // Check if contact has date of birth
       let age = null;
       
-      // Try to determine age from date_of_birth if available
       if (contact.date_of_birth) {
         const birthDate = new Date(contact.date_of_birth);
         const today = new Date();
         age = today.getFullYear() - birthDate.getFullYear();
         
-        // Adjust age if birthday hasn't occurred yet this year
         const m = today.getMonth() - birthDate.getMonth();
         if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
           age--;
         }
-        
-        console.log(`Calculated age for ${contact.first_name} ${contact.last_name}: ${age}`);
       } 
-      // If contact has a custom field for age, try to use that
       else if (contact.custom_fields) {
-        // Look for custom fields that might contain age information
         const ageField = Object.entries(contact.custom_fields).find(([key]) => 
           key.toLowerCase().includes('age')
         );
@@ -446,12 +433,10 @@ export async function fetchActiveClientsByAge(accessToken: string | null): Promi
           const parsedAge = parseInt(ageField[1].toString(), 10);
           if (!isNaN(parsedAge)) {
             age = parsedAge;
-            console.log(`Found age in custom field for ${contact.first_name} ${contact.last_name}: ${age}`);
           }
         }
       }
       
-      // If we have a valid age, categorize it
       if (age !== null && age >= 18) {
         if (age <= 30) ageGroups["18-30"]++;
         else if (age <= 40) ageGroups["31-40"]++;
@@ -465,10 +450,8 @@ export async function fetchActiveClientsByAge(accessToken: string | null): Promi
       }
     });
     
-    // Calculate average age
     const averageAge = clientsWithAge > 0 ? Math.round(totalAge / clientsWithAge) : 0;
     
-    // Find largest age segment
     let largestSegment = "N/A";
     let maxCount = 0;
     
@@ -479,7 +462,6 @@ export async function fetchActiveClientsByAge(accessToken: string | null): Promi
       }
     });
     
-    // Format age groups for frontend
     const result = Object.entries(ageGroups).map(([range, count]) => ({
       range,
       count
@@ -507,7 +489,6 @@ export async function fetchActiveClientsByState(accessToken: string | null): Pro
   }
   
   try {
-    // Construct URL with filters for active clients
     const url = `${ENDPOINTS.CONTACTS}?contact_type=Client&active=true&per_page=100`;
     
     console.log('Fetching active clients by state from Wealthbox API:', url);
@@ -533,28 +514,17 @@ export async function fetchActiveClientsByState(accessToken: string | null): Pro
     
     // Process each client and extract state information
     data.contacts.forEach((contact: any) => {
-      // Check for street addresses
       let state = 'Unknown';
-      
-      // Log the contact structure to debug address fields
-      console.log(`Processing contact: ${contact.id} - ${contact.first_name} ${contact.last_name}`);
-      console.log('Address fields:', JSON.stringify({
-        hasStreetAddresses: !!contact.street_addresses,
-        hasAddresses: !!contact.addresses,
-        email: contact.email || contact.email_address || (contact.email_addresses && contact.email_addresses.length > 0 ? contact.email_addresses[0].address : null)
-      }));
       
       // Try street_addresses first (as per API docs)
       if (contact.street_addresses && contact.street_addresses.length > 0) {
         const principalAddress = contact.street_addresses.find((addr: any) => addr.principal) || contact.street_addresses[0];
         state = principalAddress.state || 'Unknown';
-        console.log(`Found state in street_addresses: ${state}`);
       }
       // Fall back to addresses if available
       else if (contact.addresses && contact.addresses.length > 0) {
         const principalAddress = contact.addresses.find((addr: any) => addr.principal) || contact.addresses[0];
         state = principalAddress.state || 'Unknown';
-        console.log(`Found state in addresses: ${state}`);
       }
       
       // Increment count for this state
@@ -590,34 +560,22 @@ export async function fetchActiveClientsByState(accessToken: string | null): Pro
  */
 export async function getActiveClientsByStateHandler(req: Request, res: Response) {
   try {
-    // Check if a specific Wealthbox user ID is provided (for filtering)
     const requestedUserId = req.query.wealthboxUserId ? Number(req.query.wealthboxUserId) : undefined;
-    console.log(`Geographic Distribution API - WealthboxUserId parameter: ${requestedUserId}`);
-    
-    // Get the user's token if they're authenticated
     let accessToken = null;
     
-    // 1. Try to use access_token parameter if provided
     if (req.query.access_token) {
       accessToken = req.query.access_token as string;
-      console.log("Using access_token from query parameters");
     } 
-    // 2. Try to use the authenticated user's token
     else if (req.user && (req.user as any).wealthboxToken) {
       accessToken = (req.user as any).wealthboxToken;
-      console.log("Using authenticated user's Wealthbox token");
     } 
-    // 3. Fall back to default token from configuration
     else {
       const userId = (req.user as any)?.id;
-      console.log(`Attempting to get token for user ID: ${userId || 'none'}`);
       const configToken = await getWealthboxToken(userId);
       
       if (configToken) {
         accessToken = configToken;
-        console.log("Using token from configuration for geographic distribution API");
       } else {
-        console.error("No Wealthbox token available for geographic distribution API");
         return res.status(400).json({ 
           success: false, 
           error: 'WealthBox access token is required' 
@@ -625,27 +583,16 @@ export async function getActiveClientsByStateHandler(req: Request, res: Response
       }
     }
     
-    // Log additional information for filtering
-    if (requestedUserId) {
-      console.log(`Will attempt to filter results for Wealthbox user ID: ${requestedUserId}`);
-      // Note: The Wealthbox API might not support filtering by user in the contacts endpoint
-      // In a real implementation, you might need to fetch all contacts and filter on your end
-    }
-    
-    // Test the token before proceeding
     const isConnected = await testWealthboxConnection(accessToken);
     if (!isConnected) {
-      console.error("Token authentication failed when attempting to fetch geographic distribution data");
       return res.status(401).json({
         success: false,
         error: 'WealthBox authentication failed'
       });
     }
     
-    // Fetch and process the data
     const result = await fetchActiveClientsByState(accessToken);
     
-    // Return the processed data
     return res.json({
       success: true,
       data: result
@@ -664,34 +611,22 @@ export async function getActiveClientsByStateHandler(req: Request, res: Response
  */
 export async function getActiveClientsByAgeHandler(req: Request, res: Response) {
   try {
-    // Check if a specific Wealthbox user ID is provided (for filtering)
     const requestedUserId = req.query.wealthboxUserId ? Number(req.query.wealthboxUserId) : undefined;
-    console.log(`Age Distribution API - WealthboxUserId parameter: ${requestedUserId}`);
-    
-    // Get the user's token if they're authenticated
     let accessToken = null;
     
-    // 1. Try to use access_token parameter if provided
     if (req.query.access_token) {
       accessToken = req.query.access_token as string;
-      console.log("Using access_token from query parameters");
     } 
-    // 2. Try to use the authenticated user's token
     else if (req.user && (req.user as any).wealthboxToken) {
       accessToken = (req.user as any).wealthboxToken;
-      console.log("Using authenticated user's Wealthbox token");
     } 
-    // 3. Fall back to default token from configuration
     else {
       const userId = (req.user as any)?.id;
-      console.log(`Attempting to get token for user ID: ${userId || 'none'}`);
       const configToken = await getWealthboxToken(userId);
       
       if (configToken) {
         accessToken = configToken;
-        console.log("Using token from configuration for age distribution API");
       } else {
-        console.error("No Wealthbox token available for age distribution API");
         return res.status(400).json({ 
           success: false, 
           error: 'WealthBox access token is required' 
@@ -699,27 +634,16 @@ export async function getActiveClientsByAgeHandler(req: Request, res: Response) 
       }
     }
     
-    // Log additional information for filtering
-    if (requestedUserId) {
-      console.log(`Will attempt to filter results for Wealthbox user ID: ${requestedUserId}`);
-      // Note: The Wealthbox API might not support filtering by user in the contacts endpoint
-      // In a real implementation, you might need to fetch all contacts and filter on your end
-    }
-    
-    // Test the token before proceeding
     const isConnected = await testWealthboxConnection(accessToken);
     if (!isConnected) {
-      console.error("Token authentication failed when attempting to fetch age distribution data");
       return res.status(401).json({
         success: false,
         error: 'WealthBox authentication failed'
       });
     }
     
-    // Fetch and process the data
     const result = await fetchActiveClientsByAge(accessToken);
     
-    // Return the processed data
     return res.json({
       success: true,
       data: result
@@ -738,32 +662,21 @@ export async function getActiveClientsByAgeHandler(req: Request, res: Response) 
  */
 export async function getWealthboxUsersHandler(req: Request, res: Response) {
   try {
-    console.log("Wealthbox Users API - Fetching all users");
-    
-    // Get the user's token if they're authenticated
     let accessToken = null;
     
-    // 1. Try to use access_token parameter if provided
     if (req.query.access_token) {
       accessToken = req.query.access_token as string;
-      console.log("Using access_token from query parameters");
     } 
-    // 2. Try to use the authenticated user's token
     else if (req.user && (req.user as any).wealthboxToken) {
       accessToken = (req.user as any).wealthboxToken;
-      console.log("Using authenticated user's Wealthbox token");
     } 
-    // 3. Fall back to default token from configuration
     else {
       const userId = (req.user as any)?.id;
-      console.log(`Attempting to get token for user ID: ${userId || 'none'}`);
       const configToken = await getWealthboxToken(userId);
       
       if (configToken) {
         accessToken = configToken;
-        console.log("Using token from configuration for users API");
       } else {
-        console.error("No Wealthbox token available for users API");
         return res.status(400).json({ 
           success: false, 
           error: 'WealthBox access token is required' 
@@ -771,20 +684,16 @@ export async function getWealthboxUsersHandler(req: Request, res: Response) {
       }
     }
     
-    // Test the token before proceeding
     const isConnected = await testWealthboxConnection(accessToken);
     if (!isConnected) {
-      console.error("Token authentication failed when attempting to fetch Wealthbox users");
       return res.status(401).json({
         success: false,
         error: 'WealthBox authentication failed'
       });
     }
 
-    // Fetch users from Wealthbox API
     const users = await fetchWealthboxUsers(accessToken);
     
-    // Return the users
     res.json({
       success: true,
       data: {
