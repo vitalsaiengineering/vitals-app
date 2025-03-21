@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
 import { insertUserSchema, insertClientSchema, insertDataMappingSchema } from "@shared/schema";
+
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
@@ -16,7 +17,7 @@ import { getOpportunitiesByPipelineHandler, getOpportunityStagesHandler } from "
 import { getWealthboxTokenHandler } from "./api/wealthbox-token";
 import { getWealthboxToken } from "./utils/wealthbox-token";
 import dotenv from "dotenv";
-
+import bcrypt from 'bcrypt';
 // Load environment variables
 dotenv.config();
 
@@ -115,6 +116,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/me", requireAuth, (req, res) => {
     res.json(req.user);
+  });
+
+  app.post("/api/signup", async (req, res) => {
+      try {
+        console.log("req.body", req.body);
+
+        // Hash the password
+        const saltRounds = 10;
+        const passwordHash = await bcrypt.hash(req.body.password, saltRounds);
+
+        // Extract name components (assuming simple first name only in this example)
+        // You may need more sophisticated name parsing depending on your requirements
+        const firstName = req.body.name;
+        const lastName = ""; // Add logic for lastname if you have it
+
+        // Prepare data for validation according to schema
+        const userData = {
+          email: req.body.email,
+          passwordHash: passwordHash,
+          firstName: firstName,
+          lastName: lastName,
+          roleId: 1, // Set appropriate default or derive from request
+          organizationId: 1, // Set appropriate default or derive from request
+          status: "active" // Using default from schema
+        };
+
+        const validatedData = insertUserSchema.parse(userData);
+        console.log("validatedData", validatedData);
+
+        const existingEmail = await storage.getUserByEmail(validatedData.email);
+        if (existingEmail) {
+          return res.status(400).json({ message: "Email already exists" });
+        }
+
+        // Insert the user into the database
+        const newUser = await storage.createUser(validatedData);
+      console.log({newUser});
+        // Return success response (without sending back sensitive data)
+        return res.status(201).json({ 
+          message: "User created successfully", 
+          userId: newUser.id 
+        });
+      } catch (error) {
+        console.error("Signup error:", error);
+        return res.status(400).json({ 
+          message: error instanceof z.ZodError 
+            ? "Invalid data provided" 
+            : "Failed to create user",
+          details: error instanceof z.ZodError ? error.errors : undefined
+        });
+      }
   });
 
   // User routes

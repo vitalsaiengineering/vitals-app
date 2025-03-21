@@ -139,7 +139,23 @@ const SignupForm = () => {
     setIsLoading(true);
 
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const response = await fetch('/api/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      console.log(response);
+    } catch (error) {
+      console.error("Error during signup:", error);
+      toast({
+        title: "Signup Error",
+        description: "An error occurred while creating your account. Please try again later.",
+        variant: "destructive",
+      });
+    }
 
     setIsLoading(false);
     toast({
