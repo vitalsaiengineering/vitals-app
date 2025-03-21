@@ -163,6 +163,36 @@ export default function Integrations() {
     },
   });
 
+  const saveConfigMutation = useMutation({
+    mutationFn: async (token: string) => {
+      const response = await fetch('/api/wealthbox/save-config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          accessToken: token,
+          settings: { sync_frequency: 'daily' }
+        })
+      });
+      if (!response.ok) {
+        throw new Error('Failed to save configuration');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Configuration saved",
+        description: "WealthBox API configuration has been saved successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Save failed",
+        description: error.message || "Failed to save WealthBox configuration",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleTestConnection = async () => {
     if (!accessToken.trim()) {
       toast({
@@ -175,6 +205,19 @@ export default function Integrations() {
 
     setIsConnecting(true);
     testConnectionMutation.mutate(accessToken);
+  };
+
+  const handleSaveConfig = async () => {
+    if (!accessToken.trim()) {
+      toast({
+        title: "Access token required",
+        description: "Please enter your WealthBox API access token.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    saveConfigMutation.mutate(accessToken);
   };
 
   const handleImport = () => {
@@ -302,13 +345,21 @@ export default function Integrations() {
                     placeholder="Enter your WealthBox API access token"
                     className="flex-1"
                   />
-                  <Button
-                    onClick={handleTestConnection}
-                    disabled={isConnecting}
-                    className="ml-2"
-                  >
-                    {isConnecting ? "Testing..." : "Test Connection"}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleTestConnection}
+                      disabled={isConnecting}
+                    >
+                      {isConnecting ? "Testing..." : "Test Connection"}
+                    </Button>
+                    <Button
+                      onClick={handleSaveConfig}
+                      disabled={saveConfigMutation.isPending}
+                      variant="secondary"
+                    >
+                      {saveConfigMutation.isPending ? "Saving..." : "Save Configuration"}
+                    </Button>
+                  </div>
                 </div>
                 <p className="mt-1 text-xs text-gray-500">
                   Your personal API token can be found in your WealthBox account

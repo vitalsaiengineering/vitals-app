@@ -486,6 +486,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(demographics);
     } catch (err) {
+
+  // Save WealthBox configuration
+  app.post("/api/wealthbox/save-config", requireRole(["client_admin"]), async (req, res) => {
+    try {
+      const { accessToken, settings } = req.body;
+      const user = req.user as any;
+
+      if (!accessToken) {
+        return res.status(400).json({ success: false, message: 'Access token is required' });
+      }
+
+      // Test connection before saving
+      const isConnected = await testWealthboxConnection(accessToken);
+      if (!isConnected) {
+        return res.status(401).json({ success: false, message: 'Invalid access token' });
+      }
+
+      // Save to firm_integration_configs
+      const result = await storage.upsertFirmIntegrationConfig({
+        integrationTypeId: 1, // WealthBox integration type
+        firmId: user.organizationId,
+        credentials: { api_key: accessToken },
+        settings: settings || { sync_frequency: 'daily' },
+        status: 'active'
+      });
+
+      res.json({ success: true, data: result });
+    } catch (error: any) {
+      console.error('Error saving WealthBox configuration:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: error.message || 'Failed to save configuration' 
+      });
+    }
+  });
+
+
       res.status(500).json({ error: "Could not fetch client demographics" });
     }
   });
