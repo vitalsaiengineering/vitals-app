@@ -53,21 +53,45 @@ export async function runMigrations() {
     for (const file of fs.readdirSync(migrationsDir).sort()) {
       if (file.endsWith('.sql')) {
         console.log(`Running migration: ${file}`);
-        const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
+        let sqlContent = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
         try {
-          // For SQL with complex structures like DO blocks with $$ delimiters,
-          // we need to execute the entire file at once
-          try {
-            await pool.query(sql);
-            console.log(`Migration ${file} applied as a whole script`);
-            continue; // Go to the next file since we applied this one completely
-          } catch (error) {
-            console.log(`Failed to apply entire migration file, trying statement by statement: ${error.message}`);
+          // For SQL files with complex structures, we need to carefully handle the execution
+          const hasDollarQuotes = sqlContent.includes('$$');
+          if (hasDollarQuotes) {
+            console.log('Migration contains dollar-quoted blocks, executing with special handling...');
+            
+            // Find all DO $$ BEGIN...END $$ blocks and execute them separately
+            const doBlockRegex = /DO\s+\$\$\s+BEGIN\s+([\s\S]+?)\s+END\s+\$\$\s*;?/g;
+            let match;
+            let modifiedSql = sqlContent;
+            
+            // Extract and execute each DO block separately
+            while ((match = doBlockRegex.exec(sqlContent)) !== null) {
+              const fullBlock = match[0];
+              try {
+                console.log(`Executing DO block: ${fullBlock.substring(0, 60)}...`);
+                await pool.query(fullBlock);
+                console.log('DO block executed successfully');
+                
+                // Remove the block from the SQL to process the rest later
+                modifiedSql = modifiedSql.replace(fullBlock, '-- DO block executed separately');
+              } catch (error) {
+                const blockError = error as { code?: string; message?: string };
+                if (blockError.code === '42710') { // duplicate type
+                  console.log(`Notice: Type already exists, continuing... (${blockError.message || 'Unknown error'})`);
+                } else {
+                  console.log(`Warning: Error in DO block: ${blockError.message || 'Unknown error'}`);
+                }
+              }
+            }
+            
+            // Update SQL to the version without DO blocks
+            sqlContent = modifiedSql;
           }
           
           // Fallback: Split SQL by statements to handle them individually
           // and allow some statements to fail (like CREATE INDEX if already exists)
-          const statements = sql.split(';').filter(stmt => stmt.trim());
+          const statements = sqlContent.split(';').filter((stmt: string) => stmt.trim());
           
           for (const statement of statements) {
             if (!statement.trim()) continue;
