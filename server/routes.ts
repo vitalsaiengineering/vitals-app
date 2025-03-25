@@ -44,21 +44,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Configure local strategy for Passport
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      try {
-        const user = await storage.getUserByUsername(username);
-        if (!user) {
-          return done(null, false, { message: "Incorrect username" });
+    new LocalStrategy(
+      {
+        usernameField: 'email',    // Use email field for the username
+        passwordField: 'password'  // Use password field for the password
+      },
+      async (email, password, done) => {
+        try {
+          const user = await storage.getUserByEmail(email);
+          if (!user) {
+            return done(null, false, { message: "Incorrect email" });
+          }
+          
+          const validPassword = await bcrypt.compare(password, user.passwordHash);
+          if (!validPassword) {
+            return done(null, false, { message: "Incorrect password" });
+          }
+          
+          return done(null, user);
+        } catch (error) {
+          return done(error);
         }
-        if (user.password !== password) {
-          // In a real app, you would use bcrypt to compare hashed passwords
-          return done(null, false, { message: "Incorrect password" });
-        }
-        return done(null, user);
-      } catch (error) {
-        return done(error);
       }
-    })
+    )
   );
 
   passport.serializeUser((user: any, done) => {

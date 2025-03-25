@@ -1,6 +1,8 @@
 // Simple script to seed demo data
-import { storage } from './server/storage.js';
+import { storage } from './server/storage';
 import bcrypt from 'bcrypt';
+import { roleNameEnum, statusEnum, organizationTypeEnum } from './shared/schema';
+import { db } from './shared/db';
 
 async function seedDemoUser() {
   console.log('Seeding demo user...');
@@ -47,4 +49,7 @@ async function seedDemoUser() {
 seedDemoUser()
   .then(() => console.log('Demo seeding completed.'))
   .catch(err => console.error('Demo seeding failed:', err))
-  .finally(() => process.exit(0));
+  .finally(() => {
+    // Just exit without trying to close the pool
+    process.exit(0);
+  });
