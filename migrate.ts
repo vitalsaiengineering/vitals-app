@@ -1,18 +1,27 @@
-// Enhanced migration script that preserves existing tables
-import { runSafeMigrations, closeConnection } from './shared/db';
-import dotenv from 'dotenv';
+import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { Pool } from "pg";
 
-dotenv.config();
-
-console.log("Starting safe migrations that won't drop existing tables...");
-
-// Run the safer migrations function from db.ts
-runSafeMigrations()
-  .then(() => {
-    console.log("Migrations completed successfully");
-    closeConnection().then(() => process.exit(0));
-  })
-  .catch((err) => {
-    console.error("Migration failed", err);
-    closeConnection().then(() => process.exit(1));
+async function runMigrations() {
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+      rejectUnauthorized: false
+    }
   });
+
+  const db = drizzle(pool);
+
+  console.log("Running migrations...");
+
+  // Using the path from the root drizzle.config.ts
+  await migrate(db, { migrationsFolder: "./migrations" });
+
+  console.log("Migrations completed");
+  process.exit(0);
+}
+
+runMigrations().catch((err) => {
+  console.error("Migration failed", err);
+  process.exit(1);
+});
