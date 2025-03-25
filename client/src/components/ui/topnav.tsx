@@ -94,9 +94,12 @@ export function TopNav({ user, toggleSidebar }: TopNavProps) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center space-x-2">
-                  <span className="hidden md:block text-sm font-medium text-neutral-700">{user.fullName}</span>
+                  <span className="hidden md:block text-sm font-medium text-neutral-700">
+                    {user.firstName} {user.lastName}
+                  </span>
                   <div className="h-8 w-8 rounded-full bg-primary-700 flex items-center justify-center text-white text-sm">
-                    {user.fullName.split(' ').map(name => name[0]).join('')}
+                    {user.firstName ? user.firstName.charAt(0) : ''}
+                    {user.lastName ? user.lastName.charAt(0) : ''}
                   </div>
                 </Button>
               </DropdownMenuTrigger>

@@ -13,8 +13,9 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
 
   if (!user) return null;
 
-  const isAdmin = user.role === "global_admin" || user.role === "client_admin";
-  const isGlobalAdmin = user.role === "global_admin";
+  // RoleId 1 is typically admin
+  const isAdmin = user.roleId === 1;
+  const isGlobalAdmin = user.roleId === 1;
 
   return (
     <nav 
@@ -163,15 +164,20 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
           <div className="flex-shrink-0">
             <div className="h-10 w-10 rounded-full bg-blue-700 flex items-center justify-center">
               <span className="text-white font-medium">
-                {user.fullName.split(' ').map(name => name[0]).join('')}
+                {user.firstName ? user.firstName.charAt(0) : ''}
+                {user.lastName ? user.lastName.charAt(0) : ''}
               </span>
             </div>
           </div>
           
           {!isCollapsed && (
             <div className="ml-3">
-              <p className="text-sm font-medium text-white">{user.fullName}</p>
-              <p className="text-xs text-gray-400">{user.role.replace('_', ' ')}</p>
+              <p className="text-sm font-medium text-white">
+                {user.firstName} {user.lastName}
+              </p>
+              <p className="text-xs text-gray-400">
+                {user.roleId === 1 ? 'Administrator' : 'User'}
+              </p>
             </div>
           )}
         </div>
