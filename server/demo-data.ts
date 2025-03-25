@@ -1,180 +1,158 @@
 
 import { faker } from '@faker-js/faker';
-import { storage } from './storage';
-import { organizationTypeEnum, statusEnum, roleNameEnum } from '@shared/schema';
+import { db } from '../shared/db';
+import { eq } from 'drizzle-orm';
+import bcrypt from 'bcrypt';
+import { users, organizations, roles, clients, portfolios, assets } from '../shared/schema';
 
 export const isDemoMode = process.env.DEMO_MODE === 'true';
 
-async function seedRoles() {
-  const roles = [
-    { name: 'global_admin', permissions: { admin: true } },
-    { name: 'client_admin', permissions: { client: true } },
-    { name: 'financial_advisor', permissions: { advisor: true } },
-    { name: 'home_office', permissions: { home_office: true } },
-    { name: 'firm_admin', permissions: { firm: true } }
-  ];
-
-  for (const role of roles) {
-    await storage.db.insert(storage.roles).values(role).onConflictDoNothing();
-  }
-}
-
-async function seedOrganizations() {
-  const orgs = [];
-  // Create one global org
-  orgs.push({
-    name: 'Global Admin Organization',
-    type: 'global',
-    status: 'active'
-  });
-
-  // Create 5 firms
-  for (let i = 0; i < 5; i++) {
-    orgs.push({
-      name: faker.company.name(),
-      type: 'firm',
-      status: 'active'
-    });
-  }
-
-  for (const org of orgs) {
-    await storage.db.insert(storage.organizations).values(org).onConflictDoNothing();
-  }
-}
-
-async function seedUsers() {
-  const users = [];
-  const orgs = await storage.getOrganizations();
-  const roles = await storage.db.select().from(storage.roles);
-
-  // Add a reliable demo user first
-  users.push({
-    email: 'demo@example.com',
-    passwordHash: await bcrypt.hash('demo123', 10),
-    firstName: 'Demo',
-    lastName: 'User',
-    roleId: 1, // global_admin role
-    organizationId: 1, // global org
-    status: 'active'
-  });
-
-  // Create 50 users across different organizations and roles
-  for (let i = 0; i < 50; i++) {
-    const org = faker.helpers.arrayElement(orgs);
-    const role = faker.helpers.arrayElement(roles);
-    
-    users.push({
-      email: faker.internet.email(),
-      passwordHash: await bcrypt.hash('demo123', 10),
-      firstName: faker.person.firstName(),
-      lastName: faker.person.lastName(),
-      roleId: role.id,
-      organizationId: org.id,
-      status: 'active'
-    });
-  }
-
-  for (const user of users) {
-    await storage.db.insert(storage.users).values(user).onConflictDoNothing();
-  }
-}
-
-async function seedClients() {
-  const clients = [];
-  const orgs = await storage.getOrganizations();
-  const advisors = await storage.db.select().from(storage.users)
-    .where(eq(storage.users.roleId, 3)); // Financial advisor role
-
-  // Create 50 clients
-  for (let i = 0; i < 50; i++) {
-    const org = faker.helpers.arrayElement(orgs);
-    const advisor = faker.helpers.arrayElement(advisors);
-    
-    clients.push({
-      externalId: faker.string.uuid(),
-      firmId: org.id,
-      primaryAdvisorId: advisor.id,
-      firstName: faker.person.firstName(),
-      lastName: faker.person.lastName(),
+// Create a mock data object to return directly instead of seeding the database
+export const mockDemoData = {
+  advisorMetrics: {
+    totalAum: 2500000,
+    totalRevenue: 75000,
+    totalClients: 25,
+    totalActivities: 120,
+    assetAllocation: [
+      { class: 'Equity', value: 1250000, percentage: 50 },
+      { class: 'Fixed Income', value: 750000, percentage: 30 },
+      { class: 'Cash', value: 250000, percentage: 10 },
+      { class: 'Alternative', value: 250000, percentage: 10 }
+    ]
+  },
+  clientDemographics: {
+    ageGroups: [
+      { range: '18-30', count: 3 },
+      { range: '31-45', count: 8 },
+      { range: '46-60', count: 10 },
+      { range: '61-75', count: 3 },
+      { range: '76+', count: 1 }
+    ],
+    stateDistribution: [
+      { state: 'CA', count: 5, percentage: 20 },
+      { state: 'NY', count: 4, percentage: 16 },
+      { state: 'TX', count: 3, percentage: 12 },
+      { state: 'FL', count: 3, percentage: 12 },
+      { state: 'IL', count: 2, percentage: 8 },
+      { state: 'Other', count: 8, percentage: 32 }
+    ]
+  },
+  portfolios: [
+    {
+      name: 'Retirement Fund',
+      accountNumber: 'RT345678',
+      accountType: '401(k)',
+      assets: [
+        { symbol: 'AAPL', assetType: 'Equity', quantity: '50', marketValue: 8500, valuation_date: new Date() },
+        { symbol: 'MSFT', assetType: 'Equity', quantity: '40', marketValue: 12000, valuation_date: new Date() },
+        { symbol: 'VBTLX', assetType: 'Fixed Income', quantity: '200', marketValue: 22000, valuation_date: new Date() },
+      ]
+    },
+    {
+      name: 'College Savings',
+      accountNumber: 'CS123456',
+      accountType: '529',
+      assets: [
+        { symbol: 'VTI', assetType: 'Equity', quantity: '80', marketValue: 17600, valuation_date: new Date() },
+        { symbol: 'VGIT', assetType: 'Fixed Income', quantity: '100', marketValue: 10500, valuation_date: new Date() },
+      ]
+    },
+    {
+      name: 'Taxable Investment',
+      accountNumber: 'TX789012',
+      accountType: 'Brokerage',
+      assets: [
+        { symbol: 'AMZN', assetType: 'Equity', quantity: '10', marketValue: 13500, valuation_date: new Date() },
+        { symbol: 'GOOGL', assetType: 'Equity', quantity: '15', marketValue: 18000, valuation_date: new Date() },
+        { symbol: 'BND', assetType: 'Fixed Income', quantity: '150', marketValue: 12300, valuation_date: new Date() },
+        { symbol: 'GLD', assetType: 'Alternative', quantity: '25', marketValue: 4750, valuation_date: new Date() },
+      ]
+    }
+  ],
+  clients: [
+    {
+      firstName: 'John',
+      lastName: 'Smith',
       contactInfo: {
-        email: faker.internet.email(),
-        phone: faker.phone.number(),
+        email: 'john.smith@example.com',
+        phone: '555-123-4567',
         address: {
-          street: faker.location.streetAddress(),
-          city: faker.location.city(),
-          state: faker.location.state(),
-          zip: faker.location.zipCode()
+          street: '123 Main St',
+          city: 'New York',
+          state: 'NY',
+          zip: '10001'
         }
-      },
-      source: 'demo'
-    });
-  }
+      }
+    },
+    {
+      firstName: 'Jane',
+      lastName: 'Doe',
+      contactInfo: {
+        email: 'jane.doe@example.com',
+        phone: '555-234-5678',
+        address: {
+          street: '456 Oak Ave',
+          city: 'San Francisco',
+          state: 'CA',
+          zip: '94102'
+        }
+      }
+    },
+    {
+      firstName: 'Robert',
+      lastName: 'Johnson',
+      contactInfo: {
+        email: 'robert.johnson@example.com',
+        phone: '555-345-6789',
+        address: {
+          street: '789 Elm St',
+          city: 'Chicago',
+          state: 'IL',
+          zip: '60601'
+        }
+      }
+    }
+  ],
+  opportunitiesByPipeline: [
+    {
+      pipeline: 'New Clients',
+      stages: [
+        { stage: 'Prospecting', count: 10 },
+        { stage: 'Qualification', count: 5 },
+        { stage: 'Proposal', count: 3 },
+        { stage: 'Negotiation', count: 2 },
+        { stage: 'Closed Won', count: 1 }
+      ],
+      totalCount: 21
+    },
+    {
+      pipeline: 'Existing Clients',
+      stages: [
+        { stage: 'Additional Services', count: 8 },
+        { stage: 'Review', count: 12 },
+        { stage: 'Proposal', count: 5 },
+        { stage: 'Decision', count: 3 }
+      ],
+      totalCount: 28
+    }
+  ],
+  activities: [
+    { type: 'Email', count: 45 },
+    { type: 'Call', count: 30 },
+    { type: 'Meeting', count: 15 },
+    { type: 'Task', count: 20 },
+    { type: 'Note', count: 10 }
+  ],
+  revenueByQuarter: [
+    { quarter: 'Q1', revenue: 15000 },
+    { quarter: 'Q2', revenue: 18000 },
+    { quarter: 'Q3', revenue: 22000 },
+    { quarter: 'Q4', revenue: 20000 }
+  ]
+};
 
-  for (const client of clients) {
-    await storage.db.insert(storage.clients).values(client).onConflictDoNothing();
-  }
-}
-
-async function seedPortfolios() {
-  const portfolios = [];
-  const clients = await storage.db.select().from(storage.clients);
-
-  // Create 50 portfolios
-  for (let i = 0; i < 50; i++) {
-    const client = faker.helpers.arrayElement(clients);
-    
-    portfolios.push({
-      externalId: faker.string.uuid(),
-      clientId: client.id,
-      name: faker.finance.accountName(),
-      accountNumber: faker.finance.accountNumber(),
-      accountType: faker.helpers.arrayElement(['IRA', '401k', 'Brokerage', 'Trust']),
-      source: 'demo'
-    });
-  }
-
-  for (const portfolio of portfolios) {
-    await storage.db.insert(storage.portfolios).values(portfolio).onConflictDoNothing();
-  }
-}
-
-async function seedAssets() {
-  const assets = [];
-  const portfolios = await storage.db.select().from(storage.portfolios);
-
-  // Create 50 assets
-  for (let i = 0; i < 50; i++) {
-    const portfolio = faker.helpers.arrayElement(portfolios);
-    
-    assets.push({
-      portfolioId: portfolio.id,
-      symbol: faker.finance.currencyCode(),
-      assetType: faker.helpers.arrayElement(['Equity', 'Fixed Income', 'Cash', 'Alternative']),
-      quantity: faker.number.float({ min: 1, max: 1000, precision: 0.01 }).toString(),
-      marketValue: faker.number.float({ min: 1000, max: 1000000, precision: 0.01 }).toString(),
-      valuationDate: faker.date.recent(),
-      source: 'demo'
-    });
-  }
-
-  for (const asset of assets) {
-    await storage.db.insert(storage.assets).values(asset).onConflictDoNothing();
-  }
-}
-
-export async function seedDemoData() {
-  if (!isDemoMode) return;
-
-  try {
-    console.log('Starting demo data seeding...');
-    await seedRoles();
-    await seedOrganizations();
-    await seedUsers();
-    await seedClients();
-    await seedPortfolios();
-    await seedAssets();
-    console.log('Demo data seeding completed successfully');
-  } catch (error) {
-    console.error('Error seeding demo data:', error);
-  }
+// No need for database seeding as we're using mock data directly
+export async function getDemoData() {
+  return mockDemoData;
 }
