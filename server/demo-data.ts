@@ -47,6 +47,17 @@ async function seedUsers() {
   const orgs = await storage.getOrganizations();
   const roles = await storage.db.select().from(storage.roles);
 
+  // Add a reliable demo user first
+  users.push({
+    email: 'demo@example.com',
+    passwordHash: await bcrypt.hash('demo123', 10),
+    firstName: 'Demo',
+    lastName: 'User',
+    roleId: 1, // global_admin role
+    organizationId: 1, // global org
+    status: 'active'
+  });
+
   // Create 50 users across different organizations and roles
   for (let i = 0; i < 50; i++) {
     const org = faker.helpers.arrayElement(orgs);
