@@ -1,11 +1,13 @@
 import { db } from './db'; // You'll need to create this file with database connection
-import { users, organizations, roles } from './schema'; // Your Drizzle schema
-import { eq } from 'drizzle-orm';
+import { users, organizations, roles, clients, portfolios, assets } from './schema'; // Your Drizzle schema
+import { eq, and } from 'drizzle-orm';
 import {
   Organization,
   InsertOrganization,
   User,
   InsertUser,
+  Client,
+  InsertClient,
 } from "@shared/schema";
 
 export interface IStorage {
