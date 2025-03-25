@@ -7,7 +7,7 @@ import {
   users, clients, portfolios, assets,
   clientAdvisorRelationships
 } from '../shared/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, or } from 'drizzle-orm';
 import { isDemoMode } from './demo-data';
 
 /**
@@ -39,13 +39,20 @@ export async function getDemoAdvisorMetrics(advisorId: number) {
     }
 
     // Get total AUM for advisor's clients
-    const clientPortfolios = await db.select({
-      id: portfolios.id,
-      clientId: portfolios.clientId
-    })
-    .from(portfolios)
-    .where(sql`${portfolios.clientId} IN (${clientIds.join(',')})`);
-
+    let clientPortfolios: { id: number; clientId: number }[] = [];
+    
+    if (clientIds.length > 0) {
+      // Use individual 'eq' and 'or' conditions instead of SQL template literal
+      const queries = clientIds.map(id => eq(portfolios.clientId, id));
+      
+      clientPortfolios = await db.select({
+        id: portfolios.id,
+        clientId: portfolios.clientId
+      })
+      .from(portfolios)
+      .where(queries.length === 1 ? queries[0] : or(...queries));
+    }
+    
     const portfolioIds = clientPortfolios.map(p => p.id);
 
     // Calculate AUM and asset allocation
@@ -58,14 +65,22 @@ export async function getDemoAdvisorMetrics(advisorId: number) {
     };
     
     if (portfolioIds.length > 0) {
+      // Use individual 'eq' and 'or' conditions instead of SQL template literal
+      const queries = portfolioIds.map(id => eq(assets.portfolioId, id));
+      
+      type AssetResult = {
+        assetType: string;
+        marketValue: string;
+      };
+      
       const assetValues = await db.select({
         assetType: assets.assetType,
         marketValue: assets.marketValue
       })
       .from(assets)
-      .where(sql`${assets.portfolioId} IN (${portfolioIds.join(',')})`);
+      .where(queries.length === 1 ? queries[0] : or(...queries));
       
-      for (const asset of assetValues) {
+      for (const asset of assetValues as AssetResult[]) {
         const marketValue = parseFloat(asset.marketValue);
         totalAum += marketValue;
         
@@ -143,7 +158,12 @@ export async function getDemoClientDemographics(advisorId: number) {
     // Calculate state distribution
     const stateMap: Record<string, number> = {};
     
-    for (const client of advisorClients) {
+    interface ClientWithContact {
+      id: number;
+      contactInfo: any;
+    }
+    
+    for (const client of advisorClients as ClientWithContact[]) {
       // Randomly assign to age groups based on position in list
       // This ensures consistent distribution across different loads
       const index = client.id % 6;
@@ -159,7 +179,14 @@ export async function getDemoClientDemographics(advisorId: number) {
 
     // Convert state map to expected format
     const stateTotal = Object.values(stateMap).reduce((sum, count) => sum + count, 0);
-    const stateDistribution = Object.entries(stateMap).map(([state, count]) => ({
+    
+    interface StateDist {
+      state: string;
+      count: number;
+      percentage: number;
+    }
+    
+    const stateDistribution = Object.entries(stateMap).map<StateDist>(([state, count]) => ({
       state,
       count,
       percentage: stateTotal > 0 ? (count / stateTotal) * 100 : 0
