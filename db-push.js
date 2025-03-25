@@ -3,8 +3,12 @@
  * It's useful for scenarios where you don't want to execute the shell script directly
  */
 
-const { execSync } = require('child_process');
-const path = require('path');
+import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 console.log('Starting safe database push via Node.js...');
 
