@@ -1,6 +1,8 @@
 
 import { faker } from '@faker-js/faker';
 import { storage } from './storage';
+import { eq } from 'drizzle-orm';
+import bcrypt from 'bcrypt';
 import { organizationTypeEnum, statusEnum, roleNameEnum } from '@shared/schema';
 
 export const isDemoMode = process.env.DEMO_MODE === 'true';
