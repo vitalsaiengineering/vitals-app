@@ -1,7 +1,15 @@
 // db-push.js - Safely push schema changes to the database without data loss
-import { db, runSafeMigrations, closeConnection } from './shared/db.js';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { exec } from 'child_process';
 import dotenv from 'dotenv';
+
+// Get the directory name from the current module's URL
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Dynamically import the database module
+const { db, runSafeMigrations, closeConnection } = await import('./shared/db.js');
 
 dotenv.config();
 

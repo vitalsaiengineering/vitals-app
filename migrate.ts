@@ -1,5 +1,5 @@
 // Enhanced migration script that preserves existing tables
-import { runSafeMigrations, closeConnection } from './shared/db.js';
+import { runSafeMigrations, closeConnection } from './shared/db';
 import dotenv from 'dotenv';
 
 dotenv.config();
