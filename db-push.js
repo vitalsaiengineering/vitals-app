@@ -15,13 +15,15 @@ try {
   // Execute the TypeScript version directly using tsx
   console.log('Running safe database migrations...');
   
-  // First generate migrations
-  execSync('npx tsx generate-safe-migration.ts', { 
+  // First generate migrations with drizzle-kit
+  console.log('1. Generating migration files with drizzle-kit...');
+  execSync('npx drizzle-kit generate:pg', { 
     stdio: 'inherit',
     cwd: scriptDir 
   });
   
-  // Then apply them
+  // Then apply them using the migrate script (which uses drizzle-migrate)
+  console.log('2. Running migrations...');
   execSync('npx tsx migrate.ts', { 
     stdio: 'inherit',
     cwd: scriptDir 

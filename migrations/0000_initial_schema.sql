@@ -1,10 +1,29 @@
 -- Initial schema migration
   
--- Create enums
-CREATE TYPE organization_type AS ENUM ('global', 'multi_network', 'network', 'firm');
-CREATE TYPE role_name AS ENUM ('global_admin', 'multi_network_admin', 'network_admin', 'firm_admin', 'advisor');
-CREATE TYPE status AS ENUM ('active', 'inactive', 'pending', 'suspended');
-CREATE TYPE access_level AS ENUM ('read', 'write', 'admin');
+-- Create enums if they don't exist
+DO $$ BEGIN
+    CREATE TYPE organization_type AS ENUM ('global', 'multi_network', 'network', 'firm');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE role_name AS ENUM ('global_admin', 'multi_network_admin', 'network_admin', 'firm_admin', 'advisor');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE status AS ENUM ('active', 'inactive', 'pending', 'suspended');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+DO $$ BEGIN
+    CREATE TYPE access_level AS ENUM ('read', 'write', 'admin');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Create tables
 CREATE TABLE IF NOT EXISTS roles (
