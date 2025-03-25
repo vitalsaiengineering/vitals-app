@@ -55,7 +55,39 @@ export async function runMigrations() {
         console.log(`Running migration: ${file}`);
         const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
         try {
-          await pool.query(sql);
+          // For SQL with complex structures like DO blocks with $$ delimiters,
+          // we need to execute the entire file at once
+          try {
+            await pool.query(sql);
+            console.log(`Migration ${file} applied as a whole script`);
+            continue; // Go to the next file since we applied this one completely
+          } catch (error) {
+            console.log(`Failed to apply entire migration file, trying statement by statement: ${error.message}`);
+          }
+          
+          // Fallback: Split SQL by statements to handle them individually
+          // and allow some statements to fail (like CREATE INDEX if already exists)
+          const statements = sql.split(';').filter(stmt => stmt.trim());
+          
+          for (const statement of statements) {
+            if (!statement.trim()) continue;
+            
+            try {
+              await pool.query(statement + ';');
+            } catch (error) {
+              const stmtError = error as { code?: string; message?: string };
+              // Log the error but continue if it's just about something already existing
+              if (stmtError.code === '42P07' || // relation already exists
+                  stmtError.code === '42710' || // duplicate object
+                  stmtError.code === '42701' || // duplicate column
+                  stmtError.code === '23505') { // duplicate key value violates unique constraint
+                console.log(`Notice: Item already exists, continuing... (${stmtError.message || 'Unknown error'})`);
+              } else {
+                throw error;
+              }
+            }
+          }
+          
           console.log(`Migration ${file} completed`);
         } catch (error) {
           console.error(`Error running migration ${file}:`, error);

@@ -238,20 +238,70 @@ CREATE TABLE IF NOT EXISTS user_data_access (
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
--- Create indexes for better performance
-CREATE INDEX idx_users_role_id ON users(role_id);
-CREATE INDEX idx_users_organization_id ON users(organization_id);
-CREATE INDEX idx_organizations_parent_id ON organizations(parent_id);
-CREATE INDEX idx_organizations_type ON organizations(type);
-CREATE INDEX idx_firm_integration_configs_firm_id ON firm_integration_configs(firm_id);
-CREATE INDEX idx_firm_integration_configs_integration_type_id ON firm_integration_configs(integration_type_id);
-CREATE INDEX idx_firm_data_mappings_firm_id ON firm_data_mappings(firm_id);
-CREATE INDEX idx_firm_data_mappings_integration_type_id ON firm_data_mappings(integration_type_id);
-CREATE INDEX idx_wealthbox_users_firm_integration_config_id ON wealthbox_users(firm_integration_config_id);
-CREATE INDEX idx_wealthbox_users_mapped_user_id ON wealthbox_users(mapped_user_id);
-CREATE INDEX idx_clients_firm_id ON clients(firm_id);
-CREATE INDEX idx_clients_primary_advisor_id ON clients(primary_advisor_id);
-CREATE INDEX idx_opportunities_wealthbox_user_id ON opportunities(wealthbox_user_id);
-CREATE INDEX idx_opportunities_client_id ON opportunities(client_id);
-CREATE INDEX idx_portfolios_client_id ON portfolios(client_id);
-CREATE INDEX idx_assets_portfolio_id ON assets(portfolio_id);
+-- Create indexes for better performance if they don't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_users_role_id') THEN
+        CREATE INDEX idx_users_role_id ON users(role_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_users_organization_id') THEN
+        CREATE INDEX idx_users_organization_id ON users(organization_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_organizations_parent_id') THEN
+        CREATE INDEX idx_organizations_parent_id ON organizations(parent_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_organizations_type') THEN
+        CREATE INDEX idx_organizations_type ON organizations(type);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_firm_integration_configs_firm_id') THEN
+        CREATE INDEX idx_firm_integration_configs_firm_id ON firm_integration_configs(firm_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_firm_integration_configs_integration_type_id') THEN
+        CREATE INDEX idx_firm_integration_configs_integration_type_id ON firm_integration_configs(integration_type_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_firm_data_mappings_firm_id') THEN
+        CREATE INDEX idx_firm_data_mappings_firm_id ON firm_data_mappings(firm_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_firm_data_mappings_integration_type_id') THEN
+        CREATE INDEX idx_firm_data_mappings_integration_type_id ON firm_data_mappings(integration_type_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_wealthbox_users_firm_integration_config_id') THEN
+        CREATE INDEX idx_wealthbox_users_firm_integration_config_id ON wealthbox_users(firm_integration_config_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_wealthbox_users_mapped_user_id') THEN
+        CREATE INDEX idx_wealthbox_users_mapped_user_id ON wealthbox_users(mapped_user_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_clients_firm_id') THEN
+        CREATE INDEX idx_clients_firm_id ON clients(firm_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_clients_primary_advisor_id') THEN
+        CREATE INDEX idx_clients_primary_advisor_id ON clients(primary_advisor_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_opportunities_wealthbox_user_id') THEN
+        CREATE INDEX idx_opportunities_wealthbox_user_id ON opportunities(wealthbox_user_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_opportunities_client_id') THEN
+        CREATE INDEX idx_opportunities_client_id ON opportunities(client_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_portfolios_client_id') THEN
+        CREATE INDEX idx_portfolios_client_id ON portfolios(client_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_assets_portfolio_id') THEN
+        CREATE INDEX idx_assets_portfolio_id ON assets(portfolio_id);
+    END IF;
+END $$;
