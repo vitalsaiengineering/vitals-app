@@ -18,6 +18,8 @@ import { getWealthboxTokenHandler } from "./api/wealthbox-token";
 import { getWealthboxToken } from "./utils/wealthbox-token";
 import dotenv from "dotenv";
 import bcrypt from 'bcrypt';
+import { isDemoMode } from './demo-data';
+import { getDemoAdvisorMetrics, getDemoClientDemographics } from './demo-analytics';
 // Load environment variables
 dotenv.config();
 
@@ -385,68 +387,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       let metrics;
       
-      // If specific advisor is selected, show their metrics
-      if (advisorId) {
-        metrics = await storage.getAdvisorMetrics(advisorId);
-      } 
-      // If firm is selected but no specific advisor, aggregate metrics for all advisors in the firm
-      else if (firmId) {
-        // Get all advisors in the firm
-        const advisors = await storage.getAdvisorsByFirm(firmId);
-        
-        // Placeholder for aggregated metrics
-        let totalAum = 0;
-        let totalRevenue = 0;
-        let totalClients = 0;
-        let totalActivities = 0;
-        let assetAllocation = {
-          Equities: 0,
-          "Fixed Income": 0,
-          Alternatives: 0,
-          Cash: 0
-        };
-        
-        // Sum up metrics for all advisors
-        for (const advisor of advisors) {
-          const advisorMetrics = await storage.getAdvisorMetrics(advisor.id);
-          totalAum += advisorMetrics.totalAum;
-          totalRevenue += advisorMetrics.totalRevenue;
-          totalClients += advisorMetrics.totalClients;
-          totalActivities += advisorMetrics.totalActivities;
+      // Use demo data if demo mode is enabled
+      if (isDemoMode) {
+        const targetAdvisorId = advisorId || user.id;
+        metrics = await getDemoAdvisorMetrics(targetAdvisorId);
+      } else {
+        // If specific advisor is selected, show their metrics
+        if (advisorId) {
+          metrics = await storage.getAdvisorMetrics(advisorId);
+        } 
+        // If firm is selected but no specific advisor, aggregate metrics for all advisors in the firm
+        else if (firmId) {
+          // Get all advisors in the firm
+          const advisors = await storage.getAdvisorsByFirm(firmId);
           
-          // Add asset allocations
-          advisorMetrics.assetAllocation.forEach(asset => {
-            const className = asset.class;
-            if (className === "Equities") {
-              assetAllocation.Equities += asset.value;
-            } else if (className === "Fixed Income") {
-              assetAllocation["Fixed Income"] += asset.value;
-            } else if (className === "Alternatives") {
-              assetAllocation.Alternatives += asset.value;
-            } else if (className === "Cash") {
-              assetAllocation.Cash += asset.value;
-            }
-          });
+          // Placeholder for aggregated metrics
+          let totalAum = 0;
+          let totalRevenue = 0;
+          let totalClients = 0;
+          let totalActivities = 0;
+          let assetAllocation = {
+            Equities: 0,
+            "Fixed Income": 0,
+            Alternatives: 0,
+            Cash: 0
+          };
+          
+          // Sum up metrics for all advisors
+          for (const advisor of advisors) {
+            const advisorMetrics = await storage.getAdvisorMetrics(advisor.id);
+            totalAum += advisorMetrics.totalAum;
+            totalRevenue += advisorMetrics.totalRevenue;
+            totalClients += advisorMetrics.totalClients;
+            totalActivities += advisorMetrics.totalActivities;
+            
+            // Add asset allocations
+            advisorMetrics.assetAllocation.forEach(asset => {
+              const className = asset.class;
+              if (className === "Equities") {
+                assetAllocation.Equities += asset.value;
+              } else if (className === "Fixed Income") {
+                assetAllocation["Fixed Income"] += asset.value;
+              } else if (className === "Alternatives") {
+                assetAllocation.Alternatives += asset.value;
+              } else if (className === "Cash") {
+                assetAllocation.Cash += asset.value;
+              }
+            });
+          }
+          
+          // Calculate percentages for asset allocation
+          const assetAllocationArray = Object.entries(assetAllocation).map(([className, value]) => ({
+            class: className,
+            value: value,
+            percentage: totalAum > 0 ? (value / totalAum) * 100 : 0
+          }));
+          
+          metrics = {
+            totalAum,
+            totalRevenue,
+            totalClients,
+            totalActivities,
+            assetAllocation: assetAllocationArray
+          };
+        } 
+        // Otherwise, show current user's metrics
+        else {
+          metrics = await storage.getAdvisorMetrics(user.id);
         }
-        
-        // Calculate percentages for asset allocation
-        const assetAllocationArray = Object.entries(assetAllocation).map(([className, value]) => ({
-          class: className,
-          value: value,
-          percentage: totalAum > 0 ? (value / totalAum) * 100 : 0
-        }));
-        
-        metrics = {
-          totalAum,
-          totalRevenue,
-          totalClients,
-          totalActivities,
-          assetAllocation: assetAllocationArray
-        };
-      } 
-      // Otherwise, show current user's metrics
-      else {
-        metrics = await storage.getAdvisorMetrics(user.id);
       }
       
       res.json(metrics);
@@ -463,66 +471,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       let demographics;
       
-      // If specific advisor is selected, show their client demographics
-      if (advisorId) {
-        demographics = await storage.getClientDemographics(advisorId);
-      } 
-      // Otherwise, show current user's demographics or aggregated firm demographics
-      else if (firmId) {
-        // Get all advisors in the firm
-        const advisors = await storage.getAdvisorsByFirm(firmId);
-        
-        // Placeholder for aggregated age groups and state distribution
-        const ageGroups: Record<string, number> = {};
-        const stateDistribution: Record<string, number> = {};
-        let totalClients = 0;
-        
-        // Aggregate demographics data
-        for (const advisor of advisors) {
-          const advisorDemographics = await storage.getClientDemographics(advisor.id);
+      // Use demo data if demo mode is enabled
+      if (isDemoMode) {
+        const targetAdvisorId = advisorId || user.id;
+        demographics = await getDemoClientDemographics(targetAdvisorId);
+      } else {
+        // If specific advisor is selected, show their client demographics
+        if (advisorId) {
+          demographics = await storage.getClientDemographics(advisorId);
+        } 
+        // Otherwise, show current user's demographics or aggregated firm demographics
+        else if (firmId) {
+          // Get all advisors in the firm
+          const advisors = await storage.getAdvisorsByFirm(firmId);
           
-          // Aggregate age groups
-          advisorDemographics.ageGroups.forEach(group => {
-            if (!ageGroups[group.range]) {
-              ageGroups[group.range] = 0;
-            }
-            ageGroups[group.range] += group.count;
-            totalClients += group.count;
-          });
+          // Placeholder for aggregated age groups and state distribution
+          const ageGroups: Record<string, number> = {};
+          const stateDistribution: Record<string, number> = {};
+          let totalClients = 0;
           
-          // Aggregate state distribution
-          advisorDemographics.stateDistribution.forEach(state => {
-            if (!stateDistribution[state.state]) {
-              stateDistribution[state.state] = 0;
-            }
-            stateDistribution[state.state] += state.count;
-          });
+          // Aggregate demographics data
+          for (const advisor of advisors) {
+            const advisorDemographics = await storage.getClientDemographics(advisor.id);
+            
+            // Aggregate age groups
+            advisorDemographics.ageGroups.forEach(group => {
+              if (!ageGroups[group.range]) {
+                ageGroups[group.range] = 0;
+              }
+              ageGroups[group.range] += group.count;
+              totalClients += group.count;
+            });
+            
+            // Aggregate state distribution
+            advisorDemographics.stateDistribution.forEach(state => {
+              if (!stateDistribution[state.state]) {
+                stateDistribution[state.state] = 0;
+              }
+              stateDistribution[state.state] += state.count;
+            });
+          }
+          
+          // Format the aggregated data
+          const formattedAgeGroups = Object.entries(ageGroups).map(([range, count]) => ({
+            range,
+            count: count as number
+          }));
+          
+          const formattedStateDistribution = Object.entries(stateDistribution).map(([state, count]) => ({
+            state,
+            count: count as number,
+            percentage: totalClients > 0 ? ((count as number) / totalClients) * 100 : 0
+          }));
+          
+          demographics = {
+            ageGroups: formattedAgeGroups,
+            stateDistribution: formattedStateDistribution
+          };
+        } 
+        // Show current user's demographics
+        else {
+          demographics = await storage.getClientDemographics(user.id);
         }
-        
-        // Format the aggregated data
-        const formattedAgeGroups = Object.entries(ageGroups).map(([range, count]) => ({
-          range,
-          count: count as number
-        }));
-        
-        const formattedStateDistribution = Object.entries(stateDistribution).map(([state, count]) => ({
-          state,
-          count: count as number,
-          percentage: totalClients > 0 ? ((count as number) / totalClients) * 100 : 0
-        }));
-        
-        demographics = {
-          ageGroups: formattedAgeGroups,
-          stateDistribution: formattedStateDistribution
-        };
-      } 
-      // Show current user's demographics
-      else {
-        demographics = await storage.getClientDemographics(user.id);
       }
       
       res.json(demographics);
     } catch (err) {
+      res.status(500).json({ error: "Could not fetch client demographics" });
+    }
+  });
 
   // Save WealthBox configuration
   app.post("/api/wealthbox/save-config", requireRole(["client_admin"]), async (req, res) => {
@@ -556,11 +573,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: false, 
         message: error.message || 'Failed to save configuration' 
       });
-    }
-  });
-
-
-      res.status(500).json({ error: "Could not fetch client demographics" });
     }
   });
 
