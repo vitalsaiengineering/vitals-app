@@ -114,11 +114,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validPassword = await bcrypt.compare(password, user.passwordHash);
       console.log({validPassword})
       if (!validPassword) {
-        // In a real app, you would use bcrypt to compare hashed passwords
         return res.status(401).json({ message: "Incorrect password" });
       }
-      // req.session.user = user;
-      res.json(user);
+      
+      // Log the user in via Passport
+      req.login(user, (err) => {
+        if (err) {
+          console.error("Login error:", err);
+          return res.status(500).json({ message: "Failed to establish session" });
+        }
+        // Return user without sensitive data
+        const { passwordHash, ...userWithoutPassword } = user;
+        return res.json(userWithoutPassword);
+      });
     } catch (error) {
       console.error("Login error:", error);
       res.status(500).json({ message: "Failed to log in" });
