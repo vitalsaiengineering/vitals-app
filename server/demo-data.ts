@@ -1,11 +1,10 @@
 
 import { faker } from '@faker-js/faker';
-import { storage } from './storage';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import { db } from '../shared/db';
 import { 
-  organizationTypeEnum, statusEnum, roleNameEnum,
+  organizationTypeEnum, statusEnum, roleNameEnum, accessLevelEnum,
   roles, organizations, users, clients, portfolios, assets 
 } from '../shared/schema';
 
