@@ -1,27 +1,18 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import { migrate } from "drizzle-orm/node-postgres/migrator";
-import { Pool } from "pg";
+// migrate.ts - Run database migrations
+import { runMigrations, closeConnection } from './shared/drizzle-migrate';
 
-async function runMigrations() {
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false
-    }
-  });
-
-  const db = drizzle(pool);
-
-  console.log("Running migrations...");
-
-  // Using the path from the root drizzle.config.ts
-  await migrate(db, { migrationsFolder: "./migrations" });
-
-  console.log("Migrations completed");
-  process.exit(0);
+async function migrate() {
+  try {
+    console.log('Starting database migration...');
+    await runMigrations();
+    console.log('Migration completed successfully');
+  } catch (error) {
+    console.error('Migration failed:', error);
+    process.exit(1);
+  } finally {
+    await closeConnection();
+  }
 }
 
-runMigrations().catch((err) => {
-  console.error("Migration failed", err);
-  process.exit(1);
-});
+// Run the migration
+migrate();
