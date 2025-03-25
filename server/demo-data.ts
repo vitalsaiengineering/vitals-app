@@ -3,12 +3,16 @@ import { faker } from '@faker-js/faker';
 import { storage } from './storage';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
-import { organizationTypeEnum, statusEnum, roleNameEnum } from '@shared/schema';
+import { db } from '../shared/db';
+import { 
+  organizationTypeEnum, statusEnum, roleNameEnum,
+  roles, organizations, users, clients, portfolios, assets 
+} from '../shared/schema';
 
 export const isDemoMode = process.env.DEMO_MODE === 'true';
 
 async function seedRoles() {
-  const roles = [
+  const roleList = [
     { name: 'global_admin', permissions: { admin: true } },
     { name: 'client_admin', permissions: { client: true } },
     { name: 'financial_advisor', permissions: { advisor: true } },
@@ -16,8 +20,8 @@ async function seedRoles() {
     { name: 'firm_admin', permissions: { firm: true } }
   ];
 
-  for (const role of roles) {
-    await storage.db.insert(storage.roles).values(role).onConflictDoNothing();
+  for (const role of roleList) {
+    await db.insert(roles).values(role).onConflictDoNothing();
   }
 }
 
@@ -40,7 +44,7 @@ async function seedOrganizations() {
   }
 
   for (const org of orgs) {
-    await storage.db.insert(storage.organizations).values(org).onConflictDoNothing();
+    await db.insert(organizations).values(org).onConflictDoNothing();
   }
 }
 
