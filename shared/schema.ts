@@ -66,10 +66,8 @@ export const users = pgTable("users", {
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
   roleId: integer("role_id")
-    .notNull()
     .references(() => roles.id),
   organizationId: integer("organization_id")
-    .notNull()
     .references(() => organizations.id),
   status: statusEnum("status").notNull().default("active"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

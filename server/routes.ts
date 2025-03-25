@@ -104,8 +104,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
   
   // Auth routes
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.json(req.user);
+  app.post("/api/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ message: "Incorrect username" });
+      }
+      const validPassword = await bcrypt.compare(password, user.passwordHash);
+      console.log({validPassword})
+      if (!validPassword) {
+        // In a real app, you would use bcrypt to compare hashed passwords
+        return res.status(401).json({ message: "Incorrect password" });
+      }
+      // req.session.user = user;
+      res.json(user);
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Failed to log in" });
+    }
   });
 
   app.post("/api/logout", (req, res) => {
@@ -119,56 +136,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/signup", async (req, res) => {
-      try {
-        console.log("req.body", req.body);
+    try {
+      console.log("req.body", req.body);
 
-        // Hash the password
-        const saltRounds = 10;
-        const passwordHash = await bcrypt.hash(req.body.password, saltRounds);
-
-        // Extract name components (assuming simple first name only in this example)
-        // You may need more sophisticated name parsing depending on your requirements
-        const firstName = req.body.name;
-        const lastName = ""; // Add logic for lastname if you have it
-
-        // Prepare data for validation according to schema
-        const userData = {
-          email: req.body.email,
-          passwordHash: passwordHash,
-          firstName: firstName,
-          lastName: lastName,
-          roleId: 1, // Set appropriate default or derive from request
-          organizationId: 1, // Set appropriate default or derive from request
-          status: "active" // Using default from schema
-        };
-
-        const validatedData = insertUserSchema.parse(userData);
-        console.log("validatedData", validatedData);
-
-        const existingEmail = await storage.getUserByEmail(validatedData.email);
-        if (existingEmail) {
-          return res.status(400).json({ message: "Email already exists" });
-        }
-
-        // Insert the user into the database
-        const newUser = await storage.createUser(validatedData);
-      console.log({newUser});
-        // Return success response (without sending back sensitive data)
-        return res.status(201).json({ 
-          message: "User created successfully", 
-          userId: newUser.id 
-        });
-      } catch (error) {
-        console.error("Signup error:", error);
-        return res.status(400).json({ 
-          message: error instanceof z.ZodError 
-            ? "Invalid data provided" 
-            : "Failed to create user",
-          details: error instanceof z.ZodError ? error.errors : undefined
-        });
+      // Check if email already exists first - before creating any resources
+      const existingEmail = await storage.getUserByEmail(req.body.email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email already exists" });
       }
-  });
 
+      // 1. Create an organization first
+      const orgData = {
+        name: `${req.body.organizationName}`, // Create organization name based on user input
+        type: "firm" as const, // Set as firm type
+        // parentId is optional, can be null by default
+      };
+
+      // Create organization in database
+      const newOrg = await storage.createOrganization(orgData);
+      console.log("Created organization:", newOrg);
+
+      // 2. Now prepare user data with the new organization ID
+      const userData = {
+        email: req.body.email,
+        passwordHash: await bcrypt.hash(req.body.password, 10),
+        firstName: req.body.name,
+        lastName: "", // Add logic for last name if needed
+        roleId: 1, // Firm owner/admin role
+        organizationId: newOrg.id, // Use the newly created org ID
+        status: "active" 
+      };
+
+      const validatedData = insertUserSchema.parse(userData);
+      console.log("validatedData", validatedData);
+
+      // 3. Create the user with the organization context
+      const newUser = await storage.createUser(validatedData);
+
+      // Return success with both organization and user info
+      return res.status(201).json({ 
+        message: "Account created successfully", 
+        userId: newUser.id,
+        organizationId: newOrg.id
+      });
+    } catch (error) {
+      console.error("Signup error:", error);
+      return res.status(400).json({ 
+        message: error instanceof z.ZodError 
+          ? "Invalid data provided" 
+          : "Failed to create account",
+        details: error instanceof z.ZodError ? error.errors : undefined
+      });
+    }
+  });
+  
   // User routes
   app.get("/api/users", requireRole(["global_admin", "client_admin", "home_office", "firm_admin"]), async (req, res) => {
     const user = req.user as any;

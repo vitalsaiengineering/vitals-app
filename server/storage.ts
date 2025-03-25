@@ -5,6 +5,11 @@ import {
   InsertUser,
 } from "@shared/schema";
 
+
+import { PostgresStorage } from 'shared/pg-storage';
+export const storage = new PostgresStorage();
+
+
 export interface IStorage {
   // Organization methods
   getOrganization(id: number): Promise<Organization | undefined>;
@@ -123,4 +128,8 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+// // This code defines an interface called IStorage that outlines methods for interacting with organizations and users.
+// // The MemStorage class implements this interface, providing in-memory storage for organizations and users.
+// // This implementation uses Maps to store data and increments IDs for each new organization and user.
+// // It defines methods for creating, retrieving, updating, and deleting organizations and users. 
+// export const storage = new MemStorage();
