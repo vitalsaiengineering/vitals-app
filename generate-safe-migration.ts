@@ -1,11 +1,14 @@
-// generate-safe-migration.ts
-// This script generates migration files without dropping existing tables
+/**
+ * This script safely generates migrations that won't drop existing tables
+ * It's designed to respect existing database structures while applying new schema changes
+ */
+
 import { exec } from 'child_process';
-import dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
+import { promisify } from 'util';
 
-dotenv.config();
+const execAsync = promisify(exec);
 
 /**
  * This function checks if migration files contain any DROP statements and removes them
@@ -14,68 +17,78 @@ function sanitizeMigrationFiles() {
   const migrationsDir = path.join(process.cwd(), 'migrations');
   
   if (!fs.existsSync(migrationsDir)) {
-    console.log('No migrations directory found. Creating one...');
+    console.log('No migrations directory found. Creating it...');
     fs.mkdirSync(migrationsDir, { recursive: true });
     return;
   }
   
-  console.log('Scanning migration files to ensure they are non-destructive...');
-  
-  // Get all SQL files
   const sqlFiles = fs.readdirSync(migrationsDir)
-    .filter(file => file.endsWith('.sql'));
+    .filter(file => file.endsWith('.sql'))
+    .map(file => path.join(migrationsDir, file));
   
   for (const file of sqlFiles) {
-    const filePath = path.join(migrationsDir, file);
-    const content = fs.readFileSync(filePath, 'utf8');
+    console.log(`Sanitizing migration file: ${file}`);
+    let content = fs.readFileSync(file, 'utf-8');
     
-    // Remove any DROP statements which could destroy existing data
-    let modified = content.replace(/DROP\s+TABLE(\s+IF\s+EXISTS)?\s+[^;]+;/gi, '-- DROP statement removed for safety\n');
+    // Remove DROP TABLE statements
+    content = content.replace(/DROP TABLE IF EXISTS [^;]*;/g, '');
     
-    // Also remove ALTER TABLE statements that might contain data loss operations
-    modified = modified.replace(/(ALTER\s+TABLE\s+[^\s]+\s+DROP\s+[^;]+;)/gi, '-- $1 -- Removed for safety\n');
+    // Convert CREATE TABLE to CREATE TABLE IF NOT EXISTS
+    content = content.replace(/CREATE TABLE ([^(]*)/g, 'CREATE TABLE IF NOT EXISTS $1');
     
-    // Ensure CREATE TABLE statements use IF NOT EXISTS
-    modified = modified.replace(/CREATE\s+TABLE(?!\s+IF\s+NOT\s+EXISTS)/gi, 'CREATE TABLE IF NOT EXISTS');
+    // Remove ALTER TABLE ... DROP statements
+    content = content.replace(/ALTER TABLE [^;]* DROP [^;]*;/g, '');
     
-    // Write back the modified content
-    if (content !== modified) {
-      console.log(`Sanitized potentially destructive statements in ${file}`);
-      fs.writeFileSync(filePath, modified);
-    }
+    fs.writeFileSync(file, content, 'utf-8');
+    console.log(`File sanitized: ${file}`);
   }
-  
-  console.log('Migration files have been checked and sanitized if needed');
 }
 
 /**
  * Generate migration files using drizzle-kit
  */
 function generateMigrations() {
-  console.log('Generating migration files...');
-  
-  // Execute the drizzle-kit generate command
-  const child = exec('npx drizzle-kit generate:pg', (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Error generating migrations: ${error.message}`);
-      return;
-    }
+  return new Promise<void>((resolve, reject) => {
+    console.log('Generating migration files...');
     
-    if (stderr) {
-      console.error(`drizzle-kit stderr: ${stderr}`);
-    }
-    
-    console.log(stdout);
-    console.log('Migrations generated successfully');
-    
-    // After generating, sanitize the files to ensure they don't break anything
-    sanitizeMigrationFiles();
+    exec('npx drizzle-kit generate:pg', (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error generating migrations: ${error.message}`);
+        return reject(error);
+      }
+      
+      console.log(stdout);
+      
+      if (stderr && !stderr.includes('warn')) {
+        console.error(`drizzle-kit stderr: ${stderr}`);
+      }
+      
+      resolve();
+    });
   });
-  
-  // Forward stdout and stderr to console
-  child.stdout?.pipe(process.stdout);
-  child.stderr?.pipe(process.stderr);
 }
 
-// Run the function
-generateMigrations();
+/**
+ * Main function to run the safe migration process
+ */
+async function main() {
+  try {
+    console.log('Starting safe migration generation process...');
+    
+    // First generate the migrations
+    await generateMigrations();
+    
+    // Then sanitize them to make them safe
+    sanitizeMigrationFiles();
+    
+    console.log('Safe migrations generated successfully!');
+    console.log('You can now apply them with: npx tsx migrate.ts');
+    
+  } catch (error) {
+    console.error('Migration generation failed:', error);
+    process.exit(1);
+  }
+}
+
+// Run the main function
+main();

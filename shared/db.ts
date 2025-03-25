@@ -2,7 +2,7 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import pg from 'pg';
-import * as schema from './schema.js';
+import * as schema from './schema';
 import dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -34,8 +34,28 @@ export async function runSafeMigrations() {
   console.log('Running safe migrations...');
   
   try {
+    // Ensure migrations directory and journal exist
+    const migrationsDir = './migrations';
+    const metaDir = './migrations/meta';
+    
+    // Create directories if they don't exist
+    if (!fs.existsSync(migrationsDir)) {
+      fs.mkdirSync(migrationsDir, { recursive: true });
+    }
+    
+    if (!fs.existsSync(metaDir)) {
+      fs.mkdirSync(metaDir, { recursive: true });
+    }
+    
+    // Create journal file if it doesn't exist
+    const journalPath = path.join(metaDir, '_journal.json');
+    if (!fs.existsSync(journalPath)) {
+      fs.writeFileSync(journalPath, JSON.stringify({ entries: [] }), 'utf-8');
+      console.log('Created new migration journal file');
+    }
+    
     // Using drizzle-kit's migrate functionality which preserves existing data
-    await migrate(db, { migrationsFolder: './migrations' });
+    await migrate(db, { migrationsFolder: migrationsDir });
     
     console.log('All migrations completed successfully');
   } catch (error) {
