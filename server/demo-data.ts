@@ -106,16 +106,18 @@ async function seedClients() {
     const org = faker.helpers.arrayElement(orgs);
     const advisor = faker.helpers.arrayElement(allUsers);
 
+    const age = faker.number.int({ min: 18, max: 90 });
     const client = {
       externalId: faker.string.uuid(),
       firmId: org.id,
       primaryAdvisorId: advisor.id,
       firstName: faker.person.firstName(),
       lastName: faker.person.lastName(),
+      age: age,
       contactInfo: {
         email: faker.internet.email(),
         phone: faker.phone.number(),
-        age: faker.number.int({ min: 18, max: 90 }),
+        age: age, // Keep it in contactInfo for backward compatibility
         address: {
           street: faker.location.streetAddress(),
           city: faker.location.city(),
