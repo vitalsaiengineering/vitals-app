@@ -63,7 +63,7 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
       if (!response.ok) throw new Error('Failed to fetch advisors');
       return response.json();
     },
-    enabled: !!user && (user.role === 'client_admin' || user.role === 'firm_admin' || user.role === 'home_office' || user.role === 'global_admin'),
+    enabled: !!user && (user.role === 'firm_admin' || user.role === 'firm_admin' || user.role === 'home_office' || user.role === 'global_admin'),
   });
   
   // Fetch Wealthbox users if the user has a Wealthbox token

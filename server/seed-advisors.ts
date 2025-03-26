@@ -20,7 +20,7 @@ async function seedAdvisors() {
         password: "password",
         email: "advisor1@example.com",
         fullName: "Michael Johnson",
-        role: "financial_advisor",
+        role: "advisor",
         organizationId
       },
       {
@@ -28,7 +28,7 @@ async function seedAdvisors() {
         password: "password",
         email: "advisor2@example.com",
         fullName: "Jessica Williams",
-        role: "financial_advisor",
+        role: "advisor",
         organizationId
       },
       {
@@ -36,7 +36,7 @@ async function seedAdvisors() {
         password: "password",
         email: "advisor3@example.com",
         fullName: "David Brown",
-        role: "financial_advisor",
+        role: "advisor",
         organizationId
       },
       {
@@ -44,7 +44,7 @@ async function seedAdvisors() {
         password: "password",
         email: "advisor4@example.com",
         fullName: "Emma Davis",
-        role: "financial_advisor",
+        role: "advisor",
         organizationId
       },
       {
@@ -52,7 +52,7 @@ async function seedAdvisors() {
         password: "password",
         email: "advisor5@example.com",
         fullName: "Christopher Wilson",
-        role: "financial_advisor",
+        role: "advisor",
         organizationId
       },
       {
@@ -60,7 +60,7 @@ async function seedAdvisors() {
         password: "password",
         email: "advisor6@example.com",
         fullName: "Olivia Martinez",
-        role: "financial_advisor",
+        role: "advisor",
         organizationId
       },
       {
@@ -68,7 +68,7 @@ async function seedAdvisors() {
         password: "password",
         email: "advisor7@example.com",
         fullName: "James Anderson",
-        role: "financial_advisor",
+        role: "advisor",
         organizationId
       },
       {
@@ -76,7 +76,7 @@ async function seedAdvisors() {
         password: "password",
         email: "advisor8@example.com",
         fullName: "Sophia Taylor",
-        role: "financial_advisor",
+        role: "advisor",
         organizationId
       },
       {
@@ -84,7 +84,7 @@ async function seedAdvisors() {
         password: "password",
         email: "advisor9@example.com",
         fullName: "Daniel Moore",
-        role: "financial_advisor",
+        role: "advisor",
         organizationId
       },
       {
@@ -92,7 +92,7 @@ async function seedAdvisors() {
         password: "password",
         email: "advisor10@example.com",
         fullName: "Ava Jackson",
-        role: "financial_advisor",
+        role: "advisor",
         organizationId
       }
     ];

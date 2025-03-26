@@ -91,7 +91,7 @@ export function OpportunitiesCard({ wealthboxToken, advisorId, wealthboxUserId, 
         url.searchParams.append('wealthboxUserId', wealthboxUserId.toString());
       }
       // Second priority: Filter by advisor ID from our system 
-      else if (currentUser?.role === 'client_admin' && advisorId) {
+      else if (currentUser?.role === 'firm_admin' && advisorId) {
         url.searchParams.append('advisorId', advisorId.toString());
       }
       
@@ -115,7 +115,7 @@ export function OpportunitiesCard({ wealthboxToken, advisorId, wealthboxUserId, 
   }, [opportunitiesData, selectedPipeline]);
   
   // For client admin viewing advisor opportunities, don't require wealthbox connection
-  if (!wealthboxToken && currentUser?.role !== 'client_admin') {
+  if (!wealthboxToken && currentUser?.role !== 'firm_admin') {
     return (
       <Card>
         <CardHeader>

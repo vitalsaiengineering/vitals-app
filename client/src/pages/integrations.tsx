@@ -263,7 +263,7 @@ export default function Integrations() {
   // Check if user is authorized
   // Client admin users should always be authorized
   const isAuthorized =
-    (user && (user as any).role === "client_admin") ||
+    (user && (user as any).role === "advisor") ||
     (wealthboxStatus !== undefined && !!wealthboxStatus.authorized);
 
   return (

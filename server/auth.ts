@@ -78,7 +78,7 @@ export function setupAuth(app: Express) {
               password: null, // No password for social login
               email: email,
               fullName: fullName || "Google User",
-              role: "financial_advisor", // Default role for new users
+              role: "advisor", // Default role for new users
               organizationId: defaultOrg.id,
             });
             

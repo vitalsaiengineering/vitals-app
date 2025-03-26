@@ -62,7 +62,7 @@ const userSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   email: z.string().email("Invalid email address"),
   fullName: z.string().min(1, "Full name is required"),
-  role: z.enum(["global_admin", "client_admin", "financial_advisor"], {
+  role: z.enum(["global_admin", "firm_admin", "advisor"], {
     required_error: "Role is required",
   }),
   organizationId: z.coerce.number().optional(),
@@ -75,9 +75,9 @@ const formatRole = (role: string) => {
   switch (role) {
     case "global_admin":
       return "Global Admin";
-    case "client_admin":
+    case "firm_admin":
       return "Client Admin";
-    case "financial_advisor":
+    case "advisor":
       return "Financial Advisor";
     default:
       return role;
@@ -89,9 +89,9 @@ const getRoleBadgeVariant = (role: string) => {
   switch (role) {
     case "global_admin":
       return "destructive";
-    case "client_admin":
+    case "firm_admin":
       return "default";
-    case "financial_advisor":
+    case "advisor":
       return "secondary";
     default:
       return "outline";
@@ -142,7 +142,7 @@ export default function Users() {
       password: "",
       email: "",
       fullName: "",
-      role: "financial_advisor",
+      role: "advisor",
     },
   });
 
@@ -263,8 +263,8 @@ export default function Users() {
                             </FormControl>
                             <SelectContent>
                               <SelectItem value="global_admin">Global Admin</SelectItem>
-                              <SelectItem value="client_admin">Client Admin</SelectItem>
-                              <SelectItem value="financial_advisor">Financial Advisor</SelectItem>
+                              <SelectItem value="firm_admin">Client Admin</SelectItem>
+                              <SelectItem value="advisor">Financial Advisor</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />

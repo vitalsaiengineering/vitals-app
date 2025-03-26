@@ -165,7 +165,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // 1. Create an organization first
       const orgData = {
-        name: `${req.body.organizationName}`, // Create organization name based on user input
+        name: `${req.body.organizationName}`|| "ABD Org", // Create organization name based on user input
         type: "firm" as const, // Set as firm type
         // parentId is optional, can be null by default
       };
@@ -207,9 +207,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-  
+
   // User routes
-  app.get("/api/users", requireRole(["global_admin", "client_admin", "home_office", "firm_admin"]), async (req, res) => {
+  app.get("/api/users", requireRole(["global_admin", "firm_admin", "home_office", "firm_admin"]), async (req, res) => {
     const user = req.user as any;
     let users;
     
@@ -220,7 +220,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       users = await storage.getUsersByHomeOffice(user.organizationId);
     } else {
       users = await storage.getUsersByOrganization(user.organizationId);
-      // Filter out global_admin users for client_admin and firm_admin
+      // Filter out global_admin users for firm_admin and firm_admin
       users = users.filter(u => u.role !== "global_admin");
     }
     
@@ -228,7 +228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get financial advisors (filtered by firm if specified)
-  app.get("/api/users/advisors", requireRole(["home_office", "firm_admin", "client_admin"]), async (req, res) => {
+  app.get("/api/users/advisors", requireRole(["home_office", "firm_admin", "firm_admin"]), async (req, res) => {
     const user = req.user as any;
     const firmId = req.query.firmId ? parseInt(req.query.firmId as string) : null;
     
@@ -242,14 +242,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       advisors = await storage.getAdvisorsByHomeOffice(user.organizationId);
     } else {
       // Firm admin or client admin - get advisors in their organization
-      advisors = await storage.getUsersByRoleAndOrganization("financial_advisor", user.organizationId);
+      advisors = await storage.getUsersByRoleAndOrganization("advisor", user.organizationId);
       console.log(`Found ${advisors.length} advisors for ${user.username} in organization ${user.organizationId}`);
     }
     
     res.json(advisors);
   });
 
-  app.post("/api/users", requireRole(["global_admin", "client_admin"]), async (req, res) => {
+  app.post("/api/users", requireRole(["global_admin", "firm_admin"]), async (req, res) => {
     try {
       const user = req.user as any;
       const validatedData = insertUserSchema.parse(req.body);
@@ -266,8 +266,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Client admin can only create financial advisors for their org
-      if (user.role === "client_admin") {
-        if (validatedData.role !== "financial_advisor") {
+      if (user.role === "firm_admin") {
+        if (validatedData.role !== "advisor") {
           return res.status(403).json({ message: "Client admins can only create financial advisor users" });
         }
         validatedData.organizationId = user.organizationId;
@@ -323,7 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const user = req.user as any;
     let clients;
     
-    if (user.role === "financial_advisor") {
+    if (user.role === "advisor") {
       clients = await storage.getClientsByAdvisor(user.id);
     } else {
       clients = await storage.getClientsByOrganization(user.organizationId);
@@ -332,14 +332,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(clients);
   });
 
-  app.post("/api/clients", requireRole(["financial_advisor", "client_admin"]), async (req, res) => {
+  app.post("/api/clients", requireRole(["advisor", "firm_admin"]), async (req, res) => {
     try {
       const user = req.user as any;
       const validatedData = insertClientSchema.parse(req.body);
       
       // Set organization and advisor ID based on the user
       validatedData.organizationId = user.organizationId;
-      if (user.role === "financial_advisor") {
+      if (user.role === "advisor") {
         validatedData.advisorId = user.id;
       }
       
@@ -350,14 +350,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Data Mapping routes - client_admin and financial_advisor users can access
-  app.get("/api/mappings", requireRole(["client_admin", "financial_advisor"]), async (req, res) => {
+  // Data Mapping routes - firm_admin and advisor users can access
+  app.get("/api/mappings", requireRole(["firm_admin", "advisor"]), async (req, res) => {
     const user = req.user as any;
     const mappings = await storage.getDataMappings(user.id);
     res.json(mappings);
   });
 
-  app.post("/api/mappings", requireRole(["client_admin", "financial_advisor"]), async (req, res) => {
+  app.post("/api/mappings", requireRole(["firm_admin", "advisor"]), async (req, res) => {
     try {
       const user = req.user as any;
       const validatedData = insertDataMappingSchema.parse({
@@ -372,7 +372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/mappings/:id", requireRole(["client_admin", "financial_advisor"]), async (req, res) => {
+  app.delete("/api/mappings/:id", requireRole(["firm_admin", "advisor"]), async (req, res) => {
     const id = parseInt(req.params.id);
     await storage.deleteDataMapping(id);
     res.status(204).send();
@@ -542,7 +542,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Save WealthBox configuration
-  app.post("/api/wealthbox/save-config", requireRole(["client_admin"]), async (req, res) => {
+  app.post("/api/wealthbox/save-config", requireRole(["firm_admin"]), async (req, res) => {
     try {
       const { accessToken, settings } = req.body;
       const user = req.user as any;
@@ -579,20 +579,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI query route
   app.post("/api/ai/query", requireAuth, aiQueryHandler);
   
-  // Wealthbox integration routes - client_admin and financial_advisor users can access
-  app.post("/api/wealthbox/test-connection", requireRole(["client_admin", "financial_advisor"]), testWealthboxConnectionHandler);
-  app.post("/api/wealthbox/import-data", requireRole(["client_admin", "financial_advisor"]), importWealthboxDataHandler);
+  // Wealthbox integration routes - firm_admin and advisor users can access
+  app.post("/api/wealthbox/test-connection", requireRole(["firm_admin", "advisor"]), testWealthboxConnectionHandler);
+  app.post("/api/wealthbox/import-data", requireRole(["firm_admin", "advisor"]), importWealthboxDataHandler);
   app.get("/api/wealthbox/token", requireAuth, getWealthboxTokenHandler);
   app.get("/api/wealthbox/status", requireAuth, (req, res) => {
     const user = req.user as any;
     
     // Check if user is authorized to see Wealthbox status
-    const isAuthorized = user.role === "client_admin" || user.role === "financial_advisor";
+    const isAuthorized = user.role === "firm_admin" || user.role === "advisor";
     
     // For client admin users, we need to treat them as connected even if they personally don't have tokens
     // This is because they can use WealthBox on behalf of the organization
-    const isConnected = user.role === "client_admin" ? true : (user?.wealthboxConnected || false);
-    const tokenExpiry = user.role === "client_admin" ? new Date(Date.now() + 86400000).toISOString() : (user?.wealthboxTokenExpiry || null);
+    const isConnected = user.role === "firm_admin" ? true : (user?.wealthboxConnected || false);
+    const tokenExpiry = user.role === "firm_admin" ? new Date(Date.now() + 86400000).toISOString() : (user?.wealthboxTokenExpiry || null);
     
     res.json({ 
       connected: isAuthorized && isConnected,
@@ -615,7 +615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/wealthbox/users", getWealthboxUsersHandler);
   
   // Wealthbox sync routes
-  app.post("/api/wealthbox/sync", requireRole(["client_admin", "financial_advisor"]), async (req, res) => {
+  app.post("/api/wealthbox/sync", requireRole(["firm_admin", "advisor"]), async (req, res) => {
     const user = req.user as any;
     const { accessToken } = req.body;
     

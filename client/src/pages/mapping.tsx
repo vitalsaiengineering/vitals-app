@@ -194,7 +194,7 @@ export default function Mapping() {
   }
   
   // Check if user is authorized - client admins should always be authorized
-  const isAuthorized = (user && (user as any).role === "client_admin") || (wealthboxStatus !== undefined && !!wealthboxStatus.authorized);
+  const isAuthorized = (user && (user as any).role === "firm_admin") || (wealthboxStatus !== undefined && !!wealthboxStatus.authorized);
   
   // If user is not authorized, show access restricted message
   if (!isAuthorized) {

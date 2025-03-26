@@ -258,7 +258,7 @@ export default function Dashboard() {
   // Role-based dashboard display
   if (currentUser) {
     // For client admins, we'll show the advisor list with a filter bar AND the advisor dashboard
-    if (currentUser.role === 'client_admin') {
+    if (currentUser.role === 'firm_admin') {
       return (
         <div className="container mx-auto py-8">
           <div className="mb-6">
