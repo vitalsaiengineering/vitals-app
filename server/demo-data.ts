@@ -302,3 +302,8 @@ export async function seedDemoData() {
     console.error("Error seeding demo data:", error);
   }
 }
+
+export function getAverageAge(): number {
+  const sum = clients.reduce((acc, client) => acc + client.age, 0);
+  return Math.round((sum / clients.length) * 10) / 10;
+}
