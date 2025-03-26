@@ -101,8 +101,7 @@ async function seedClients() {
     return;
   }
 
-  // Create 5 clients for testing (smaller number for testing)
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 20; i++) {
     const org = faker.helpers.arrayElement(orgs);
     const advisor = faker.helpers.arrayElement(allUsers);
 
@@ -113,7 +112,6 @@ async function seedClients() {
       primaryAdvisorId: advisor.id,
       firstName: faker.person.firstName(),
       lastName: faker.person.lastName(),
-      age: age,
       contactInfo: {
         email: faker.internet.email(),
         phone: faker.phone.number(),

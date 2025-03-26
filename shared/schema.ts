@@ -65,10 +65,8 @@ export const users = pgTable("users", {
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
-  roleId: integer("role_id")
-    .references(() => roles.id),
-  organizationId: integer("organization_id")
-    .references(() => organizations.id),
+  roleId: integer("role_id").references(() => roles.id),
+  organizationId: integer("organization_id").references(() => organizations.id),
   status: statusEnum("status").notNull().default("active"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -165,7 +163,6 @@ export const clients = pgTable("clients", {
   primaryAdvisorId: integer("primary_advisor_id").references(() => users.id),
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
-  age: integer("age"),
   contactInfo: json("contact_info").notNull().default({}),
   source: varchar("source", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -429,22 +426,24 @@ export const userDataAccessRelations = relations(userDataAccess, ({ one }) => ({
 }));
 
 // Create insert schemas for Zod validation
-export const insertUserSchema = createInsertSchema(users).omit({ 
-  id: true, 
-  createdAt: true, 
-  updatedAt: true 
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
-export const insertClientSchema = createInsertSchema(clients).omit({ 
-  id: true, 
-  createdAt: true, 
-  updatedAt: true 
+export const insertClientSchema = createInsertSchema(clients).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
-export const insertDataMappingSchema = createInsertSchema(firmDataMappings).omit({ 
-  id: true, 
-  createdAt: true, 
-  updatedAt: true 
+export const insertDataMappingSchema = createInsertSchema(
+  firmDataMappings,
+).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 // Create insert types
@@ -458,6 +457,14 @@ export type Client = typeof clients.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;
 export type Role = typeof roles.$inferSelect;
 export type DataMapping = typeof firmDataMappings.$inferSelect;
-export type Activity = { id: number; clientId: number; type: string; details: any; date: Date; createdAt: Date; advisorId: number; };
+export type Activity = {
+  id: number;
+  clientId: number;
+  type: string;
+  details: any;
+  date: Date;
+  createdAt: Date;
+  advisorId: number;
+};
 export type Portfolio = typeof portfolios.$inferSelect;
 export type Holding = typeof assets.$inferSelect;
