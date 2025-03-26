@@ -163,6 +163,7 @@ export const clients = pgTable("clients", {
   primaryAdvisorId: integer("primary_advisor_id").references(() => users.id),
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
+  age: integer("age").notNull(),
   contactInfo: json("contact_info").notNull().default({}),
   source: varchar("source", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
