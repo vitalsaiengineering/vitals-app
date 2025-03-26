@@ -14,14 +14,27 @@ import { PortfolioCard } from "@/components/dashboard/portfolio-card";
 import { DemographicsCard } from "@/components/dashboard/demographics-card";
 import { OpportunitiesCard } from "@/components/dashboard/opportunities-card";
 import { GeographicDistributionCard } from "@/components/dashboard/geographic-distribution-card";
-import { AgeDistributionCard } from "@/components/dashboard/age-distribution-card";
 import { FilterBar } from "@/components/dashboard/filter-bar";
 import { AiQuery } from "@/components/dashboard/ai-query";
 import { importWealthboxData, getWealthboxStatus, getCurrentUser } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { AdvisorsList } from "../components/AdvisorsList";
-import { User } from "@shared/schema";
+// Using extended User type that includes role and username fields
+interface ExtendedUser {
+  id: number;
+  email: string;
+  passwordHash: string;
+  firstName: string;
+  lastName: string;
+  createdAt: Date;
+  updatedAt: Date;
+  roleId: number | null;
+  status: "active" | "inactive" | "pending" | "suspended";
+  organizationId: number | null;
+  role?: string;
+  username?: string;
+}
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -73,7 +86,7 @@ export default function Dashboard() {
   }
   
   // Fetch current user
-  const { data: currentUser, isLoading: isLoadingUser } = useQuery<User>({
+  const { data: currentUser, isLoading: isLoadingUser } = useQuery<ExtendedUser>({
     queryKey: ['/api/me'],
   });
   
@@ -330,8 +343,7 @@ export default function Dashboard() {
             {/* Client Demographics */}
             <DemographicsCard {...demographicsData} />
             
-            {/* Age Distribution - Wealthbox Data */}
-            <AgeDistributionCard wealthboxUserId={filters.wealthboxUserId} />
+            {/* Age Distribution is shown in Demographics Card */}
             
             {/* Geographic Distribution */}
             <GeographicDistributionCard wealthboxUserId={filters.wealthboxUserId} />
@@ -459,8 +471,7 @@ export default function Dashboard() {
         {/* Client Demographics */}
         <DemographicsCard {...demographicsData} />
         
-        {/* Age Distribution - Wealthbox Data */}
-        <AgeDistributionCard wealthboxUserId={filters.wealthboxUserId} />
+        {/* Age Distribution is shown in Demographics Card */}
         
         {/* Geographic Distribution */}
         <GeographicDistributionCard wealthboxUserId={filters.wealthboxUserId} />
