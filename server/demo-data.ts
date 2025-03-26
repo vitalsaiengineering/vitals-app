@@ -115,7 +115,7 @@ async function seedClients() {
       contactInfo: {
         email: faker.internet.email(),
         phone: faker.phone.number(),
-        age: age, // Keep it in contactInfo for backward compatibility
+        age: faker.number.int({ min: 18, max: 90 }),
         address: {
           street: faker.location.streetAddress(),
           city: faker.location.city(),
