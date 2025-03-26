@@ -1,11 +1,9 @@
-// migrate.ts - Run database migrations
-import { runMigrations, closeConnection } from './shared/drizzle-migrate';
+
+import { runMigrations, closeConnection } from './shared/db';
 
 async function migrate() {
   try {
-    console.log('Starting database migration...');
     await runMigrations();
-    console.log('Migration completed successfully');
   } catch (error) {
     console.error('Migration failed:', error);
     process.exit(1);
@@ -14,5 +12,4 @@ async function migrate() {
   }
 }
 
-// Run the migration
 migrate();
