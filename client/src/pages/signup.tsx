@@ -32,6 +32,7 @@ interface FormData {
   email: string;
   password: string;
   confirmPassword: string;
+  organizationName: string;
   referralSource: string;
   antiBot: boolean;
 }
@@ -42,6 +43,7 @@ const SignupForm = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    organizationName: "",
     referralSource: "",
     antiBot: false,
   });
@@ -215,6 +217,22 @@ const SignupForm = () => {
                 onChange={handleChange}
                 className="pl-10 h-12 text-base"
                 placeholder="name@example.com"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="organization" className="text-base font-normal">
+              Organization Name
+            </Label>
+            <div className="relative">
+              <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                id="organization"
+                name="organization"
+                value={formData.organizationName}
+                onChange={handleChange}
+                className="pl-10 h-12 text-base"
+                placeholder="Enter organization name"
               />
             </div>
           </div>

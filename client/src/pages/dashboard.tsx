@@ -509,12 +509,12 @@ export default function Dashboard() {
         <PortfolioCard {...portfolioData} />
 
         {/* Client Demographics */}
-        <DemographicsCard {...demographicsData} />
+        {/* <DemographicsCard {...demographicsData} /> */}
 
         {/* Age Distribution is shown in Demographics Card */}
 
         {/* Geographic Distribution */}
-        <GeographicDistributionCard wealthboxUserId={filters.wealthboxUserId} />
+        {/* <GeographicDistributionCard wealthboxUserId={filters.wealthboxUserId} /> */}
       </div>
 
       {/* Opportunities Section - Full Width */}

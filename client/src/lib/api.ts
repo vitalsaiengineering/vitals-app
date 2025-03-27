@@ -48,6 +48,25 @@ export const deleteMapping = async (id: number) => {
 };
 
 // WealthBox Integration
+export const setupWealthboxOAuth = async (
+  clientId: string,
+  clientSecret: string,
+  redirectUri: string
+) => {
+  const response = await fetch("/api/wealthbox/oauth/setup", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      clientId,
+      clientSecret,
+      redirectUri,
+    }),
+  });
+  return response.json();
+} 
+
 export const testWealthboxConnection = async (accessToken: string) => {
   const response = await apiRequest("POST", "/api/wealthbox/test-connection", { accessToken });
   return response.json();

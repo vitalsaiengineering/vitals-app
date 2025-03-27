@@ -112,10 +112,10 @@ async function seedClients() {
       primaryAdvisorId: advisor.id,
       firstName: faker.person.firstName(),
       lastName: faker.person.lastName(),
+      age: age,
+      emailAddress: faker.internet.email(),
+      phone_Number: faker.phone.number(),
       contactInfo: {
-        email: faker.internet.email(),
-        phone: faker.phone.number(),
-        age: faker.number.int({ min: 18, max: 90 }),
         address: {
           street: faker.location.streetAddress(),
           city: faker.location.city(),
@@ -125,6 +125,7 @@ async function seedClients() {
       },
       source: "demo",
     };
+    console.log()
 
     await db.insert(clients).values(client).onConflictDoNothing();
   }

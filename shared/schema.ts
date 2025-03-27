@@ -164,6 +164,8 @@ export const clients = pgTable("clients", {
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
   age: integer("age").notNull(),
+  emailaddress: varchar("emailaddress", { length: 255 }).notNull(),
+  phoneNumber: varchar("phone_number", { length: 20 }).notNull(),
   contactInfo: json("contact_info").notNull().default({}),
   source: varchar("source", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),

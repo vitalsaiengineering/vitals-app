@@ -23,6 +23,12 @@ import { getDemoAdvisorMetrics, getDemoClientDemographics } from './demo-analyti
 // Load environment variables
 dotenv.config();
 
+const WEALTHBOX_CLIENT_ID = process.env.WEALTHBOX_CLIENT_ID || "mock_client_id";
+const WEALTHBOX_CLIENT_SECRET = process.env.WEALTHBOX_CLIENT_SECRET || "mock_client_secret";
+const WEALTHBOX_REDIRECT_URI = process.env.WEALTHBOX_REDIRECT_URI || "http://localhost:5000/api/wealthbox/callback";
+const WEALTHBOX_AUTH_URL = "https://api.wealthbox.com/oauth/authorize";
+const WEALTHBOX_TOKEN_URL = "https://api.wealthbox.com/oauth/token";
+
 // Setup session store
 const MemoryStoreSession = MemoryStore(session);
 
@@ -542,6 +548,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Save WealthBox configuration
+  app.get("/api/wealthbox/auth/setup", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    const authUrl = `${WEALTHBOX_AUTH_URL}?client_id=${WEALTHBOX_CLIENT_ID}&redirect_uri=${encodeURIComponent(WEALTHBOX_REDIRECT_URI)}&response_type=code&state=${req.user.id}`;
+    res.json({ authUrl });
+  });
+  
+  
   app.post("/api/wealthbox/save-config", requireRole(["firm_admin"]), async (req, res) => {
     try {
       const { accessToken, settings } = req.body;

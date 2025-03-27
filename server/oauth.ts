@@ -9,99 +9,110 @@ const WEALTHBOX_REDIRECT_URI = process.env.WEALTHBOX_REDIRECT_URI || "http://loc
 const WEALTHBOX_AUTH_URL = "https://api.wealthbox.com/oauth/authorize";
 const WEALTHBOX_TOKEN_URL = "https://api.wealthbox.com/oauth/token";
 
+//TODO this token based auth to be removed
+// export function setupWealthboxOAuth(app: Express) {
+//   // Initiate OAuth flow
+//   app.get("/api/wealthbox/auth", (req, res) => {
+//     if (!req.isAuthenticated()) {
+//       return res.status(401).json({ message: "Unauthorized" });
+//     }
+
+//     // Create URL for WealthBox OAuth authorization
+//     const authUrl = `${WEALTHBOX_AUTH_URL}?` + 
+//       `client_id=${WEALTHBOX_CLIENT_ID}&` +
+//       `redirect_uri=${encodeURIComponent(WEALTHBOX_REDIRECT_URI)}&` +
+//       `response_type=code&` +
+//       `state=${req.user!.id}`;
+    
+//     res.json({ authUrl });
+//   });
+
+//   // OAuth callback endpoint
+//   app.get("/api/wealthbox/callback", async (req, res) => {
+//     const { code, state } = req.query;
+    
+//     if (!code || !state) {
+//       return res.status(400).json({ message: "Invalid callback parameters" });
+//     }
+    
+//     try {
+//       const userId = parseInt(state as string);
+      
+//       // In a real implementation, you would make an actual API call to exchange the code for a token
+//       // For this MVP, we'll simulate the token response
+      
+//       // Mock token response
+//       const tokenResponse = {
+//         access_token: "mock_access_token_" + Date.now(),
+//         refresh_token: "mock_refresh_token_" + Date.now(),
+//         expires_in: 3600 // 1 hour
+//       };
+      
+//       // Update user with token information
+//       const expiryDate = new Date(Date.now() + tokenResponse.expires_in * 1000);
+//       await storage.updateUserWealthboxConnection(
+//         userId,
+//         tokenResponse.access_token,
+//         tokenResponse.refresh_token,
+//         expiryDate
+//       );
+      
+//       // In a real implementation, you would redirect to the frontend with success message
+//       res.redirect('/integrations?status=success');
+//     } catch (error: any) {
+//       console.error("OAuth callback error:", error);
+//       res.redirect('/integrations?status=error');
+//     }
+//   });
+
+//   // Endpoint to get WealthBox connection status
+//   app.get("/api/wealthbox/status", (req, res) => {
+//     if (!req.isAuthenticated()) {
+//       return res.status(401).json({ message: "Unauthorized" });
+//     }
+    
+//     const user = req.user as any;
+    
+//     res.json({
+//       connected: user.wealthboxConnected || false,
+//       expiresAt: user.wealthboxTokenExpiry
+//     });
+//   });
+
+//   // Mock endpoint to import data from WealthBox
+//   app.post("/api/wealthbox/import", async (req, res) => {
+//     if (!req.isAuthenticated()) {
+//       return res.status(401).json({ message: "Unauthorized" });
+//     }
+    
+//     const user = req.user as any;
+    
+//     if (!user.wealthboxConnected) {
+//       return res.status(400).json({ message: "WealthBox not connected" });
+//     }
+    
+//     try {
+//       // In a real implementation, you would make actual API calls to WealthBox
+//       // For this MVP, we'll create mock data
+      
+//       // Generate some sample data for the advisor
+//       await generateSampleData(user.id, user.organizationId);
+      
+//       res.json({ message: "Data imported successfully" });
+//     } catch (error: any) {
+//       console.error("Import error:", error);
+//       res.status(500).json({ message: "Error importing data" });
+//     }
+//   });
+// }
+
 export function setupWealthboxOAuth(app: Express) {
-  // Initiate OAuth flow
-  app.get("/api/wealthbox/auth", (req, res) => {
+  app.get("/api/wealthbox/auth", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
-
-    // Create URL for WealthBox OAuth authorization
-    const authUrl = `${WEALTHBOX_AUTH_URL}?` + 
-      `client_id=${WEALTHBOX_CLIENT_ID}&` +
-      `redirect_uri=${encodeURIComponent(WEALTHBOX_REDIRECT_URI)}&` +
-      `response_type=code&` +
-      `state=${req.user!.id}`;
-    
+    const authUrl = `${WEALTHBOX_AUTH_URL}?client_id=${WEALTHBOX_CLIENT_ID}&redirect_uri=${encodeURIComponent(WEALTHBOX_REDIRECT_URI)}&response_type=code&state=${req.user.id}`;
     res.json({ authUrl });
-  });
-
-  // OAuth callback endpoint
-  app.get("/api/wealthbox/callback", async (req, res) => {
-    const { code, state } = req.query;
-    
-    if (!code || !state) {
-      return res.status(400).json({ message: "Invalid callback parameters" });
-    }
-    
-    try {
-      const userId = parseInt(state as string);
-      
-      // In a real implementation, you would make an actual API call to exchange the code for a token
-      // For this MVP, we'll simulate the token response
-      
-      // Mock token response
-      const tokenResponse = {
-        access_token: "mock_access_token_" + Date.now(),
-        refresh_token: "mock_refresh_token_" + Date.now(),
-        expires_in: 3600 // 1 hour
-      };
-      
-      // Update user with token information
-      const expiryDate = new Date(Date.now() + tokenResponse.expires_in * 1000);
-      await storage.updateUserWealthboxConnection(
-        userId,
-        tokenResponse.access_token,
-        tokenResponse.refresh_token,
-        expiryDate
-      );
-      
-      // In a real implementation, you would redirect to the frontend with success message
-      res.redirect('/integrations?status=success');
-    } catch (error: any) {
-      console.error("OAuth callback error:", error);
-      res.redirect('/integrations?status=error');
-    }
-  });
-
-  // Endpoint to get WealthBox connection status
-  app.get("/api/wealthbox/status", (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
-    const user = req.user as any;
-    
-    res.json({
-      connected: user.wealthboxConnected || false,
-      expiresAt: user.wealthboxTokenExpiry
-    });
-  });
-
-  // Mock endpoint to import data from WealthBox
-  app.post("/api/wealthbox/import", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
-    const user = req.user as any;
-    
-    if (!user.wealthboxConnected) {
-      return res.status(400).json({ message: "WealthBox not connected" });
-    }
-    
-    try {
-      // In a real implementation, you would make actual API calls to WealthBox
-      // For this MVP, we'll create mock data
-      
-      // Generate some sample data for the advisor
-      await generateSampleData(user.id, user.organizationId);
-      
-      res.json({ message: "Data imported successfully" });
-    } catch (error: any) {
-      console.error("Import error:", error);
-      res.status(500).json({ message: "Error importing data" });
-    }
   });
 }
 
