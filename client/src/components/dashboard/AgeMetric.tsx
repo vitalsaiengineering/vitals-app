@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAverageAge } from "@/lib/data";
 
@@ -7,7 +7,20 @@ interface AgeMetricProps {
 }
 
 const AgeMetric: React.FC<AgeMetricProps> = ({ className }) => {
-  const averageAge = getAverageAge();
+  const [averageAge, setAverageAge] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getAverageAge()
+      .then(age => {
+        setAverageAge(age);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error('Error fetching average age:', error);
+        setLoading(false);
+      });
+  }, []);
 
   return (
     <Card className={`overflow-hidden animate-fade-in-up ${className}`}>
@@ -19,7 +32,7 @@ const AgeMetric: React.FC<AgeMetricProps> = ({ className }) => {
       <CardContent>
         <div className="flex items-end justify-between">
           <div className="text-5xl font-bold tracking-tight animate-scale-in">
-            {averageAge}
+            {loading ? "..." : averageAge}
             <span className="ml-1 text-base font-normal text-muted-foreground">
               years
             </span>
