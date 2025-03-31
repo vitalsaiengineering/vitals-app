@@ -17,11 +17,12 @@ const ENDPOINTS = {
  * Tests connection to Wealthbox API with the provided access token
  */
 export async function testWealthboxConnection(accessToken: string | null): Promise<boolean> {
+  console.log("testWealthboxConnection",{accessToken});
+
   if (!accessToken) {
     console.error('No Wealthbox access token provided to test connection');
     return false;
   }
-  
   try {
     const response = await fetch(`${ENDPOINTS.CONTACTS}?limit=1`, {
       method: 'GET',
@@ -164,7 +165,7 @@ export async function importWealthboxActivities(
 export async function testWealthboxConnectionHandler(req: Request, res: Response) {
   try {
     const { accessToken } = req.body;
-    
+    console.log("testWealthboxConnectionHandler", {accessToken});
     if (!accessToken) {
       return res.status(400).json({ success: false, message: 'Access token is required' });
     }

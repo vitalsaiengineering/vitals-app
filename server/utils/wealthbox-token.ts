@@ -15,8 +15,9 @@ export async function getWealthboxToken(userId?: number): Promise<string | null>
   // If a user ID is provided, try to get their Wealthbox token
   if (userId) {
     const user = await storage.getUser(userId);
-    if (user?.wealthboxToken) {
-      return user.wealthboxToken;
+    if (user && user.organizationId) {
+      const wealthboxToken = await storage.getAdvisorAuthTokenByUserId(user.id, user.organizationId);
+      return wealthboxToken?.accessToken || null;
     }
   }
   

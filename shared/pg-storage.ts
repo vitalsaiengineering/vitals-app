@@ -1,12 +1,35 @@
-import { db } from './db'; // You'll need to create this file with database connection
-import { users, organizations, roles } from './schema'; // Your Drizzle schema
-import { eq } from 'drizzle-orm';
+import { db } from "./db"; // You'll need to create this file with database connection
+import { eq, and } from "drizzle-orm";
 import {
+  users,
+  roles,
+  organizations,
   Organization,
   InsertOrganization,
   User,
   InsertUser,
+  Role,
+  FirmIntegrationConfigs,
+  InsertFirmIntegrationConfig,
+  AdvisorAuthTokens,
+  firmIntegrationConfigs,
+  advisorAuthTokens,
+  InsertAdvisorAuthToken,
+  IntegrationType,
+  integrationTypes,
 } from "@shared/schema";
+
+// export interface IFirmIntegrationConfig {
+//   id: number;
+//   integrationTypeId: number;
+//   firmId: number;
+//   credentials: any;
+//   settings: any;
+//   status: "active" | "inactive" | "pending" | "suspended";
+//   createdAt: Date;
+//   updatedAt: Date;
+
+// }
 
 export interface IStorage {
   // Organization methods
@@ -22,12 +45,52 @@ export interface IStorage {
   getUsersByOrganization(organizationId: number): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
+
+  // Role methods
+  getRole(id: number): Promise<Role | undefined>;
+
+  // Other methods
+  upsertFirmIntegrationConfig(
+    integration: FirmIntegrationConfigs,
+  ): Promise<FirmIntegrationConfigs>;
+  getFirmIntegrationConfigByFirmId(
+    id: number,
+  ): Promise<FirmIntegrationConfigs | undefined>;
+  createFirmIntegrationConfig(
+    integration: InsertFirmIntegrationConfig,
+  ): Promise<FirmIntegrationConfigs>;
+
+  getAdvisorAuthTokenByUserId(
+    id: number,
+    organizationId: number,
+  ): Promise<AdvisorAuthTokens | undefined>;
+
+  createAdvisorAuthToken(
+    token: InsertAdvisorAuthToken,
+  ): Promise<AdvisorAuthTokens>;
+
+  upsertAdvisorAuthToken(token: AdvisorAuthTokens): Promise<AdvisorAuthTokens>;
+
+  getIntegrationTypeByName(name: string): Promise<IntegrationType | undefined>;
+
+  updateFirmIntegrationConfig(
+    id: number,
+    integration: FirmIntegrationConfigs,
+  ): Promise<FirmIntegrationConfigs>;
+
+  updateAdvisorAuthToken(
+    id: number,
+    token: AdvisorAuthTokens,
+  ): Promise<AdvisorAuthTokens>;
 }
 
 export class PostgresStorage implements IStorage {
   // Organization methods
   async getOrganization(id: number): Promise<Organization | undefined> {
-    const results = await db.select().from(organizations).where(eq(organizations.id, id));
+    const results = await db
+      .select()
+      .from(organizations)
+      .where(eq(organizations.id, id));
     return results[0];
   }
 
@@ -51,7 +114,10 @@ export class PostgresStorage implements IStorage {
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const results = await db.select().from(users).where(eq(users.username, username));
+    const results = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, username));
     return results[0];
   }
 
@@ -61,7 +127,10 @@ export class PostgresStorage implements IStorage {
   }
 
   async getUsersByOrganization(organizationId: number): Promise<User[]> {
-    return db.select().from(users).where(eq(users.organizationId, organizationId));
+    return db
+      .select()
+      .from(users)
+      .where(eq(users.organizationId, organizationId));
   }
 
   async createUser(user: InsertUser): Promise<User> {
@@ -69,10 +138,144 @@ export class PostgresStorage implements IStorage {
     return results[0];
   }
 
-  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
-    const results = await db.update(users)
+  async updateUser(
+    id: number,
+    userData: Partial<User>,
+  ): Promise<User | undefined> {
+    const results = await db
+      .update(users)
       .set(userData)
       .where(eq(users.id, id))
+      .returning();
+    return results[0];
+  }
+
+  async getRole(id: number): Promise<Role | undefined> {
+    const results = await db.select().from(roles).where(eq(roles.id, id));
+    return results[0];
+  }
+
+  async upsertFirmIntegrationConfig(
+    integration: FirmIntegrationConfigs,
+  ): Promise<FirmIntegrationConfigs> {
+    const results = await db
+      .insert(firmIntegrationConfigs)
+      .values(integration)
+      .returning();
+    return results[0];
+  }
+
+  async updateFirmIntegrationConfig(
+    id: number,
+    integration: Partial<FirmIntegrationConfigs>,
+  ): Promise<FirmIntegrationConfigs> {
+    const results = await db
+      .update(firmIntegrationConfigs)
+      .set(integration)
+      .where(eq(firmIntegrationConfigs.id, id))
+      .returning();
+    return results[0];
+  }
+
+  async getFirmIntegrationConfigByFirmId(
+    firmId: number,
+  ): Promise<FirmIntegrationConfigs | undefined> {
+    const results = await db
+      .select()
+      .from(firmIntegrationConfigs)
+      .where(eq(firmIntegrationConfigs.firmId, firmId));
+    return results[0];
+  }
+
+  async createFirmIntegrationConfig(
+    integration: InsertFirmIntegrationConfig,
+  ): Promise<FirmIntegrationConfigs> {
+    const results = await db
+      .insert(firmIntegrationConfigs)
+      .values(integration)
+      .returning();
+    return results[0];
+  }
+
+  async getAdvisorAuthToken(
+    id: number,
+  ): Promise<AdvisorAuthTokens | undefined> {
+    const results = await db
+      .select()
+      .from(advisorAuthTokens)
+      .where(eq(advisorAuthTokens.id, id));
+    return results[0];
+  }
+
+  async getIntegrationTypeByName(name: string): Promise<IntegrationType> {
+    const results = await db
+      .select()
+      .from(integrationTypes)
+      .where(eq(integrationTypes.name, name));
+    return results[0];
+  }
+
+  async getAdvisorAuthTokenByUserId(
+    advisorId: number,
+    organizationId: number,
+  ): Promise<AdvisorAuthTokens | undefined> {
+    const wealthboxIntegration =
+      await this.getIntegrationTypeByName("wealthbox");
+
+    const integrationConfigs = await db
+      .select()
+      .from(firmIntegrationConfigs)
+      .where(
+        and(
+          eq(firmIntegrationConfigs.firmId, organizationId),
+          eq(firmIntegrationConfigs.integrationTypeId, wealthboxIntegration.id),
+        ),
+      );
+
+    const results = await db
+      .select()
+      .from(advisorAuthTokens)
+      .where(
+        and(
+          eq(advisorAuthTokens.userId, advisorId),
+          eq(
+            advisorAuthTokens.firmIntegrationConfigId,
+            integrationConfigs[0].id,
+          ),
+        ),
+      );
+
+    return results[0];
+  }
+
+  async createAdvisorAuthToken(
+    token: InsertAdvisorAuthToken,
+  ): Promise<AdvisorAuthTokens> {
+    const results = await db
+      .insert(advisorAuthTokens)
+      .values(token)
+      .returning();
+    return results[0];
+  }
+
+  async updateAdvisorAuthToken(
+    id: number,
+    token: AdvisorAuthTokens,
+  ): Promise<AdvisorAuthTokens> {
+    const results = await db
+      .update(advisorAuthTokens)
+      .set(token)
+      .where(eq(advisorAuthTokens.id, token.id))
+      .returning();
+    return results[0];
+  }
+
+  async upsertAdvisorAuthToken(
+    token: AdvisorAuthTokens,
+  ): Promise<AdvisorAuthTokens> {
+    const results = await db
+      .insert(advisorAuthTokens)
+      .values(token)
       .returning();
     return results[0];
   }

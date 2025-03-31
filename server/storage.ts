@@ -3,6 +3,7 @@ import {
   InsertOrganization,
   User,
   InsertUser,
+  Role,
 } from "@shared/schema";
 
 
@@ -24,12 +25,16 @@ export interface IStorage {
   getUsersByOrganization(organizationId: number): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
+
+  //roles
+  getRoles(): Promise<Role[]>;
 }
 
 export class MemStorage implements IStorage {
   private organizations: Map<number, Organization>;
   private users: Map<number, User>;
   private currentIds: { [key: string]: number };
+  private roles: Map<number, Role>;
 
   constructor() {
     this.organizations = new Map();
@@ -38,6 +43,7 @@ export class MemStorage implements IStorage {
       organizations: 1,
       users: 1,
     };
+    this.roles = new Map();
   }
 
   // Organization methods
@@ -126,6 +132,17 @@ export class MemStorage implements IStorage {
     this.users.set(id, updatedUser);
     return updatedUser;
   }
+
+  async getRoleName(roleId: number): Promise<string | null> {
+    // Replace with your actual logic to fetch the role name
+    const role = this.roles.get(roleId);
+    return role ? role.name : null;
+  }
+  
+  async getRoles(): Promise<Role[]> {
+    return Array.from(this.roles.values());
+  }
+
 }
 
 // // This code defines an interface called IStorage that outlines methods for interacting with organizations and users.

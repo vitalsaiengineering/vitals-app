@@ -1,0 +1,119 @@
+  app.post("/api/wealthbox/save-config", async (req, res) => {
+    try {
+      const { accessToken, settings } = req.body;
+      const user = req.user as any;
+      console.log("Saving Wealthbox configuration for user:", user.id);
+      console.log("accessToken:", accessToken);
+      console.log("settings:", settings);
+      if (!accessToken) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Access token is required" });
+      }
+
+      // Test connection before saving
+      try {
+        const isConnected = await testWealthboxConnectionHandler(req, res);
+        console.log("Wealthbox connection status:", isConnected);
+        if (!isConnected) {
+          return res
+            .status(401)
+            .json({ success: false, message: "Invalid access token" });
+        }
+      } catch (error) {
+        console.error("Error testing Wealthbox connection:", error);
+        return res.status(500).json({
+          success: false,
+          message: "Failed to test Wealthbox connection",
+        });
+      }
+
+      try {
+        const integrationType =
+          await storage.getIntegrationTypeByName("wealthbox");
+        console.log("integrationType:", integrationType);
+
+        // 1. Get or create firm integration config
+        let firmIntegration = await storage.getFirmIntegrationConfigByFirmId(
+          user.organizationId,
+        );
+        console.log("Existing firm integration:", firmIntegration);
+        if (!firmIntegration) {
+          firmIntegration = await storage.createFirmIntegrationConfig({
+            firmId: user.organizationId,
+            integrationTypeId: integrationType?.id,
+            credentials: { api_key: accessToken },
+            settings: settings || { sync_frequency: "daily" },
+            status: "active",
+          });
+          console.log("New firm integration created:", firmIntegration);
+        }
+
+        // 2. Update firm integration config
+        const updatedFirmIntegration = await storage.updateFirmIntegrationConfig(
+          firmIntegration.id,
+          {
+            id: firmIntegration.id,
+            integrationTypeId: integrationType?.id,
+            firmId: user.organizationId,
+            credentials: { api_key: accessToken },
+            settings: settings || { sync_frequency: "daily" },
+            status: "active",
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        );
+        console.log("Updated firm integration:", updatedFirmIntegration);
+
+        // 3. Get or create advisor auth token
+        let advisorAuthToken = await storage.getAdvisorAuthTokenByUserId(
+          user.id,
+          user.organizationId,
+        );
+        console.log("Existing advisor auth token:", advisorAuthToken);
+        if (!advisorAuthToken) {
+          advisorAuthToken = await storage.createAdvisorAuthToken({
+            userId: user.id,
+            accessToken: accessToken,
+            expiresAt: new Date(),
+            firmIntegrationConfigId: updatedFirmIntegration.id,
+            refreshToken: null,
+            tokenType: null,
+            scope: null,
+            additionalData: {},
+          });
+          console.log("New advisor auth token created:", advisorAuthToken);
+        }
+
+        // 4. Update advisor auth token
+        await storage.updateAdvisorAuthToken(advisorAuthToken.id, {
+          id: advisorAuthToken.id,
+          createdAt: advisorAuthToken.createdAt,
+          updatedAt: new Date(),
+          firmIntegrationConfigId: updatedFirmIntegration.id,
+          userId: user.id,
+          accessToken: accessToken,
+          refreshToken: advisorAuthToken.refreshToken,
+          tokenType: advisorAuthToken.tokenType,
+          expiresAt: advisorAuthToken.expiresAt,
+          scope: advisorAuthToken.scope,
+          additionalData: advisorAuthToken.additionalData,
+        });
+        console.log("Updated advisor auth token:", advisorAuthToken);
+
+        res.json({ success: true, data: updatedFirmIntegration });
+      } catch (error: any) {
+        console.error("Error saving Wealthbox configuration:", error);
+        res.status(500).json({
+          success: false,
+          message: error.message || "Failed to save configuration",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error saving Wealthbox configuration:", error);
+      res.status(500).json({
+        success: false,
+        message: error.message || "Failed to save configuration",
+      });
+    }
+  });

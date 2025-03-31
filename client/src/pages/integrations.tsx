@@ -8,6 +8,7 @@ import {
   getCurrentUser,
   getWealthboxStatus,
   setupWealthboxOAuth,
+  getWealthboxToken,
 } from "@/lib/api";
 import {
   Card,
@@ -30,6 +31,11 @@ interface WealthboxStatus {
   authorized: boolean;
 }
 
+interface TokenData {
+  token: string;
+}
+
+
 interface User {
   id: number;
   username: string;
@@ -46,9 +52,18 @@ export default function Integrations() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [accessToken, setAccessToken] = useState(
-    "34b27e49093743a9ad58b9b793c12bc9",
-  ); // Default to provided token
+  const [accessToken, setAccessToken] = useState("");
+
+  const { data: tokenData, isLoading: isLoadingToken, error: tokenError } = useQuery<TokenData>({
+    queryKey: ["/api/wealthbox/token"],
+    retry: false,
+  });
+  useEffect(() => {
+    if (tokenData?.token) {
+      setAccessToken(tokenData.token);
+    }
+  }, [tokenData]);
+  
   const [connectionStatus, setConnectionStatus] = useState<
     "none" | "success" | "error"
   >("none");

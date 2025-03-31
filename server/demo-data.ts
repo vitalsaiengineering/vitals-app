@@ -114,7 +114,7 @@ async function seedClients() {
       lastName: faker.person.lastName(),
       age: age,
       emailAddress: faker.internet.email(),
-      phone_Number: faker.phone.number(),
+      phoneNumber: faker.phone.number(),
       contactInfo: {
         address: {
           street: faker.location.streetAddress(),
@@ -125,7 +125,7 @@ async function seedClients() {
       },
       source: "demo",
     };
-    console.log()
+    console.log(`Creating client ${client.externalId}`, client);
 
     await db.insert(clients).values(client).onConflictDoNothing();
   }
