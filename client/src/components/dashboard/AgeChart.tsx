@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import { getAgeGroups, AgeGroup } from "@/lib/data";
+import { getAgeGroups, AgeGroup } from "@/lib/clientData";
 
 interface AgeChartProps {
   className?: string;
