@@ -16,7 +16,7 @@ import {
 } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { AdvisorsList } from "../components/AdvisorsList";
+import AgeMetric from "@/components/dashboard/AgeMetric";
 // Using extended User type that includes role and username fields
 interface ExtendedUser {
   id: number;
@@ -370,8 +370,10 @@ export default function Dashboard() {
             <PortfolioCard {...portfolioData} />
 
             {/* Client Demographics */}
+            {/* <DemographicsCard {...demographics} /> */}
 
             {/* Age Distribution is shown in Demographics Card */}
+            <AgeMetric />
 
             {/* Geographic Distribution */}
           </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getAverageAge } from "@/lib/data";
+import { getAverageAge } from "@/lib/clientData";
 
 interface AgeMetricProps {
   className?: string;
@@ -10,16 +10,17 @@ const AgeMetric: React.FC<AgeMetricProps> = ({ className }) => {
   const [averageAge, setAverageAge] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
+  const { data: clientdata, error, isloading} = getAverageAge();
+  
   useEffect(() => {
-    getAverageAge()
-      .then(age => {
-        setAverageAge(age);
-        setLoading(false);
-      })
-      .catch(error => {
-        console.error('Error fetching average age:', error);
-        setLoading(false);
-      });
+    if (data) {
+      setAverageAge(clientdata);
+      setLoading(false);
+    }
+    if (error) {
+      console.error("Error fetching average age:", error);
+      setLoading(false);
+    }
   }, []);
 
   return (
