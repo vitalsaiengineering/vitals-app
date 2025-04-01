@@ -10,11 +10,11 @@ const AgeMetric: React.FC<AgeMetricProps> = ({ className }) => {
   const [averageAge, setAverageAge] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
-  const { data: clientdata, error, isloading} = getAverageAge();
+  const { data, error, isLoading } = getAverageAge();
   
   useEffect(() => {
     if (data) {
-      setAverageAge(clientdata);
+      setAverageAge(data);
       setLoading(false);
     }
     if (error) {
