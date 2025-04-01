@@ -28,13 +28,6 @@ export default defineConfig({
       "@shared": path.resolve(__dirname, "shared"),
     },
   },
-  define: {
-    "process.env": {},
-    process: {
-      env: {},
-      version: '"v16.14.0"'
-    },
-  },
   root: path.resolve(__dirname, "client"),
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
