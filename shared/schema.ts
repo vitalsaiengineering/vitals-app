@@ -170,6 +170,7 @@ export const clients = pgTable("clients", {
   source: varchar("source", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  status: statusEnum("status").notNull().default("active"),
 });
 
 export const clientAdvisorRelationships = pgTable(
@@ -242,16 +243,24 @@ export const userDataAccess = pgTable("user_data_access", {
 
 export const advisorAuthTokens = pgTable("advisor_auth_tokens", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
-  firmIntegrationConfigId: integer("firm_integration_config_id").notNull().references(() => firmIntegrationConfigs.id),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
+  firmIntegrationConfigId: integer("firm_integration_config_id")
+    .notNull()
+    .references(() => firmIntegrationConfigs.id),
   accessToken: varchar("access_token", { length: 1000 }).notNull(),
   refreshToken: varchar("refresh_token", { length: 1000 }),
   tokenType: varchar("token_type", { length: 50 }).default("Bearer"),
   expiresAt: timestamp("expires_at", { withTimezone: true }),
   scope: varchar("scope", { length: 500 }),
   additionalData: json("additional_data").default({}),
-  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
 });
 
 // Relations
@@ -338,16 +347,19 @@ export const firmIntegrationConfigsRelations = relations(
   }),
 );
 
-export const advisorAuthTokensRelations = relations(advisorAuthTokens, ({ one }) => ({
-  user: one(users, {
-    fields: [advisorAuthTokens.userId],
-    references: [users.id],
+export const advisorAuthTokensRelations = relations(
+  advisorAuthTokens,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [advisorAuthTokens.userId],
+      references: [users.id],
+    }),
+    firmIntegrationConfig: one(firmIntegrationConfigs, {
+      fields: [advisorAuthTokens.firmIntegrationConfigId],
+      references: [firmIntegrationConfigs.id],
+    }),
   }),
-  firmIntegrationConfig: one(firmIntegrationConfigs, {
-    fields: [advisorAuthTokens.firmIntegrationConfigId],
-    references: [firmIntegrationConfigs.id],
-  }),
-}));
+);
 
 export const firmDataMappingsRelations = relations(
   firmDataMappings,
@@ -488,13 +500,17 @@ export const insertIntegrationTypeSchema = createInsertSchema(
   updatedAt: true,
 });
 
-export const insertFirmIntegrationConfigSchema = createInsertSchema(firmIntegrationConfigs).omit({
+export const insertFirmIntegrationConfigSchema = createInsertSchema(
+  firmIntegrationConfigs,
+).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 });
 
-export const insertAdvisorAuthTokenSchema = createInsertSchema(advisorAuthTokens).omit({
+export const insertAdvisorAuthTokenSchema = createInsertSchema(
+  advisorAuthTokens,
+).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -506,9 +522,12 @@ export type InsertClient = z.infer<typeof insertClientSchema>;
 export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
 export type InsertDataMapping = z.infer<typeof insertDataMappingSchema>;
 export type InsertIntegrationType = z.infer<typeof insertIntegrationTypeSchema>;
-export type InsertFirmIntegrationConfig = z.infer<typeof insertFirmIntegrationConfigSchema>;
-export type InsertAdvisorAuthToken = z.infer<typeof insertAdvisorAuthTokenSchema>;
-
+export type InsertFirmIntegrationConfig = z.infer<
+  typeof insertFirmIntegrationConfigSchema
+>;
+export type InsertAdvisorAuthToken = z.infer<
+  typeof insertAdvisorAuthTokenSchema
+>;
 
 // Create select types
 export type User = typeof users.$inferSelect;
@@ -528,7 +547,8 @@ export type Activity = {
 export type Portfolio = typeof portfolios.$inferSelect;
 export type Holding = typeof assets.$inferSelect;
 export type FirmIntegrationConfigs = typeof firmIntegrationConfigs.$inferSelect;
-export type AdvisorIntegrationAccess = typeof advisorIntegrationAccess.$inferSelect;
+export type AdvisorIntegrationAccess =
+  typeof advisorIntegrationAccess.$inferSelect;
 export type IntegrationDataStorage = typeof integrationDataStorage.$inferSelect;
 export type AataAccessPolicies = typeof dataAccessPolicies.$inferSelect;
 export type UserDataAccess = typeof userDataAccess.$inferSelect;
