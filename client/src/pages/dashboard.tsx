@@ -203,87 +203,6 @@ export default function Dashboard() {
     ],
   };
 
-  // Data for Revenue card
-  const revenueData = {
-    totalRevenue: metrics?.totalRevenue ?? 0,
-    revenueChange: 3.8, // Example change percentage
-    revenueByQuarter: [
-      { quarter: "Q1", revenue: (metrics?.totalRevenue ?? 0) * 0.2 },
-      { quarter: "Q2", revenue: (metrics?.totalRevenue ?? 0) * 0.25 },
-      { quarter: "Q3", revenue: (metrics?.totalRevenue ?? 0) * 0.15 },
-      { quarter: "Q4", revenue: (metrics?.totalRevenue ?? 0) * 0.4 },
-    ],
-    topClient: {
-      name: "GlobalTech Inc.",
-      revenue: (metrics?.totalRevenue ?? 0) * 0.3,
-      percentage: 30,
-    },
-    averageRevenue: (metrics?.totalRevenue ?? 0) / (metrics?.totalClients ?? 1),
-  };
-
-  // Data for Activities card
-  const activitiesData = {
-    totalActivities: metrics?.totalActivities ?? 0,
-    activityChange: 12.4, // Example change percentage
-    activityTrend: [
-      { date: "Mon", emails: 42, calls: 24 },
-      { date: "Tue", emails: 38, calls: 28 },
-      { date: "Wed", emails: 45, calls: 32 },
-      { date: "Thu", emails: 35, calls: 24 },
-      { date: "Fri", emails: 30, calls: 18 },
-      { date: "Sat", emails: 15, calls: 8 },
-      { date: "Sun", emails: 10, calls: 5 },
-    ],
-    activityBreakdown: [
-      {
-        type: "Emails",
-        count: Math.round((metrics?.totalActivities ?? 0) * 0.42),
-      },
-      {
-        type: "Calls",
-        count: Math.round((metrics?.totalActivities ?? 0) * 0.25),
-      },
-      {
-        type: "Meetings",
-        count: Math.round((metrics?.totalActivities ?? 0) * 0.33),
-      },
-    ],
-  };
-
-  // Data for Portfolio Allocation card
-  const portfolioData = {
-    assetAllocation: [
-      {
-        assetClass: "Equities",
-        allocation: 45,
-        value: (metrics?.totalAum ?? 0) * 0.45,
-        performance: 8.2,
-        color: "hsl(var(--primary-500))",
-      },
-      {
-        assetClass: "Fixed Income",
-        allocation: 30,
-        value: (metrics?.totalAum ?? 0) * 0.3,
-        performance: 2.5,
-        color: "hsl(var(--secondary-400))",
-      },
-      {
-        assetClass: "Alternatives",
-        allocation: 15,
-        value: (metrics?.totalAum ?? 0) * 0.15,
-        performance: -1.3,
-        color: "hsl(var(--chart-3))",
-      },
-      {
-        assetClass: "Cash",
-        allocation: 10,
-        value: (metrics?.totalAum ?? 0) * 0.1,
-        performance: 0.3,
-        color: "hsl(var(--chart-4))",
-      },
-    ],
-  };
-
   // Role-based dashboard display
   if (currentUser) {
     // For client admins, we'll show the advisor list with a filter bar AND the advisor dashboard
@@ -360,20 +279,10 @@ export default function Dashboard() {
             {/* AUM by Client */}
             <AssetsCard {...assetsData} />
 
-            {/* Revenue by Client */}
-            <RevenueCard {...revenueData} />
-
-            {/* Total Activities by Client */}
-            <ActivitiesCard {...activitiesData} />
-
-            {/* Portfolio Allocation & Holdings */}
-            <PortfolioCard {...portfolioData} />
-
             {/* Client Demographics */}
             {/* <DemographicsCard {...demographics} /> */}
 
             {/* Age Distribution is shown in Demographics Card */}
-            <AgeMetric />
 
             {/* Geographic Distribution */}
           </div>
@@ -500,19 +409,6 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* AUM by Client */}
         <AssetsCard {...assetsData} />
-
-        {/* Revenue by Client */}
-        <RevenueCard {...revenueData} />
-
-        {/* Total Activities by Client */}
-        <ActivitiesCard {...activitiesData} />
-
-        {/* Portfolio Allocation & Holdings */}
-        <PortfolioCard {...portfolioData} />
-
-        {/* Client Demographics */}
-        {/* <DemographicsCard {...demographicsData} /> */}
-
         {/* Age Distribution is shown in Demographics Card */}
 
         {/* Geographic Distribution */}
