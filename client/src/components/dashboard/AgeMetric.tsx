@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAverageAge } from "@/lib/clientData";
 import { useAuth } from "@/providers/auth-provider";
@@ -10,16 +10,12 @@ interface AgeMetricProps {
 
 const AgeMetric: React.FC<AgeMetricProps> = ({ className }) => {
   const { user } = useAuth();
-  const [averageAge, setAverageAge] = useState<number>(0);
   
-  const { isLoading, error } = useQuery({
+  const { data: averageAge = 0, isLoading } = useQuery({
     queryKey: ['averageClientAge', user?.id],
     queryFn: async () => {
       // Pass the user ID to getAverageAge to get clients specific to this advisor
       return await getAverageAge(user?.id);
-    },
-    onSuccess: (data) => {
-      setAverageAge(data);
     },
     enabled: !!user // Only run query if user is logged in
   });

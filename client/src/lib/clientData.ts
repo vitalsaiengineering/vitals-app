@@ -1,9 +1,9 @@
 import { db } from "@shared/db";
-import { eq, and, or } from "drizzle-orm";
+import { eq, or, and } from "drizzle-orm";
 import { clients, clientAdvisorRelationships } from "@shared/schema";
 
 /**
- * Get the average age of all active clients for a specific advisor
+ * Get the average age of all clients for a specific advisor
  * @param advisorId The ID of the advisor/user
  * @returns Promise with the average age of clients
  */
@@ -24,38 +24,48 @@ export async function getAverageAge(advisorId?: number): Promise<number> {
     return Math.round(totalAge / allClients.length);
   }
   
-  // If advisorId is provided, get clients where the user is either the primary advisor 
-  // or has a relationship through the client_advisor_relationships table
-  const clientsForAdvisor = await db
+  // If advisorId is provided, get active clients where the user is the primary advisor 
+  const primaryAdvisorClients = await db
     .select()
     .from(clients)
-    .leftJoin(
+    .where(and(
+      eq(clients.primaryAdvisorId, advisorId),
+      eq(clients.status, "active")
+    ));
+    
+  // Get active clients from the relationships table
+  const clientRelationships = await db
+    .select({
+      client: clients
+    })
+    .from(clients)
+    .innerJoin(
       clientAdvisorRelationships,
       eq(clients.id, clientAdvisorRelationships.clientId)
     )
-    .where(
-      and(
-        eq(clients.status, "active"),
-        or(
-          eq(clients.primaryAdvisorId, advisorId),
-          eq(clientAdvisorRelationships.advisorId, advisorId)
-        )
-      )
-    );
-
-  if (clientsForAdvisor.length === 0) return 0;
+    .where(and(
+      eq(clientAdvisorRelationships.advisorId, advisorId),
+      eq(clients.status, "active")
+    ));
+    
+  // Combine both sets of clients
+  const allClientRows = [
+    ...primaryAdvisorClients.map((client: typeof clients.$inferSelect) => ({ client })),
+    ...clientRelationships
+  ];
+  
+  if (allClientRows.length === 0) return 0;
 
   // Use a Set to keep track of unique client IDs to avoid double-counting
   const uniqueClientIds = new Set<number>();
-  const uniqueClients = clientsForAdvisor.filter(row => {
-    const client = row.clients;
-    if (!client || uniqueClientIds.has(client.id)) return false;
-    uniqueClientIds.add(client.id);
+  const uniqueClients = allClientRows.filter(row => {
+    if (!row.client || uniqueClientIds.has(row.client.id)) return false;
+    uniqueClientIds.add(row.client.id);
     return true;
   });
 
   const totalAge = uniqueClients.reduce(
-    (sum, row) => sum + (row.clients?.age || 0),
+    (sum, row) => sum + (row.client?.age || 0),
     0,
   );
   

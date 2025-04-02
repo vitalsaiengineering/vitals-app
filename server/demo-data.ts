@@ -124,10 +124,11 @@ async function seedClients() {
         },
       },
       source: "demo",
+      status: statusEnum.enumValues[0], // active
     };
     console.log(`Creating client ${client.externalId}`, client);
 
-    await db.insert(clients).values(client).onConflictDoNothing();
+    await db.insert(clients).values([client]).onConflictDoNothing();
   }
 }
 
@@ -153,7 +154,7 @@ async function seedPortfolios() {
         source: "demo",
       };
 
-      await db.insert(portfolios).values(portfolio).onConflictDoNothing();
+      await db.insert(portfolios).values([portfolio]).onConflictDoNothing();
     }
   }
 }
@@ -304,7 +305,13 @@ export async function seedDemoData() {
   }
 }
 
-export function getAverageAge(): number {
-  const sum = clients.reduce((acc, client) => acc + client.age, 0);
-  return Math.round((sum / clients.length) * 10) / 10;
+export async function getAverageAge(): Promise<number> {
+  const clientsList = await db.select().from(clients);
+  
+  if (clientsList.length === 0) {
+    return 0;
+  }
+  
+  const sum = clientsList.reduce((acc, client) => acc + (client.age || 0), 0);
+  return Math.round((sum / clientsList.length) * 10) / 10;
 }
