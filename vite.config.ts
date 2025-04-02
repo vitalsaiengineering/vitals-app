@@ -14,6 +14,7 @@ export default defineConfig({
     runtimeErrorOverlay(),
     themePlugin(),
   define: {
+
     'process.env': {},
     'process': { env: {} }
   },
