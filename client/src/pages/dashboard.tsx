@@ -409,8 +409,8 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* AUM by Client */}
         <AssetsCard {...assetsData} />
-        {/* Age Distribution is shown in Demographics Card */}
-
+        {/* Average Client Age */}
+        <AgeMetric />
         {/* Geographic Distribution */}
         {/* <GeographicDistributionCard wealthboxUserId={filters.wealthboxUserId} /> */}
       </div>
