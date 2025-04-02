@@ -37,7 +37,7 @@ const AgeChart: React.FC<AgeChartProps> = ({
   onGroupSelect,
   selectedGroup,
 }) => {
-  const ageGroups = getAgeGroups();
+  const ageGroups = getAgeGroups(); // Static demo data for now
 
   // Determine which bar index corresponds to the selected group name
   const selectedBarIndex = selectedGroup

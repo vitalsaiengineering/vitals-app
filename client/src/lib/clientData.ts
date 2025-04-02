@@ -2,6 +2,14 @@ import { db } from "@shared/db";
 import { eq, or, and } from "drizzle-orm";
 import { clients, clientAdvisorRelationships } from "@shared/schema";
 
+export interface AgeGroup {
+  name: string;
+  range: string;
+  count: number;
+  percentage: number;
+  colorClass: string;
+}
+
 /**
  * Get the average age of all clients for a specific advisor
  * @param advisorId The ID of the advisor/user
@@ -70,4 +78,52 @@ export async function getAverageAge(advisorId?: number): Promise<number> {
   );
   
   return Math.round(totalAge / uniqueClients.length);
+}
+
+/**
+ * Get age groups for client demographics visualization
+ * @param advisorId Optional advisor ID to filter clients
+ * @returns Array of age groups with counts and percentages
+ */
+export function getAgeGroups(): AgeGroup[] {
+  // Static demo data
+  const ageGroups: AgeGroup[] = [
+    {
+      name: "Under 30",
+      range: "0-29",
+      count: 42,
+      percentage: 14,
+      colorClass: "bg-[var(--ageBand-1)]",
+    },
+    {
+      name: "30-45",
+      range: "30-45",
+      count: 78,
+      percentage: 26,
+      colorClass: "bg-[var(--ageBand-2)]",
+    },
+    {
+      name: "46-60",
+      range: "46-60",
+      count: 96,
+      percentage: 32,
+      colorClass: "bg-[var(--ageBand-3)]",
+    },
+    {
+      name: "61-75",
+      range: "61-75",
+      count: 63,
+      percentage: 21,
+      colorClass: "bg-[var(--ageBand-4)]",
+    },
+    {
+      name: "Over 75",
+      range: "76+",
+      count: 21,
+      percentage: 7,
+      colorClass: "bg-[var(--ageBand-5)]",
+    },
+  ];
+
+  return ageGroups;
 }

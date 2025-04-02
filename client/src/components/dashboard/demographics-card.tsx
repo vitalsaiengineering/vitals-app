@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import AgeMetric from "@/components/dashboard/AgeMetric";
 import AgeChart from "@/components/dashboard/AgeChart";
 import ClientsTable from "@/components/dashboard/ClientsTable";
-import { getAgeGroups } from "@/lib/data";
+import { getAgeGroups } from "@/lib/clientData";
 
 const Index = () => {
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
-  const ageGroups = getAgeGroups();
+  const ageGroups = getAgeGroups(); // Static demo data for now
   const totalClients = ageGroups.reduce((acc, group) => acc + group.count, 0);
 
   const handleGroupSelect = (groupName: string) => {

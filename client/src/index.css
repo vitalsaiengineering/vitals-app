@@ -3,6 +3,14 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --ageBand-1: #4ade80; /* Under 30 - Green */
+    --ageBand-2: #60a5fa; /* 30-45 - Blue */
+    --ageBand-3: #f59e0b; /* 46-60 - Amber */
+    --ageBand-4: #f97316; /* 61-75 - Orange */
+    --ageBand-5: #f43f5e; /* Over 75 - Rose */
+  }
+  
   * {
     @apply border-border;
   }
