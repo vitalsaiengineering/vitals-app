@@ -12,6 +12,9 @@ import Clients from "@/pages/clients";
 import Users from "@/pages/admin/users";
 import Organizations from "@/pages/admin/organizations";
 import { AppLayout } from "@/components/layout/app-layout";
+// import { setupGlobalErrorHandler } from "@/utils/global-error-handler";
+
+// setupGlobalErrorHandler();
 
 function Router() {
   return (

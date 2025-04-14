@@ -3,20 +3,17 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AssetsCard } from "@/components/dashboard/assets-card";
-import { RevenueCard } from "@/components/dashboard/revenue-card";
-import { ActivitiesCard } from "@/components/dashboard/activities-card";
-import { PortfolioCard } from "@/components/dashboard/portfolio-card";
 import { OpportunitiesCard } from "@/components/dashboard/opportunities-card";
 import { FilterBar } from "@/components/dashboard/filter-bar";
 import { AiQuery } from "@/components/dashboard/ai-query";
 import {
   importWealthboxData,
   getWealthboxStatus,
-  getCurrentUser,
+  getCurrentUser
 } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import AgeMetric from "@/components/dashboard/AgeMetric";
+// import AgeMetric from "@/components/dashboard/AgeMetric";
 // Using extended User type that includes role and username fields
 interface ExtendedUser {
   id: number;
@@ -180,29 +177,6 @@ export default function Dashboard() {
     importMutation.mutate(undefined);
   };
 
-  // Data for Assets Under Management card
-  const assetsData = {
-    totalAum: metrics?.totalAum ?? 0,
-    aumChange: 5.2, // Example change percentage
-    aumByClientType: [
-      {
-        name: "Enterprise Clients",
-        value: (metrics?.totalAum ?? 0) * 0.5,
-        color: "hsl(var(--primary-500))",
-      },
-      {
-        name: "Mid-size Clients",
-        value: (metrics?.totalAum ?? 0) * 0.35,
-        color: "hsl(var(--secondary-400))",
-      },
-      {
-        name: "Small Clients",
-        value: (metrics?.totalAum ?? 0) * 0.15,
-        color: "hsl(var(--chart-3))",
-      },
-    ],
-  };
-
   // Role-based dashboard display
   if (currentUser) {
     // For client admins, we'll show the advisor list with a filter bar AND the advisor dashboard
@@ -272,30 +246,8 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Removed Financial Advisors list as requested */}
-
           {/* Dashboard Grid - showing the same dashboard as advisors see */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* AUM by Client */}
-            <AssetsCard {...assetsData} />
-
-            {/* Client Demographics */}
-            {/* <DemographicsCard {...demographics} /> */}
-
-            {/* Age Distribution is shown in Demographics Card */}
-
-            {/* Geographic Distribution */}
-          </div>
-
-          {/* Opportunities Section - Full Width */}
-          <div className="mt-6">
-            <OpportunitiesCard
-              wealthboxToken={"a362b9c57ca349e5af99a6d8d4af6b3a"} // Always use token for client admin
-              advisorId={filters.advisorId || 5} // Default to advisor ID 5 (Sarah) if none selected
-              wealthboxUserId={filters.wealthboxUserId} // Pass the selected Wealthbox user ID
-              currentUser={currentUser}
-            />
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
 
           {/* AI Query Section */}
           <div className="mt-6">
@@ -407,10 +359,8 @@ export default function Dashboard() {
 
       {/* Dashboard Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* AUM by Client */}
-        <AssetsCard {...assetsData} />
         {/* Average Client Age */}
-        <AgeMetric />
+        {/* <AgeMetric /> */}
         {/* Geographic Distribution */}
         {/* <GeographicDistributionCard wealthboxUserId={filters.wealthboxUserId} /> */}
       </div>

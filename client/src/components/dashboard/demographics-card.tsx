@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import AgeMetric from "@/components/dashboard/AgeMetric";
+// import AgeMetric from "@/components/dashboard/AgeMetric";
 import AgeChart from "@/components/dashboard/AgeChart";
 import ClientsTable from "@/components/dashboard/ClientsTable";
 import { getAgeGroups } from "@/lib/clientData";
@@ -34,7 +34,7 @@ const Index = () => {
           <div className="grid gap-6">
             {/* Top row */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <AgeMetric className="md:col-span-1" />
+              {/* <AgeMetric className="md:col-span-1" /> */}
               <AgeChart
                 className="md:col-span-2"
                 onGroupSelect={handleGroupSelect}

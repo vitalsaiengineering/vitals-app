@@ -17,6 +17,8 @@ import {
   InsertAdvisorAuthToken,
   IntegrationType,
   integrationTypes,
+  Status,
+  statusValues
 } from "@shared/schema";
 
 // export interface IFirmIntegrationConfig {
@@ -82,6 +84,12 @@ export interface IStorage {
     id: number,
     token: AdvisorAuthTokens,
   ): Promise<AdvisorAuthTokens>;
+
+  getClientsByOrganization(organizationId: number): Promise<User[]>;
+  getUsersByOrganizaton(organizationId: number): Promise<User[]>;
+
+  getRoles(): Promise<Role[]>
+  getStatuses(): Promise<Status[]>
 }
 
 export class PostgresStorage implements IStorage {
@@ -126,12 +134,36 @@ export class PostgresStorage implements IStorage {
     return results[0];
   }
 
-  async getUsersByOrganization(organizationId: number): Promise<User[]> {
-    return db
+  async getUsersByOrganization(organizationId: number): Promise<(User & { role?: Role })[]> {
+    const results = await db
       .select()
       .from(users)
       .where(eq(users.organizationId, organizationId));
+
+    // Get all role IDs from users (filtering out nulls)
+    const roleIds = results
+      .map((user) => user.roleId)
+      .filter((id): id is number => id !== null);
+
+    // Get all roles in one query if there are roleIds
+    const rolesResults = roleIds.length > 0 
+      ? await db.select().from(roles)
+      : [];
+
+    // add roles to users
+    return results.map((user) => {
+      const role = user.roleId 
+        ? rolesResults.find((role) => role.id === user.roleId) 
+        : undefined;
+
+      return {
+        ...user,
+        role,
+      };
+    });
   }
+
+
 
   async createUser(user: InsertUser): Promise<User> {
     const results = await db.insert(users).values(user).returning();
@@ -278,5 +310,29 @@ export class PostgresStorage implements IStorage {
       .values(token)
       .returning();
     return results[0];
+  }
+
+  async getClientsByOrganization(organizationId: number): Promise<User[]> {
+    const results = await db
+      .select()
+      .from(clients)
+      .where(eq(clients.firmId, organizationId));
+    return results;
+  }
+
+  // async getUsersByOrganization(organizationId: number): Promise<User[]> {
+  //   const results = await db
+  //     .select()
+  //     .from(users)
+  //     .where(eq(users.organizationId, organizationId));
+  //   return results;
+  // }
+
+  async getRoles(): Promise<Role[]>{
+    return db.select().from(roles);
+  }
+
+  getStatuses(): Status[] {
+    return statusValues;
   }
 }

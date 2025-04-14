@@ -14,7 +14,7 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
   if (!user) return null;
 
   // RoleId 1 is typically admin
-  const isAdmin = user.roleId === 1;
+  const isAdmin = user.roleId === 4;
   const isGlobalAdmin = user.roleId === 1;
 
   return (

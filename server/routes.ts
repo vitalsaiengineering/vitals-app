@@ -21,6 +21,7 @@ import {
   getWealthboxUsersHandler,
   getActiveClientsByStateHandler,
   getActiveClientsByAgeHandler,
+  getWealthboxUsers
 } from "./wealthbox";
 import { synchronizeWealthboxData } from "./sync-service";
 import {
@@ -51,6 +52,23 @@ const WEALTHBOX_TOKEN_URL = "https://api.wealthbox.com/oauth/token";
 // Setup session store
 const MemoryStoreSession = MemoryStore(session);
 
+const userFetchQueue: (() => Promise<void>)[] = [];
+const processQueue = async () => {
+  console.log("processing queue");
+  while (userFetchQueue.length > 0) {
+    const fetchUserTask = userFetchQueue.shift();
+    if (fetchUserTask) {
+      try {
+        await fetchUserTask();
+      } catch (error) {
+        console.error("Error processing user fetch task:", error);
+      }
+    }
+  }
+};
+// Start processing the queue (You might want to set this up elsewhere in your app)
+setInterval(processQueue, 10000); // adjust interval as needed
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup session
   app.use(
@@ -65,6 +83,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }),
   );
 
+  
   // Setup Passport
   app.use(passport.initialize());
   app.use(passport.session());
@@ -127,14 +146,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   };
 
   const requireRole = (roles: string[]) => {
-    return (req: Request, res: Response, next: any) => {
+    return async (req: Request, res: Response, next: any) => {
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Unauthorized" });
       }
-      console.log(req.user);
+      // console.log("req.user",req.user);
       const user = req.user as any;
+      let roleName: string;
+      if (user.roleId) {
+        const role = await storage.getRole(user.roleId);
+        // console.log("role",role);
+        roleName = role.name;
+      }
+      // console.log("roleName",roleName);
 
-      if (!roles.includes(user.role)) {
+      if (!roles.includes(roleName)) {
         return res.status(403).json({ message: "Forbidden" });
       }
 
@@ -251,7 +277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user as any;
       let users;
 
-      if (user.role === "global_admin") {
+      if (user.role === "firm_admin") {
         users = await storage.getUsersByOrganization(user.organizationId);
       } else if (user.role === "home_office") {
         // Home office can see users from all firms under them
@@ -265,6 +291,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(users);
     },
   );
+
+  app.get("/api/roles", requireAuth, async (req, res) =>{
+    const roles = await storage.getRoles();
+    res.json(roles);
+  });
+
+  app.get("/api/statuses", requireAuth, async (req, res) =>{
+    const statuses = storage.getStatuses();
+    res.json(statuses);
+  });
 
   // Get financial advisors (filtered by firm if specified)
   app.get(
@@ -330,6 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           validatedData.organizationId = user.organizationId;
         }
 
+
         const newUser = await storage.createUser(validatedData);
         res.status(201).json(newUser);
       } catch (error: any) {
@@ -337,6 +374,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     },
   );
+
+  app.put("/api/users/:id", requireRole(["global_admin", "firm_admin"]), async (req, res) =>
+    {
+      const user = req.user as any;
+      const userId = parseInt(req.params.id);
+      const userData = req.body;
+      const updatedUser = await storage.updateUser(userId, userData);
+      res.json(updatedUser);
+    }
+    );
 
   // Organization routes
   app.get(
@@ -658,116 +705,209 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 // Save WealthBox configuration and associated advisor tokens
-app.post("/api/wealthbox/save-config", async (req, res) => {
-  try {
-    const { accessToken, settings } = req.body;
-    const user = req.user as any;
-    console.log("Saving Wealthbox configuration for user:", user.id);
-    console.log("accessToken:", accessToken);
-    console.log("settings:", settings);
-
-    if (!accessToken) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Access token is required" });
-    }
-
-    // Test connection before saving
+  app.post("/api/wealthbox/save-config", async (req, res) => {
     try {
-      const isConnected = await testWealthboxConnectionHandler(req, res);
-      console.log("Wealthbox connection status:", isConnected);
-      if (!isConnected) {
+      const { accessToken, settings } = req.body;
+      const user = req.user as any;
+      console.log("Saving Wealthbox configuration for user:", user.id);
+      console.log("accessToken:", accessToken);
+      console.log("settings:", settings);
+
+      if (!accessToken) {
         return res
-          .status(401)
-          .json({ success: false, message: "Invalid access token" });
+          .status(400)
+          .json({ success: false, message: "Access token is required" });
       }
-    } catch (error) {
-      console.error("Error testing Wealthbox connection:", error);
-      if (!res.headersSent) { // Check if headers are already sent
-        return res.status(500).json({
-          success: false,
-          message: "Failed to test Wealthbox connection",
+
+      // Test connection before saving
+      try {
+        const isConnected = await testWealthboxConnectionHandler(req, res);
+        console.log("Wealthbox connection status:", isConnected);
+        if (!isConnected) {
+          return res
+            .status(401)
+            .json({ success: false, message: "Invalid access token" });
+        }
+      } catch (error) {
+        console.error("Error testing Wealthbox connection:", error);
+        if (!res.headersSent) {
+          return res
+            .status(500)
+            .json({
+              success: false,
+              message: "Failed to test Wealthbox connection",
+            });
+        }
+        return; // Prevent further execution if headers are already sent
+      }
+
+      console.log({user});
+
+      const integrationType =
+        await storage.getIntegrationTypeByName("wealthbox");
+      console.log("integrationType:", integrationType);
+
+      // Get or create firm integration config
+      let firmIntegration = await storage.getFirmIntegrationConfigByFirmId(
+        user.organizationId,
+      );
+      console.log("Existing firm integration:", firmIntegration);
+      if (!firmIntegration) {
+        firmIntegration = await storage.createFirmIntegrationConfig({
+          firmId: user.organizationId,
+          integrationTypeId: integrationType?.id,
+          credentials: { api_key: accessToken },
+          settings: settings || { sync_frequency: "daily" },
+          status: "active",
         });
+        console.log("New firm integration created:", firmIntegration);
       }
-      return; // Prevent further execution if headers are already sent
-    }
 
-    const integrationType = await storage.getIntegrationTypeByName("wealthbox");
-    console.log("integrationType:", integrationType);
+      // Update firm integration config
+      const updatedFirmIntegration = await storage.updateFirmIntegrationConfig(
+        firmIntegration.id,
+        {
+          id: firmIntegration.id,
+          integrationTypeId: integrationType?.id,
+          firmId: user.organizationId,
+          credentials: { api_key: accessToken },
+          settings: settings || { sync_frequency: "daily" },
+          status: "active",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      );
+      console.log("Updated firm integration:", updatedFirmIntegration);
 
-    // Get or create firm integration config
-    let firmIntegration = await storage.getFirmIntegrationConfigByFirmId(user.organizationId);
-    console.log("Existing firm integration:", firmIntegration);
-    if (!firmIntegration) {
-      firmIntegration = await storage.createFirmIntegrationConfig({
-        firmId: user.organizationId,
-        integrationTypeId: integrationType?.id,
-        credentials: { api_key: accessToken },
-        settings: settings || { sync_frequency: "daily" },
-        status: "active",
-      });
-      console.log("New firm integration created:", firmIntegration);
-    }
+      // Get or create advisor auth token
+      let advisorAuthToken = await storage.getAdvisorAuthTokenByUserId(
+        user.id,
+        user.organizationId,
+      );
+      console.log("Existing advisor auth token:", advisorAuthToken);
+      if (!advisorAuthToken) {
+        advisorAuthToken = await storage.createAdvisorAuthToken({
+          userId: user.id,
+          accessToken: accessToken,
+          expiresAt: new Date(),
+          firmIntegrationConfigId: updatedFirmIntegration.id,
+          refreshToken: null,
+          tokenType: null,
+          scope: null,
+          additionalData: {},
+        });
+        console.log("New advisor auth token created:", advisorAuthToken);
+      }
 
-    // Update firm integration config
-    const updatedFirmIntegration = await storage.updateFirmIntegrationConfig(firmIntegration.id, {
-      id: firmIntegration.id,
-      integrationTypeId: integrationType?.id,
-      firmId: user.organizationId,
-      credentials: { api_key: accessToken },
-      settings: settings || { sync_frequency: "daily" },
-      status: "active",
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-    console.log("Updated firm integration:", updatedFirmIntegration);
-
-    // Get or create advisor auth token
-    let advisorAuthToken = await storage.getAdvisorAuthTokenByUserId(user.id, user.organizationId);
-    console.log("Existing advisor auth token:", advisorAuthToken);
-    if (!advisorAuthToken) {
-      advisorAuthToken = await storage.createAdvisorAuthToken({
+      // Update advisor auth token
+      await storage.updateAdvisorAuthToken(advisorAuthToken.id, {
+        id: advisorAuthToken.id,
+        createdAt: advisorAuthToken.createdAt,
+        updatedAt: new Date(),
+        firmIntegrationConfigId: updatedFirmIntegration.id,
         userId: user.id,
         accessToken: accessToken,
-        expiresAt: new Date(),
-        firmIntegrationConfigId: updatedFirmIntegration.id,
-        refreshToken: null,
-        tokenType: null,
-        scope: null,
-        additionalData: {},
+        refreshToken: advisorAuthToken.refreshToken,
+        tokenType: advisorAuthToken.tokenType,
+        expiresAt: advisorAuthToken.expiresAt,
+        scope: advisorAuthToken.scope,
+        additionalData: advisorAuthToken.additionalData,
       });
-      console.log("New advisor auth token created:", advisorAuthToken);
-    }
+      console.log("Updated advisor auth token:", advisorAuthToken);
 
-    // Update advisor auth token
-    await storage.updateAdvisorAuthToken(advisorAuthToken.id, {
-      id: advisorAuthToken.id,
-      createdAt: advisorAuthToken.createdAt,
-      updatedAt: new Date(),
-      firmIntegrationConfigId: updatedFirmIntegration.id,
-      userId: user.id,
-      accessToken: accessToken,
-      refreshToken: advisorAuthToken.refreshToken,
-      tokenType: advisorAuthToken.tokenType,
-      expiresAt: advisorAuthToken.expiresAt,
-      scope: advisorAuthToken.scope,
-      additionalData: advisorAuthToken.additionalData,
-    });
-    console.log("Updated advisor auth token:", advisorAuthToken);
+      // Push task to fetch Wealthbox users to the queue
+      userFetchQueue.push(async () => {
+        try {
+          // console.log("Fetching Wealthbox users for firm:", user.organizationId);
+          // try {
+            const { users: wealthboxUsersData, success} = await getWealthboxUsers(user.id);
 
-    return res.json({ success: true, data: updatedFirmIntegration });
-  } catch (error: any) {
-    console.error("Error saving Wealthbox configuration:", error);
-    if (!res.headersSent) { // Check if headers are already sent
-      return res.status(500).json({
-        success: false,
-        message: error.message || "Failed to save configuration",
+            if (!success) {
+              throw new Error("Failed to fetch Wealthbox users");
+            }
+            console.log("Wealthbox users response:", wealthboxUsersData);
+          // } catch (error) {
+          //   console.error("Error fetching Wealthbox users:", error);
+          //   throw new Error("Failed to fetch Wealthbox users");
+          // }
+
+
+          const saveUsersPromises = await Promise.all(wealthboxUsersData.map(async (wealthboxUser: any) => {
+            const existingUser = await storage.getUserByEmail(wealthboxUser.email);
+            if (!existingUser) {
+              const userData = {
+                // id: wealthboxUser.id,
+                firstName: wealthboxUser.name.split(' ')[0],
+                lastName: wealthboxUser.name.split(' ')[1] || '',
+                email: wealthboxUser.email,
+                roleId: '5',
+                organizationId: user.organizationId,
+                status:"inactive",
+                wealthboxUserId: wealthboxUser.id,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              };
+              console.log(`Creating user: ${userData.email}`);
+              return await storage.createUser(userData); 
+            }
+            else {
+              console.log(`Updating user: ${existingUser.email}`);
+              return await storage.updateUser(existingUser.id, {
+                wealthboxUserId: wealthboxUser.id,
+                firstNmae: wealthboxUser.name.split(' ')[0],
+                lastName: wealthboxUser.name.split(' ')[1] || '',
+                updatedAt: new Date(),
+              });
+            }
+            return null;
+          })).then(results => results.filter(Boolean));
+          await Promise.all(saveUsersPromises);
+          console.log("Wealthbox users saved successfully.");
+        } catch (error) {
+          console.error("Error fetching or saving Wealthbox users:", error);
+        }
       });
-    }
-  }
-});
 
-  
+      // Send success response
+      return res.json({ success: true, data: updatedFirmIntegration });
+    } catch (error: any) {
+      console.error("Error saving Wealthbox configuration:", error);
+      if (!res.headersSent) {
+        return res.status(500).json({
+          success: false,
+          message: error.message || "Failed to save configuration",
+        });
+      }
+    }
+  });
+
+  // async function fetchWealthboxUsers(accessToken: string) {
+  //   const wealthboxUsersResponse = await fetch(
+  //     `/api/wealthbox/users?access_token=${accessToken}`,
+  //   );
+  //   if (!wealthboxUsersResponse.ok) {
+  //     throw new Error("Failed to fetch Wealthbox users");
+  //   }
+
+  //   console.log("Wealthbox users response:", wealthboxUsersResponse);
+
+  //   const wealthboxUsersData = await wealthboxUsersResponse.json();
+  //   // Save users to your storage
+  //   const saveUsersPromises = wealthboxUsersData.data.users.map(
+  //     async (wealthboxUser: any) => {
+  //       const userData = {
+  //         id: wealthboxUser.id,
+  //         name: wealthboxUser.name,
+  //         email: wealthboxUser.email,
+  //         // Map other properties as necessary
+  //       };
+  //       return await storage.createUser(userData); // Ensure createUser handles existing users
+  //     },
+  //   );
+  //   await Promise.all(saveUsersPromises);
+  //   console.log("Wealthbox users saved successfully.");
+  // }
+
   // AI query route
   app.post("/api/ai/query", requireAuth, aiQueryHandler);
 

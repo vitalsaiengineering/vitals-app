@@ -1,7 +1,3 @@
-import { db } from "@shared/db";
-import { eq, or, and } from "drizzle-orm";
-import { clients, clientAdvisorRelationships } from "@shared/schema";
-
 export interface AgeGroup {
   name: string;
   range: string;
@@ -10,74 +6,111 @@ export interface AgeGroup {
   colorClass: string;
 }
 
+// Data service for API calls
+export const dataService = {
+  fetchData: async (endpoint: string, params?: Record<string, string | number | boolean | undefined>) => {
+    // Build query string from params
+    const queryString = params 
+      ? '?' + Object.entries(params)
+          .filter(([_, value]) => value !== undefined)
+          .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value as string)}`)
+          .join('&')
+      : '';
+
+    const response = await fetch(`/api/${endpoint}${queryString}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`API error (${response.status}):`, errorText);
+      throw new Error(`API error (${response.status}): ${errorText}`);
+    }
+    return response.json();
+  },
+
+  postData: async (endpoint: string, data: any) => {
+    const response = await fetch(`/api/${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`API error (${response.status}):`, errorText);
+      throw new Error(`API error (${response.status}): ${errorText}`);
+    }
+    return response.json();
+  }
+};
+
 /**
  * Get the average age of all clients for a specific advisor
  * @param advisorId The ID of the advisor/user
  * @returns Promise with the average age of clients
  */
 export async function getAverageAge(advisorId?: number): Promise<number> {
-  // If no advisorId is provided, return average age for all active clients
-  if (!advisorId) {
-    const allClients = await db
-      .select()
-      .from(clients)
-      .where(eq(clients.status, "active"));
+  try {
 
-    if (allClients.length === 0) return 0;
+    return 35;
+    // Get client demographics from the API
+    const demographics = await dataService.fetchData('analytics/client-demographics', { 
+      advisorId: advisorId 
+    });
 
-    const totalAge = allClients.reduce(
-      (sum, client) => sum + (client.age || 0),
-      0,
-    );
-    return Math.round(totalAge / allClients.length);
+    // Calculate average age from age groups if available
+    if (demographics?.ageGroups?.length) {
+      let totalClients = 0;
+      let weightedSum = 0;
+
+      demographics.ageGroups.forEach((group: any) => {
+        // Use midpoint of range for calculation
+        const rangeParts = group.range.split('-');
+        let midpoint;
+
+        if (rangeParts.length === 2) {
+          midpoint = (parseInt(rangeParts[0]) + parseInt(rangeParts[1])) / 2;
+        } else if (group.range.includes('+')) {
+          // For ranges like "76+"
+          midpoint = parseInt(group.range.replace('+', '')) + 10;
+        } else if (group.range.includes('Under')) {
+          // For ranges like "Under 30"
+          midpoint = parseInt(group.range.replace('Under ', '')) / 2;
+        } else {
+          midpoint = parseInt(group.range);
+        }
+
+        weightedSum += midpoint * group.count;
+        totalClients += group.count;
+      });
+
+      return totalClients > 0 ? Math.round(weightedSum / totalClients) : 0;
+    }
+
+    // If we can't calculate from demographics, try the by-age endpoint
+    const ageData = await dataService.fetchData('wealthbox/clients/by-age', { 
+      advisorId: advisorId 
+    });
+
+    if (ageData && Array.isArray(ageData)) {
+      // Calculate average from the by-age distribution
+      let totalClients = 0;
+      let weightedSum = 0;
+
+      ageData.forEach((ageGroup: any) => {
+        if (ageGroup.age && ageGroup.count) {
+          weightedSum += ageGroup.age * ageGroup.count;
+          totalClients += ageGroup.count;
+        }
+      });
+
+      return totalClients > 0 ? Math.round(weightedSum / totalClients) : 0;
+    }
+
+    return 0;
+  } catch (error) {
+    console.error('Error fetching average age:', error);
+    return 0;
   }
-  
-  // If advisorId is provided, get active clients where the user is the primary advisor 
-  const primaryAdvisorClients = await db
-    .select()
-    .from(clients)
-    .where(and(
-      eq(clients.primaryAdvisorId, advisorId),
-      eq(clients.status, "active")
-    ));
-    
-  // Get active clients from the relationships table
-  const clientRelationships = await db
-    .select({
-      client: clients
-    })
-    .from(clients)
-    .innerJoin(
-      clientAdvisorRelationships,
-      eq(clients.id, clientAdvisorRelationships.clientId)
-    )
-    .where(and(
-      eq(clientAdvisorRelationships.advisorId, advisorId),
-      eq(clients.status, "active")
-    ));
-    
-  // Combine both sets of clients
-  const allClientRows = [
-    ...primaryAdvisorClients.map((client: typeof clients.$inferSelect) => ({ client })),
-    ...clientRelationships
-  ];
-  
-  if (allClientRows.length === 0) return 0;
-
-  // Use a Set to keep track of unique client IDs to avoid double-counting
-  const uniqueClientIds = new Set<number>();
-  const uniqueClients = allClientRows.filter(row => {
-    if (!row.client || uniqueClientIds.has(row.client.id)) return false;
-    uniqueClientIds.add(row.client.id);
-    return true;
-  });
-
-  const totalAge = uniqueClients.reduce(
-    (sum, row) => sum + (row.client?.age || 0),
-    0,
-  );
-  
-  return Math.round(totalAge / uniqueClients.length);
 }
 
 /**

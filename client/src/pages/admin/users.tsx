@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { createUser } from "@/lib/api";
+import { createUser, updateUser } from "@/lib/api";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { formatDistanceToNow } from "date-fns";
 
 import {
   Card,
@@ -55,6 +56,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MoreVertical, Edit, Key, Ban } from "lucide-react";
+import EditUserDialog from "@/components/ui/edit-user-dialog";
+
 
 // Schema for the user form
 const userSchema = z.object({
@@ -70,39 +75,14 @@ const userSchema = z.object({
 
 type UserValues = z.infer<typeof userSchema>;
 
-// Format role for display
-const formatRole = (role: string) => {
-  switch (role) {
-    case "global_admin":
-      return "Global Admin";
-    case "firm_admin":
-      return "Client Admin";
-    case "advisor":
-      return "Financial Advisor";
-    default:
-      return role;
-  }
-};
-
-// Role badge variant
-const getRoleBadgeVariant = (role: string) => {
-  switch (role) {
-    case "global_admin":
-      return "destructive";
-    case "firm_admin":
-      return "default";
-    case "advisor":
-      return "secondary";
-    default:
-      return "outline";
-  }
-};
-
 export default function Users() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  // Add this to your Users() functional component
+  const [selectedUser, setSelectedUser] = useState(null);
 
+  
   // Fetch users
   const { data: users, isLoading: isLoadingUsers } = useQuery({
     queryKey: ['/api/users'],
@@ -134,6 +114,31 @@ export default function Users() {
     },
   });
 
+  // Update user mutation
+  const updateUserMutation = useMutation({
+    mutationFn: (params) => {
+      const [id, userData] = params;
+      return updateUser(id, userData);
+    },
+    onSuccess: () => {
+      toast({
+        title: "User updated",
+        description: "User has been updated successfully.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      setSelectedUser(null); // Close the dialog
+    },
+    onError: () => {
+      toast({
+        title: "Error updating user",
+        description: "There was a problem updating the user. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  
+
   // Form setup
   const form = useForm<UserValues>({
     resolver: zodResolver(userSchema),
@@ -150,6 +155,90 @@ export default function Users() {
     createUserMutation.mutate(data);
   }
 
+  // Function to handle user update
+  const handleUpdateUser = (id, userData) => {
+    console.log("Updating user:", id, userData);
+    updateUserMutation.mutate([id, userData]);
+  };
+
+  // Helper functions for the new UI
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Active":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "Inactive":
+        return "bg-blue-50 text-blue-600 border-blue-100";
+      case "Pending":
+        return "bg-sky-100 text-sky-800 border-sky-200";
+      case "Suspended":
+        return "bg-indigo-100 text-indigo-800 border-indigo-200";
+      default:
+        return "bg-blue-50 text-blue-600 border-blue-100";
+    }
+  };
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case "global_admin":
+        return "bg-blue-700 text-white border-blue-800";
+      case "firm_admin":
+        return "bg-blue-500 text-white border-blue-600";
+      case "advisor":
+        return "bg-blue-300 text-blue-900 border-blue-400";
+      default:
+        return "bg-blue-300 text-blue-900 border-blue-400";
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "—";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "—";
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+    } catch (e) {
+      return "—";
+    }
+  };
+
+  const formatLastLogin = (dateString: string) => {
+    if (!dateString) return "—";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "—";
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch (e) {
+      return "—";
+    }
+  };
+
+  const getInitials = (name: string) => {
+    if (!name) return "";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
+
+  // Map role to display format
+  const formatRole = (role: any) => {
+    switch (role) {
+      case "global_admin":
+        return "Admin";
+      case "firm_admin":
+        return "Admin";
+      case "advisor":
+        return "Advisor";
+      default:
+        return role;
+    }
+  };
+
   const isLoading = isLoadingUsers || isLoadingOrgs;
 
   if (isLoading) {
@@ -165,6 +254,11 @@ export default function Users() {
 
   return (
     <div className="container mx-auto py-8">
+      <EditUserDialog 
+        selectedUser={selectedUser} 
+        onClose={() => setSelectedUser(null)} 
+        onUpdate={handleUpdateUser} 
+      />
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-semibold text-neutral-900">User Management</h1>
@@ -186,6 +280,7 @@ export default function Users() {
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                {/* Form content remains the same */}
                 <div className="grid grid-cols-1 gap-4">
                   <FormField
                     control={form.control}
@@ -200,7 +295,7 @@ export default function Users() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -215,7 +310,7 @@ export default function Users() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="email"
@@ -230,7 +325,7 @@ export default function Users() {
                       )}
                     />
                   </div>
-                  
+
                   <FormField
                     control={form.control}
                     name="password"
@@ -244,7 +339,7 @@ export default function Users() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -271,7 +366,7 @@ export default function Users() {
                         </FormItem>
                       )}
                     />
-                    
+
                     {organizations && (
                       <FormField
                         control={form.control}
@@ -303,7 +398,7 @@ export default function Users() {
                     )}
                   </div>
                 </div>
-                
+
                 <DialogFooter>
                   <Button
                     type="button"
@@ -328,57 +423,79 @@ export default function Users() {
       <Card>
         <CardContent className="p-0">
           {users && users.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Username</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Organization</TableHead>
-                  <TableHead>WealthBox</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.fullName}</TableCell>
-                    <TableCell>{user.username}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Badge variant={getRoleBadgeVariant(user.role)}>
-                        {formatRole(user.role)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {organizations?.find(org => org.id === user.organizationId)?.name || 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      {user.wealthboxConnected ? (
-                        <Badge variant="success" className="bg-green-100 text-green-800">Connected</Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-neutral-100 text-neutral-800">Not Connected</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <span className="material-icons">more_vert</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Edit User</DropdownMenuItem>
-                          <DropdownMenuItem>Reset Password</DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">Deactivate User</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-blue-50">
+                    <TableHead className="w-[250px]">Full name</TableHead>
+                    <TableHead>Display name</TableHead>
+                    <TableHead>Email address</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Last login</TableHead>
+                    <TableHead>Date joined</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user.id} className="hover:bg-blue-50">
+                      <TableCell className="font-medium py-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={user.avatarUrl} alt={user.fullName} />
+                            <AvatarFallback>{user.firstName && user.lastName ? getInitials(`${user.firstName} ${user.lastName}`) : ""}</AvatarFallback>
+                          </Avatar>
+                          <span>{user.firstName} {user.lastName}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{user.firstName || '—'}</TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`${getRoleColor(user.role.name)} px-2 py-1 text-xs font-medium`}>
+                          {formatRole(user.role.name)}
+                          
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`${getStatusColor(user.status)} px-2 py-1 text-xs font-medium`}>
+                          {user.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{formatLastLogin(user.lastLogin)}</TableCell>
+                      <TableCell>{formatDate(user.createdAt)}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <span className="sr-only">Open menu</span>
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedUser(user); 
+                              
+                            }}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit User
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Key className="mr-2 h-4 w-4" />
+                              Reset Password
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600">
+                              <Ban className="mr-2 h-4 w-4" />
+                              {user.active ? "Deactivate User" : "Activate User"}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
             <div className="text-center py-8 text-neutral-500">
               <span className="material-icons text-4xl mb-2">people</span>

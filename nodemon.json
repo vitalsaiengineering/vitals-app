@@ -1,0 +1,13 @@
+{
+  "watch": ["server"],
+  "ext": "ts,js,json",
+  "ignore": ["server/vite.ts", "client", "node_modules"],
+  "exec": "tsx server/index.ts",
+  "events": {
+    "restart": "echo \"Backend server restarted\""
+  },
+  "env": {
+    "NODE_ENV": "development",
+    "VITE_HMR_FORCE_PRESERVE": "true"
+  }
+}

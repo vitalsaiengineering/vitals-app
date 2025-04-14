@@ -25,6 +25,28 @@ export const createUser = async (userData: any) => {
   return response.json();
 };
 
+export const updateUser = async (id: number, userData: any) => {
+  
+  console.log("Updating user with ID:", id, "and data:", userData)
+  const response = await apiRequest("PUT", `/api/users/${id}`, userData);
+  return response.json();
+};
+
+export const fetchRoles = async () => {
+  const response = await apiRequest("GET", "/api/roles");
+  return response.json();
+};
+
+export const fetchStatuses = async () => {
+  const response = await apiRequest("GET", "/api/statuses");
+  return response.json();
+};
+
+export const getUsersByOrganization = async (organizationId: number) => {
+  const response = await apiRequest("GET", `/api/users?organizationId=${organizationId}`);
+  return response.json();
+};
+
 // Organizations
 export const createOrganization = async (orgData: any) => {
   const response = await apiRequest("POST", "/api/organizations", orgData);

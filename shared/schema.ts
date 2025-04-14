@@ -34,6 +34,9 @@ export const statusEnum = pgEnum("status", [
   "pending",
   "suspended",
 ]);
+export const statusValues = statusEnum.enumValues;
+
+
 export const accessLevelEnum = pgEnum("access_level", [
   "read",
   "write",
@@ -62,12 +65,13 @@ export const organizations = pgTable("organizations", {
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   email: varchar("email", { length: 255 }).notNull().unique(),
-  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+  passwordHash: varchar("password_hash", { length: 255 }),
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
   roleId: integer("role_id").references(() => roles.id),
   organizationId: integer("organization_id").references(() => organizations.id),
   status: statusEnum("status").notNull().default("active"),
+  wealthboxUserId: varchar("wealthbox_user_id", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -534,6 +538,9 @@ export type User = typeof users.$inferSelect;
 export type Client = typeof clients.$inferSelect;
 export type Organization = typeof organizations.$inferSelect;
 export type Role = typeof roles.$inferSelect;
+export type Status = (typeof statusEnum.enumValues)[number];
+
+
 export type DataMapping = typeof firmDataMappings.$inferSelect;
 export type Activity = {
   id: number;
