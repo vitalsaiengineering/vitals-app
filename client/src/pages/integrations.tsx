@@ -35,7 +35,6 @@ interface TokenData {
   token: string;
 }
 
-
 interface User {
   id: number;
   username: string;
@@ -54,7 +53,11 @@ export default function Integrations() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [accessToken, setAccessToken] = useState("");
 
-  const { data: tokenData, isLoading: isLoadingToken, error: tokenError } = useQuery<TokenData>({
+  const {
+    data: tokenData,
+    isLoading: isLoadingToken,
+    error: tokenError,
+  } = useQuery<TokenData>({
     queryKey: ["/api/wealthbox/token"],
     retry: false,
   });
@@ -63,7 +66,7 @@ export default function Integrations() {
       setAccessToken(tokenData.token);
     }
   }, [tokenData]);
-  
+
   const [connectionStatus, setConnectionStatus] = useState<
     "none" | "success" | "error"
   >("none");
@@ -181,16 +184,16 @@ export default function Integrations() {
 
   const saveConfigMutation = useMutation({
     mutationFn: async (token: string) => {
-      const response = await fetch('/api/wealthbox/save-config', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+      const response = await fetch("/api/wealthbox/save-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           accessToken: token,
-          settings: { sync_frequency: 'daily' }
-        })
+          settings: { sync_frequency: "daily" },
+        }),
       });
       if (!response.ok) {
-        throw new Error('Failed to save configuration');
+        throw new Error("Failed to save configuration");
       }
       return response.json();
     },
@@ -206,7 +209,7 @@ export default function Integrations() {
         description: error.message || "Failed to save WealthBox configuration",
         variant: "destructive",
       });
-    }
+    },
   });
 
   const handleTestConnection = async () => {
@@ -305,7 +308,6 @@ export default function Integrations() {
   // TODO: fix auth based view
   const isAuthorized = true;
 
-  
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
@@ -314,7 +316,7 @@ export default function Integrations() {
           Connect and manage your external data sources
         </p>
       </div>
-  
+
       {!isAuthorized && (
         <Alert className="mb-6 bg-yellow-50 border-yellow-200">
           <AlertTitle className="text-yellow-800">Access Restricted</AlertTitle>
@@ -375,12 +377,9 @@ export default function Integrations() {
           <CardContent>
             <div className="space-y-6">
               <div>
-                <Button onClick={handleOAuth}>Connect to Wealthbox</Button>
                 
-                <Label htmlFor="api-token">WealthBox API Access Token
-                
-                
-                </Label>
+
+                <Label htmlFor="api-token">WealthBox API Access Token</Label>
                 <div className="mt-1 flex">
                   <Input
                     id="api-token"
@@ -402,7 +401,9 @@ export default function Integrations() {
                       disabled={saveConfigMutation.isPending}
                       variant="secondary"
                     >
-                      {saveConfigMutation.isPending ? "Saving..." : "Save Configuration"}
+                      {saveConfigMutation.isPending
+                        ? "Saving..."
+                        : "Save Configuration"}
                     </Button>
                   </div>
                 </div>

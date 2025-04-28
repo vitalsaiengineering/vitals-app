@@ -13,6 +13,11 @@ import {
 } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import  ClientStateDistributionMap  from "@/components/dashboard/ClientStateDistributionMap"
+import ClientAgeDemographic from "@/components/dashboard/ClientAgeDemographic";
+import ReferralDashboard from 
+  "@/components/dashboard/ReferralDashboard";
+import HouseholdNetNewTable from "@/components/dashboard/AdvisorGrowthMetric";
 // import AgeMetric from "@/components/dashboard/AgeMetric";
 // Using extended User type that includes role and username fields
 interface ExtendedUser {
@@ -49,7 +54,6 @@ export default function Dashboard() {
     advisorId: number | null;
     wealthboxUserId: number | null;
   }) => {
-    console.log("Filters changed:", newFilters);
     setFilters(newFilters);
   };
 
@@ -364,6 +368,28 @@ export default function Dashboard() {
         {/* Geographic Distribution */}
         {/* <GeographicDistributionCard wealthboxUserId={filters.wealthboxUserId} /> */}
       </div>
+
+      {/* KPI Section */}
+      <div className="mt-6">
+        <ClientStateDistributionMap
+          />
+      </div>
+
+      <div className="mt-6">
+        <ClientAgeDemographic
+          />
+        </div>
+
+      <div className="mt-6">
+        <ReferralDashboard
+          />
+      </div>
+
+      <div className="mt-6">
+        <HouseholdNetNewTable
+          />
+        </div>
+      
 
       {/* Opportunities Section - Full Width */}
       <div className="mt-6">

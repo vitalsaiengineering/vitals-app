@@ -140,7 +140,6 @@ export function FilterBar({ user, onFilterChange }: FilterBarProps) {
   
   // Render Wealthbox users filter (now labeled simply as "Advisor")
   const renderWealthboxUsersFilter = () => {
-    console.log("Rendering Wealthbox users filter, users:", wealthboxUsers);
     
     if (!wealthboxUsers?.length) {
       console.log("No Wealthbox users to display");

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { useMutation } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import {
   UserIcon,
@@ -26,13 +27,14 @@ import {
 } from "@/components/ui/select";
 import BackgroundGradient from "@/components/BackgroundGradient";
 import VitalsLogo from "@/components/VitalsLogo";
+import { signup } from "@/lib/api";
 
 interface FormData {
   name: string;
   email: string;
   password: string;
   confirmPassword: string;
-  organizationName: string;
+  // organizationName: string;
   referralSource: string;
   antiBot: boolean;
 }
@@ -43,14 +45,41 @@ const SignupForm = () => {
     email: "",
     password: "",
     confirmPassword: "",
-    organizationName: "",
+    // organizationName: "",
     referralSource: "",
     antiBot: false,
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+
+  // --- Move useMutation hook here ---
+  const createUserMutation = useMutation({
+    mutationFn: signup,
+    onSuccess: () => {
+      toast({
+        title: "Account created successfully",
+        description: "Welcome aboard! Your account has been created.",
+      });
+      // Redirect on success
+      setLocation('/dashboard');
+    },
+    onError: (error) => { // It's good practice to log the error
+      console.error("Signup Error:", error);
+      
+      toast({
+        title: "Signup Error",
+        description:
+          error.message,
+        variant: "destructive",
+      });
+    },
+    // Tanstack Query handles loading state via createUserMutation.isPending
+    // onSettled: () => {
+    //   setIsLoading(false); // No longer needed if using isPending
+    // }
+  });
+  // --- End of moved hook ---
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -139,42 +168,25 @@ const SignupForm = () => {
       return;
     }
 
-    setIsLoading(true);
+    // Don't need to manually set isLoading if using createUserMutation.isPending
+    // setIsLoading(true);
 
-    // Simulate API call
-    try {
-      const response = await fetch('/api/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-      console.log(response);
-    } catch (error) {
-      console.error("Error during signup:", error);
-      toast({
-        title: "Signup Error",
-        description: "An error occurred while creating your account. Please try again later.",
-        variant: "destructive",
-      });
-    }
+    // Call the mutate function from the hook defined above
+    createUserMutation.mutate(formData);
 
-    setIsLoading(false);
-    toast({
-      title: "Account created successfully",
-      description: "Welcome aboard! Your account has been created.",
-    });
-
-    // Redirect to dashboard after successful signup
-    setTimeout(() => {
-      setLocation("/dashboard");
-    }, 1000);
+    // Remove manual setIsLoading(false) and setTimeout redirect
+    // setIsLoading(false);
+    // setTimeout(() => {
+    //   setLocation("/dashboard");
+    // }, 1000);
   };
 
   const toggleShowPassword = () => {
     setShowPassword(!showPassword);
   };
+
+  // Use createUserMutation.isPending for loading state in the button
+  const isLoading = createUserMutation.isPending;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -220,7 +232,7 @@ const SignupForm = () => {
               />
             </div>
           </div>
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="organization" className="text-base font-normal">
               Organization Name
             </Label>
@@ -235,7 +247,7 @@ const SignupForm = () => {
                 placeholder="Enter organization name"
               />
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Password Section */}
@@ -358,6 +370,7 @@ const SignupForm = () => {
           </div>
         </div>
 
+        {/* Update Button disabled and loading state */}
         <Button type="submit" className="w-full h-12 mt-8" disabled={isLoading}>
           {isLoading ? (
             <div className="flex items-center">
@@ -429,9 +442,9 @@ export default function Signup() {
               Join Vitals AI to start managing your clients more efficiently
             </motion.p>
           </div>
-          
+
           <SignupForm />
-          
+
           <div className="mt-8 text-center text-sm text-muted-foreground">
             Already have an account?{" "}
             <Link

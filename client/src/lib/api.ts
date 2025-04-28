@@ -6,6 +6,31 @@ export const login = async (username: string, password: string) => {
   return response.json();
 };
 
+export const signup = async (userData: any) => {
+  const response = await apiRequest("POST", "/api/signup", userData);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: "Signup failed" }));
+    
+    // Extract just the real error message
+    let errorMessage = errorData.message || "Signup failed";
+    try {
+      // Check if the error message contains a JSON string
+      if (errorMessage.includes('{"message":')) {
+        const match = errorMessage.match(/\{"message":"([^"]+)"\}/);
+        if (match && match[1]) {
+          errorMessage = match[1];
+        }
+      }
+    } catch (e) {
+      // If parsing fails, keep using the original error message
+    }
+    
+    throw new Error(errorMessage);
+  }
+  return response.json();
+}
+
+
 export const logout = async () => {
   const response = await apiRequest("POST", "/api/logout");
   return response.json();
@@ -22,6 +47,12 @@ export const getCurrentUser = async () => {
 // Users
 export const createUser = async (userData: any) => {
   const response = await apiRequest("POST", "/api/users", userData);
+  console.log("Create user response:", response)
+  if (!response.ok) {
+    console.error("Failed to create user:", response)
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Failed to create user");
+  }
   return response.json();
 };
 
