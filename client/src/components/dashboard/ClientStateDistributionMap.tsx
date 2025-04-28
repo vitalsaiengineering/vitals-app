@@ -71,15 +71,15 @@ const ClientDistributionMap: React.FC = () => {
     <div style={{ fontFamily: 'sans-serif', padding: '20px' }}>
       {/* Header */}
       <div style={{
-        backgroundColor: '#1a2a45',
-        color: 'white',
+        backgroundColor: 'white',
+        // color: '#0c5a9e',
         padding: '15px 20px',
         borderRadius: '8px 8px 0 0',
         display: 'flex',
         alignItems: 'center',
         marginBottom: '0'
       }}>
-        <span style={{ marginRight: '10px', fontSize: '1.2em' }}>📍</span>
+        <span style={{ marginRight: '10px', fontSize: '1.2em' }}></span>
         <h2 style={{ margin: 0, fontSize: '1.4em' }}>Client Distribution by State</h2>
       </div>
 
@@ -95,7 +95,8 @@ const ClientDistributionMap: React.FC = () => {
 
         {/* Map Section */}
         <div style={{
-          flex: 3,
+          flex: 1,
+          maxWidth: '50%',
           backgroundColor: 'white',
           padding: '10px', // Reduced padding slightly for map
           borderRadius: '8px',

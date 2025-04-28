@@ -370,10 +370,13 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Section */}
+
       <div className="mt-6">
-        <ClientStateDistributionMap
+        <HouseholdNetNewTable
           />
-      </div>
+        </div>
+      
+
 
       <div className="mt-6">
         <ClientAgeDemographic
@@ -386,9 +389,9 @@ export default function Dashboard() {
       </div>
 
       <div className="mt-6">
-        <HouseholdNetNewTable
+        <ClientStateDistributionMap
           />
-        </div>
+      </div>
       
 
       {/* Opportunities Section - Full Width */}
