@@ -27,29 +27,19 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
       {/* Logo and brand */}
       <div className="flex items-center justify-between px-4 py-5 border-b border-slate-700">
         {!isCollapsed && (
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
-              <svg
-                className="w-5 h-5 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-              </svg>
-            </div>
-            <span className="ml-3 font-bold text-lg">VitalsAI</span>
+          <div className="flex items-center justify-center w-full">
+            <img 
+              src="/images/vitals-ai-logo.png" 
+              alt="Vitals AI - Advisor Intelligence" 
+              className="w-auto h-12 max-w-full"
+            />
           </div>
         )}
 
         {isCollapsed && (
-          <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center mx-auto">
+          <div className="w-10 h-10 bg-blue-500 rounded-md flex items-center justify-center mx-auto">
             <svg
-              className="w-5 h-5 text-white"
+              className="w-6 h-6 text-white"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               fill="none"
@@ -203,6 +193,30 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
           </NavLink>
 
           <NavLink
+            href="/clients"
+            isActive={location.startsWith("/clients")}
+            isCollapsed={isCollapsed}
+            icon={
+              <svg
+                className="w-6 h-6"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+            }
+          >
+            Clients
+          </NavLink>
+
+          <NavLink
             href="/profile"
             isActive={location.startsWith("/profile")}
             isCollapsed={isCollapsed}
@@ -226,29 +240,7 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
             Profile
           </NavLink>
 
-          <NavLink
-            href="/mapping"
-            isActive={location.startsWith("/mapping")}
-            isCollapsed={isCollapsed}
-            icon={
-              <svg
-                className="w-6 h-6"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-                />
-              </svg>
-            }
-          >
-            Data Mapping
-          </NavLink>
+
         </div>
 
         {isAdmin && (
