@@ -9,6 +9,8 @@ import Signup from "@/pages/signup";
 import Integrations from "@/pages/integrations";
 import Mapping from "@/pages/mapping";
 import Clients from "@/pages/clients";
+import Settings from "@/pages/settings";
+import Profile from "@/pages/profile";
 import Users from "@/pages/admin/users";
 import Organizations from "@/pages/admin/organizations";
 import { AppLayout } from "@/components/layout/app-layout";
@@ -60,6 +62,18 @@ function Router() {
       <Route path="/admin/organizations">
         <AppLayout>
           <Organizations />
+        </AppLayout>
+      </Route>
+      
+      <Route path="/settings">
+        <AppLayout>
+          <Settings />
+        </AppLayout>
+      </Route>
+      
+      <Route path="/profile">
+        <AppLayout>
+          <Profile />
         </AppLayout>
       </Route>
       

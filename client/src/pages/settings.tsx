@@ -33,12 +33,19 @@ export default function Settings() {
   const [accessToken, setAccessToken] = useState("");
   const [activeTab, setActiveTab] = useState("user-management");
 
+  // Define interface for token response
+  interface TokenResponse {
+    token?: string;
+    success?: boolean;
+    message?: string;
+  }
+
   // Get WealthBox token
   const {
     data: tokenData,
     isLoading: isLoadingToken,
     error: tokenError,
-  } = useQuery({
+  } = useQuery<TokenResponse>({
     queryKey: ["/api/wealthbox/token"],
     retry: false,
   });
@@ -53,14 +60,21 @@ export default function Settings() {
     "none" | "success" | "error"
   >("none");
 
+  // Define interface for WealthBox status
+  interface WealthboxStatus {
+    connected?: boolean;
+    tokenExpiry?: string;
+    message?: string;
+  }
+
   // Get current user
-  const { data: user, isLoading: isLoadingUser } = useQuery({
+  const { data: user, isLoading: isLoadingUser } = useQuery<any>({
     queryKey: ["/api/me"],
     retry: false,
   });
 
   // Get WealthBox status
-  const { data: wealthboxStatus, isLoading: isLoadingStatus } = useQuery({
+  const { data: wealthboxStatus, isLoading: isLoadingStatus } = useQuery<WealthboxStatus>({
     queryKey: ["/api/wealthbox/status"],
     retry: false,
   });
