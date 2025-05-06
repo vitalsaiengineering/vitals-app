@@ -20,12 +20,12 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
   return (
     <nav
       className={cn(
-        "bg-slate-800 text-white h-screen flex-shrink-0 overflow-y-auto transition-all duration-200 ease-in-out",
+        "bg-[#002B5B] text-white h-screen flex-shrink-0 overflow-y-auto transition-all duration-200 ease-in-out",
         isCollapsed ? "w-20" : "w-64",
       )}
     >
       {/* Logo and brand */}
-      <div className="flex items-center justify-between px-4 py-5 border-b border-slate-700">
+      <div className="flex items-center justify-between px-4 py-5 border-b border-[#003B7B]">
         {!isCollapsed && (
           <div className="flex items-center justify-center w-full">
             <img 
@@ -37,29 +37,22 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
         )}
 
         {isCollapsed && (
-          <div className="w-10 h-10 bg-blue-500 rounded-md flex items-center justify-center mx-auto">
-            <svg
-              className="w-6 h-6 text-white"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-            </svg>
+          <div className="w-10 h-10 rounded-md flex items-center justify-center mx-auto">
+            <img 
+              src="/images/vitals-ai-logo.png" 
+              alt="Vitals AI Icon" 
+              className="w-8 h-8"
+            />
           </div>
         )}
 
-        <button
+        <button 
           onClick={toggleSidebar}
-          className="text-gray-400 hover:text-white md:flex hidden"
+          className="flex items-center justify-center rounded-full bg-[#003B7B] p-2 hover:bg-[#004B9B] transition-colors absolute right-0 translate-x-1/2 top-8 z-10"
         >
           {isCollapsed ? (
             <svg
-              className="w-5 h-5"
+              className="w-5 h-5 text-white"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
@@ -72,7 +65,7 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
             </svg>
           ) : (
             <svg
-              className="w-5 h-5"
+              className="w-5 h-5 text-white"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
@@ -307,10 +300,10 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
       </div>
 
       {/* User Profile */}
-      <div className="mt-auto p-4 border-t border-slate-700">
+      <div className="mt-auto p-4 border-t border-[#003B7B]">
         <div className="flex items-center">
           <div className="flex-shrink-0">
-            <div className="h-10 w-10 rounded-full bg-blue-700 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-full bg-[#1E88E5] flex items-center justify-center">
               <span className="text-white font-medium">
                 {user.firstName ? user.firstName.charAt(0) : ""}
                 {user.lastName ? user.lastName.charAt(0) : ""}
@@ -355,8 +348,8 @@ function NavLink({
         className={cn(
           "group flex items-center px-2 py-2 text-sm font-medium rounded-md cursor-pointer",
           isActive
-            ? "bg-slate-900 text-white"
-            : "text-gray-300 hover:bg-slate-700 hover:text-white",
+            ? "bg-[#003B7B] text-white"
+            : "text-gray-300 hover:bg-[#003B7B]/70 hover:text-white",
         )}
       >
         <div className="flex-shrink-0 mr-3 h-6 w-6">{icon}</div>
