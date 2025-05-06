@@ -1,17 +1,17 @@
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
-import { 
-  LucideIcon, 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
+import {
+  LucideIcon,
+  LayoutDashboard,
+  Users,
+  Settings,
   ChevronLeft,
   ChevronRight,
   Calculator,
   FileLineChart,
   ChevronUp,
   ChevronDown,
-  User
+  User,
 } from "lucide-react";
 import { useLocation, Link } from "react-router-dom";
 import {
@@ -44,15 +44,15 @@ interface NavItemProps {
   toggleSubmenu?: () => void;
 }
 
-const NavItem = ({ 
-  icon: Icon, 
-  title, 
-  href, 
-  isActive, 
+const NavItem = ({
+  icon: Icon,
+  title,
+  href,
+  isActive,
   hasSubmenu = false,
   submenuItems = [],
   isSubmenuOpen = false,
-  toggleSubmenu
+  toggleSubmenu,
 }: NavItemProps) => {
   const { state } = useSidebar();
   const showTooltip = state === "collapsed";
@@ -73,16 +73,20 @@ const NavItem = ({
             <Icon size={iconSize} />
             <span>{title}</span>
             <div className="ml-auto">
-              {isSubmenuOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              {isSubmenuOpen ? (
+                <ChevronUp size={16} />
+              ) : (
+                <ChevronDown size={16} />
+              )}
             </div>
           </SidebarMenuButton>
-          
+
           {isSubmenuOpen && (
             <SidebarMenuSub>
               {submenuItems.map((subItem) => (
                 <SidebarMenuSubItem key={subItem.href}>
-                  <SidebarMenuSubButton 
-                    asChild 
+                  <SidebarMenuSubButton
+                    asChild
                     isActive={window.location.pathname === subItem.href}
                   >
                     <Link to={subItem.href}>{subItem.title}</Link>
@@ -101,8 +105,14 @@ const NavItem = ({
           {showTooltip ? (
             <HoverCard>
               <HoverCardTrigger asChild>
-                <Link to={href} className="flex items-center justify-center w-full">
-                  <Icon size={iconSize} className={isActive ? "text-white" : "text-white/70"} />
+                <Link
+                  to={href}
+                  className="flex items-center justify-center w-full"
+                >
+                  <Icon
+                    size={iconSize}
+                    className={isActive ? "text-white" : "text-white/70"}
+                  />
                 </Link>
               </HoverCardTrigger>
               <HoverCardContent side="right" className="py-1 px-3">
@@ -111,7 +121,10 @@ const NavItem = ({
             </HoverCard>
           ) : (
             <Link to={href} className="flex items-center gap-3 w-full">
-              <Icon size={iconSize} className={isActive ? "text-white" : "text-white/70"} />
+              <Icon
+                size={iconSize}
+                className={isActive ? "text-white" : "text-white/70"}
+              />
               <span>{title}</span>
             </Link>
           )}
@@ -169,18 +182,18 @@ export const Sidebar = () => {
         <div className="flex justify-between items-center">
           {state !== "collapsed" && (
             <div className="flex items-center justify-center w-full py-4 px-2">
-              <img 
-                src="/lovable-uploads/d62e5228-3d79-4ebf-9803-0cdadb75b3ac.png" 
-                alt="Vitals AI - Advisor Intelligence" 
+              <img
+                src="/public/images/d62e5228-3d79-4ebf-9803-0cdadb75b3ac.png"
+                alt="Vitals AI - Advisor Intelligence"
                 className="w-auto h-20 max-w-full"
               />
             </div>
           )}
-          <button 
+          <button
             onClick={toggleSidebar}
             className={cn(
               "flex items-center justify-center rounded-full bg-sidebar-accent p-2 hover:bg-sidebar-accent-foreground/10 transition-colors",
-              state === "collapsed" ? "ml-auto" : "ml-2 mr-4"
+              state === "collapsed" ? "ml-auto" : "ml-2 mr-4",
             )}
           >
             {state === "collapsed" ? (
@@ -203,16 +216,18 @@ export const Sidebar = () => {
               hasSubmenu={item.hasSubmenu}
               submenuItems={item.submenuItems}
               isSubmenuOpen={item.title === "Scorecard" && submenuOpen}
-              toggleSubmenu={item.title === "Scorecard" ? toggleSubmenu : undefined}
+              toggleSubmenu={
+                item.title === "Scorecard" ? toggleSubmenu : undefined
+              }
             />
           ))}
-          
+
           {/* Add Profile NavItem */}
           <NavItem
             icon={User}
             title="Profile"
             href="/profile"
-            isActive={pathname === '/profile'}
+            isActive={pathname === "/profile"}
             hasSubmenu={false}
           />
         </SidebarMenu>

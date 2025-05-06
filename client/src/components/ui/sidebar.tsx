@@ -48,11 +48,11 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
 
         <button 
           onClick={toggleSidebar}
-          className="flex items-center justify-center rounded-full bg-[#1E88E5] p-2 hover:bg-[#1976D2] transition-colors shadow-md absolute right-0 translate-x-1/2 top-16 z-50"
+          className="flex items-center justify-center rounded-full bg-white p-2 hover:bg-gray-200 transition-colors shadow-md absolute right-0 translate-x-1/2 top-14 z-50 border-2 border-[#002B5B] w-8 h-8"
         >
           {isCollapsed ? (
             <svg
-              className="w-5 h-5 text-white"
+              className="w-4 h-4 text-[#002B5B]"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
@@ -65,7 +65,7 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
             </svg>
           ) : (
             <svg
-              className="w-5 h-5 text-white"
+              className="w-4 h-4 text-[#002B5B]"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
