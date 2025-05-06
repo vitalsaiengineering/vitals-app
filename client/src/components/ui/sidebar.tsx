@@ -25,9 +25,9 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
       )}
     >
       {/* Logo and brand */}
-      <div className="flex items-center justify-between px-4 py-5 border-b border-[#003B7B]">
+      <div className="flex justify-between items-center border-b border-[#003B7B]">
         {!isCollapsed && (
-          <div className="flex items-center justify-center w-full py-2">
+          <div className="flex items-center justify-center w-full py-4 px-2">
             <img 
               src="/lovable-uploads/d62e5228-3d79-4ebf-9803-0cdadb75b3ac.png" 
               alt="Vitals AI - Advisor Intelligence" 
@@ -37,7 +37,7 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
         )}
 
         {isCollapsed && (
-          <div className="w-14 h-14 flex items-center justify-center mx-auto">
+          <div className="flex items-center justify-center w-full py-4">
             <img 
               src="/lovable-uploads/d62e5228-3d79-4ebf-9803-0cdadb75b3ac.png" 
               alt="Vitals AI Icon" 
@@ -48,33 +48,36 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
 
         <button 
           onClick={toggleSidebar}
-          className="flex items-center justify-center rounded-full bg-white p-2 hover:bg-gray-200 transition-colors shadow-md absolute right-0 translate-x-1/2 top-14 z-50 border-2 border-[#002B5B] w-8 h-8"
+          className={cn(
+            "flex items-center justify-center rounded-full bg-[#003B7B] p-2 hover:bg-[#004C9E] transition-colors",
+            isCollapsed ? "ml-auto mr-3" : "ml-auto mr-4 my-4"
+          )}
         >
           {isCollapsed ? (
             <svg
-              className="w-4 h-4 text-[#002B5B]"
+              className="w-5 h-5 text-white"
               xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <path
-                fillRule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clipRule="evenodd"
-              />
+              <polyline points="9 18 15 12 9 6" />
             </svg>
           ) : (
             <svg
-              className="w-4 h-4 text-[#002B5B]"
+              className="w-5 h-5 text-white"
               xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <path
-                fillRule="evenodd"
-                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                clipRule="evenodd"
-              />
+              <polyline points="15 18 9 12 15 6" />
             </svg>
           )}
         </button>
