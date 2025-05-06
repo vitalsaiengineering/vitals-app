@@ -27,28 +27,30 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
       {/* Logo and brand */}
       <div className="flex items-center justify-between px-4 py-5 border-b border-[#003B7B]">
         {!isCollapsed && (
-          <div className="flex items-center justify-center w-full">
-            <img 
-              src="/images/vitals-ai-logo.png" 
-              alt="Vitals AI - Advisor Intelligence" 
-              className="w-auto h-12 max-w-full"
-            />
+          <div className="flex items-center justify-center w-full py-2">
+            <div className="bg-white rounded-md p-2">
+              <img 
+                src="/images/vitals-ai-logo.png" 
+                alt="Vitals AI - Advisor Intelligence" 
+                className="w-auto h-16 max-w-full"
+              />
+            </div>
           </div>
         )}
 
         {isCollapsed && (
-          <div className="w-10 h-10 rounded-md flex items-center justify-center mx-auto">
+          <div className="w-14 h-14 bg-white rounded-md flex items-center justify-center mx-auto">
             <img 
               src="/images/vitals-ai-logo.png" 
               alt="Vitals AI Icon" 
-              className="w-8 h-8"
+              className="w-10 h-10"
             />
           </div>
         )}
 
         <button 
           onClick={toggleSidebar}
-          className="flex items-center justify-center rounded-full bg-[#003B7B] p-2 hover:bg-[#004B9B] transition-colors absolute right-0 translate-x-1/2 top-8 z-10"
+          className="flex items-center justify-center rounded-full bg-[#1E88E5] p-2 hover:bg-[#1976D2] transition-colors shadow-md absolute right-0 translate-x-1/2 top-16 z-50"
         >
           {isCollapsed ? (
             <svg
