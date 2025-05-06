@@ -29,7 +29,7 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
         {!isCollapsed && (
           <div className="flex items-center justify-center w-full py-2">
             <img 
-              src="/images/vitals-ai-logo-white.svg" 
+              src="/lovable-uploads/d62e5228-3d79-4ebf-9803-0cdadb75b3ac.png" 
               alt="Vitals AI - Advisor Intelligence" 
               className="w-auto h-16 max-w-full"
             />
@@ -39,7 +39,7 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
         {isCollapsed && (
           <div className="w-14 h-14 flex items-center justify-center mx-auto">
             <img 
-              src="/images/vitals-ai-logo-white.svg" 
+              src="/lovable-uploads/d62e5228-3d79-4ebf-9803-0cdadb75b3ac.png" 
               alt="Vitals AI Icon" 
               className="w-10 h-10"
             />
