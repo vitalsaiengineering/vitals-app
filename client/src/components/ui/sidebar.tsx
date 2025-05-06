@@ -26,31 +26,21 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
     >
       {/* Logo and brand */}
       <div className="flex justify-between items-center border-b border-[#003B7B]">
-        {!isCollapsed && (
+        {!isCollapsed ? (
           <div className="flex items-center justify-center w-full py-4 px-2">
-            <img 
-              src="/lovable-uploads/d62e5228-3d79-4ebf-9803-0cdadb75b3ac.png" 
-              alt="Vitals AI - Advisor Intelligence" 
+            <img
+              src="/lovable-uploads/d62e5228-3d79-4ebf-9803-0cdadb75b3ac.png"
+              alt="Vitals AI - Advisor Intelligence"
               className="w-auto h-16 max-w-full"
             />
           </div>
-        )}
+        ) : null}
 
-        {isCollapsed && (
-          <div className="flex items-center justify-center w-full py-4">
-            <img 
-              src="/lovable-uploads/d62e5228-3d79-4ebf-9803-0cdadb75b3ac.png" 
-              alt="Vitals AI Icon" 
-              className="w-10 h-10"
-            />
-          </div>
-        )}
-
-        <button 
+        <button
           onClick={toggleSidebar}
           className={cn(
             "flex items-center justify-center rounded-full bg-[#003B7B] p-2 hover:bg-[#004C9E] transition-colors",
-            isCollapsed ? "ml-auto mr-3" : "ml-auto mr-4 my-4"
+            isCollapsed ? "ml-auto mr-3" : "ml-auto mr-4 my-4",
           )}
         >
           {isCollapsed ? (
@@ -235,8 +225,6 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
           >
             Profile
           </NavLink>
-
-
         </div>
 
         {isAdmin && (
