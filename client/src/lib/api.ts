@@ -102,10 +102,20 @@ export const deleteMapping = async (id: number) => {
 
 // WealthBox Integration
 export const setupWealthboxOAuth = async (
-  clientId: string,
-  clientSecret: string,
-  redirectUri: string
+  clientId?: string,
+  clientSecret?: string,
+  redirectUri?: string
 ) => {
+  // If no parameters are provided, just initiate OAuth with defaults
+  if (!clientId && !clientSecret && !redirectUri) {
+    const response = await fetch("/api/wealthbox/oauth/start", {
+      method: "GET",
+      credentials: "include"
+    });
+    return response.json();
+  }
+  
+  // Otherwise, setup OAuth with custom parameters
   const response = await fetch("/api/wealthbox/oauth/setup", {
     method: "POST",
     headers: {
