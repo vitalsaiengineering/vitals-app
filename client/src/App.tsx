@@ -3,14 +3,16 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
-import Dashboard from "@/pages/dashboard";
+import Dashboard from "@/pages/dashboard-new";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
 import Integrations from "@/pages/integrations";
 import Mapping from "@/pages/mapping";
-import Clients from "@/pages/clients";
+import Clients from "@/pages/clients-new";
 import Settings from "@/pages/settings";
 import Profile from "@/pages/profile";
+import Reporting from "@/pages/reporting";
+import Valuation from "@/pages/valuation";
 import Users from "@/pages/admin/users";
 import Organizations from "@/pages/admin/organizations";
 import { AppLayout } from "@/components/layout/app-layout";
@@ -74,6 +76,18 @@ function Router() {
       <Route path="/profile">
         <AppLayout>
           <Profile />
+        </AppLayout>
+      </Route>
+
+      <Route path="/reporting">
+        <AppLayout>
+          <Reporting />
+        </AppLayout>
+      </Route>
+      
+      <Route path="/valuation">
+        <AppLayout>
+          <Valuation />
         </AppLayout>
       </Route>
       

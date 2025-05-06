@@ -133,8 +133,8 @@ export default function Reporting() {
   ];
 
   // Custom color function for age brackets - green for younger, transitioning to red for older
-  const getAgeBarColor = (entry: any) => {
-    const ageMap = {
+  const getAgeBarColor = (entry: { name: string; value: number }) => {
+    const ageMap: Record<string, string> = {
       "Under 30": "#4ade80",  // Green for youngest
       "30-45": "#86efac",     // Light green
       "46-60": "#fcd34d",     // Yellow
