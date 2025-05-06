@@ -20,13 +20,13 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
   return (
     <nav
       className={cn(
-        "bg-[#002B5B] text-white h-screen flex-shrink-0 overflow-y-auto transition-all duration-200 ease-in-out",
+        "bg-[#002B5B] text-white h-screen flex-shrink-0 overflow-y-auto transition-all duration-200 ease-in-out flex flex-col",
         isCollapsed ? "w-20" : "w-64",
       )}
     >
       {/* Logo and brand */}
       <div className="flex justify-between items-center border-b border-[#003B7B]">
-        {!isCollapsed ? (
+        {!isCollapsed && (
           <div className="flex items-center justify-center w-full py-4 px-2">
             <img
               src="/lovable-uploads/d62e5228-3d79-4ebf-9803-0cdadb75b3ac.png"
@@ -34,13 +34,23 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
               className="w-auto h-16 max-w-full"
             />
           </div>
-        ) : null}
+        )}
 
+        {/* {isCollapsed && (
+          <div className="flex items-center justify-center w-full py-4">
+            <img
+              src="/lovable-uploads/d62e5228-3d79-4ebf-9803-0cdadb75b3ac.png"
+              alt="Vitals AI Icon"
+              className="w-10 h-10"
+            />
+          </div>
+        )}
+ */}
         <button
           onClick={toggleSidebar}
           className={cn(
             "flex items-center justify-center rounded-full bg-[#003B7B] p-2 hover:bg-[#004C9E] transition-colors",
-            isCollapsed ? "ml-auto mr-3" : "ml-auto mr-4 my-4",
+            isCollapsed ? "mx-auto my-3" : "ml-auto mr-4 my-4",
           )}
         >
           {isCollapsed ? (
@@ -291,28 +301,28 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
       </div>
 
       {/* User Profile */}
-      <div className="mt-auto p-4 border-t border-[#003B7B]">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <div className="h-10 w-10 rounded-full bg-[#1E88E5] flex items-center justify-center">
-              <span className="text-white font-medium">
+      <div className="flex-shrink-0 flex flex-col justify-end mt-auto">
+        <Link href="/profile">
+          <div className="p-4 m-3 border-t border-[#003B7B] rounded-md bg-[#003B7B] bg-opacity-30 shadow-inner hover:bg-[#004C9E] hover:bg-opacity-50 transition-all cursor-pointer">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-[#1E88E5] flex items-center justify-center text-white font-medium shadow-md">
                 {user.firstName ? user.firstName.charAt(0) : ""}
                 {user.lastName ? user.lastName.charAt(0) : ""}
-              </span>
+              </div>
+              
+              {!isCollapsed && (
+                <div>
+                  <p className="font-medium text-white">
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <p className="text-xs text-white/75">
+                    {user.roleId === 1 ? "Administrator" : "Advisor"}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
-
-          {!isCollapsed && (
-            <div className="ml-3">
-              <p className="text-sm font-medium text-white">
-                {user.firstName} {user.lastName}
-              </p>
-              <p className="text-xs text-gray-400">
-                {user.roleId === 1 ? "Administrator" : "User"}
-              </p>
-            </div>
-          )}
-        </div>
+        </Link>
       </div>
     </nav>
   );
