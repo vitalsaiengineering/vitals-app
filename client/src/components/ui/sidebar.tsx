@@ -29,7 +29,7 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
         {!isCollapsed && (
           <div className="flex items-center justify-center w-full py-4 px-2">
             <img
-              src="/lovable-uploads/d62e5228-3d79-4ebf-9803-0cdadb75b3ac.png"
+              src="/images/d62e5228-3d79-4ebf-9803-0cdadb75b3ac.png"
               alt="Vitals AI - Advisor Intelligence"
               className="w-auto h-16 max-w-full"
             />
@@ -309,7 +309,7 @@ export function Sidebar({ user, isCollapsed, toggleSidebar }: SidebarProps) {
                 {user.firstName ? user.firstName.charAt(0) : ""}
                 {user.lastName ? user.lastName.charAt(0) : ""}
               </div>
-              
+
               {!isCollapsed && (
                 <div>
                   <p className="font-medium text-white">
