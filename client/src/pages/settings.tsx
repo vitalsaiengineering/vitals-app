@@ -23,7 +23,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserCog, Network, Plug, Building } from "lucide-react";
+import { UserCog, Network, Plug, Building, Database } from "lucide-react";
+import { useLocation } from "wouter";
+import DataMappingSection from "@/components/integrations/DataMappingSection";
+import WealthboxMapping from "@/components/integrations/WealthboxMapping";
+import OrionMapping from "@/components/integrations/OrionMapping";
+import VitalsMapping from "@/components/integrations/VitalsMapping";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -32,6 +37,25 @@ export default function Settings() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [accessToken, setAccessToken] = useState("");
   const [activeTab, setActiveTab] = useState("user-management");
+  
+  // State for data mapping
+  const [location, setLocation] = useLocation();
+  const [activeMapping, setActiveMapping] = useState<string | null>(null);
+  
+  // Parse the URL query parameters to initialize states
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const tab = searchParams.get('tab');
+    const mapping = searchParams.get('mapping');
+    
+    if (tab) {
+      setActiveTab(tab);
+    }
+    
+    if (mapping) {
+      setActiveMapping(mapping);
+    }
+  }, []);
 
   // Define interface for token response
   interface TokenResponse {
@@ -281,6 +305,20 @@ export default function Settings() {
         variant: "destructive",
       });
     }
+  };
+  
+  // Handle changing the active mapping type
+  const handleSetActiveMapping = (mapping: string) => {
+    setActiveMapping(mapping);
+    
+    // Update URL with the new mapping type
+    const params = new URLSearchParams(window.location.search);
+    params.set('tab', 'data-mapping');
+    params.set('mapping', mapping);
+    
+    setLocation(`/settings?${params.toString()}`, {
+      replace: true
+    });
   };
 
   // Check if user is loading
@@ -582,19 +620,18 @@ export default function Settings() {
 
         {/* Data Mapping Content */}
         <TabsContent value="data-mapping">
-          <Card>
-            <CardHeader>
-              <CardTitle>Data Mapping</CardTitle>
-              <CardDescription>
-                Configure data sources and field mappings.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-muted-foreground">
-                Connect and map data from various sources to standardized fields within the system.
-              </p>
-            </CardContent>
-          </Card>
+          {activeMapping === 'vitals' ? (
+            <VitalsMapping />
+          ) : activeMapping === 'wealthbox' ? (
+            <WealthboxMapping />
+          ) : activeMapping === 'orion' ? (
+            <OrionMapping />
+          ) : (
+            <DataMappingSection 
+              activeMapping={activeMapping} 
+              onSetActiveMapping={handleSetActiveMapping} 
+            />
+          )}
         </TabsContent>
 
         {/* Integrations Content */}
