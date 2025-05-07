@@ -5,11 +5,11 @@ export interface FieldOption {
 
 export interface FieldMapping {
   sourceField: string;
-  sourceLabel?: string;
+  sourceLabel: string;
   targetField: string;
   targetOptions: FieldOption[];
   customInput?: boolean;
-  inputType?: 'text' | 'number' | 'currency' | 'select';
+  inputType?: 'text' | 'number' | 'currency' | 'date';
 }
 
 export interface MappingSection {
