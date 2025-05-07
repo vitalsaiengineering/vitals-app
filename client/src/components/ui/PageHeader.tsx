@@ -17,16 +17,17 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   
   const handleBack = () => {
     if (backLink) {
-      // Handle clean URL without query parameters
+      // Handle URL to go back to data-mapping tab
       if (backLink === '/settings') {
-        // Use clean navigation to settings page
-        navigate('/settings', { replace: true });
+        // Always navigate back to data-mapping tab
+        navigate('/settings?tab=data-mapping', { replace: true });
       } else {
         navigate(backLink);
       }
     } else {
-      // In wouter, we can't navigate(-1) like react-router, so we'll just navigate to a known location
-      navigate('/settings', { replace: true });
+      // In wouter, we can't navigate(-1) like react-router, 
+      // so we'll just navigate to the data-mapping tab
+      navigate('/settings?tab=data-mapping', { replace: true });
     }
   };
 
