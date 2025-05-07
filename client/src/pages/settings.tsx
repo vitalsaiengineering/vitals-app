@@ -320,6 +320,33 @@ export default function Settings() {
       replace: true
     });
   };
+  
+  // Function to reset the active mapping
+  const resetActiveMapping = () => {
+    setActiveMapping(null);
+    
+    // Update URL to remove the mapping parameter
+    const params = new URLSearchParams(window.location.search);
+    params.delete('mapping');
+    
+    if (params.has('tab')) {
+      setLocation(`/settings?${params.toString()}`, {
+        replace: true
+      });
+    } else {
+      setLocation('/settings', {
+        replace: true
+      });
+    }
+  };
+  
+  // Listen to location changes to update state accordingly
+  useEffect(() => {
+    // Check if we're on the settings page without any query parameters
+    if (location === '/settings') {
+      resetActiveMapping();
+    }
+  }, [location]);
 
   // Check if user is loading
   if (isLoadingUser || isLoadingStatus) {
