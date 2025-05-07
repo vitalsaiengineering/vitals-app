@@ -17,22 +17,16 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   
   const handleBack = () => {
     if (backLink) {
-      // Clear any query parameters that might be in the URL when navigating back
+      // Handle clean URL without query parameters
       if (backLink === '/settings') {
+        // Use clean navigation to settings page
         navigate('/settings', { replace: true });
-        
-        // Force a reload of the page to ensure state is reset properly
-        // This is needed because we're using URL query params for state management
-        window.location.href = '/settings';
-        return;
+      } else {
+        navigate(backLink);
       }
-      navigate(backLink);
     } else {
       // In wouter, we can't navigate(-1) like react-router, so we'll just navigate to a known location
       navigate('/settings', { replace: true });
-      
-      // Force a reload of the page to ensure state is reset properly
-      window.location.href = '/settings';
     }
   };
 

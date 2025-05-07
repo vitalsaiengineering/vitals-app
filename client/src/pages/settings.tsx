@@ -324,26 +324,17 @@ export default function Settings() {
   // Function to reset the active mapping
   const resetActiveMapping = () => {
     setActiveMapping(null);
-    
-    // Update URL to remove the mapping parameter
-    const params = new URLSearchParams(window.location.search);
-    params.delete('mapping');
-    
-    if (params.has('tab')) {
-      setLocation(`/settings?${params.toString()}`, {
-        replace: true
-      });
-    } else {
-      setLocation('/settings', {
-        replace: true
-      });
-    }
   };
   
   // Listen to location changes to update state accordingly
   useEffect(() => {
-    // Check if we're on the settings page without any query parameters
-    if (location === '/settings') {
+    // Check if we're on the settings page with no query params or a different tab
+    const searchParams = new URLSearchParams(window.location.search);
+    const tab = searchParams.get('tab');
+    const mapping = searchParams.get('mapping');
+    
+    // Reset active mapping if we're on the settings page without mapping query param
+    if (location === '/settings' || (tab && tab !== 'data-mapping') || (tab === 'data-mapping' && !mapping)) {
       resetActiveMapping();
     }
   }, [location]);
