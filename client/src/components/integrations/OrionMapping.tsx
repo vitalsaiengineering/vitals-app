@@ -122,6 +122,10 @@ const OrionMapping: React.FC = () => {
         title="Orion Advisor Integration"
         description="Map your portfolio data fields to corresponding Orion Advisor fields"
         backLink="/settings"
+        onBack={() => {
+          window.history.pushState({}, "", "/settings?tab=data-mapping");
+          window.dispatchEvent(new Event('popstate'));
+        }}
       />
 
       <div className="max-w-4xl mx-auto">

@@ -200,6 +200,10 @@ const VitalsMapping: React.FC = () => {
         title="Vitals AI Inputs"
         description="Configure how your practice data maps to Vitals AI KPIs and metrics"
         backLink="/settings"
+        onBack={() => {
+          window.history.pushState({}, "", "/settings?tab=data-mapping");
+          window.dispatchEvent(new Event('popstate'));
+        }}
       />
 
       <div className="max-w-4xl mx-auto">

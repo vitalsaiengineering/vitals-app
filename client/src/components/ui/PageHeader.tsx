@@ -6,20 +6,28 @@ interface PageHeaderProps {
   title: string;
   description?: string;
   backLink?: string;
+  onBack?: () => void; // Added callback for custom back behavior
 }
 
 const PageHeader: React.FC<PageHeaderProps> = ({
   title,
   description,
-  backLink
+  backLink,
+  onBack
 }) => {
   const [_, navigate] = useLocation();
   
   const handleBack = () => {
+    // If there's a custom onBack handler, use it
+    if (onBack) {
+      onBack();
+      return;
+    }
+    
     if (backLink) {
       // Handle URL to go back to data-mapping tab
       if (backLink === '/settings') {
-        // Always navigate back to data-mapping tab
+        // Always navigate back to data-mapping tab and ensure the mapping param is removed
         navigate('/settings?tab=data-mapping', { replace: true });
       } else {
         navigate(backLink);

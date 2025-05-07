@@ -337,7 +337,37 @@ export default function Settings() {
     if (location === '/settings' || (tab && tab !== 'data-mapping') || (tab === 'data-mapping' && !mapping)) {
       resetActiveMapping();
     }
+    
+    // Update active tab based on the URL
+    if (tab) {
+      setActiveTab(tab);
+    }
   }, [location]);
+  
+  // Also listen for popstate events to handle browser back button and history manipulation
+  useEffect(() => {
+    const handlePopState = () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tab = searchParams.get('tab');
+      const mapping = searchParams.get('mapping');
+      
+      if (tab) {
+        setActiveTab(tab);
+      }
+      
+      if (mapping) {
+        setActiveMapping(mapping);
+      } else {
+        resetActiveMapping();
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
   // Check if user is loading
   if (isLoadingUser || isLoadingStatus) {

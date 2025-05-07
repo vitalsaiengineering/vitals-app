@@ -209,6 +209,10 @@ const WealthboxMapping: React.FC = () => {
         title="Wealthbox Integration"
         description="Map your firm's data fields to corresponding Wealthbox CRM fields"
         backLink="/settings"
+        onBack={() => {
+          window.history.pushState({}, "", "/settings?tab=data-mapping");
+          window.dispatchEvent(new Event('popstate'));
+        }}
       />
 
       <div className="max-w-4xl mx-auto">
