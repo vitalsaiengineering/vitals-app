@@ -20,8 +20,8 @@ export const saveDataMappingsHandler = async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
     
-    const userId = req.user.id;
-    const organizationId = req.user.organizationId;
+    const userId = (req.user as any).id;
+    const organizationId = (req.user as any).organizationId;
     
     if (!organizationId) {
       return res.status(400).json({ 
@@ -38,12 +38,12 @@ export const saveDataMappingsHandler = async (req: Request, res: Response) => {
     }
     
     // First, delete any existing mappings for this organization, integration, and entity type
-    await db.delete(firm_data_mappings)
+    await db.delete(firmDataMappings)
       .where(
         and(
-          eq(firm_data_mappings.firm_id, organizationId),
-          eq(firm_data_mappings.integration_type_id, integrationTypeId),
-          eq(firm_data_mappings.entity_type, entityType)
+          eq(firmDataMappings.firm_id, organizationId),
+          eq(firmDataMappings.integration_type_id, integrationTypeId),
+          eq(firmDataMappings.entity_type, entityType)
         )
       );
     
@@ -60,7 +60,7 @@ export const saveDataMappingsHandler = async (req: Request, res: Response) => {
     }));
     
     if (mappingsToInsert.length > 0) {
-      await db.insert(firm_data_mappings).values(mappingsToInsert);
+      await db.insert(firmDataMappings).values(mappingsToInsert);
     }
     
     return res.json({ 
@@ -87,8 +87,8 @@ export const getDataMappingsHandler = async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
     
-    const userId = req.user.id;
-    const organizationId = req.user.organizationId;
+    const userId = (req.user as any).id;
+    const organizationId = (req.user as any).organizationId;
     
     if (!organizationId) {
       return res.status(400).json({ 
@@ -106,12 +106,12 @@ export const getDataMappingsHandler = async (req: Request, res: Response) => {
     
     // Get all mappings for this organization, integration, and entity type
     const mappings = await db.select()
-      .from(firm_data_mappings)
+      .from(firmDataMappings)
       .where(
         and(
-          eq(firm_data_mappings.firm_id, organizationId),
-          eq(firm_data_mappings.integration_type_id, Number(integrationTypeId)),
-          eq(firm_data_mappings.entity_type, entityType as string)
+          eq(firmDataMappings.firm_id, organizationId),
+          eq(firmDataMappings.integration_type_id, Number(integrationTypeId)),
+          eq(firmDataMappings.entity_type, entityType as string)
         )
       );
     

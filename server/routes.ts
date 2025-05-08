@@ -923,6 +923,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     importWealthboxDataHandler,
   );
   app.get("/api/wealthbox/token", requireAuth, getWealthboxTokenHandler);
+  app.get("/api/data-mappings", requireAuth, getDataMappingsHandler);
+  app.post("/api/data-mappings", requireAuth, saveDataMappingsHandler);
   app.get("/api/wealthbox/status", requireAuth, (req, res) => {
     const user = req.user as any;
 
