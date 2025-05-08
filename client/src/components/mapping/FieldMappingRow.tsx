@@ -1,14 +1,8 @@
 import React from 'react';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { ArrowRight } from 'lucide-react';
 import { FieldMapping } from '@/types/mapping';
+import { Autocomplete } from '@/components/ui/autocomplete';
 
 interface FieldMappingRowProps {
   mapping: FieldMapping;
@@ -89,18 +83,13 @@ const FieldMappingRow: React.FC<FieldMappingRowProps> = ({
             placeholder={`Enter ${inputType === 'currency' ? 'amount' : 'value'}...`}
           />
         ) : (
-          <Select value={targetField} onValueChange={handleSelectChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder={`Select ${targetSystem} field...`} />
-            </SelectTrigger>
-            <SelectContent>
-              {targetOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Autocomplete
+            options={targetOptions}
+            value={targetField}
+            onValueChange={handleSelectChange}
+            placeholder={`Select ${targetSystem} field...`}
+            emptyMessage="No matching fields found"
+          />
         )}
       </div>
     </div>
