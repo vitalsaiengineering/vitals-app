@@ -3,6 +3,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'wouter';
 
+// Import the image assets directly
+// These paths assume the images are in the /public folder
+const vitalsIcon = '/attached_assets/vitals.png';
+const wealthboxIcon = '/attached_assets/wealthbox.png';
+const orionIcon = '/attached_assets/orion.png';
+
 interface IntegrationOption {
   name: string;
   description: string;
@@ -17,20 +23,11 @@ const integrations: IntegrationOption[] = [
     description: 'Configure Vital inputs to your practice KPIs',
     path: '/settings?tab=data-mapping&mapping=vitals',
     icon: (
-      <svg
-        className="w-8 h-8 text-blue-600"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M13 10V3L4 14h7v7l9-11h-7z"
-        ></path>
-      </svg>
+      <img 
+        src={vitalsIcon} 
+        alt="Vitals AI" 
+        className="w-8 h-8 object-contain" 
+      />
     ),
     color: 'bg-blue-50',
   },
@@ -39,20 +36,11 @@ const integrations: IntegrationOption[] = [
     description: 'Map client data fields to Wealthbox CRM',
     path: '/settings?tab=data-mapping&mapping=wealthbox',
     icon: (
-      <svg
-        className="w-8 h-8 text-blue-600"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-        ></path>
-      </svg>
+      <img 
+        src={wealthboxIcon} 
+        alt="Wealthbox" 
+        className="w-8 h-8 object-contain" 
+      />
     ),
     color: 'bg-blue-50',
   },
@@ -61,20 +49,11 @@ const integrations: IntegrationOption[] = [
     description: 'Map portfolio data to Orion Advisor Services',
     path: '/settings?tab=data-mapping&mapping=orion',
     icon: (
-      <svg
-        className="w-8 h-8 text-purple-600"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="2"
-          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-        ></path>
-      </svg>
+      <img 
+        src={orionIcon} 
+        alt="Orion Advisor" 
+        className="w-8 h-8 object-contain" 
+      />
     ),
     color: 'bg-purple-50',
   },
