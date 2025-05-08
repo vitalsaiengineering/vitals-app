@@ -1,9 +1,9 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import FieldMappingRow from './FieldMappingRow';
-import { FieldMapping } from '@/types/mapping';
+import { FieldMapping, FieldOption } from '@/types/mapping';
 
-interface FieldMappingCardProps {
+export interface FieldMappingCardProps {
   title: string;
   description?: string;
   mappings: FieldMapping[];
@@ -11,6 +11,7 @@ interface FieldMappingCardProps {
   onInputChange?: (sourceField: string, value: string) => void;
   sourceSystem: string;
   targetSystem: string;
+  onSearch?: (searchTerm: string) => Promise<FieldOption[]>;
 }
 
 const FieldMappingCard: React.FC<FieldMappingCardProps> = ({
@@ -21,6 +22,7 @@ const FieldMappingCard: React.FC<FieldMappingCardProps> = ({
   onInputChange,
   sourceSystem,
   targetSystem,
+  onSearch,
 }) => {
   return (
     <Card className="mb-6">
@@ -38,6 +40,7 @@ const FieldMappingCard: React.FC<FieldMappingCardProps> = ({
               onInputChange={onInputChange}
               sourceSystem={sourceSystem}
               targetSystem={targetSystem}
+              onSearch={onSearch}
             />
           ))}
         </div>

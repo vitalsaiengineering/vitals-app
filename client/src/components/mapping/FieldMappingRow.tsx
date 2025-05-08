@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { ArrowRight } from 'lucide-react';
-import { FieldMapping } from '@/types/mapping';
+import { FieldMapping, FieldOption } from '@/types/mapping';
 import { Autocomplete } from '@/components/ui/autocomplete';
 
 interface FieldMappingRowProps {
@@ -10,6 +10,7 @@ interface FieldMappingRowProps {
   onInputChange?: (sourceField: string, value: string) => void;
   sourceSystem: string;
   targetSystem: string;
+  onSearch?: (searchTerm: string) => Promise<FieldOption[]>;
 }
 
 const FieldMappingRow: React.FC<FieldMappingRowProps> = ({
@@ -18,11 +19,28 @@ const FieldMappingRow: React.FC<FieldMappingRowProps> = ({
   onInputChange,
   sourceSystem,
   targetSystem,
+  onSearch,
 }) => {
   const { sourceField, sourceLabel, targetField, targetOptions, customInput, inputType } = mapping;
+  const [isSearching, setIsSearching] = useState(false);
 
   const handleSelectChange = (value: string) => {
     onMappingChange(sourceField, value);
+  };
+
+  const handleSearch = async (searchTerm: string) => {
+    if (!onSearch) return targetOptions;
+    
+    setIsSearching(true);
+    try {
+      const results = await onSearch(searchTerm);
+      return results;
+    } catch (error) {
+      console.error('Error searching options:', error);
+      return targetOptions;
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,6 +107,8 @@ const FieldMappingRow: React.FC<FieldMappingRowProps> = ({
             onValueChange={handleSelectChange}
             placeholder={`Select ${targetSystem} field...`}
             emptyMessage="No matching fields found"
+            onSearch={onSearch ? handleSearch : undefined}
+            isLoading={isSearching}
           />
         )}
       </div>
