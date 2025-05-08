@@ -45,8 +45,14 @@ const fetchFromWealthbox = async <T>(
 ): Promise<T[]> => {
   try {
     const apiClient = createApiClient(accessToken);
-    const response = await apiClient.get<WealthboxApiResponse<T>>(endpoint);
-    return response.data.data || [];
+    const response = await apiClient.get(endpoint);
+    
+    // Extract field name from the endpoint
+    // Example: "/categories/contact_types" -> "contact_types"
+    const fieldName = endpoint.split('/').pop() || '';
+    
+    // Return the data from the appropriate field
+    return response.data[fieldName] || [];
   } catch (error) {
     console.error(`Error fetching from Wealthbox API ${endpoint}:`, error);
     return [];
