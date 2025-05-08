@@ -30,6 +30,10 @@ import {
 } from "./opportunities";
 import { getWealthboxTokenHandler } from "./api/wealthbox-token";
 import { getWealthboxToken } from "./utils/wealthbox-token";
+import { 
+  saveDataMappingsHandler,
+  getDataMappingsHandler
+} from "./api/data-mapping";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 import { isDemoMode } from "./demo-data";
