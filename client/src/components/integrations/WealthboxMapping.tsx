@@ -112,6 +112,60 @@ const WealthboxMapping: React.FC = () => {
     },
   ]);
   
+  // Load existing mappings from the database
+  const [isMappingsLoading, setIsMappingsLoading] = useState(false);
+  
+  const loadSavedMappings = useCallback(async () => {
+    if (!wealthboxToken) return;
+    
+    setIsMappingsLoading(true);
+    try {
+      const response = await axios.get('/api/data-mappings', {
+        params: {
+          integrationTypeId: 1, // Wealthbox integration ID
+          entityType: 'client'
+        }
+      });
+      
+      if (response.data.success && response.data.mappings) {
+        // Create a mapping of sourceField -> targetField for quick lookup
+        const savedMappings = response.data.mappings.reduce((acc: Record<string, string>, mapping: { sourceField: string; targetField: string }) => {
+          acc[mapping.sourceField] = mapping.targetField;
+          return acc;
+        }, {});
+        
+        // Update sections with saved mappings
+        if (Object.keys(savedMappings).length > 0) {
+          setSections(prevSections => 
+            prevSections.map(section => ({
+              ...section,
+              mappings: section.mappings.map(mapping => ({
+                ...mapping,
+                targetField: savedMappings[mapping.sourceField] || mapping.targetField,
+              }))
+            }))
+          );
+          
+          // Update segmentation sections with saved mappings
+          setSegmentationSections(prevSections => 
+            prevSections.map(section => ({
+              ...section,
+              mappings: section.mappings.map(mapping => ({
+                ...mapping,
+                targetField: savedMappings[mapping.sourceField] || mapping.targetField,
+              }))
+            }))
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Error loading saved mappings:', error);
+      // Don't show an error toast here to avoid disrupting the UX
+    } finally {
+      setIsMappingsLoading(false);
+    }
+  }, [wealthboxToken]);
+
   // Update sections with field options once they're loaded
   useEffect(() => {
     if (!isLoading && !hasError && wealthboxToken) {
@@ -137,8 +191,11 @@ const WealthboxMapping: React.FC = () => {
       
       setSections(updatedSections);
       setSegmentationSections(updatedSegmentationSections);
+      
+      // Load saved mappings after field options are ready
+      loadSavedMappings();
     }
-  }, [isLoading, hasError, wealthboxToken, getOptions]);
+  }, [isLoading, hasError, wealthboxToken, getOptions, loadSavedMappings]);
   
   const [tierCount, setTierCount] = useState(3);
 
@@ -189,15 +246,58 @@ const WealthboxMapping: React.FC = () => {
     });
   };
 
-  const handleSave = () => {
-    // In a real application, we would save the mapping to the backend here
-    console.log('Saving Wealthbox mapping:', sections);
-    console.log('Saving Client Segmentation mapping:', segmentationSections);
-    
-    toast({
-      title: "Mapping saved",
-      description: "Your Wealthbox field mapping has been saved successfully.",
-    });
+  const handleSave = async () => {
+    try {
+      // Prepare the mappings data
+      const allMappings: Array<{ sourceField: string; targetField: string }> = [];
+      
+      // Add main section mappings
+      sections.forEach(section => {
+        section.mappings.forEach(mapping => {
+          if (mapping.targetField) {
+            allMappings.push({
+              sourceField: mapping.sourceField,
+              targetField: mapping.targetField
+            });
+          }
+        });
+      });
+      
+      // Add segmentation section mappings
+      segmentationSections.forEach(section => {
+        section.mappings.forEach(mapping => {
+          if (mapping.targetField) {
+            allMappings.push({
+              sourceField: mapping.sourceField,
+              targetField: mapping.targetField
+            });
+          }
+        });
+      });
+      
+      // Save to backend
+      const response = await axios.post('/api/data-mappings', {
+        integrationTypeId: 1, // Wealthbox integration ID
+        entityType: 'client',
+        mappings: allMappings
+      });
+      
+      if (response.data.success) {
+        toast({
+          title: "Mapping saved",
+          description: "Your Wealthbox field mapping has been saved successfully.",
+        });
+      } else {
+        throw new Error(response.data.message || 'Failed to save mappings');
+      }
+    } catch (error) {
+      console.error('Error saving mappings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save your field mappings. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const renderDefinitionsSection = () => {
