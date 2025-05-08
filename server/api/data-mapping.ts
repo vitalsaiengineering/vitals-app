@@ -41,22 +41,22 @@ export const saveDataMappingsHandler = async (req: Request, res: Response) => {
     await db.delete(firmDataMappings)
       .where(
         and(
-          eq(firmDataMappings.firm_id, organizationId),
-          eq(firmDataMappings.integration_type_id, integrationTypeId),
-          eq(firmDataMappings.entity_type, entityType)
+          eq(firmDataMappings.firmId, organizationId),
+          eq(firmDataMappings.integrationTypeId, integrationTypeId),
+          eq(firmDataMappings.entityType, entityType)
         )
       );
     
     // Then insert the new mappings
     const mappingsToInsert = mappings.map((mapping: DataMapping) => ({
-      firm_id: organizationId,
-      integration_type_id: integrationTypeId,
-      entity_type: entityType,
-      source_field: mapping.sourceField,
-      target_field: mapping.targetField,
-      transformation_rule: null, // No transformation rule for now
-      created_at: new Date(),
-      updated_at: new Date()
+      firmId: organizationId,
+      integrationTypeId: integrationTypeId,
+      entityType: entityType,
+      sourceField: mapping.sourceField,
+      targetField: mapping.targetField,
+      transformationRule: null, // No transformation rule for now
+      createdAt: new Date(),
+      updatedAt: new Date()
     }));
     
     if (mappingsToInsert.length > 0) {
@@ -109,17 +109,17 @@ export const getDataMappingsHandler = async (req: Request, res: Response) => {
       .from(firmDataMappings)
       .where(
         and(
-          eq(firmDataMappings.firm_id, organizationId),
-          eq(firmDataMappings.integration_type_id, Number(integrationTypeId)),
-          eq(firmDataMappings.entity_type, entityType as string)
+          eq(firmDataMappings.firmId, organizationId),
+          eq(firmDataMappings.integrationTypeId, Number(integrationTypeId)),
+          eq(firmDataMappings.entityType, entityType as string)
         )
       );
     
     // Format the response
     const formattedMappings = mappings.map(mapping => ({
-      sourceField: mapping.source_field,
-      targetField: mapping.target_field,
-      transformationRule: mapping.transformation_rule
+      sourceField: mapping.sourceField,
+      targetField: mapping.targetField,
+      transformationRule: mapping.transformationRule
     }));
     
     return res.json({ 
