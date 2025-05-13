@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import axios from 'axios';
 
 interface UserProfile {
@@ -25,13 +25,38 @@ interface UserProfile {
 export const Header = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [, navigate] = useLocation();
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const response = await axios.get('/api/me');
         if (response.data) {
-          setUser(response.data);
+          // Transform the data to match the UserProfile interface with full name
+          let fullName = '';
+          
+          // Try to get the full name from various possible fields
+          if (response.data.name) {
+            fullName = response.data.name;
+          } else if (response.data.first_name && response.data.last_name) {
+            fullName = `${response.data.first_name} ${response.data.last_name}`;
+          } else if (response.data.firstName && response.data.lastName) {
+            fullName = `${response.data.firstName} ${response.data.lastName}`;
+          } else if (response.data.display_name) {
+            fullName = response.data.display_name;
+          } else {
+            // If no name fields are available, use the username or email prefix
+            fullName = response.data.username || response.data.email.split('@')[0];
+          }
+          
+          const userData: UserProfile = {
+            id: response.data.id,
+            username: response.data.username || response.data.email.split('@')[0],
+            name: fullName,
+            email: response.data.email,
+            role: response.data.role || 'user'
+          };
+          setUser(userData);
         }
       } catch (error) {
         console.error('Error fetching user profile:', error);
@@ -46,6 +71,17 @@ export const Header = () => {
   const getInitials = (name: string) => {
     if (!name) return '';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+  
+  const handleLogout = async () => {
+    try {
+      await axios.post('/api/logout');
+      navigate('/login');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      // Even if the API fails, still redirect to login
+      navigate('/login');
+    }
   };
 
   return (
@@ -93,11 +129,9 @@ export const Header = () => {
               </DropdownMenuItem>
             </Link>
             <DropdownMenuSeparator />
-            <Link href="/login">
-              <DropdownMenuItem>
-                Log out
-              </DropdownMenuItem>
-            </Link>
+            <DropdownMenuItem onSelect={handleLogout}>
+              Log out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

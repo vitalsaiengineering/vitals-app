@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  LayoutDashboard, 
-  BarChart, 
-  DollarSign, 
-  Settings, 
-  Users, 
-  User
-} from 'lucide-react';
-import { Link, useLocation } from 'wouter';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import {
+  LayoutDashboard,
+  BarChart,
+  DollarSign,
+  Settings,
+  Users,
+  User,
+} from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import axios from "axios";
 
 interface UserProfile {
   id: number;
@@ -20,16 +20,16 @@ interface UserProfile {
   role: string;
 }
 
-const SidebarItem = ({ 
-  icon: Icon, 
-  label, 
+const SidebarItem = ({
+  icon: Icon,
+  label,
   href,
-  active = false
-}: { 
-  icon: React.ElementType, 
-  label: string,
-  href: string,
-  active?: boolean
+  active = false,
+}: {
+  icon: React.ElementType;
+  label: string;
+  href: string;
+  active?: boolean;
 }) => {
   return (
     <Link href={href}>
@@ -38,9 +38,9 @@ const SidebarItem = ({
           variant="ghost"
           className={cn(
             "w-full justify-start gap-3 px-3 font-normal",
-            active 
-              ? "bg-white/10 text-white" 
-              : "text-white/70 hover:text-white hover:bg-white/10"
+            active
+              ? "bg-white/10 text-white"
+              : "text-white/70 hover:text-white hover:bg-white/10",
           )}
         >
           <Icon size={20} />
@@ -59,11 +59,11 @@ export const AppSidebar = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get('/api/me');
+        const response = await axios.get("/api/me");
         if (response.data) {
           // Transform the data to match the UserProfile interface with full name
-          let fullName = '';
-          
+          let fullName = "";
+
           // Try to get the full name from various possible fields
           if (response.data.name) {
             fullName = response.data.name;
@@ -71,24 +71,28 @@ export const AppSidebar = () => {
             fullName = `${response.data.first_name} ${response.data.last_name}`;
           } else if (response.data.firstName && response.data.lastName) {
             fullName = `${response.data.firstName} ${response.data.lastName}`;
+          } else if (response.data.firstName && !response.data.last_name) {
+            fullName = `${response.data.firstName}`;
           } else if (response.data.display_name) {
             fullName = response.data.display_name;
           } else {
             // If no name fields are available, use the username or email prefix
-            fullName = response.data.username || response.data.email.split('@')[0];
+            fullName =
+              response.data.username || response.data.email.split("@")[0];
           }
-          
+
           const userData: UserProfile = {
             id: response.data.id,
-            username: response.data.username || response.data.email.split('@')[0],
+            username:
+              response.data.username || response.data.email.split("@")[0],
             name: fullName,
             email: response.data.email,
-            role: response.data.role || 'user'
+            role: response.data.role || "user",
           };
           setUser(userData);
         }
       } catch (error) {
-        console.error('Error fetching user profile:', error);
+        console.error("Error fetching user profile:", error);
       } finally {
         setLoading(false);
       }
@@ -98,28 +102,35 @@ export const AppSidebar = () => {
   }, []);
 
   const getInitials = (name: string) => {
-    if (!name) return '';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    if (!name) return "";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
   };
-  
+
   const formatRole = (role: string): string => {
     // Format role names to be more user-friendly
     switch (role.toLowerCase()) {
-      case 'admin':
-        return 'Administrator';
-      case 'firm_admin':
-        return 'Firm Administrator';
-      case 'advisor':
-        return 'Financial Advisor';
-      case 'user':
-        return 'Standard User';
+      case "admin":
+        return "Administrator";
+      case "firm_admin":
+        return "Firm Administrator";
+      case "advisor":
+        return "Financial Advisor";
+      case "user":
+        return "Standard User";
       default:
         // Convert snake_case or kebab-case to Title Case
         return role
-          .replace(/[-_]/g, ' ')
-          .split(' ')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-          .join(' ');
+          .replace(/[-_]/g, " ")
+          .split(" ")
+          .map(
+            (word) =>
+              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+          )
+          .join(" ");
     }
   };
 
@@ -137,60 +148,62 @@ export const AppSidebar = () => {
 
       {/* Main navigation */}
       <div className="flex-1 px-3 py-2 space-y-1">
-        <SidebarItem 
-          icon={LayoutDashboard} 
-          label="Dashboard" 
+        <SidebarItem
+          icon={LayoutDashboard}
+          label="Dashboard"
           href="/"
-          active={location === '/'} 
+          active={location === "/"}
         />
-        <SidebarItem 
-          icon={BarChart} 
-          label="Reporting" 
+        <SidebarItem
+          icon={BarChart}
+          label="Reporting"
           href="/reporting"
-          active={location === '/reporting'} 
+          active={location === "/reporting"}
         />
-        <SidebarItem 
-          icon={DollarSign} 
-          label="Valuation" 
+        <SidebarItem
+          icon={DollarSign}
+          label="Valuation"
           href="/valuation"
-          active={location === '/valuation'} 
+          active={location === "/valuation"}
         />
-        <SidebarItem 
-          icon={Settings} 
-          label="Settings" 
+        <SidebarItem
+          icon={Settings}
+          label="Settings"
           href="/settings"
-          active={location.startsWith('/settings')} 
+          active={location.startsWith("/settings")}
         />
-        <SidebarItem 
-          icon={Users} 
-          label="Clients" 
+        <SidebarItem
+          icon={Users}
+          label="Clients"
           href="/clients"
-          active={location === '/clients'} 
+          active={location === "/clients"}
         />
-        <SidebarItem 
-          icon={User} 
-          label="Profile" 
+        <SidebarItem
+          icon={User}
+          label="Profile"
           href="/profile"
-          active={location === '/profile'} 
+          active={location === "/profile"}
         />
       </div>
 
       {/* Administration section */}
-      {user && (user.role === 'admin' || user.role === 'firm_admin') && (
+      {user && (user.role === "admin" || user.role === "firm_admin") && (
         <div className="px-6 py-3">
-          <div className="text-white/50 text-xs font-medium mb-2">ADMINISTRATION</div>
+          <div className="text-white/50 text-xs font-medium mb-2">
+            ADMINISTRATION
+          </div>
           <div className="px-3 space-y-1">
-            <SidebarItem 
-              icon={Settings} 
-              label="User Management" 
+            <SidebarItem
+              icon={Settings}
+              label="User Management"
               href="/admin/users"
-              active={location === '/admin/users'}
+              active={location === "/admin/users"}
             />
-            <SidebarItem 
-              icon={Settings} 
-              label="Organizations" 
+            <SidebarItem
+              icon={Settings}
+              label="Organizations"
               href="/admin/organizations"
-              active={location === '/admin/organizations'}
+              active={location === "/admin/organizations"}
             />
           </div>
         </div>
@@ -200,14 +213,14 @@ export const AppSidebar = () => {
       <div className="p-4 border-t border-white/10">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-full bg-vitals-lightBlue flex items-center justify-center text-white font-medium">
-            {loading ? '...' : (user ? getInitials(user.name) : 'GU')}
+            {loading ? "..." : user ? getInitials(user.name) : "GU"}
           </div>
           <div className="flex flex-col">
             <span className="text-white font-medium text-sm">
-              {loading ? 'Loading...' : (user ? user.name : 'Guest User')}
+              {loading ? "Loading..." : user ? user.name : "Guest User"}
             </span>
             <span className="text-white/50 text-xs">
-              {loading ? '...' : (user ? formatRole(user.role) : 'Not logged in')}
+              {loading ? "..." : user ? formatRole(user.role) : "Not logged in"}
             </span>
           </div>
         </div>
