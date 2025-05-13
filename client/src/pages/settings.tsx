@@ -37,21 +37,21 @@ export default function Settings() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [accessToken, setAccessToken] = useState("");
   const [activeTab, setActiveTab] = useState("user-management");
-  
+
   // State for data mapping
   const [location, setLocation] = useLocation();
   const [activeMapping, setActiveMapping] = useState<string | null>(null);
-  
+
   // Parse the URL query parameters to initialize states
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
-    const tab = searchParams.get('tab');
-    const mapping = searchParams.get('mapping');
-    
+    const tab = searchParams.get("tab");
+    const mapping = searchParams.get("mapping");
+
     if (tab) {
       setActiveTab(tab);
     }
-    
+
     if (mapping) {
       setActiveMapping(mapping);
     }
@@ -73,7 +73,7 @@ export default function Settings() {
     queryKey: ["/api/wealthbox/token"],
     retry: false,
   });
-  
+
   useEffect(() => {
     if (tokenData?.token) {
       setAccessToken(tokenData.token);
@@ -98,10 +98,11 @@ export default function Settings() {
   });
 
   // Get WealthBox status
-  const { data: wealthboxStatus, isLoading: isLoadingStatus } = useQuery<WealthboxStatus>({
-    queryKey: ["/api/wealthbox/status"],
-    retry: false,
-  });
+  const { data: wealthboxStatus, isLoading: isLoadingStatus } =
+    useQuery<WealthboxStatus>({
+      queryKey: ["/api/wealthbox/status"],
+      retry: false,
+    });
 
   // Test WealthBox connection
   const testConnectionMutation = useMutation({
@@ -306,66 +307,70 @@ export default function Settings() {
       });
     }
   };
-  
+
   // Handle changing the active mapping type
   const handleSetActiveMapping = (mapping: string) => {
     setActiveMapping(mapping);
-    
+
     // Update URL with the new mapping type
     const params = new URLSearchParams(window.location.search);
-    params.set('tab', 'data-mapping');
-    params.set('mapping', mapping);
-    
+    params.set("tab", "data-mapping");
+    params.set("mapping", mapping);
+
     setLocation(`/settings?${params.toString()}`, {
-      replace: true
+      replace: true,
     });
   };
-  
+
   // Function to reset the active mapping
   const resetActiveMapping = () => {
     setActiveMapping(null);
   };
-  
+
   // Listen to location changes to update state accordingly
   useEffect(() => {
     // Check if we're on the settings page with no query params or a different tab
     const searchParams = new URLSearchParams(window.location.search);
-    const tab = searchParams.get('tab');
-    const mapping = searchParams.get('mapping');
-    
+    const tab = searchParams.get("tab");
+    const mapping = searchParams.get("mapping");
+
     // Reset active mapping if we're on the settings page without mapping query param
-    if (location === '/settings' || (tab && tab !== 'data-mapping') || (tab === 'data-mapping' && !mapping)) {
+    if (
+      location === "/settings" ||
+      (tab && tab !== "data-mapping") ||
+      (tab === "data-mapping" && !mapping)
+    ) {
       resetActiveMapping();
     }
-    
+
     // Update active tab based on the URL
     if (tab) {
       setActiveTab(tab);
     }
   }, [location]);
-  
+
   // Also listen for popstate events to handle browser back button and history manipulation
   useEffect(() => {
     const handlePopState = () => {
       const searchParams = new URLSearchParams(window.location.search);
-      const tab = searchParams.get('tab');
-      const mapping = searchParams.get('mapping');
-      
+      const tab = searchParams.get("tab");
+      const mapping = searchParams.get("mapping");
+
       if (tab) {
         setActiveTab(tab);
       }
-      
+
       if (mapping) {
         setActiveMapping(mapping);
       } else {
         resetActiveMapping();
       }
     };
-    
-    window.addEventListener('popstate', handlePopState);
-    
+
+    window.addEventListener("popstate", handlePopState);
+
     return () => {
-      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener("popstate", handlePopState);
     };
   }, []);
 
@@ -616,7 +621,7 @@ export default function Settings() {
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container p-8 space-y-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Settings</h1>
         <p className="mt-1 text-md text-gray-500">
@@ -624,14 +629,17 @@ export default function Settings() {
         </p>
       </div>
 
-      <Tabs 
-        defaultValue="user-management" 
+      <Tabs
+        defaultValue="user-management"
         className="space-y-6"
         value={activeTab}
         onValueChange={setActiveTab}
       >
         <TabsList className="grid grid-cols-4 gap-4 w-full">
-          <TabsTrigger value="user-management" className="flex items-center gap-2">
+          <TabsTrigger
+            value="user-management"
+            className="flex items-center gap-2"
+          >
             <UserCog size={18} />
             <span>User Management</span>
           </TabsTrigger>
@@ -643,7 +651,10 @@ export default function Settings() {
             <Plug size={18} />
             <span>Integrations</span>
           </TabsTrigger>
-          <TabsTrigger value="firm-information" className="flex items-center gap-2">
+          <TabsTrigger
+            value="firm-information"
+            className="flex items-center gap-2"
+          >
             <Building size={18} />
             <span>Firm Information</span>
           </TabsTrigger>
@@ -668,16 +679,16 @@ export default function Settings() {
 
         {/* Data Mapping Content */}
         <TabsContent value="data-mapping">
-          {activeMapping === 'vitals' ? (
+          {activeMapping === "vitals" ? (
             <VitalsMapping />
-          ) : activeMapping === 'wealthbox' ? (
+          ) : activeMapping === "wealthbox" ? (
             <WealthboxMapping />
-          ) : activeMapping === 'orion' ? (
+          ) : activeMapping === "orion" ? (
             <OrionMapping />
           ) : (
-            <DataMappingSection 
-              activeMapping={activeMapping} 
-              onSetActiveMapping={handleSetActiveMapping} 
+            <DataMappingSection
+              activeMapping={activeMapping}
+              onSetActiveMapping={handleSetActiveMapping}
             />
           )}
         </TabsContent>
@@ -708,7 +719,8 @@ export default function Settings() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">
-                Update company information, branding elements, and contact details.
+                Update company information, branding elements, and contact
+                details.
               </p>
             </CardContent>
           </Card>

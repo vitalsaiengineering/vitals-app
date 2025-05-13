@@ -139,8 +139,12 @@ export const AppSidebar = () => {
       {/* Logo */}
       <div className="p-6">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-            <span className="text-vitals-blue font-bold">V</span>
+          <div className="h-8 w-auto">
+            <img 
+              src="/images/vitals.png" 
+              alt="Vitals AI" 
+              className="h-full w-auto object-contain brightness-0 invert" // brightness-0 invert makes it white
+            />
           </div>
           <span className="text-white font-semibold text-lg">Vitals AI</span>
         </div>
