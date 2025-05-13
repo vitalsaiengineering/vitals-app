@@ -38,12 +38,12 @@ export const Dashboard = () => {
         }
       } catch (error) {
         console.error('Error fetching metrics:', error);
-        // Fall back to default metrics if API fails
+        // Keep metrics at 0 if the API fails - follow data integrity policy
         setMetrics({
-          totalClients: 346,
-          aum: 28,
-          revenue: 1.2,
-          averageAge: 58
+          totalClients: 0,
+          aum: 0,
+          revenue: 0,
+          averageAge: 0
         });
       } finally {
         setLoading(false);
