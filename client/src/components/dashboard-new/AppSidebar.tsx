@@ -61,7 +61,17 @@ export const AppSidebar = () => {
       try {
         const response = await axios.get('/api/me');
         if (response.data) {
-          setUser(response.data);
+          // Transform the data to match the UserProfile interface if needed
+          const userData: UserProfile = {
+            id: response.data.id,
+            username: response.data.username || response.data.email.split('@')[0],
+            name: response.data.name || (response.data.first_name && response.data.last_name 
+              ? `${response.data.first_name} ${response.data.last_name}` 
+              : response.data.email),
+            email: response.data.email,
+            role: response.data.role || 'user'
+          };
+          setUser(userData);
         }
       } catch (error) {
         console.error('Error fetching user profile:', error);
@@ -76,6 +86,27 @@ export const AppSidebar = () => {
   const getInitials = (name: string) => {
     if (!name) return '';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+  
+  const formatRole = (role: string): string => {
+    // Format role names to be more user-friendly
+    switch (role.toLowerCase()) {
+      case 'admin':
+        return 'Administrator';
+      case 'firm_admin':
+        return 'Firm Administrator';
+      case 'advisor':
+        return 'Financial Advisor';
+      case 'user':
+        return 'Standard User';
+      default:
+        // Convert snake_case or kebab-case to Title Case
+        return role
+          .replace(/[-_]/g, ' ')
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(' ');
+    }
   };
 
   return (
@@ -162,7 +193,7 @@ export const AppSidebar = () => {
               {loading ? 'Loading...' : (user ? user.name : 'Guest User')}
             </span>
             <span className="text-white/50 text-xs">
-              {loading ? '...' : (user ? user.role : 'Not logged in')}
+              {loading ? '...' : (user ? formatRole(user.role) : 'Not logged in')}
             </span>
           </div>
         </div>
