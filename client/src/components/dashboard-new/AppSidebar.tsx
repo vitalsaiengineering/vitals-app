@@ -61,13 +61,27 @@ export const AppSidebar = () => {
       try {
         const response = await axios.get('/api/me');
         if (response.data) {
-          // Transform the data to match the UserProfile interface if needed
+          // Transform the data to match the UserProfile interface with full name
+          let fullName = '';
+          
+          // Try to get the full name from various possible fields
+          if (response.data.name) {
+            fullName = response.data.name;
+          } else if (response.data.first_name && response.data.last_name) {
+            fullName = `${response.data.first_name} ${response.data.last_name}`;
+          } else if (response.data.firstName && response.data.lastName) {
+            fullName = `${response.data.firstName} ${response.data.lastName}`;
+          } else if (response.data.display_name) {
+            fullName = response.data.display_name;
+          } else {
+            // If no name fields are available, use the username or email prefix
+            fullName = response.data.username || response.data.email.split('@')[0];
+          }
+          
           const userData: UserProfile = {
             id: response.data.id,
             username: response.data.username || response.data.email.split('@')[0],
-            name: response.data.name || (response.data.first_name && response.data.last_name 
-              ? `${response.data.first_name} ${response.data.last_name}` 
-              : response.data.email),
+            name: fullName,
             email: response.data.email,
             role: response.data.role || 'user'
           };
