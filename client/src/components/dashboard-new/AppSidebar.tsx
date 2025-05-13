@@ -5,10 +5,7 @@ import {
   DollarSign, 
   Settings, 
   Users, 
-  User,
-  Calendar,
-  MessageCircle,
-  Bell
+  User
 } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
@@ -112,24 +109,6 @@ export const AppSidebar = () => {
           label="Valuation" 
           href="/valuation"
           active={location === '/valuation'} 
-        />
-        <SidebarItem 
-          icon={Calendar} 
-          label="Calendar" 
-          href="/calendar"
-          active={location === '/calendar'} 
-        />
-        <SidebarItem 
-          icon={MessageCircle} 
-          label="Messages" 
-          href="/messages"
-          active={location === '/messages'} 
-        />
-        <SidebarItem 
-          icon={Bell} 
-          label="Notifications" 
-          href="/notifications"
-          active={location === '/notifications'} 
         />
         <SidebarItem 
           icon={Settings} 

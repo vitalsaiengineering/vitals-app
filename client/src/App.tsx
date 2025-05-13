@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -14,9 +14,59 @@ import Valuation from "@/pages/valuation";
 import Users from "@/pages/admin/users";
 import Organizations from "@/pages/admin/organizations";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
+import { useEffect, useState } from "react";
+import axios from "axios";
 // import { setupGlobalErrorHandler } from "@/utils/global-error-handler";
 
 // setupGlobalErrorHandler();
+
+// Protected route component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [, navigate] = useLocation();
+
+  useEffect(() => {
+    // Check if user is authenticated
+    const checkAuth = async () => {
+      try {
+        await axios.get('/api/me');
+        setIsAuthenticated(true);
+      } catch (error) {
+        setIsAuthenticated(false);
+        navigate('/login');
+      }
+    };
+    checkAuth();
+  }, [navigate]);
+
+  // Show loading until we know authentication status
+  if (isAuthenticated === null) {
+    return <div className="w-full h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  // If authenticated, render the protected content
+  return isAuthenticated ? <>{children}</> : null;
+};
+
+// Root redirect component
+const RootRedirect = () => {
+  const [, navigate] = useLocation();
+  
+  useEffect(() => {
+    // Check if user is authenticated and redirect accordingly
+    const checkAuth = async () => {
+      try {
+        await axios.get('/api/me');
+        navigate('/dashboard');
+      } catch (error) {
+        navigate('/login');
+      }
+    };
+    checkAuth();
+  }, [navigate]);
+  
+  return <div className="w-full h-screen flex items-center justify-center">Loading...</div>;
+};
 
 function Router() {
   return (
@@ -29,76 +79,80 @@ function Router() {
         <Signup />
       </Route>
       
-      <Route path="/">
-        <DashboardLayout>
-          <Dashboard />
-        </DashboardLayout>
+      <Route path="/" exact>
+        <RootRedirect />
+      </Route>
+      
+      <Route path="/dashboard">
+        <ProtectedRoute>
+          <DashboardLayout>
+            <Dashboard />
+          </DashboardLayout>
+        </ProtectedRoute>
       </Route>
       
       <Route path="/clients">
-        <DashboardLayout>
-          <Clients />
-        </DashboardLayout>
+        <ProtectedRoute>
+          <DashboardLayout>
+            <Clients />
+          </DashboardLayout>
+        </ProtectedRoute>
       </Route>
       
       <Route path="/admin/users">
-        <DashboardLayout>
-          <Users />
-        </DashboardLayout>
+        <ProtectedRoute>
+          <DashboardLayout>
+            <Users />
+          </DashboardLayout>
+        </ProtectedRoute>
       </Route>
       
       <Route path="/admin/organizations">
-        <DashboardLayout>
-          <Organizations />
-        </DashboardLayout>
+        <ProtectedRoute>
+          <DashboardLayout>
+            <Organizations />
+          </DashboardLayout>
+        </ProtectedRoute>
       </Route>
       
       <Route path="/settings">
-        <DashboardLayout>
-          <Settings />
-        </DashboardLayout>
+        <ProtectedRoute>
+          <DashboardLayout>
+            <Settings />
+          </DashboardLayout>
+        </ProtectedRoute>
       </Route>
       
       <Route path="/profile">
-        <DashboardLayout>
-          <Profile />
-        </DashboardLayout>
+        <ProtectedRoute>
+          <DashboardLayout>
+            <Profile />
+          </DashboardLayout>
+        </ProtectedRoute>
       </Route>
 
       <Route path="/reporting">
-        <DashboardLayout>
-          <Reporting />
-        </DashboardLayout>
+        <ProtectedRoute>
+          <DashboardLayout>
+            <Reporting />
+          </DashboardLayout>
+        </ProtectedRoute>
       </Route>
       
       <Route path="/valuation">
-        <DashboardLayout>
-          <Valuation />
-        </DashboardLayout>
-      </Route>
-      
-      <Route path="/calendar">
-        <DashboardLayout>
-          <NotFound />
-        </DashboardLayout>
-      </Route>
-      
-      <Route path="/messages">
-        <DashboardLayout>
-          <NotFound />
-        </DashboardLayout>
-      </Route>
-      
-      <Route path="/notifications">
-        <DashboardLayout>
-          <NotFound />
-        </DashboardLayout>
+        <ProtectedRoute>
+          <DashboardLayout>
+            <Valuation />
+          </DashboardLayout>
+        </ProtectedRoute>
       </Route>
       
       <Route>
-        <DashboardLayout>
-          <NotFound />
-        </DashboardLayout>
+        <ProtectedRoute>
+          <DashboardLayout>
+            <NotFound />
+          </DashboardLayout>
+        </ProtectedRoute>
       </Route>
     </Switch>
   );
