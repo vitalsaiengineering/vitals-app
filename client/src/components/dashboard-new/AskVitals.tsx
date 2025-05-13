@@ -17,7 +17,7 @@ export const AskVitals = () => {
     {
       id: '1',
       role: 'assistant',
-      content: 'Hi there! I'm Vitals AI Assistant. How can I help you with your practice today?'
+      content: "Hi there! I'm Vitals AI Assistant. How can I help you with your practice today?"
     }
   ]);
   const [loading, setLoading] = useState(false);
@@ -43,7 +43,7 @@ export const AskVitals = () => {
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: response.data.response || 'I apologize, but I couldn\'t process that request.'
+        content: response.data.response || "I apologize, but I couldn't process that request."
       };
 
       setMessages(prev => [...prev, aiMessage]);
@@ -53,7 +53,7 @@ export const AskVitals = () => {
       const fallbackMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: 'I apologize, but I\'m having trouble connecting to my knowledge base right now. Please try again later.'
+        content: "I apologize, but I'm having trouble connecting to my knowledge base right now. Please try again later."
       };
       
       setMessages(prev => [...prev, fallbackMessage]);
@@ -77,7 +77,7 @@ export const AskVitals = () => {
               <div 
                 className={`max-w-[80%] rounded-lg px-4 py-2 ${
                   message.role === 'user' 
-                    ? 'bg-vitals-blue text-white' 
+                    ? 'bg-blue-600 text-white' 
                     : 'bg-gray-100 text-gray-800'
                 }`}
               >
