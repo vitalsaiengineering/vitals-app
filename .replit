@@ -10,12 +10,12 @@ deploymentTarget = "cloudrun"
 run = ["sh", "-c", "npm run dev"]
 
 [[ports]]
-localPort = 5000
-externalPort = 80
-
-[[ports]]
 localPort = 4000
 externalPort = 3000
+
+[[ports]]
+localPort = 5000
+externalPort = 80
 
 [workflows]
 runButton = "Full Stack Dev"
