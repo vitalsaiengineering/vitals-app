@@ -11,6 +11,18 @@ const ORION_CLIENT_ID = '2112';
 const ORION_CLIENT_SECRET = '4dc339e2-7ab1-41cb-8d7f-104262ab4ed4';
 const ORION_INTEGRATION_TYPE_ID = 2;
 
+// Add a type for the Request with user
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: number;
+        [key: string]: any;
+      };
+    }
+  }
+}
+
 /**
  * Makes a request to get an Orion API token
  */
@@ -44,34 +56,34 @@ export async function getOrionToken(
       const refreshToken = response.data.refresh_token;
       
       // Check if a token already exists for this user and integration type
-      const existingToken = await db.select().from(advisor_auth_tokens).where(
+      const existingToken = await db.select().from(advisorAuthTokens).where(
         and(
-          eq(advisor_auth_tokens.advisor_id, userId),
-          eq(advisor_auth_tokens.integration_type_id, ORION_INTEGRATION_TYPE_ID)
+          eq(advisorAuthTokens.userId, userId),
+          eq(advisorAuthTokens.firmIntegrationConfigId, ORION_INTEGRATION_TYPE_ID)
         )
       );
 
       if (existingToken.length > 0) {
         // Update existing token
-        await db.update(advisor_auth_tokens)
+        await db.update(advisorAuthTokens)
           .set({ 
-            access_token: refreshToken,
-            updated_at: new Date() 
+            accessToken: refreshToken,
+            updatedAt: new Date() 
           })
           .where(
             and(
-              eq(advisor_auth_tokens.advisor_id, userId),
-              eq(advisor_auth_tokens.integration_type_id, ORION_INTEGRATION_TYPE_ID)
+              eq(advisorAuthTokens.userId, userId),
+              eq(advisorAuthTokens.firmIntegrationConfigId, ORION_INTEGRATION_TYPE_ID)
             )
           );
       } else {
         // Insert new token
-        await db.insert(advisor_auth_tokens).values({
-          advisor_id: userId,
-          integration_type_id: ORION_INTEGRATION_TYPE_ID,
-          access_token: refreshToken,
-          created_at: new Date(),
-          updated_at: new Date()
+        await db.insert(advisorAuthTokens).values({
+          userId: userId,
+          firmIntegrationConfigId: ORION_INTEGRATION_TYPE_ID,
+          accessToken: refreshToken,
+          createdAt: new Date(),
+          updatedAt: new Date()
         });
       }
 
@@ -103,18 +115,18 @@ export async function getOrionStatus(
   res: Response
 ): Promise<void> {
   try {
-    const userId = req.session?.userId;
-
-    if (!userId) {
+    if (!req.user) {
       res.status(401).json({ success: false, message: 'Unauthorized' });
       return;
     }
+    
+    const userId = req.user.id;
 
     // Check if a token exists for this user and integration type
-    const tokens = await db.select().from(advisor_auth_tokens).where(
+    const tokens = await db.select().from(advisorAuthTokens).where(
       and(
-        eq(advisor_auth_tokens.advisor_id, userId),
-        eq(advisor_auth_tokens.integration_type_id, ORION_INTEGRATION_TYPE_ID)
+        eq(advisorAuthTokens.userId, userId),
+        eq(advisorAuthTokens.firmIntegrationConfigId, ORION_INTEGRATION_TYPE_ID)
       )
     );
 
@@ -154,10 +166,10 @@ export async function callOrionApi(
   data?: any
 ): Promise<any> {
   // Get the token from the database
-  const tokens = await db.select().from(advisor_auth_tokens).where(
+  const tokens = await db.select().from(advisorAuthTokens).where(
     and(
-      eq(advisor_auth_tokens.advisor_id, userId),
-      eq(advisor_auth_tokens.integration_type_id, ORION_INTEGRATION_TYPE_ID)
+      eq(advisorAuthTokens.userId, userId),
+      eq(advisorAuthTokens.firmIntegrationConfigId, ORION_INTEGRATION_TYPE_ID)
     )
   );
 
@@ -165,7 +177,7 @@ export async function callOrionApi(
     throw new Error('No Orion token found for this user');
   }
 
-  const refreshToken = tokens[0].access_token;
+  const refreshToken = tokens[0].accessToken;
 
   // Make the API request
   const response = await axios({
@@ -190,13 +202,13 @@ export async function getClientAumOverTime(
   res: Response
 ): Promise<void> {
   try {
-    const userId = req.session?.userId;
-    const clientId = req.params.clientId;
-
-    if (!userId) {
+    if (!req.user) {
       res.status(401).json({ success: false, message: 'Unauthorized' });
       return;
     }
+    
+    const userId = req.user.id;
+    const clientId = req.params.clientId;
 
     if (!clientId) {
       res.status(400).json({ success: false, message: 'Client ID is required' });
