@@ -961,6 +961,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       authorized: isAuthorized,
     });
   });
+  
+  // Orion API Routes
+  app.get("/api/orion/status", requireAuth, getOrionStatus);
+  app.get("/api/orion/token", requireRole(["firm_admin", "advisor"]), getOrionToken);
+  app.get("/api/orion/client/:clientId/aum", requireRole(["firm_admin", "advisor"]), getClientAumOverTime);
 
   // Wealthbox Opportunities routes - Direct token-based access for dashboard widget
   app.get(
