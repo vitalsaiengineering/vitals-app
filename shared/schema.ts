@@ -259,6 +259,7 @@ export const advisorAuthTokens = pgTable("advisor_auth_tokens", {
     .references(() => users.id),
   firmIntegrationConfigId: integer("firm_integration_config_id")
     .references(() => firmIntegrationConfigs.id),
+  integrationType: integer("integration_type").notNull().default(1), // 1 for WealthBox, 2 for Orion
   accessToken: varchar("access_token", { length: 1000 }).notNull(),
   refreshToken: varchar("refresh_token", { length: 1000 }),
   tokenType: varchar("token_type", { length: 50 }).default("Bearer"),
@@ -446,6 +447,7 @@ export const advisorAuthTokensRelations = relations(
     firmIntegrationConfig: one(firmIntegrationConfigs, {
       fields: [advisorAuthTokens.firmIntegrationConfigId],
       references: [firmIntegrationConfigs.id],
+      relationName: "authTokens",
     }),
   }),
 );
