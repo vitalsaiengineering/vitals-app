@@ -10,20 +10,21 @@ import Clients from "@/pages/clients-new";
 import Settings from "@/pages/settings";
 import Profile from "@/pages/profile";
 import Reporting from "@/pages/reporting";
+import ReportViewPage from "@/pages/report-view-page";
 import Valuation from "@/pages/valuation";
 import Users from "@/pages/admin/users";
 import Organizations from "@/pages/admin/organizations";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useEffect, useState } from "react";
 import axios from "axios";
-// import { setupGlobalErrorHandler } from "@/utils/global-error-handler";
+// REMOVE: import { useNavigate } from "react-router-dom";
 
 // setupGlobalErrorHandler();
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [, navigate] = useLocation();
+  const [, navigate] = useLocation(); // Get navigate from wouter's useLocation
 
   useEffect(() => {
     // Check if user is authenticated
@@ -50,7 +51,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Root redirect component
 const RootRedirect = () => {
-  const [, navigate] = useLocation();
+  const [, navigate] = useLocation(); // Get navigate from wouter's useLocation
   
   useEffect(() => {
     // Check if user is authenticated and redirect accordingly
@@ -139,6 +140,14 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
+      <Route path="/reporting/:reportId">
+        <ProtectedRoute>
+          <DashboardLayout>
+            <ReportViewPage />
+          </DashboardLayout>
+        </ProtectedRoute>
+      </Route>
+      
       <Route path="/valuation">
         <ProtectedRoute>
           <DashboardLayout>
@@ -161,7 +170,9 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
+      {/* Router component from wouter does not need to be explicitly rendered here if Switch is used directly */}
+      {/* However, if you had a <Router> component from wouter wrapping <Switch>, that would be fine */}
+      <Router /> 
       <Toaster />
     </QueryClientProvider>
   );
