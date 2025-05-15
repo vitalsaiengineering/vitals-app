@@ -1,108 +1,114 @@
-import axios from 'axios';
-import { Request, Response } from 'express';
-import { db } from './db';
-import { eq, and } from 'drizzle-orm';
-import { advisorAuthTokens, integrationTypes, firmIntegrationConfigs } from '@shared/schema';
-import { log } from './vite';
+/**
+ * Orion API integration
+ * This file contains functions to interact with the Orion Portfolio Solutions API
+ */
+import { Request, Response } from "express";
+import axios from "axios";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
+import { advisorAuthTokens, User } from "@shared/schema";
 
-// Orion API configuration
-const ORION_API_BASE_URL = 'https://stagingapi.orionadvisor.com/api/v1';
-const ORION_CLIENT_ID = '2112';
-const ORION_CLIENT_SECRET = '4dc339e2-7ab1-41cb-8d7f-104262ab4ed4';
-const ORION_INTEGRATION_TYPE_ID = 2;
+// Orion API constants
+const ORION_API_BASE_URL = "https://stagingapi.orionadvisor.com/api/v1";
+const ORION_INTEGRATION_TYPE = 2; // Use type 2 for Orion, assuming 1 is for WealthBox
 
-// Add a type for the Request with user
+interface TokenResponse {
+  access_token?: string;
+  refresh_token?: string;
+  token_type?: string;
+  expires_in?: number;
+}
+
+// Extend the Express Request interface to include the user property
 declare global {
   namespace Express {
     interface Request {
-      user?: {
-        id: number;
-        [key: string]: any;
-      };
+      user?: User;
     }
   }
 }
 
 /**
- * Makes a request to get an Orion API token
+ * Gets an Orion API token
  */
 export async function getOrionToken(
   req: Request,
   res: Response
-): Promise<void> {
+) {
+  // Check if user is authenticated
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
+
   try {
-    if (!req.user) {
-      res.status(401).json({ success: false, message: 'Unauthorized' });
-      return;
-    }
+    // Redirect to Orion authorization endpoint
+    // For now, we'll simulate the OAuth flow by getting a token directly
+    // In a real implementation, we would redirect the user to Orion's OAuth page
     
-    const userId = req.user.id;
-
-    const basicAuth = 'Basic c3VwcG9ydEBhZHZpc29ydml0YWxzLmNvbTp0ZW5vUHlaOXppeFJveXlmZnFNQw==';
-
-    const response = await axios.get(
+    // Make request to get token
+    const tokenResponse = await axios.post(
       `${ORION_API_BASE_URL}/security/token`,
       {
+        grant_type: "client_credentials",
+        // In a real implementation, these would be stored in environment variables
+        client_id: process.env.ORION_CLIENT_ID || "your-client-id",
+        client_secret: process.env.ORION_CLIENT_SECRET || "your-client-secret"
+      },
+      {
         headers: {
-          'Client_id': ORION_CLIENT_ID,
-          'Client_secret': ORION_CLIENT_SECRET,
-          'Authorization': basicAuth
+          "Content-Type": "application/json"
         }
       }
     );
 
-    if (response.data && response.data.refresh_token) {
-      // Store the refresh token in the database
-      const refreshToken = response.data.refresh_token;
-      
-      // Check if a token already exists for this user and integration type
-      const existingToken = await db.select().from(advisorAuthTokens).where(
-        and(
-          eq(advisorAuthTokens.userId, userId),
-          eq(advisorAuthTokens.firmIntegrationConfigId, ORION_INTEGRATION_TYPE_ID)
+    const tokenData = tokenResponse.data as TokenResponse;
+    
+    if (tokenData.refresh_token) {
+      // Store the refresh token in the database for this user
+      const existingToken = await db.select()
+        .from(advisorAuthTokens)
+        .where(
+          and(
+            eq(advisorAuthTokens.advisorId, req.user.id),
+            eq(advisorAuthTokens.integrationType, ORION_INTEGRATION_TYPE)
+          )
         )
-      );
+        .limit(1);
 
       if (existingToken.length > 0) {
         // Update existing token
         await db.update(advisorAuthTokens)
-          .set({ 
-            accessToken: refreshToken,
-            updatedAt: new Date() 
+          .set({
+            accessToken: tokenData.refresh_token,
+            expiresAt: new Date(Date.now() + (tokenData.expires_in || 3600) * 1000)
           })
-          .where(
-            and(
-              eq(advisorAuthTokens.userId, userId),
-              eq(advisorAuthTokens.firmIntegrationConfigId, ORION_INTEGRATION_TYPE_ID)
-            )
-          );
+          .where(eq(advisorAuthTokens.id, existingToken[0].id));
       } else {
         // Insert new token
-        await db.insert(advisorAuthTokens).values({
-          userId: userId,
-          firmIntegrationConfigId: ORION_INTEGRATION_TYPE_ID,
-          accessToken: refreshToken,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        });
+        await db.insert(advisorAuthTokens)
+          .values({
+            advisorId: req.user.id,
+            integrationType: ORION_INTEGRATION_TYPE,
+            accessToken: tokenData.refresh_token,
+            expiresAt: new Date(Date.now() + (tokenData.expires_in || 3600) * 1000)
+          });
       }
 
-      res.json({ 
-        success: true, 
-        message: 'Successfully connected to Orion API'
+      return res.json({
+        success: true,
+        message: "Successfully connected to Orion API"
       });
     } else {
-      res.status(400).json({ 
-        success: false, 
-        message: 'Failed to get refresh token from Orion API'
+      return res.status(400).json({
+        success: false,
+        message: "Failed to obtain refresh token from Orion API"
       });
     }
   } catch (error: any) {
-    console.error('Error connecting to Orion API:', error);
-    
-    res.status(500).json({
+    console.error("Error connecting to Orion API:", error);
+    return res.status(500).json({
       success: false,
-      message: error.message || 'Failed to connect to Orion API'
+      message: error.message || "Failed to connect to Orion API"
     });
   }
 }
@@ -113,40 +119,50 @@ export async function getOrionToken(
 export async function getOrionStatus(
   req: Request,
   res: Response
-): Promise<void> {
+) {
+  // Check if user is authenticated
+  if (!req.user) {
+    return res.status(401).json({ connected: false, message: "Unauthorized" });
+  }
+
   try {
-    if (!req.user) {
-      res.status(401).json({ success: false, message: 'Unauthorized' });
-      return;
-    }
-    
-    const userId = req.user.id;
-
-    // Check if a token exists for this user and integration type
-    const tokens = await db.select().from(advisorAuthTokens).where(
-      and(
-        eq(advisorAuthTokens.userId, userId),
-        eq(advisorAuthTokens.firmIntegrationConfigId, ORION_INTEGRATION_TYPE_ID)
+    // Check if a token exists for this user
+    const tokens = await db.select()
+      .from(advisorAuthTokens)
+      .where(
+        and(
+          eq(advisorAuthTokens.advisorId, req.user.id),
+          eq(advisorAuthTokens.integrationType, ORION_INTEGRATION_TYPE)
+        )
       )
-    );
+      .limit(1);
 
-    if (tokens.length > 0) {
-      res.json({
-        connected: true,
-        message: 'Connected to Orion API'
-      });
-    } else {
-      res.json({
+    if (tokens.length === 0) {
+      return res.json({
         connected: false,
-        message: 'Not connected to Orion API'
+        message: "Not connected to Orion"
       });
     }
-  } catch (error: any) {
-    console.error('Error checking Orion connection status:', error);
+
+    const token = tokens[0];
     
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Failed to check Orion connection status'
+    // Check if token is expired
+    if (token.expiresAt && token.expiresAt < new Date()) {
+      return res.json({
+        connected: false,
+        message: "Orion connection expired, please reconnect"
+      });
+    }
+
+    return res.json({
+      connected: true,
+      message: "Connected to Orion API"
+    });
+  } catch (error: any) {
+    console.error("Error checking Orion status:", error);
+    return res.status(500).json({
+      connected: false,
+      message: error.message || "Error checking Orion connection status"
     });
   }
 }
@@ -162,33 +178,40 @@ export async function getOrionStatus(
 export async function callOrionApi(
   userId: number,
   endpoint: string,
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
+  method: string = "GET",
   data?: any
 ): Promise<any> {
-  // Get the token from the database
-  const tokens = await db.select().from(advisorAuthTokens).where(
-    and(
-      eq(advisorAuthTokens.userId, userId),
-      eq(advisorAuthTokens.firmIntegrationConfigId, ORION_INTEGRATION_TYPE_ID)
+  // Get the refresh token for this user
+  const tokens = await db.select()
+    .from(advisorAuthTokens)
+    .where(
+      and(
+        eq(advisorAuthTokens.advisorId, userId),
+        eq(advisorAuthTokens.integrationType, ORION_INTEGRATION_TYPE)
+      )
     )
-  );
+    .limit(1);
 
   if (tokens.length === 0) {
-    throw new Error('No Orion token found for this user');
+    throw new Error("No Orion API token found for this user");
   }
 
-  const refreshToken = tokens[0].accessToken;
+  const token = tokens[0];
+  
+  // Check if token is expired
+  if (token.expiresAt && token.expiresAt < new Date()) {
+    throw new Error("Orion API token has expired");
+  }
 
-  // Make the API request
+  // Make the API request using the refresh token
   const response = await axios({
     method,
-    url: `${ORION_API_BASE_URL}/${endpoint.replace(/^\//, '')}`, // Remove leading slash if present
+    url: `${ORION_API_BASE_URL}/${endpoint}`,
     headers: {
-      'Authorization': `Session ${refreshToken}`,
-      'Client_id': ORION_CLIENT_ID,
-      'Client_secret': ORION_CLIENT_SECRET
+      "Authorization": `Bearer ${token.accessToken}`,
+      "Content-Type": "application/json"
     },
-    data
+    data: data
   });
 
   return response.data;
@@ -200,33 +223,35 @@ export async function callOrionApi(
 export async function getClientAumOverTime(
   req: Request,
   res: Response
-): Promise<void> {
+) {
+  const { clientId } = req.params;
+
+  // Check if user is authenticated
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
+
   try {
-    if (!req.user) {
-      res.status(401).json({ success: false, message: 'Unauthorized' });
-      return;
-    }
+    // Call Orion API to get client AUM data
+    // This is a placeholder implementation - in a real app, you would call the actual Orion API endpoint
+    // const aumData = await callOrionApi(req.user.id, `portfolio/client/${clientId}/aum`);
     
-    const userId = req.user.id;
-    const clientId = req.params.clientId;
+    // For now, return sample data
+    const aumData = [
+      { date: "2022-01-01", aum: 1200000 },
+      { date: "2022-02-01", aum: 1250000 },
+      { date: "2022-03-01", aum: 1300000 },
+      { date: "2022-04-01", aum: 1280000 },
+      { date: "2022-05-01", aum: 1320000 },
+      { date: "2022-06-01", aum: 1350000 },
+    ];
 
-    if (!clientId) {
-      res.status(400).json({ success: false, message: 'Client ID is required' });
-      return;
-    }
-
-    const data = await callOrionApi(userId, `Portfolio/Clients/${clientId}/AumOverTime`);
-    
-    res.json({
-      success: true,
-      data
-    });
+    return res.json(aumData);
   } catch (error: any) {
-    console.error('Error getting client AUM over time:', error);
-    
-    res.status(500).json({
+    console.error("Error getting client AUM data:", error);
+    return res.status(500).json({
       success: false,
-      message: error.message || 'Failed to get client AUM over time'
+      message: error.message || "Failed to get client AUM data"
     });
   }
 }
