@@ -21,12 +21,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UserCog, Network, Plug, Building, Database } from "lucide-react";
+import { UserCog, Network, Plug, Building, Database, RefreshCw } from "lucide-react";
 import { useLocation } from "wouter";
 import DataMappingSection from "@/components/integrations/DataMappingSection";
 import WealthboxMapping from "@/components/integrations/WealthboxMapping";
@@ -563,6 +564,81 @@ export default function Settings() {
   // Check if user is authorized
   // For now, everyone is authorized as per the original code
   const isAuthorized = true;
+  
+  // Handle Orion connect button click
+  const handleConnectOrionClick = async () => {
+    setIsConnectingOrion(true);
+    setOrionConnectionStatus("none");
+    try {
+      await connectOrionMutation.mutateAsync();
+    } catch (error) {
+      console.error("Error connecting to Orion:", error);
+    }
+  };
+  
+  // Orion integration UI
+  const renderOrionIntegration = () => {
+    return (
+      <div className="border rounded-md p-4">
+        <h3 className="text-lg font-medium mb-2">Orion Portfolio Solutions</h3>
+        <div className="text-sm text-muted-foreground mb-4">
+          Connect to Orion Portfolio Solutions to access client portfolio data, AUM metrics, and investment information.
+        </div>
+        
+        <div className="flex items-center gap-4">
+          {orionStatus?.connected ? (
+            <>
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                Connected
+              </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-auto"
+                onClick={handleConnectOrionClick}
+                disabled={isConnectingOrion}
+              >
+                Reconnect
+                {isConnectingOrion && (
+                  <ReloadIcon className="ml-2 h-4 w-4 animate-spin" />
+                )}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                Not Connected
+              </Badge>
+              <Button
+                variant="default"
+                size="sm"
+                className="ml-auto"
+                onClick={handleConnectOrionClick}
+                disabled={isConnectingOrion}
+              >
+                Connect to Orion
+                {isConnectingOrion && (
+                  <ReloadIcon className="ml-2 h-4 w-4 animate-spin" />
+                )}
+              </Button>
+            </>
+          )}
+        </div>
+        
+        {orionConnectionStatus === "error" && (
+          <div className="mt-4 text-sm text-red-600">
+            Failed to connect to Orion. Please try again.
+          </div>
+        )}
+        
+        {orionStatus?.message && (
+          <div className="mt-4 text-sm text-muted-foreground">
+            {orionStatus.message}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderWealthboxIntegration = () => {
     return (
