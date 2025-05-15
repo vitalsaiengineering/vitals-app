@@ -2,7 +2,7 @@ import axios from 'axios';
 import { Request, Response } from 'express';
 import { db } from './db';
 import { eq, and } from 'drizzle-orm';
-import { advisor_auth_tokens } from '@shared/schema';
+import { advisorAuthTokens, integrationTypes, firmIntegrationConfigs } from '@shared/schema';
 import { log } from './vite';
 
 // Orion API configuration
@@ -19,12 +19,12 @@ export async function getOrionToken(
   res: Response
 ): Promise<void> {
   try {
-    const userId = req.session?.userId;
-
-    if (!userId) {
+    if (!req.user) {
       res.status(401).json({ success: false, message: 'Unauthorized' });
       return;
     }
+    
+    const userId = req.user.id;
 
     const basicAuth = 'Basic c3VwcG9ydEBhZHZpc29ydml0YWxzLmNvbTp0ZW5vUHlaOXppeFJveXlmZnFNQw==';
 
