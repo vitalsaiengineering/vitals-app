@@ -94,6 +94,10 @@ export default function Settings() {
   const [connectionStatus, setConnectionStatus] = useState<
     "none" | "success" | "error"
   >("none");
+  
+  const [orionConnectionStatus, setOrionConnectionStatus] = useState<
+    "none" | "success" | "error"
+  >("none");
 
   // Define interface for WealthBox status
   interface WealthboxStatus {
@@ -112,6 +116,19 @@ export default function Settings() {
   const { data: wealthboxStatus, isLoading: isLoadingStatus } =
     useQuery<WealthboxStatus>({
       queryKey: ["/api/wealthbox/status"],
+      retry: false,
+    });
+  
+  // Define interface for Orion status
+  interface OrionStatus {
+    connected?: boolean;
+    message?: string;
+  }
+  
+  // Get Orion status
+  const { data: orionStatus, isLoading: isLoadingOrionStatus } =
+    useQuery<OrionStatus>({
+      queryKey: ["/api/orion/status"],
       retry: false,
     });
 
@@ -167,6 +184,47 @@ export default function Settings() {
       setConnectionStatus("success");
     }
   }, [wealthboxStatus]);
+  
+  // Set initial Orion connection status based on orionStatus
+  useEffect(() => {
+    if (orionStatus?.connected) {
+      setOrionConnectionStatus("success");
+    }
+  }, [orionStatus]);
+  
+  // Connect to Orion API
+  const [isConnectingOrion, setIsConnectingOrion] = useState(false);
+  
+  const connectOrionMutation = useMutation({
+    mutationFn: connectToOrion,
+    onSuccess: (data) => {
+      if (data.success) {
+        setOrionConnectionStatus("success");
+        toast({
+          title: "Connection successful",
+          description: "Successfully connected to Orion API.",
+        });
+      } else {
+        setOrionConnectionStatus("error");
+        toast({
+          title: "Connection failed",
+          description: data.message || "Failed to connect to Orion API.",
+          variant: "destructive",
+        });
+      }
+      setIsConnectingOrion(false);
+    },
+    onError: (error: any) => {
+      setOrionConnectionStatus("error");
+      toast({
+        title: "Connection error",
+        description:
+          error.message || "An error occurred while connecting to Orion.",
+        variant: "destructive",
+      });
+      setIsConnectingOrion(false);
+    },
+  });
 
   // Set initial Orion connection status
   useEffect(() => {
@@ -1063,7 +1121,7 @@ export default function Settings() {
                 Connect third-party services and tools to your dashboard.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-8">
               {renderWealthboxIntegration()}
               {renderOrionIntegration()}
             </CardContent>

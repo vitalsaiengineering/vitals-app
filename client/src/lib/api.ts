@@ -232,3 +232,19 @@ export const executeAiQuery = async (query: string) => {
   const response = await apiRequest("POST", "/api/ai/query", { query });
   return response.json();
 };
+
+// Orion API Integration
+export const getOrionStatus = async () => {
+  const response = await apiRequest("GET", "/api/orion/status");
+  return response.json();
+};
+
+export const connectToOrion = async () => {
+  const response = await apiRequest("GET", "/api/orion/token");
+  return response.json();
+};
+
+export const getClientAumOverTime = async (clientId: string) => {
+  const response = await apiRequest("GET", `/api/orion/client/${clientId}/aum`);
+  return response.json();
+};
