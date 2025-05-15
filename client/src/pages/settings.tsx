@@ -486,7 +486,7 @@ export default function Settings() {
               >
                 Reconnect
                 {isConnectingOrion && (
-                  <ReloadIcon className="ml-2 h-4 w-4 animate-spin" />
+                  <Network className="ml-2 h-4 w-4 animate-spin" />
                 )}
               </Button>
             </>
@@ -504,7 +504,7 @@ export default function Settings() {
               >
                 Connect to Orion
                 {isConnectingOrion && (
-                  <ReloadIcon className="ml-2 h-4 w-4 animate-spin" />
+                  <Network className="ml-2 h-4 w-4 animate-spin" />
                 )}
               </Button>
             </>
