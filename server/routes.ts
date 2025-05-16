@@ -354,7 +354,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post(
     "/api/users",
-    requireRole(["global_admin", "firm_admin"]),
     async (req, res) => {
       try {
         const user = req.user as any;
