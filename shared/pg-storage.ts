@@ -9,6 +9,7 @@ import {
   User,
   InsertUser,
   Role,
+  Client,
   FirmIntegrationConfigs,
   InsertFirmIntegrationConfig,
   AdvisorAuthTokens,
@@ -18,7 +19,8 @@ import {
   IntegrationType,
   integrationTypes,
   Status,
-  statusValues
+  statusValues,
+  clients
 } from "@shared/schema";
 
 // export interface IFirmIntegrationConfig {
@@ -312,7 +314,7 @@ export class PostgresStorage implements IStorage {
     return results[0];
   }
 
-  async getClientsByOrganization(organizationId: number): Promise<User[]> {
+  async getClientsByOrganization(organizationId: number): Promise<Client[]> {
     const results = await db
       .select()
       .from(clients)
@@ -335,4 +337,5 @@ export class PostgresStorage implements IStorage {
   getStatuses(): Status[] {
     return statusValues;
   }
+  
 }
