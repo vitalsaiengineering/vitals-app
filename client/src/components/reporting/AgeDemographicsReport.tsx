@@ -1,116 +1,47 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react'; // Added useEffect
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Switch } from "@/components/ui/switch"; // For the toggle switch
-import { Label } from "@/components/ui/label";   // For switch label
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
-
-import { 
+import {
   BarChart as RechartsBarChart,
-  Bar, 
-  XAxis, 
-  YAxis, 
+  Bar,
+  XAxis,
+  YAxis,
   CartesianGrid,
   TooltipProps
 } from 'recharts';
 import { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent';
-
 import {
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   type ChartConfig
 } from "@/components/ui/chart";
+import * as RechartsPrimitive from "recharts";
 
-import * as RechartsPrimitive from "recharts"; // For direct Tooltip usage
+// Import the new data fetching function and the interface
+import { getAgeDemographicsReportData, AgeDemographicsData } from '@/lib/clientData';
+// Remove direct import of mock data if it was here, or ensure it's only for type reference if needed.
+// We will fetch data instead of using ageDemographicsMockData directly.
 
-export interface AgeDemographicsData {
-  overall: {
-    totalClients: number;
-    totalAUM: number;
-    averageClientAge: number;
-  };
-  byAgeBracket: Array<{
-    bracket: string; // e.g., "<20", "21-40"
-    clientCount: number;
-    clientPercentage: number;
-    aum: number;
-    aumPercentage: number;
-    // For detailed chart tooltips (optional)
-    detailedBreakdown?: Array<{ segment: string; clients: number; aum: number }>;
-  }>;
-  clientDetails: Array<{
-    id: string;
-    name: string;
-    age: number;
-    segment: string; // e.g., "Gold", "Platinum"
-    joinDate: string; // YYYY-MM-DD
-    aum?: number; // Optional, for AUM view
-  }>;
-}
+// ... (Existing interfaces like AgeDemographicsData might be slightly different from the one in clientData.ts, ensure consistency or use the imported one)
+// For this example, I'll assume the AgeDemographicsData interface defined in this file is the one we want to use for structuring the fetched data.
+// If clientData.ts exports a more accurate/complete one, prefer that.
 
-export const ageDemographicsMockData: AgeDemographicsData = {
-  overall: {
-    totalClients: 35,
-    totalAUM: 7405000,
-    averageClientAge: 53.5,
-  },
-  byAgeBracket: [
-    { bracket: "<20", clientCount: 1, clientPercentage: 2.8, aum: 50000, aumPercentage: 0.67, 
-      detailedBreakdown: [{ segment: "Silver", clients: 1, aum: 50000}] },
-    { bracket: "21-40", clientCount: 8, clientPercentage: 22.9, aum: 740000, aumPercentage: 10.0,
-      detailedBreakdown: [
-        { segment: "Silver", clients: 5, aum: 300000},
-        { segment: "Gold", clients: 3, aum: 440000},
-      ]
-    },
-    { bracket: "41-60", clientCount: 11, clientPercentage: 31.4, aum: 2105000, aumPercentage: 28.4,
-      detailedBreakdown: [
-        { segment: "Silver", clients: 2, aum: 200000},
-        { segment: "Gold", clients: 6, aum: 1205000},
-        { segment: "Platinum", clients: 3, aum: 700000},
-      ]
-    },
-    { bracket: "61-80", clientCount: 10, clientPercentage: 28.6, aum: 3660000, aumPercentage: 49.4,
-      detailedBreakdown: [
-        { segment: "Gold", clients: 4, aum: 1000000},
-        { segment: "Platinum", clients: 6, aum: 2660000},
-      ]
-    },
-    { bracket: ">80", clientCount: 5, clientPercentage: 14.3, aum: 850000, aumPercentage: 11.5,
-      detailedBreakdown: [
-        { segment: "Gold", clients: 2, aum: 300000},
-        { segment: "Platinum", clients: 3, aum: 550000},
-      ]
-    },
-  ],
-  clientDetails: [
-    { id: 'c1', name: 'Harper Lee', age: 42, segment: 'Gold', joinDate: '2022-02-14', aum: 130000 },
-    { id: 'c2', name: 'John Doe', age: 65, segment: 'Platinum', joinDate: '2018-07-21', aum: 750000 },
-    { id: 'c3', name: 'Alice Smith', age: 33, segment: 'Silver', joinDate: '2023-01-10', aum: 80000 },
-    { id: 'c4', name: 'Robert Brown', age: 58, segment: 'Gold', joinDate: '2019-05-05', aum: 220000 },
-    { id: 'c5', name: 'Emily White', age: 72, segment: 'Platinum', joinDate: '2015-11-30', aum: 1200000 },
-    // Add more clients, especially to match the 35 total
-  ],
-};
-
-interface AgeDemographicsReportProps {
-  reportId: string;
-}
-
-// type ActiveToggle = 'clients' | 'aum'; // Replaced by isAumView boolean
-
+// ... (SEGMENT_COLORS_HSL and chartConfig remain the same) ...
 const SEGMENT_COLORS_HSL: { [key: string]: string } = {
-  SILVER: 'hsl(var(--chart-1))',
+  SILVER: 'hsl(var(--chart-3))',
   GOLD: 'hsl(var(--chart-2))',
-  PLATINUM: 'hsl(var(--chart-3))',
+  PLATINUM: 'hsl(var(--chart-1))',
   DEFAULT: 'hsl(var(--chart-4))',
 };
 
@@ -122,10 +53,11 @@ const chartConfig = {
   totalAum: { label: "Total AUM", color: SEGMENT_COLORS_HSL.DEFAULT },
 } satisfies ChartConfig;
 
-// Custom Tooltip Component
-const CustomChartTooltip = ({ active, payload, label, isAumViewInTooltip }: TooltipProps<ValueType, NameType> & { isAumViewInTooltip: boolean }) => {
-  if (active && payload && payload.length) {
-    const originalBracketData = ageDemographicsMockData.byAgeBracket.find(b => b.bracket === label);
+
+// Custom Tooltip Component - Updated to use reportData from state
+const CustomChartTooltip = ({ active, payload, label, isAumViewInTooltip, reportData }: TooltipProps<ValueType, NameType> & { isAumViewInTooltip: boolean, reportData: AgeDemographicsData | null }) => {
+  if (active && payload && payload.length && reportData) { // Check if reportData is available
+    const originalBracketData = reportData.byAgeBracket.find(b => b.bracket === label);
 
     return (
       <div className="bg-background p-3 border border-border shadow-lg rounded-md text-xs min-w-[180px]">
@@ -136,7 +68,7 @@ const CustomChartTooltip = ({ active, payload, label, isAumViewInTooltip }: Tool
           </p>
         )}
         {isAumViewInTooltip && originalBracketData && (
-           <p className="mb-1 text-muted-foreground">
+          <p className="mb-1 text-muted-foreground">
             Total: <span className="font-semibold text-foreground">{originalBracketData.aum.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })} ({originalBracketData.aumPercentage.toFixed(1)}%)</span>
           </p>
         )}
@@ -170,14 +102,57 @@ const CustomChartTooltip = ({ active, payload, label, isAumViewInTooltip }: Tool
 };
 
 
-export default function AgeDemographicsReport({ reportId }: AgeDemographicsReportProps) {
-  const [isAumView, setIsAumView] = useState<boolean>(false); // true for AUM, false for Clients
+// Helper function to get dot color for age brackets
+const getBracketDotColor = (bracket: string): string => {
+  switch (bracket) {
+    case "<20": return "hsl(var(--age-band-under-20))";
+    case "21-40": return "hsl(var(--age-band-21-40))";
+    case "41-60": return "hsl(var(--age-band-41-60))";
+    case "61-80": return "hsl(var(--age-band-61-80))";
+    case ">80": return "hsl(var(--age-band-over-80))";
+    default: return "hsl(var(--age-band-default))";
+  }
+};
+
+interface AgeDemographicsReportProps {
+  reportId: string; // Assuming reportId might be used to fetch specific report, or advisorId if available
+  // advisorId?: number; // Consider adding advisorId if needed for fetching
+}
+
+export default function AgeDemographicsReport({ reportId /*, advisorId */ }: AgeDemographicsReportProps) {
+  const [isAumView, setIsAumView] = useState<boolean>(false);
   const [selectedAgeBracketForTable, setSelectedAgeBracketForTable] = useState<string | null>(null);
-  
-  const reportData: AgeDemographicsData = ageDemographicsMockData;
-  const activeToggle = isAumView ? 'aum' : 'clients'; // Derived value
+
+  // State for fetched data, loading, and error
+  const [reportData, setReportData] = useState<AgeDemographicsData | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Pass advisorId here if it's a prop and your API uses it
+        // const data = await getAgeDemographicsReportData(advisorId); 
+        const data = await getAgeDemographicsReportData(); // Assuming no advisorId needed for now or handled by API
+        setReportData(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to fetch report data");
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [reportId /*, advisorId */]); // Re-fetch if reportId or advisorId changes
+
+  // Define the desired stacking order (bottom to top)
+  const desiredSegmentOrder = ['platinum', 'gold', 'silver'];
 
   const chartDataForRecharts = useMemo(() => {
+    if (!reportData) return []; // Return empty if no data
     return reportData.byAgeBracket.map(bracket => {
       const base = { name: bracket.bracket };
       if (!isAumView) { // Clients view
@@ -188,15 +163,16 @@ export default function AgeDemographicsReport({ reportId }: AgeDemographicsRepor
         return { ...base, ...clientSegments, totalClients: bracket.clientCount };
       } else { // AUM view
         const aumSegments: { [key: string]: number } = {};
-         bracket.detailedBreakdown?.forEach(detail => {
+        bracket.detailedBreakdown?.forEach(detail => {
           aumSegments[detail.segment.toLowerCase()] = detail.aum;
         });
         return { ...base, ...aumSegments, totalAum: bracket.aum };
       }
     });
-  }, [reportData.byAgeBracket, isAumView]);
+  }, [reportData, isAumView]);
 
   const displayData = useMemo(() => {
+    if (!reportData) return null; // Return null if no data
     return {
       totalValue: !isAumView ? reportData.overall.totalClients : reportData.overall.totalAUM.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }),
       totalLabel: !isAumView ? 'Total Clients' : 'Total AUM',
@@ -207,6 +183,7 @@ export default function AgeDemographicsReport({ reportId }: AgeDemographicsRepor
         displayPercentage: !isAumView ? b.clientPercentage : b.aumPercentage,
         valueLabel: !isAumView ? 'Clients' : 'AUM',
         isSelected: selectedAgeBracketForTable === b.bracket,
+        dotColor: getBracketDotColor(b.bracket),
       })),
       tableData: reportData.clientDetails
         .filter(client => {
@@ -222,19 +199,27 @@ export default function AgeDemographicsReport({ reportId }: AgeDemographicsRepor
           }
         })
         .map(client => ({
-        ...client,
-        aumDisplay: client.aum ? client.aum.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }) : 'N/A',
-      })),
+          ...client,
+          aumDisplay: client.aum ? client.aum.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }) : 'N/A',
+        })),
     };
   }, [isAumView, reportData, selectedAgeBracketForTable]);
 
   const segmentsInChart = useMemo(() => {
+    if (!reportData) return [];
     const allSegments = new Set<string>();
     reportData.byAgeBracket.forEach(bracket => {
       bracket.detailedBreakdown?.forEach(detail => allSegments.add(detail.segment.toLowerCase()));
     });
-    return Array.from(allSegments);
-  }, [reportData.byAgeBracket]);
+    return Array.from(allSegments).sort((a, b) => {
+      const indexA = desiredSegmentOrder.indexOf(a);
+      const indexB = desiredSegmentOrder.indexOf(b);
+      if (indexA === -1 && indexB === -1) return 0;
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
+  }, [reportData]);
 
   const handleSummaryCardClick = (bracket: string) => {
     setSelectedAgeBracketForTable(prev => prev === bracket ? null : bracket);
@@ -242,18 +227,26 @@ export default function AgeDemographicsReport({ reportId }: AgeDemographicsRepor
 
   const handleBarClick = (data: any) => {
     if (data && data.activePayload && data.activePayload.length > 0) {
-      const clickedBracketName = data.activePayload[0].payload.name; // 'name' is the age bracket from chartData
+      const clickedBracketName = data.activePayload[0].payload.name;
       if (clickedBracketName) {
         setSelectedAgeBracketForTable(prev => prev === clickedBracketName ? null : clickedBracketName);
       }
     }
   };
 
+  if (isLoading) {
+    return <div className="p-6 text-center">Loading report data...</div>;
+  }
+
+  if (error || !displayData) { // Also check if displayData is null
+    return <div className="p-6 text-center text-red-500">Error loading report: {error || "No data available"}</div>;
+  }
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center"> {/* items-center for vertical alignment */}
+          <div className="flex justify-between items-center">
             <div>
               <CardTitle className="text-2xl">Client Age Demographics</CardTitle>
               <CardDescription>{displayData.totalLabel}: {displayData.totalValue}</CardDescription>
@@ -283,29 +276,29 @@ export default function AgeDemographicsReport({ reportId }: AgeDemographicsRepor
             </div>
             <div className="lg:w-3/4 h-[300px] lg:h-[350px] bg-muted/20 p-4 rounded-lg">
               <ChartContainer config={chartConfig} className="w-full h-full">
-                <RechartsBarChart 
+                <RechartsBarChart
                   data={chartDataForRecharts}
                   margin={{ top: 5, right: 0, left: 0, bottom: 5 }}
-                  onClick={handleBarClick} // Added click handler to the chart
+                  onClick={handleBarClick}
                 >
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 12 }} />
-                  <YAxis tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 12 }} tickFormatter={(value) => isAumView ? `$${(Number(value)/1000).toLocaleString()}k` : value} />
+                  <YAxis tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 12 }} tickFormatter={(value) => isAumView ? `$${(Number(value) / 1000).toLocaleString()}k` : value} />
                   <RechartsPrimitive.Tooltip
                     cursor={{ fill: 'hsl(var(--muted) / 0.3)' }}
-                    content={<CustomChartTooltip isAumViewInTooltip={isAumView} />} // Pass current view to tooltip
+                    content={<CustomChartTooltip isAumViewInTooltip={isAumView} reportData={reportData} />}
                   />
                   <ChartLegend content={<ChartLegendContent />} />
                   {segmentsInChart.map((segment, index) => (
-                    <Bar 
-                      key={segment} dataKey={segment} stackId="a" 
+                    <Bar
+                      key={segment} dataKey={segment} stackId="a"
                       fill={`var(--color-${segment})`}
                       name={chartConfig[segment]?.label || segment}
-                      radius={index === segmentsInChart.length -1 ? [4,4,0,0] : [0,0,0,0]}
+                      radius={index === segmentsInChart.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
                     />
                   ))}
-                  {segmentsInChart.length === 0 && (
-                      <Bar dataKey={!isAumView ? 'totalClients' : 'totalAum'} fill={`var(--color-${!isAumView ? 'totalClients' : 'totalAum'})`} name={chartConfig[!isAumView ? 'totalClients' : 'totalAum']?.label as string} radius={[4,4,0,0]} />
+                  {segmentsInChart.length === 0 && reportData && ( // Ensure reportData exists
+                    <Bar dataKey={!isAumView ? 'totalClients' : 'totalAum'} fill={`var(--color-${!isAumView ? 'totalClients' : 'totalAum'})`} name={chartConfig[!isAumView ? 'totalClients' : 'totalAum']?.label as string} radius={[4, 4, 0, 0]} />
                   )}
                 </RechartsBarChart>
               </ChartContainer>
@@ -314,13 +307,19 @@ export default function AgeDemographicsReport({ reportId }: AgeDemographicsRepor
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
             {displayData.brackets.map(bracket => (
-              <Card 
-                key={bracket.bracket} 
+              <Card
+                key={bracket.bracket}
                 onClick={() => handleSummaryCardClick(bracket.bracket)}
                 className={`cursor-pointer transition-all ${bracket.isSelected ? 'ring-2 ring-primary shadow-lg' : 'hover:shadow-md'}`}
               >
                 <CardHeader className="pb-2 pt-4 text-center">
-                  <CardDescription>{bracket.bracket}</CardDescription>
+                  <CardDescription className="flex items-center justify-center">
+                    <span
+                      className="w-2.5 h-2.5 rounded-full mr-2"
+                      style={{ backgroundColor: bracket.dotColor }}
+                    ></span>
+                    {bracket.bracket}
+                  </CardDescription>
                   <CardTitle className="text-xl sm:text-2xl">{bracket.displayValue}</CardTitle>
                 </CardHeader>
                 <CardContent className="pb-4 text-center">
@@ -335,7 +334,7 @@ export default function AgeDemographicsReport({ reportId }: AgeDemographicsRepor
           <div>
             <h3 className="text-lg font-medium mb-2">
               Clients {selectedAgeBracketForTable ? `(${selectedAgeBracketForTable})` : '(All)'}
-            </h3> 
+            </h3>
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
@@ -351,28 +350,29 @@ export default function AgeDemographicsReport({ reportId }: AgeDemographicsRepor
                 <TableBody>
                   {displayData.tableData.length > 0 ? displayData.tableData
                     .map(client => (
-                    <TableRow key={client.id}>
-                      <TableCell className="font-medium">{client.name}</TableCell>
-                      <TableCell>{client.age}</TableCell>
-                      <TableCell>
-                        <span 
-                          className="px-2 py-0.5 text-xs rounded-full" 
-                          style={{ 
-                            backgroundColor: `${chartConfig[client.segment.toLowerCase()]?.color || SEGMENT_COLORS_HSL.DEFAULT}33`, 
-                            color: chartConfig[client.segment.toLowerCase()]?.color || SEGMENT_COLORS_HSL.DEFAULT,
-                            border: `1px solid ${chartConfig[client.segment.toLowerCase()]?.color || SEGMENT_COLORS_HSL.DEFAULT}`
-                          }}
-                        >
-                          {client.segment}
-                        </span>
-                      </TableCell>
-                      <TableCell>{client.joinDate}</TableCell>
-                      {isAumView && <TableCell className="text-right">{client.aumDisplay}</TableCell>}
-                      <TableCell className="text-right">
-                        <Button variant="outline" size="sm">View Contact</Button>
-                      </TableCell>
-                    </TableRow>
-                  )) : (
+                      <TableRow key={client.id}>
+                        <TableCell className="font-medium">{client.name}</TableCell>
+                        <TableCell>{client.age}</TableCell>
+                        <TableCell>
+                          <span
+                            className="px-2.5 py-1 text-xs rounded-full font-medium"
+                            style={{
+                              backgroundColor: chartConfig[client.segment.toLowerCase()]?.color || SEGMENT_COLORS_HSL.DEFAULT,
+                              color: 'hsl(var(--primary-foreground))',
+                            }}
+                          >
+                            {client.segment}
+                          </span>
+                        </TableCell>
+                        <TableCell>{client.joinDate}</TableCell>
+                        {isAumView && <TableCell className="text-right">{client.aumDisplay}</TableCell>}
+                        <TableCell className="text-right">
+                          <Button variant="default" size="sm">
+                            View Contact
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )) : (
                     <TableRow>
                       <TableCell colSpan={isAumView ? 6 : 5} className="text-center text-muted-foreground py-10">
                         No clients match the current filter.

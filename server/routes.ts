@@ -54,6 +54,7 @@ import {
   getDemoAdvisorMetrics,
   getDemoClientDemographics,
 } from "./demo-analytics";
+import _ from "lodash";
 // Load environment variables
 dotenv.config();
 
@@ -86,6 +87,361 @@ const processQueue = async () => {
 // Start processing the queue (You might want to set this up elsewhere in your app)
 setInterval(processQueue, 10000); // adjust interval as needed
 
+// --- START: Added for Age Demographics Report ---
+// Define interfaces for the report data structure (can be moved to a shared types file)
+interface SegmentBreakdown {
+  segment: string;
+  clients: number;
+  aum: number;
+}
+
+interface AgeBracketDataEntry {
+  bracket: string;
+  clientCount: number;
+  clientPercentage: number;
+  aum: number;
+  aumPercentage: number;
+  detailedBreakdown: SegmentBreakdown[];
+}
+
+interface ClientReportDetail {
+  id: string;
+  name: string;
+  age: number;
+  segment: string;
+  joinDate: string;
+  aum: number;
+}
+
+interface AgeDemographicsData {
+  overall: {
+    totalClients: number;
+    totalAUM: number;
+    averageClientAge: number;
+  };
+  byAgeBracket: AgeBracketDataEntry[];
+  clientDetails: ClientReportDetail[];
+}
+
+const getMockAgeDemographicsReportData = async (organizationId: number, advisorIds?: number[]): Promise<AgeDemographicsData> => {
+  // This data should ideally be generated based on advisorId or fetched from a service
+
+  // get all clients based on age
+  const clients = await storage.getClientsByOrganization(organizationId);
+  const clientsByAgeGroups = _.groupBy(clients, (client) => {
+    const age = client.age;
+    if (age < 20) return "<20";
+    else if (age >= 20 && age <= 40) return "21-40";
+    else if (age > 40 && age <= 60) return "41-60";
+    else if (age > 60 && age <= 80) return "61-80";
+    else return ">80";
+  });
+
+  const ageBrackets = ["<20", "21-40", "41-60", "61-80", ">80"];
+  let totalClients = 0;
+  ageBrackets.forEach(bracket => {
+    totalClients += (clientsByAgeGroups[bracket]?.length || 0);
+  });
+
+  const byAgeBracketData: AgeBracketDataEntry[] = [
+    {
+      bracket: "<20", clientCount: 0, clientPercentage: 0, aum: 50000, aumPercentage: 0.67,
+      detailedBreakdown: [{ segment: "Silver", clients: 1, aum: 50000 }]
+    },
+    {
+      bracket: "21-40", clientCount: 0, clientPercentage: 0, aum: 740000, aumPercentage: 10.0,
+      detailedBreakdown: [
+        { segment: "Silver", clients: 5, aum: 300000 },
+        { segment: "Gold", clients: 3, aum: 440000 },
+      ]
+    },
+    {
+      bracket: "41-60", clientCount: 0, clientPercentage: 0, aum: 2105000, aumPercentage: 28.4,
+      detailedBreakdown: [
+        { segment: "Silver", clients: 2, aum: 200000 },
+        { segment: "Gold", clients: 6, aum: 1205000 },
+        { segment: "Platinum", clients: 3, aum: 700000 },
+      ]
+    },
+    {
+      bracket: "61-80", clientCount: 0, clientPercentage: 0, aum: 3660000, aumPercentage: 49.4,
+      detailedBreakdown: [
+        { segment: "Gold", clients: 4, aum: 1000000 },
+        { segment: "Platinum", clients: 6, aum: 2660000 },
+      ]
+    },
+    {
+      bracket: ">80", clientCount: 0, clientPercentage: 0, aum: 850000, aumPercentage: 11.5,
+      detailedBreakdown: [
+        { segment: "Gold", clients: 2, aum: 300000 },
+        { segment: "Platinum", clients: 3, aum: 550000 },
+      ]
+    },
+  ];
+
+  const updatedByAgeBracket = byAgeBracketData.map(entry => {
+    const count = clientsByAgeGroups[entry.bracket]?.length || 0;
+    const percentage = totalClients > 0 ? (count / totalClients) * 100 : 0;
+    const generatedDetailedBreakdown: SegmentBreakdown[] = [];
+    // Assuming entry.detailedBreakdown (from byAgeBracketData) always has segment templates
+    const predefinedSegmentTemplates = entry.detailedBreakdown; 
+    const numSegments = predefinedSegmentTemplates.length;
+
+    if (count > 0 && numSegments > 0) { // count is the actual number of clients in this age bracket
+      const clientsPerSegmentBase = Math.floor(count / numSegments);
+      let remainderClients = count % numSegments;
+
+      predefinedSegmentTemplates.forEach((segmentTemplate) => {
+        let segmentClientCount = clientsPerSegmentBase;
+        if (remainderClients > 0) {
+          segmentClientCount++;
+          remainderClients--;
+        }
+        generatedDetailedBreakdown.push({
+          segment: segmentTemplate.segment,
+          clients: segmentClientCount,
+          // Dummy AUM: if clients > 0, assign a random-ish AUM, otherwise 0.
+          aum: segmentClientCount > 0 ? segmentClientCount * (40000 + Math.floor(Math.random() * 20000) * 1000) : 0,
+        });
+      });
+    } else if (numSegments > 0) { // count is 0 for this bracket
+      predefinedSegmentTemplates.forEach(segmentTemplate => {
+        generatedDetailedBreakdown.push({
+          segment: segmentTemplate.segment,
+          clients: 0,
+          aum: 0,
+        });
+      });
+    }
+    // If numSegments is 0 (i.e., entry.detailedBreakdown was empty), generatedDetailedBreakdown will be empty.
+
+    return {
+      ...entry, // This carries over other properties from the original entry,
+          // including potentially outdated bracket-level 'aum' and 'aumPercentage'.
+      clientCount: count,
+      clientPercentage: parseFloat(percentage.toFixed(1)), // Keep one decimal place
+      detailedBreakdown: generatedDetailedBreakdown,
+    };
+  });
+
+  const averageClientAge = parseFloat((clients.reduce((sum, client) => sum + client.age, 0) / totalClients || 0).toFixed(1));
+
+  return {
+    overall: {
+      totalClients: totalClients, // Use calculated total clients
+      totalAUM: 7405000, // This should also be calculated in a real scenario
+      averageClientAge, // Keep one decimal place
+    },
+    byAgeBracket: updatedByAgeBracket,
+    clientDetails: clients.map((client: any, index: number) => {
+      // Predefined list of mock segment, joinDate, and AUM details to cycle through
+      const mockDetailsList = [
+        { segment: 'Gold', joinDate: '2022-02-14', aum: 130000 },
+        { segment: 'Platinum', joinDate: '2018-07-21', aum: 750000 },
+        { segment: 'Silver', joinDate: '2023-01-10', aum: 80000 },
+        { segment: 'Gold', joinDate: '2019-05-05', aum: 220000 },
+        { segment: 'Platinum', joinDate: '2015-11-30', aum: 1200000 },
+        { segment: 'Silver', joinDate: '2024-01-15', aum: 50000 },
+        { segment: 'Silver', joinDate: '2023-08-22', aum: 60000 },
+      ];
+      const mockEntry = mockDetailsList[index % mockDetailsList.length];
+
+      return {
+        id: String(client.id), // Use actual client ID, converted to string
+        name: client.name || `${client.firstName || ''} ${client.lastName || ''}`.trim(), // Use actual client name or construct it
+        age: client.age,       // Use actual client age
+        segment: mockEntry.segment, // Keep mock segment
+        joinDate: mockEntry.joinDate, // Keep mock joinDate
+        aum: mockEntry.aum,         // Keep mock AUM
+      };
+    }),
+  };
+};
+
+async function getAgeDemographicsReportData(organizationId: number, advisorIds?: number[]): Promise<AgeDemographicsData> {
+  // This function should fetch and process the actual data from your database or API
+  // For now, returning mock data:
+  return await getMockAgeDemographicsReportData(organizationId, advisorIds);
+}
+
+async function getAgeDemographicsReportHandler(req: Request, res: Response) {
+  const user = req.user as any; // Assuming requireAuth middleware populates req.user
+  const advisorIdQuery = req.query.advisorId as string | undefined;
+  const advisorId = advisorIdQuery ? parseInt(advisorIdQuery, 10) : user?.id;
+  const organizationId = user?.organizationId;
+
+  try {
+    // In a real application, you would fetch and process data based on advisorId
+    // For example, using functions from storage or other services.
+    // const reportData = await storage.getProcessedAgeDemographics(advisorId);
+
+    // For now, returning mock data:
+    const reportData = await getAgeDemographicsReportData(organizationId);
+    // You might want to adjust the mock data if advisorId is present, or filter it.
+
+    res.json(reportData);
+  } catch (error) {
+    console.error("Error fetching age demographics report data:", error);
+    res.status(500).json({ message: "Failed to fetch age demographics report data", error: error instanceof Error ? error.message : "Unknown error" });
+  }
+}
+// --- END: Added for Age Demographics Report ---
+
+
+// --- START: Interfaces for Client Distribution Report (can be shared) ---
+interface TopStateSummary {
+  stateName: string;
+  value: number | string;
+  metricLabel: 'clients' | 'AUM';
+}
+
+interface StateMetric {
+  stateCode: string;
+  stateName: string;
+  clientCount: number;
+  totalAum: number;
+}
+
+interface ClientInStateDetail {
+  id: string;
+  name: string;
+  segment: string;
+  aum: number;
+}
+
+interface ClientDistributionReportData {
+  topStateByClients: TopStateSummary;
+  topStateByAUM: TopStateSummary;
+  stateMetrics: StateMetric[];
+  clientDetailsByState: { [stateCode: string]: ClientInStateDetail[] };
+}
+// --- END: Interfaces for Client Distribution Report ---
+
+
+// --- START: Mock Data and Handler for Client Distribution Report ---
+
+// Helper for state code to name mapping (can be expanded)
+const stateCodeToNameMapping: { [key: string]: string } = {
+  "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California",
+  "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "FL": "Florida", "GA": "Georgia",
+  "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois", "IN": "Indiana", "IA": "Iowa",
+  "KS": "Kansas", "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
+  "MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota", "MS": "Mississippi", "MO": "Missouri",
+  "MT": "Montana", "NE": "Nebraska", "NV": "Nevada", "NH": "New Hampshire", "NJ": "New Jersey",
+  "NM": "New Mexico", "NY": "New York", "NC": "North Carolina", "ND": "North Dakota", "OH": "Ohio",
+  "OK": "Oklahoma", "OR": "Oregon", "PA": "Pennsylvania", "RI": "Rhode Island", "SC": "South Carolina",
+  "SD": "South Dakota", "TN": "Tennessee", "TX": "Texas", "UT": "Utah", "VT": "Vermont",
+  "VA": "Virginia", "WA": "Washington", "WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming",
+  // Optionally, include US territories if needed
+  "AS": "American Samoa", "DC": "District of Columbia", "FM": "Federated States of Micronesia",
+  "GU": "Guam", "MH": "Marshall Islands", "MP": "Northern Mariana Islands", "PW": "Palau",
+  "PR": "Puerto Rico", "VI": "U.S. Virgin Islands"
+};
+
+// Generic templates for mocking client segment and AUM
+const genericClientDetailsTemplates = [
+  { segment: 'Ultra High Net Worth', baseAum: 2000000, randomAumRange: 10000000 },
+  { segment: 'High Net Worth', baseAum: 500000, randomAumRange: 1500000 },
+  { segment: 'Mass Affluent', baseAum: 100000, randomAumRange: 400000 },
+  { segment: 'Affluent', baseAum: 250000, randomAumRange: 750000 },
+  { segment: 'Emerging High Net Worth', baseAum: 750000, randomAumRange: 1250000 },
+];
+
+async function getMockClientDistributionReportData(organizationId: number): Promise<ClientDistributionReportData> {
+  const clients = await storage.getClientsByOrganization(organizationId);
+  
+  const clientsByState = _.groupBy(clients, (client) => {
+    return (client.contactInfo as any)?.address?.state?.toUpperCase() || "Unknown"; // Normalize state code
+  });
+
+  console.log("clientsByState", clientsByState);
+
+  const stateMetrics: StateMetric[] = [];
+  const clientDetailsByStateProcessed: { [stateCode: string]: ClientInStateDetail[] } = {};
+
+  let topStateByClientsSummary: TopStateSummary = { stateName: "N/A", value: 0, metricLabel: 'clients' };
+  let topStateByAUMSummary: TopStateSummary = { stateName: "N/A", value: "$0", metricLabel: 'AUM' };
+  let maxClients = 0;
+  let maxAum = 0;
+
+  for (const stateCode of Object.keys(clientsByState)) {
+    if (stateCode === "Unknown") { // Skip "Unknown" state category
+      continue;
+    }
+
+    const actualClientsInState = clientsByState[stateCode];
+    const clientCount = actualClientsInState.length;
+
+    if (clientCount === 0) {
+      continue;
+    }
+
+    const stateName = stateCodeToNameMapping[stateCode] || stateCode; // Use full name from mapping or state code itself
+    let currentTotalAumForState = 0;
+
+    clientDetailsByStateProcessed[stateCode] = actualClientsInState.map((client, index) => {
+      const template = genericClientDetailsTemplates[index % genericClientDetailsTemplates.length];
+      const clientAum = Math.floor(template.baseAum + Math.random() * template.randomAumRange);
+      currentTotalAumForState += clientAum;
+      return {
+        id: String(client.id),
+        name: client.name || `${client.firstName || ''} ${client.lastName || ''}`.trim(),
+        segment: template.segment,
+        aum: clientAum,
+      };
+    });
+
+    stateMetrics.push({
+      stateCode: stateCode,
+      stateName: stateName,
+      clientCount: clientCount,
+      totalAum: currentTotalAumForState,
+    });
+
+    if (clientCount > maxClients) {
+      maxClients = clientCount;
+      topStateByClientsSummary = { stateName, value: clientCount, metricLabel: 'clients' };
+    }
+    if (currentTotalAumForState > maxAum) {
+      maxAum = currentTotalAumForState;
+      topStateByAUMSummary = {
+        stateName,
+        value: currentTotalAumForState.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits:0, maximumFractionDigits:0 }),
+        metricLabel: 'AUM'
+      };
+    }
+  }
+
+  // If after processing all actual client data, no valid states were found,
+  // top summaries will remain "N/A" / "$0".
+  // This is more realistic than adding a default state if no data exists.
+
+  return {
+    topStateByClients: topStateByClientsSummary,
+    topStateByAUM: topStateByAUMSummary,
+    stateMetrics: stateMetrics.sort((a, b) => b.clientCount - a.clientCount),
+    clientDetailsByState: clientDetailsByStateProcessed,
+  };
+}
+
+// --- END: Mock Data and Handler for Client Distribution Report ---
+
+async function getClientDistributionReportHandler(req: Request, res: Response) {
+  const user = req.user as any;
+  // const advisorId = user?.id; // Or from query/params
+  const advisorIdQuery = req.query.advisorId as string | undefined;
+  const advisorId = advisorIdQuery ? parseInt(advisorIdQuery, 10) : undefined;
+  const organizationId = user?.organizationId;
+  try {
+    const reportData = await getMockClientDistributionReportData(organizationId);
+    res.json(reportData);
+  } catch (error) {
+    console.error("Error fetching client distribution report data:", error);
+    res.status(500).json({ message: "Failed to fetch client distribution report data", error: error instanceof Error ? error.message : "Unknown error" });
+  }
+}
+// --- END: Mock Data and Handler ---
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup session
   app.use(
@@ -100,7 +456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }),
   );
 
-  
+
   // Setup Passport
   app.use(passport.initialize());
   app.use(passport.session());
@@ -309,12 +665,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  app.get("/api/roles", requireAuth, async (req, res) =>{
+  app.get("/api/roles", requireAuth, async (req, res) => {
     const roles = await storage.getRoles();
     res.json(roles);
   });
 
-  app.get("/api/statuses", requireAuth, async (req, res) =>{
+  app.get("/api/statuses", requireAuth, async (req, res) => {
     const statuses = storage.getStatuses();
     res.json(statuses);
   });
@@ -391,15 +747,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  app.put("/api/users/:id", requireRole(["global_admin", "firm_admin"]), async (req, res) =>
-    {
-      const user = req.user as any;
-      const userId = parseInt(req.params.id);
-      const userData = req.body;
-      const updatedUser = await storage.updateUser(userId, userData);
-      res.json(updatedUser);
-    }
-    );
+  app.put("/api/users/:id", requireRole(["global_admin", "firm_admin"]), async (req, res) => {
+    const user = req.user as any;
+    const userId = parseInt(req.params.id);
+    const userData = req.body;
+    const updatedUser = await storage.updateUser(userId, userData);
+    res.json(updatedUser);
+  }
+  );
 
   // Organization routes
   app.get(
@@ -711,6 +1066,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  // --- START: Register new route ---
+  app.get("/api/analytics/age-demographics-report", requireAuth, getAgeDemographicsReportHandler);
+  // --- END: Register new route ---
+
+  // --- START: Register new route for Client Distribution ---
+  app.get("/api/analytics/client-distribution-report", requireAuth, getClientDistributionReportHandler);
+  // --- END: Register new route ---
+
   // Save WealthBox configuration
   app.get("/api/wealthbox/auth/setup", async (req, res) => {
     if (!req.isAuthenticated()) {
@@ -720,7 +1083,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ authUrl });
   });
 
-// Save WealthBox configuration and associated advisor tokens
+  // Save WealthBox configuration and associated advisor tokens
   app.post("/api/wealthbox/save-config", async (req, res) => {
     try {
       const { accessToken, settings } = req.body;
@@ -757,7 +1120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return; // Prevent further execution if headers are already sent
       }
 
-      console.log({user});
+      console.log({ user });
 
       const integrationType =
         await storage.getIntegrationTypeByName("wealthbox");
@@ -838,12 +1201,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // console.log("Fetching Wealthbox users for firm:", user.organizationId);
           // try {
-            const { users: wealthboxUsersData, success} = await getWealthboxUsers(user.id);
+          const { users: wealthboxUsersData, success } = await getWealthboxUsers(user.id);
 
-            if (!success) {
-              throw new Error("Failed to fetch Wealthbox users");
-            }
-            console.log("Wealthbox users response:", wealthboxUsersData);
+          if (!success) {
+            throw new Error("Failed to fetch Wealthbox users");
+          }
+          console.log("Wealthbox users response:", wealthboxUsersData);
           // } catch (error) {
           //   console.error("Error fetching Wealthbox users:", error);
           //   throw new Error("Failed to fetch Wealthbox users");
@@ -860,13 +1223,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 email: wealthboxUser.email,
                 roleId: '5',
                 organizationId: user.organizationId,
-                status:"inactive",
+                status: "inactive",
                 wealthboxUserId: wealthboxUser.id,
                 createdAt: new Date(),
                 updatedAt: new Date(),
               };
               console.log(`Creating user: ${userData.email}`);
-              return await storage.createUser(userData); 
+              return await storage.createUser(userData);
             }
             else {
               console.log(`Updating user: ${existingUser.email}`);
@@ -960,7 +1323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       authorized: isAuthorized,
     });
   });
-  
+
   // Orion API Routes
   app.get("/api/orion/status", requireAuth, getOrionStatus);
   app.get("/api/orion/token", requireRole(["firm_admin", "advisor"]), getOrionToken);

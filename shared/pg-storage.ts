@@ -9,6 +9,7 @@ import {
   User,
   InsertUser,
   Role,
+  Client,
   FirmIntegrationConfigs,
   InsertFirmIntegrationConfig,
   AdvisorAuthTokens,
@@ -334,4 +335,5 @@ export class PostgresStorage implements IStorage {
   async getStatuses(): Promise<Status[]> {
     return statusValues;
   }
+  
 }

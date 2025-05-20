@@ -50,6 +50,67 @@ export const dataService = {
   },
 };
 
+// --- START: Added for Age Demographics Report ---
+export interface SegmentBreakdown {
+  segment: string;
+  clients: number;
+  aum: number;
+}
+
+export interface AgeBracketDataEntry { // Renamed from AgeBracketData to avoid conflict if used elsewhere
+  bracket: string;
+  clientCount: number;
+  clientPercentage: number;
+  aum: number;
+  aumPercentage: number;
+  detailedBreakdown: SegmentBreakdown[];
+}
+
+export interface ClientReportDetail { // Renamed from ClientDetail to avoid conflict
+  id: string;
+  name: string;
+  age: number;
+  segment: string;
+  joinDate: string;
+  aum: number;
+}
+
+export interface AgeDemographicsData {
+  overall: {
+    totalClients: number;
+    totalAUM: number;
+    averageClientAge: number;
+  };
+  byAgeBracket: AgeBracketDataEntry[];
+  clientDetails: ClientReportDetail[];
+}
+
+/**
+ * Fetches the age demographics report data from the API.
+ * @param advisorId Optional ID of the advisor/user
+ * @returns Promise with the age demographics data
+ */
+export async function getAgeDemographicsReportData(advisorId?: number): Promise<AgeDemographicsData> {
+  try {
+    const params: Record<string, string | number | undefined> = {};
+    if (advisorId !== undefined) {
+      params.advisorId = advisorId;
+    }
+    const data = await dataService.fetchData(
+      "analytics/age-demographics-report",
+      params,
+    );
+    return data as AgeDemographicsData; // Ensure the fetched data conforms to the interface
+  } catch (error) {
+    console.error("Error fetching age demographics report data:", error);
+    // Consider returning a default structure or re-throwing
+    // For now, re-throwing to let the caller handle it.
+    throw error;
+  }
+}
+// --- END: Added for Age Demographics Report ---
+
+
 /**
  * Get the average age of all clients for a specific advisor
  * @param advisorId The ID of the advisor/user
@@ -1004,277 +1065,59 @@ export const getReferralData = async (): Promise<any> => {
   return { ...mockReferralData, referrers: updatedReferrers };
 };
 
-// ...existing code...
+// --- START: Added for Client Distribution by State Report ---
+export interface TopStateSummary {
+  stateName: string;
+  value: number | string; // Could be client count or formatted AUM string
+  metricLabel: 'clients' | 'AUM';
+}
 
-export interface HouseholdNetNew {
+export interface StateMetric {
+  stateCode: string; // e.g., "TX", "CA", "FL"
+  stateName: string;
+  clientCount: number;
+  totalAum: number;
+  // For map coloring, we might add normalized values later
+  clientDensityValue?: number; // Placeholder for map coloring logic
+  totalAssetsValue?: number;  // Placeholder for map coloring logic
+}
+
+export interface ClientInStateDetail {
   id: string;
-  clientName: string;
-  segmentation: "Platinum" | "Gold" | "Silver";
-  startingAUM: number;
-  distributions: number; // Negative value
-  contributions: number; // Positive value
-  transfers: number; // Positive or negative
-  netChange: number;
-  endingAUM: number;
-  status: "Increasing" | "Decreasing";
+  name: string;
+  segment: 'Ultra High Net Worth' | 'High Net Worth' | 'Mass Affluent' | string; // Allow for other segments
+  aum: number;
+  // joinDate?: string; // Optional, if needed
 }
 
-export interface NnaOverviewMetrics {
-  startingAUM: number;
-  distributions: number; // Negative
-  contributions: number; // Positive
-  netTransfers: number; // Positive or negative
-  totalNetNewAssets: number;
+export interface ClientDistributionReportData {
+  topStateByClients: TopStateSummary;
+  topStateByAUM: TopStateSummary;
+  stateMetrics: StateMetric[]; // Data for each state for map coloring and selection
+  // Storing client details keyed by state for easier lookup after a state is selected
+  clientDetailsByState: { [stateCode: string]: ClientInStateDetail[] };
 }
 
-export interface NnaChartDataPoint {
-  month: string; // e.g., "Jan 2025"
-  netNewAssets: number;
+/**
+ * Fetches the client distribution by state report data from the API.
+ * @returns Promise with the client distribution data
+ */
+export async function getClientDistributionReportData(): Promise<ClientDistributionReportData> {
+  try {
+    // const params: Record<string, string | number | undefined> = {};
+    // if (advisorId !== undefined) { // If advisor context is needed
+    //   params.advisorId = advisorId;
+    // }
+    const data = await dataService.fetchData(
+      "analytics/client-distribution-report",
+      // params
+    );
+    return data as ClientDistributionReportData;
+  } catch (error) {
+    console.error("Error fetching client distribution report data:", error);
+    throw error;
+  }
 }
+// --- END: Added for Client Distribution by State Report ---
 
-export const getMockHouseholdNetNew = (): HouseholdNetNew[] => {
-  return [
-    {
-      id: "1",
-      clientName: "John Smith",
-      segmentation: "Silver",
-      startingAUM: 450000,
-      distributions: -15000,
-      contributions: 25000,
-      transfers: 5000,
-      netChange: 15000,
-      endingAUM: 465000,
-      status: "Increasing",
-    },
-    {
-      id: "2",
-      clientName: "Sarah Johnson",
-      segmentation: "Platinum",
-      startingAUM: 1200000,
-      distributions: -50000,
-      contributions: 0,
-      transfers: -20000,
-      netChange: -70000,
-      endingAUM: 1130000,
-      status: "Decreasing",
-    },
-    {
-      id: "3",
-      clientName: "Robert Chen",
-      segmentation: "Gold",
-      startingAUM: 750000,
-      distributions: 0,
-      contributions: 100000,
-      transfers: 0,
-      netChange: 100000,
-      endingAUM: 850000,
-      status: "Increasing",
-    },
-    {
-      id: "4",
-      clientName: "Emily Williams",
-      segmentation: "Silver",
-      startingAUM: 325000,
-      distributions: -25000,
-      contributions: 0,
-      transfers: 0,
-      netChange: -25000,
-      endingAUM: 300000,
-      status: "Decreasing",
-    },
-    {
-      id: "5",
-      clientName: "Michael Brown",
-      segmentation: "Platinum",
-      startingAUM: 2100000,
-      distributions: 0,
-      contributions: 150000,
-      transfers: 75000,
-      netChange: 225000,
-      endingAUM: 2325000,
-      status: "Increasing",
-    },
-    {
-      id: "6",
-      clientName: "Jennifer Lee",
-      segmentation: "Gold",
-      startingAUM: 890000,
-      distributions: -35000,
-      contributions: 45000,
-      transfers: -15000,
-      netChange: -5000,
-      endingAUM: 885000,
-      status: "Decreasing",
-    },
-    {
-      id: "7",
-      clientName: "David Garcia",
-      segmentation: "Gold",
-      startingAUM: 675000,
-      distributions: -10000,
-      contributions: 30000,
-      transfers: 0,
-      netChange: 20000,
-      endingAUM: 695000,
-      status: "Increasing",
-    },
-  ];
-};
-
-export const getMockNnaOverviewMetrics = (): NnaOverviewMetrics => {
-  return {
-    startingAUM: 7840000,
-    distributions: -210000,
-    contributions: 375000,
-    netTransfers: -5000,
-    totalNetNewAssets: 160000, // contributions + distributions + netTransfers
-  };
-};
-
-export const getMockNnaChartData = (): NnaChartDataPoint[] => {
-  // Simplified data for brevity, matching the visual trend
-  return [
-    { month: "Jan 2025", netNewAssets: 145000 },
-    { month: "Feb 2025", netNewAssets: 138000 },
-    { month: "Mar 2025", netNewAssets: 166791 }, // From tooltip
-    { month: "Apr 2025", netNewAssets: 135000 },
-    { month: "May 2025", netNewAssets: 160000 },
-    { month: "Jun 2025", netNewAssets: 150000 },
-    { month: "Jul 2025", netNewAssets: 135000 },
-    { month: "Aug 2025", netNewAssets: 135000 },
-    { month: "Sep 2025", netNewAssets: 180000 },
-    { month: "Oct 2025", netNewAssets: 165000 },
-    { month: "Nov 2025", netNewAssets: 140000 },
-    { month: "Dec 2025", netNewAssets: 125000 },
-  ];
-};
-
-// Function to get household counts for filters
-export const getHouseholdTrendCounts = (households: HouseholdNetNew[]) => {
-  const increasing = households.filter((h) => h.status === "Increasing").length;
-  const decreasing = households.filter((h) => h.status === "Decreasing").length;
-  // Assuming no 'Stable' status in the provided mock data
-  const stable = 0;
-  const all = households.length;
-  return { increasing, decreasing, stable, all };
-};
-
-// ... existing interfaces ...
-
-export interface MonthlyHouseholdSummary {
-  month: string; // e.g., "May 2025"
-  startingAUM: number;
-  contributions: number;
-  distributions: number; // Negative
-  netTransfers: number;
-  endingAUM: number;
-}
-
-// Store mock data for all months in an object for easy lookup
-const mockMonthlySummaries: { [month: string]: MonthlyHouseholdSummary } = {
-  "Jan 2025": {
-    month: "Jan 2025",
-    startingAUM: 7840000,
-    contributions: 45000,
-    distributions: -15000,
-    netTransfers: 5000,
-    endingAUM: 7875000, // 7840000 + 45000 - 15000 + 5000
-  },
-  "Feb 2025": {
-    month: "Feb 2025",
-    startingAUM: 7875000, // Ending AUM from Jan
-    contributions: 30000,
-    distributions: -20000,
-    netTransfers: -2000,
-    endingAUM: 7883000, // 7875000 + 30000 - 20000 - 2000
-  },
-  "Mar 2025": {
-    month: "Mar 2025",
-    startingAUM: 7883000, // Ending AUM from Feb
-    contributions: 55000,
-    distributions: -10000,
-    netTransfers: 8000,
-    endingAUM: 7936000, // 7883000 + 55000 - 10000 + 8000
-  },
-  "Apr 2025": {
-    month: "Apr 2025",
-    startingAUM: 7936000, // Ending AUM from Mar
-    contributions: 25000,
-    distributions: -30000,
-    netTransfers: -5000,
-    endingAUM: 7926000, // 7936000 + 25000 - 30000 - 5000
-  },
-  "May 2025": {
-    month: "May 2025",
-    startingAUM: 7926000, // Ending AUM from Apr (Updated from original example)
-    contributions: 31416,
-    distributions: -17833,
-    netTransfers: -400,
-    endingAUM: 7939183, // 7926000 + 31416 - 17833 - 400
-  },
-  "Jun 2025": {
-    month: "Jun 2025",
-    startingAUM: 7939183, // Ending AUM from May
-    contributions: 40000,
-    distributions: -12000,
-    netTransfers: 3000,
-    endingAUM: 7970183, // 7939183 + 40000 - 12000 + 3000
-  },
-  "Jul 2025": {
-    month: "Jul 2025",
-    startingAUM: 7970183, // Ending AUM from Jun
-    contributions: 20000,
-    distributions: -25000,
-    netTransfers: -1000,
-    endingAUM: 7964183, // 7970183 + 20000 - 25000 - 1000
-  },
-  "Aug 2025": {
-    month: "Aug 2025",
-    startingAUM: 7964183, // Ending AUM from Jul
-    contributions: 35000,
-    distributions: -18000,
-    netTransfers: 6000,
-    endingAUM: 7987183, // 7964183 + 35000 - 18000 + 6000
-  },
-  "Sep 2025": {
-    month: "Sep 2025",
-    startingAUM: 7987183, // Ending AUM from Aug
-    contributions: 60000,
-    distributions: -22000,
-    netTransfers: 10000,
-    endingAUM: 8035183, // 7987183 + 60000 - 22000 + 10000
-  },
-  "Oct 2025": {
-    month: "Oct 2025",
-    startingAUM: 8035183, // Ending AUM from Sep
-    contributions: 28000,
-    distributions: -35000,
-    netTransfers: -3000,
-    endingAUM: 8025183, // 8035183 + 28000 - 35000 - 3000
-  },
-  "Nov 2025": {
-    month: "Nov 2025",
-    startingAUM: 8025183, // Ending AUM from Oct
-    contributions: 32000,
-    distributions: -16000,
-    netTransfers: 1500,
-    endingAUM: 8042683, // 8025183 + 32000 - 16000 + 1500
-  },
-  "Dec 2025": {
-    month: "Dec 2025",
-    startingAUM: 8042683, // Ending AUM from Nov
-    contributions: 22000,
-    distributions: -40000,
-    netTransfers: -5000,
-    endingAUM: 8019683, // 8042683 + 22000 - 40000 - 5000
-  },
-};
-
-export const getMockMonthlyHouseholdSummary = (
-  month: string,
-): MonthlyHouseholdSummary | null => {
-  // Look up the month in the predefined data object
-  return mockMonthlySummaries[month] || null; // Return the data if found, otherwise null
-};
-
-// ... rest of clientData.ts ...
+// ...rest of clientData.ts

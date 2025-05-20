@@ -3,10 +3,15 @@ import { useRoute, Link, useLocation } from 'wouter'; // Import wouter hooks and
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import AgeDemographicsReport from '@/components/reporting/AgeDemographicsReport';
+import ClientDistributionByStateReport from '@/components/reporting/ClientDistributionByStateReport'; // Import the new report
 
+// Define a registry for report components
 const reportRegistry: { [key: string]: { component: React.FC<any>, title: string } } = {
   'age-demographics': { component: AgeDemographicsReport, title: 'Client Age Demographics' },
-  // ... other reports
+  'client-distribution-by-state': { component: ClientDistributionByStateReport, title: 'Client Distribution by State' },
+  // Add other reports here as they are created
+  // 'clients-aum-overtime': { component: ClientsAUMOverTimeReport, title: 'Clients & AUM Over Time' },
+  // 'net-new-assets': { component: NetNewAssetsReport, title: 'Net New Assets' },
 };
 
 export default function ReportViewPage() {
