@@ -212,6 +212,21 @@ export const getOrionStatus = async () => {
   return response.json();
 };
 
+export const getOrionAumChartData = async (params?: {
+  aggregation?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  startDate?: string;
+  endDate?: string;
+}) => {
+  const queryParams = new URLSearchParams();
+  if (params?.aggregation) queryParams.append('aggregation', params.aggregation);
+  if (params?.startDate) queryParams.append('startDate', params.startDate);
+  if (params?.endDate) queryParams.append('endDate', params.endDate);
+  
+  const url = `/api/orion/aum-chart-data${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const response = await apiRequest("GET", url);
+  return response.json();
+};
+
 // AI Query
 export const executeAiQuery = async (query: string) => {
   const response = await apiRequest("POST", "/api/ai/query", { query });
