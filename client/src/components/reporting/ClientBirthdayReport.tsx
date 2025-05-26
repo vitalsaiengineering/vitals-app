@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search } from 'lucide-react';
+import { Search, CalendarDays, DollarSign, Users, ExternalLink } from 'lucide-react'; // Updated imports
 import {
   getClientBirthdayReportData,
   type ClientBirthdayReportData,
@@ -13,13 +13,13 @@ import {
   type BirthdayReportFilters as ReportFilterOptions
 } from '@/lib/clientData';
 
-// Define Grade colors
+// Define Grade colors - Updated for blue backgrounds and white text
 const GRADE_COLORS: Record<string, { badgeBg: string; badgeText: string; badgeBorder: string }> = {
-  Platinum: { badgeBg: 'bg-blue-100', badgeText: 'text-blue-700', badgeBorder: 'border-blue-200' },
-  Gold: { badgeBg: 'bg-yellow-100', badgeText: 'text-yellow-700', badgeBorder: 'border-yellow-200' },
-  Silver: { badgeBg: 'bg-slate-100', badgeText: 'text-slate-600', badgeBorder: 'border-slate-200' },
-  Bronze: { badgeBg: 'bg-orange-100', badgeText: 'text-orange-700', badgeBorder: 'border-orange-200' },
-  Default: { badgeBg: 'bg-gray-100', badgeText: 'text-gray-700', badgeBorder: 'border-gray-200' },
+  Platinum: { badgeBg: 'bg-blue-700', badgeText: 'text-white', badgeBorder: 'border-blue-700' }, // Darker blue
+  Gold: { badgeBg: 'bg-blue-600', badgeText: 'text-white', badgeBorder: 'border-blue-600' },     // Medium blue
+  Silver: { badgeBg: 'bg-blue-500', badgeText: 'text-white', badgeBorder: 'border-blue-500' },   // Lighter blue
+  Bronze: { badgeBg: 'bg-orange-100', badgeText: 'text-orange-700', badgeBorder: 'border-orange-200' }, // Kept for completeness
+  Default: { badgeBg: 'bg-gray-500', badgeText: 'text-white', badgeBorder: 'border-gray-500' },      // Default to a gray blue
 };
 
 const getGradeBadgeClasses = (grade: string) => {
@@ -109,6 +109,8 @@ export default function ClientBirthdayReport() {
   if (error) {
     return <div className="p-6 text-red-500 text-center">Error: {error}</div>;
   }
+
+  const iconClasses = "mr-1.5 h-4 w-4 text-blue-600"; // Common class for blue icons
 
   return (
     <div className="space-y-6">
@@ -203,20 +205,45 @@ export default function ClientBirthdayReport() {
                       <TableRow key={client.id}>
                         <TableCell className="font-medium">{client.clientName}</TableCell>
                         <TableCell>
-                          <span className={`px-2 py-0.5 text-xs font-semibold rounded-full border ${gradeClasses.badgeBg} ${gradeClasses.badgeText} ${gradeClasses.badgeBorder}`}>
+                          <span className={`px-2.5 py-1 text-xs font-semibold rounded-md ${gradeClasses.badgeBg} ${gradeClasses.badgeText}`}> {/* Removed border, adjusted padding */}
                             {client.grade}
                           </span>
                         </TableCell>
-                        <TableCell>{new Date(client.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</TableCell>
-                        <TableCell>{client.nextBirthdayDisplay}</TableCell>
-                        <TableCell className="text-center">{client.turningAge}</TableCell>
-                        <TableCell className="text-right">
-                          {client.aum.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        <TableCell>
+                          <div className="flex items-center">
+                            <CalendarDays className={iconClasses} />
+                            {new Date(client.dateOfBirth).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </div>
                         </TableCell>
-                        <TableCell>{client.clientTenure}</TableCell>
-                        <TableCell>{client.advisorName}</TableCell>
+                        <TableCell>{client.nextBirthdayDisplay}</TableCell>
+                        <TableCell className="text-center text-blue-600 font-medium">{client.turningAge}</TableCell> {/* Turning age blue */}
                         <TableCell className="text-right">
-                          <Button size="sm" variant="outline">View Contact</Button>
+                          <div className="flex items-center justify-end">
+                            <DollarSign className={iconClasses} />
+                            {client.aum.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <Users className={iconClasses} /> {/* People icon for tenure */}
+                            {client.clientTenure}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <Users className={iconClasses} /> {/* People icon for advisor */}
+                            {client.advisorName}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="bg-white text-blue-600 border-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                          >
+                            <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                            View Contact
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
