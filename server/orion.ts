@@ -741,7 +741,7 @@ export async function syncOrionClientsHandler(req: Request, res: Response) {
         error: "Orion not configured for this organization",
       });
     }
-
+    console.log("authToken", authToken);
     // Fetch clients from Orion
     const clientsResult = await getPortfolioClients(authToken.accessToken);
     if (!clientsResult.success) {
@@ -1057,6 +1057,125 @@ export async function syncOrionAccountsHandler(req: Request, res: Response) {
     return res.status(500).json({
       success: false,
       error: "Failed to sync Orion accounts",
+    });
+  }
+}
+
+/**
+ * Get Orion AUM chart data handler - optimized for chart display
+ */
+export async function getOrionAumChartDataHandler(req: Request, res: Response) {
+  try {
+    const user = req.user as any;
+    
+    if (!user) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Get firm integration config
+    const firmConfig = await storage.getFirmIntegrationConfigByFirmId(user.organizationId);
+    if (!firmConfig) {
+      return res.status(400).json({
+        success: false,
+        error: "Firm integration config not found",
+      });
+    }
+
+    // Get aggregation level from query params (default to monthly)
+    const { aggregation = 'monthly', startDate, endDate } = req.query;
+
+    const { db } = await import("./db");
+    const { sql } = await import("drizzle-orm");
+
+    let dateFormat: string;
+    let groupByClause: string;
+
+    // Determine aggregation level
+    switch (aggregation) {
+      case 'yearly':
+        dateFormat = 'YYYY';
+        groupByClause = "DATE_TRUNC('year', as_of_date)";
+        break;
+      case 'quarterly':
+        dateFormat = 'YYYY-Q';
+        groupByClause = "DATE_TRUNC('quarter', as_of_date)";
+        break;
+      case 'weekly':
+        dateFormat = 'YYYY-WW';
+        groupByClause = "DATE_TRUNC('week', as_of_date)";
+        break;
+      case 'daily':
+        dateFormat = 'YYYY-MM-DD';
+        groupByClause = "as_of_date";
+        break;
+      default: // monthly
+        dateFormat = 'YYYY-MM';
+        groupByClause = "DATE_TRUNC('month', as_of_date)";
+    }
+
+    // Build the query with optional date filtering
+    let whereClause = `WHERE firm_integration_config_id = ${firmConfig.id}`;
+    
+    if (startDate) {
+      whereClause += ` AND as_of_date >= '${startDate}'`;
+    }
+    
+    if (endDate) {
+      whereClause += ` AND as_of_date <= '${endDate}'`;
+    }
+
+    const query = `
+      SELECT 
+        ${groupByClause} as period,
+        TO_CHAR(${groupByClause}, '${dateFormat}') as period_label,
+        AVG(CAST(value AS DECIMAL)) as average_aum,
+        COUNT(*) as data_points,
+        MIN(as_of_date) as period_start,
+        MAX(as_of_date) as period_end
+      FROM orion_aum_history 
+      ${whereClause}
+      GROUP BY ${groupByClause}
+      ORDER BY period ASC
+    `;
+
+    const result = await db.execute(sql.raw(query));
+
+    // Transform the data for the chart
+    const chartData = (result?.rows as any[]).map((row: any) => ({
+      period: row.period_label,
+      date: row.period_start,
+      aum: parseFloat(row.average_aum),
+      dataPoints: parseInt(row.data_points),
+      periodStart: row.period_start,
+      periodEnd: row.period_end,
+    }));
+
+    // Calculate summary statistics
+    const totalRecords = chartData.length;
+    const latestAum = chartData.length > 0 ? chartData[chartData.length - 1].aum : 0;
+    const earliestAum = chartData.length > 0 ? chartData[0].aum : 0;
+    const growth = earliestAum > 0 ? ((latestAum - earliestAum) / earliestAum) * 100 : 0;
+
+    return res.json({
+      success: true,
+      data: chartData,
+      summary: {
+        totalRecords,
+        latestAum,
+        earliestAum,
+        growth: parseFloat(growth.toFixed(2)),
+        aggregation,
+        dateRange: {
+          start: chartData.length > 0 ? chartData[0].periodStart : null,
+          end: chartData.length > 0 ? chartData[chartData.length - 1].periodEnd : null,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error getting Orion AUM chart data:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to get Orion AUM chart data",
     });
   }
 } 
