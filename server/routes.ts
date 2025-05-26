@@ -26,7 +26,13 @@ import {
 import {
   setupOrionConnectionHandler,
   testOrionConnectionHandler,
-  getOrionStatusHandler
+  getOrionStatusHandler,
+  syncOrionClientsHandler,
+  syncOrionAccountsHandler,
+  syncOrionAumHistoryHandler,
+  getOrionAumTimeSeriesHandler,
+  getOrionSyncJobStatusHandler,
+  getUserOrionSyncJobsHandler
 } from "./orion";
 import {
   getDataMappingsHandler,
@@ -797,7 +803,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Existing advisor auth token:", advisorAuthToken);
       if (!advisorAuthToken) {
         advisorAuthToken = await storage.createAdvisorAuthToken({
-          userId: user.id,
+          advisorId: user.id,
           accessToken: accessToken,
           expiresAt: new Date(),
           firmIntegrationConfigId: updatedFirmIntegration.id,
@@ -805,6 +811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           tokenType: null,
           scope: null,
           additionalData: {},
+          integrationType: integrationType.id,
         });
         console.log("New advisor auth token created:", advisorAuthToken);
       }
@@ -815,13 +822,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdAt: advisorAuthToken.createdAt,
         updatedAt: new Date(),
         firmIntegrationConfigId: updatedFirmIntegration.id,
-        userId: user.id,
+        advisorId: user.id,
         accessToken: accessToken,
         refreshToken: advisorAuthToken.refreshToken,
         tokenType: advisorAuthToken.tokenType,
         expiresAt: advisorAuthToken.expiresAt,
         scope: advisorAuthToken.scope,
         additionalData: advisorAuthToken.additionalData,
+        integrationType: integrationType.id,
       });
       console.log("Updated advisor auth token:", advisorAuthToken);
 
@@ -970,9 +978,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/wealthbox/users", getWealthboxUsersHandler);
 
   // Orion integration routes - firm_admin and advisor users can access
-  app.post("/api/orion/setup-connection", setupOrionConnectionHandler);
-  app.post("/api/orion/test-connection", testOrionConnectionHandler);
-  app.get("/api/orion/status", requireAuth, getOrionStatusHandler);
+app.post("/api/orion/setup-connection", setupOrionConnectionHandler);
+app.post("/api/orion/test-connection", testOrionConnectionHandler);
+app.get("/api/orion/status", requireAuth, getOrionStatusHandler);
+app.post("/api/orion/sync-clients", requireAuth, syncOrionClientsHandler);
+app.post("/api/orion/sync-accounts", requireAuth, syncOrionAccountsHandler);
+app.post("/api/orion/sync-aum-history", requireAuth, syncOrionAumHistoryHandler);
+app.get("/api/orion/aum-time-series", requireAuth, getOrionAumTimeSeriesHandler);
+app.get("/api/orion/sync-jobs/:jobId", requireAuth, getOrionSyncJobStatusHandler);
+app.get("/api/orion/sync-jobs", requireAuth, getUserOrionSyncJobsHandler);
 
   // Wealthbox sync routes
   app.post(

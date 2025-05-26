@@ -1,4 +1,4 @@
-import { db } from "./db"; // You'll need to create this file with database connection
+import { db } from "../server/db";
 import { eq, and } from "drizzle-orm";
 import {
   users,
@@ -18,7 +18,12 @@ import {
   IntegrationType,
   integrationTypes,
   Status,
-  statusValues
+  statusValues,
+  clients,
+  Client,
+  InsertClient,
+  portfolios,
+  Portfolio
 } from "@shared/schema";
 
 // export interface IFirmIntegrationConfig {
@@ -85,8 +90,8 @@ export interface IStorage {
     token: AdvisorAuthTokens,
   ): Promise<AdvisorAuthTokens>;
 
-  getClientsByOrganization(organizationId: number): Promise<User[]>;
-  getUsersByOrganizaton(organizationId: number): Promise<User[]>;
+  getClientsByOrganization(organizationId: number): Promise<Client[]>;
+  getUsersByOrganization(organizationId: number): Promise<User[]>;
 
   getRoles(): Promise<Role[]>
   getStatuses(): Promise<Status[]>
@@ -112,7 +117,7 @@ export class PostgresStorage implements IStorage {
 
   async createOrganization(org: InsertOrganization): Promise<Organization> {
     const results = await db.insert(organizations).values(org).returning();
-    return results[0];
+    return results[0] as Organization;
   }
 
   // User methods
@@ -269,7 +274,7 @@ export class PostgresStorage implements IStorage {
       .from(advisorAuthTokens)
       .where(
         and(
-          eq(advisorAuthTokens.userId, advisorId),
+          eq(advisorAuthTokens.advisorId, advisorId),
           eq(
             advisorAuthTokens.firmIntegrationConfigId,
             integrationConfigs[0].id,
@@ -312,7 +317,7 @@ export class PostgresStorage implements IStorage {
     return results[0];
   }
 
-  async getClientsByOrganization(organizationId: number): Promise<User[]> {
+  async getClientsByOrganization(organizationId: number): Promise<Client[]> {
     const results = await db
       .select()
       .from(clients)
@@ -320,19 +325,13 @@ export class PostgresStorage implements IStorage {
     return results;
   }
 
-  // async getUsersByOrganization(organizationId: number): Promise<User[]> {
-  //   const results = await db
-  //     .select()
-  //     .from(users)
-  //     .where(eq(users.organizationId, organizationId));
-  //   return results;
-  // }
+
 
   async getRoles(): Promise<Role[]>{
     return db.select().from(roles);
   }
 
-  getStatuses(): Status[] {
+  async getStatuses(): Promise<Status[]> {
     return statusValues;
   }
 }

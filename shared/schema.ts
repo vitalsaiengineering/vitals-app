@@ -52,11 +52,11 @@ export const roles = pgTable("roles", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const organizations = pgTable("organizations", {
+export const organizations: any = pgTable("organizations", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
   type: organizationTypeEnum("type").notNull(),
-  parentId: integer("parent_id").references(() => organizations.id),
+  parentId: integer("parent_id").references((): any => organizations.id),
   status: statusEnum("status").notNull().default("active"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -161,15 +161,22 @@ export const integrationDataStorage = pgTable("integration_data_storage", {
 export const clients = pgTable("clients", {
   id: serial("id").primaryKey(),
   externalId: varchar("external_id", { length: 100 }),
+  orionClientId: varchar("orion_client_id", { length: 100 }),
+  wealthboxClientId: varchar("wealthbox_client_id", { length: 100 }),
   firmId: integer("firm_id")
     .notNull()
     .references(() => organizations.id),
   primaryAdvisorId: integer("primary_advisor_id").references(() => users.id),
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
-  age: integer("age").notNull(),
-  emailAddress: varchar("email_address", { length: 255 }).notNull(),
-  phoneNumber: varchar("phone_number", { length: 30 }).notNull(),
+  age: integer("age"),
+  emailAddress: varchar("email_address", { length: 255 }),
+  phoneNumber: varchar("phone_number", { length: 30 }),
+  aum: varchar("aum", { length: 50 }).default("0"), // Using varchar to match DECIMAL(20,2)
+  isActive: boolean("is_active").default(true),
+  representativeName: varchar("representative_name", { length: 255 }),
+  representativeId: integer("representative_id"),
+  startDate: timestamp("start_date", { mode: "date" }),
   contactInfo: json("contact_info").notNull().default({}),
   source: varchar("source", { length: 50 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -247,11 +254,10 @@ export const userDataAccess = pgTable("user_data_access", {
 
 export const advisorAuthTokens = pgTable("advisor_auth_tokens", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id")
+  advisorId: integer("advisor_id")
     .notNull()
     .references(() => users.id),
   firmIntegrationConfigId: integer("firm_integration_config_id")
-    .notNull()
     .references(() => firmIntegrationConfigs.id),
   accessToken: varchar("access_token", { length: 1000 }).notNull(),
   refreshToken: varchar("refresh_token", { length: 1000 }),
@@ -259,6 +265,85 @@ export const advisorAuthTokens = pgTable("advisor_auth_tokens", {
   expiresAt: timestamp("expires_at", { withTimezone: true }),
   scope: varchar("scope", { length: 500 }),
   additionalData: json("additional_data").default({}),
+  integrationType: integer("integration_type").notNull().default(1),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+
+export const orionAccountData = pgTable("orion_account_data", {
+  id: serial("id").primaryKey(),
+  portfolioId: integer("portfolio_id")
+    .references(() => portfolios.id),
+  orionAccountId: varchar("orion_account_id", { length: 100 }).notNull(),
+  firmIntegrationConfigId: integer("firm_integration_config_id")
+    .notNull()
+    .references(() => firmIntegrationConfigs.id),
+  
+  // Core account information from Orion
+  name: varchar("name", { length: 255 }),
+  number: varchar("number", { length: 100 }),
+  accountType: varchar("account_type", { length: 100 }),
+  isActive: boolean("is_active").default(true),
+  
+  // Financial data
+  currentValue: varchar("current_value", { length: 50 }), // Using varchar to match decimal precision
+  accountStartValue: varchar("account_start_value", { length: 50 }),
+  
+  // Dates
+  accountStartDate: timestamp("account_start_date", { mode: "date" }),
+  cancelDate: timestamp("cancel_date", { mode: "date" }),
+  
+  // Management and custodian information
+  custodian: varchar("custodian", { length: 255 }),
+  managementStyle: varchar("management_style", { length: 255 }),
+  managementStyleId: integer("management_style_id"),
+  fundFamily: varchar("fund_family", { length: 255 }),
+  fundFamilyId: integer("fund_family_id"),
+  registrationId: integer("registration_id"),
+  modelName: varchar("model_name", { length: 255 }),
+  subAdvisor: varchar("sub_advisor", { length: 255 }),
+  
+  // Representative information
+  representative: varchar("representative", { length: 255 }),
+  representativeId: integer("representative_id"),
+  
+  // Client and household information
+  clientIdOrion: integer("client_id_orion"), // Orion's client ID
+  household: varchar("household", { length: 255 }),
+  
+  // JSONB fields for additional data
+  rawData: json("raw_data").notNull().default({}),
+  mappedData: json("mapped_data").notNull().default({}),
+  balanceData: json("balance_data").default({}),
+  performanceData: json("performance_data").default({}),
+  holdingsData: json("holdings_data").default({}),
+  
+  lastSyncedAt: timestamp("last_synced_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const orionAumHistory = pgTable("orion_aum_history", {
+  internalId: serial("internal_id").primaryKey(),
+  orionEntityId: integer("orion_entity_id").notNull(),
+  asOfDate: timestamp("as_of_date", { mode: "date" }).notNull(),
+  value: varchar("value", { length: 50 }).notNull(),
+  currency: varchar("currency", { length: 10 }).default("USD").notNull(),
+  firmIntegrationConfigId: integer("firm_integration_config_id")
+    .notNull()
+    .references(() => firmIntegrationConfigs.id),
+  rawData: json("raw_data").default({}),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -355,7 +440,7 @@ export const advisorAuthTokensRelations = relations(
   advisorAuthTokens,
   ({ one }) => ({
     user: one(users, {
-      fields: [advisorAuthTokens.userId],
+      fields: [advisorAuthTokens.advisorId],
       references: [users.id],
     }),
     firmIntegrationConfig: one(firmIntegrationConfigs, {
@@ -438,6 +523,7 @@ export const portfoliosRelations = relations(portfolios, ({ one, many }) => ({
     references: [clients.id],
   }),
   assets: many(assets),
+  orionAccountData: many(orionAccountData),
 }));
 
 export const assetsRelations = relations(assets, ({ one }) => ({
@@ -466,6 +552,25 @@ export const userDataAccessRelations = relations(userDataAccess, ({ one }) => ({
   dataAccessPolicy: one(dataAccessPolicies, {
     fields: [userDataAccess.dataAccessPolicyId],
     references: [dataAccessPolicies.id],
+  }),
+}));
+
+
+export const orionAccountDataRelations = relations(orionAccountData, ({ one }) => ({
+  portfolio: one(portfolios, {
+    fields: [orionAccountData.portfolioId],
+    references: [portfolios.id],
+  }),
+  firmIntegrationConfig: one(firmIntegrationConfigs, {
+    fields: [orionAccountData.firmIntegrationConfigId],
+    references: [firmIntegrationConfigs.id],
+  }),
+}));
+
+export const orionAumHistoryRelations = relations(orionAumHistory, ({ one }) => ({
+  firmIntegrationConfig: one(firmIntegrationConfigs, {
+    fields: [orionAumHistory.firmIntegrationConfigId],
+    references: [firmIntegrationConfigs.id],
   }),
 }));
 
@@ -561,3 +666,5 @@ export type AataAccessPolicies = typeof dataAccessPolicies.$inferSelect;
 export type UserDataAccess = typeof userDataAccess.$inferSelect;
 export type AdvisorAuthTokens = typeof advisorAuthTokens.$inferSelect;
 export type IntegrationType = typeof integrationTypes.$inferSelect;
+export type OrionAccountData = typeof orionAccountData.$inferSelect;
+export type OrionAumHistory = typeof orionAumHistory.$inferSelect;
