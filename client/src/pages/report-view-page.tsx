@@ -4,11 +4,16 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import AgeDemographicsReport from '@/components/reporting/AgeDemographicsReport';
 import ClientDistributionByStateReport from '@/components/reporting/ClientDistributionByStateReport'; // Import the new report
+import BookDevelopmentBySegmentReport from '@/components/reporting/BookDevelopmentBySegmentReport';
+import ClientBirthdayReport from '@/components/reporting/ClientBirthdayReport';
 
 // Define a registry for report components
 const reportRegistry: { [key: string]: { component: React.FC<any>, title: string } } = {
   'age-demographics': { component: AgeDemographicsReport, title: 'Client Age Demographics' },
   'client-distribution-by-state': { component: ClientDistributionByStateReport, title: 'Client Distribution by State' },
+  'birthday-report': { component: ClientBirthdayReport, title: 'Birthday Report' },
+  'active-clients-over-segments': { component: BookDevelopmentBySegmentReport, title: 'Active Clients Over Segments' },
+
   // Add other reports here as they are created
   // 'clients-aum-overtime': { component: ClientsAUMOverTimeReport, title: 'Clients & AUM Over Time' },
   // 'net-new-assets': { component: NetNewAssetsReport, title: 'Net New Assets' },

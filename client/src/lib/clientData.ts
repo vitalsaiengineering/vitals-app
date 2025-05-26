@@ -230,7 +230,50 @@ export function getAgeGroups(): AgeGroup[] {
   return ageGroups;
 }
 
-// ... existing code ...
+// --- START: Added for Book Development Report ---
+export interface BookDevelopmentClient {
+  id: string;
+  name: string;
+  segment: 'Platinum' | 'Gold' | 'Silver';
+  yearsWithFirm: number;
+  yearsWithFirmText: string;
+  sinceDateText: string;
+  aum: number;
+}
+
+export interface YearlySegmentDataPoint {
+  year: number;
+  value: number;
+  previousYearValue?: number;
+}
+
+export interface BookDevelopmentSegmentData {
+  name: 'Platinum' | 'Gold' | 'Silver';
+  color: string;
+  fillColor?: string;
+  dataAUM: YearlySegmentDataPoint[];
+  dataClientCount: YearlySegmentDataPoint[];
+  clients: BookDevelopmentClient[];
+}
+
+export interface BookDevelopmentReportData {
+  allSegmentsData: BookDevelopmentSegmentData[];
+}
+
+/**
+ * Fetches the book development report data from the API.
+ * @returns Promise with the book development data
+ */
+export async function getBookDevelopmentReportData(): Promise<BookDevelopmentReportData> {
+  try {
+    const data = await dataService.fetchData("analytics/book-development-report");
+    return data as BookDevelopmentReportData;
+  } catch (error) {
+    console.error("Error fetching book development report data:", error);
+    throw error;
+  }
+}
+// --- END: Added for Book Development Report ---
 
 // Interface for individual client details within a state (as used in ClientStateDistributionMap)
 export interface ClientDetail {
@@ -1097,6 +1140,55 @@ export interface ClientDistributionReportData {
   // Storing client details keyed by state for easier lookup after a state is selected
   clientDetailsByState: { [stateCode: string]: ClientInStateDetail[] };
 }
+
+// filepath: /home/runner/workspace/client/src/lib/clientData.ts
+// ... existing code ...
+// --- END: Added for Client Distribution by State Report ---
+
+// --- START: Added for Client Birthday Report ---
+export interface BirthdayClient {
+  id: string;
+  clientName: string;
+  grade: string;
+  dateOfBirth: string;
+  nextBirthdayDisplay: string;
+  nextBirthdayDate: string;
+  turningAge: number;
+  aum: number;
+  clientTenure: string;
+  advisorName: string;
+}
+
+export interface BirthdayReportFilters {
+  grades: string[];
+  advisors: string[];
+}
+
+export interface ClientBirthdayReportData {
+  clients: BirthdayClient[];
+  filters: BirthdayReportFilters;
+}
+
+export interface GetClientBirthdayReportParams {
+  nameSearch?: string;
+  grade?: string;
+  month?: string; // month number as string e.g. "1" for Jan
+  tenure?: string; // e.g. "1-2 years"
+  advisor?: string;
+}
+
+export async function getClientBirthdayReportData(params?: GetClientBirthdayReportParams): Promise<ClientBirthdayReportData> {
+  try {
+    const data = await dataService.fetchData("analytics/birthday-report", params);
+    return data as ClientBirthdayReportData;
+  } catch (error) {
+    console.error("Error fetching client birthday report data:", error);
+    throw error;
+  }
+}
+// --- END: Added for Client Birthday Report ---
+
+// ...rest of clientData.ts
 
 /**
  * Fetches the client distribution by state report data from the API.
