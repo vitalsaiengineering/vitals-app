@@ -12,6 +12,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { getOrionAumChartData } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
+import { useLocation } from 'wouter';
 
 // Interface for chart data
 interface ChartDataPoint {
@@ -35,6 +36,7 @@ const formatCurrency = (amount: number) => {
 
 export const AumChart = () => {
   const [aggregation, setAggregation] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
+  const [, navigate] = useLocation();
 
   // Fetch Orion AUM data
   const { 
@@ -56,18 +58,18 @@ export const AumChart = () => {
 
   // Mock data for when no real data is available
   const mockData = [
-    { period: '2023-01', aum: 1250000, date: '2023-01-01', dataPoints: 1 },
-    { period: '2023-02', aum: 1275000, date: '2023-02-01', dataPoints: 1 },
+    { period: '2023-01', aum: 800000, date: '2023-01-01', dataPoints: 1 },
+    { period: '2023-02', aum: 900000, date: '2023-02-01', dataPoints: 1 },
     { period: '2023-03', aum: 1290000, date: '2023-03-01', dataPoints: 1 },
-    { period: '2023-04', aum: 1310000, date: '2023-04-01', dataPoints: 1 },
-    { period: '2023-05', aum: 1285000, date: '2023-05-01', dataPoints: 1 },
-    { period: '2023-06', aum: 1320000, date: '2023-06-01', dataPoints: 1 },
-    { period: '2023-07', aum: 1345000, date: '2023-07-01', dataPoints: 1 },
-    { period: '2023-08', aum: 1330000, date: '2023-08-01', dataPoints: 1 },
-    { period: '2023-09', aum: 1365000, date: '2023-09-01', dataPoints: 1 },
-    { period: '2023-10', aum: 1380000, date: '2023-10-01', dataPoints: 1 },
-    { period: '2023-11', aum: 1395000, date: '2023-11-01', dataPoints: 1 },
-    { period: '2023-12', aum: 1420000, date: '2023-12-01', dataPoints: 1 },
+    { period: '2023-04', aum: 1450000, date: '2023-04-01', dataPoints: 1 },
+    { period: '2023-05', aum: 1555000, date: '2023-05-01', dataPoints: 1 },
+    { period: '2023-06', aum: 1600000, date: '2023-06-01', dataPoints: 1 },
+    { period: '2023-07', aum: 1650000, date: '2023-07-01', dataPoints: 1 },
+    { period: '2023-08', aum: 1700000, date: '2023-08-01', dataPoints: 1 },
+    { period: '2023-09', aum: 1750000, date: '2023-09-01', dataPoints: 1 },
+    { period: '2023-10', aum: 1900000, date: '2023-10-01', dataPoints: 1 },
+    { period: '2023-11', aum: 2000000, date: '2023-11-01', dataPoints: 1 },
+    { period: '2023-12', aum: 2000000, date: '2023-12-01', dataPoints: 1 },
   ];
 
   // Transform data for the chart
@@ -78,9 +80,28 @@ export const AumChart = () => {
     dataPoints: item.dataPoints,
   })) || [];
 
+  // Check if we should show mock data
+  const shouldShowMockData = (
+    realData.length === 0 && !isLoading && (
+      !error || 
+      (error && error.message?.includes("Firm integration config not found"))
+    )
+  );
+
+  // Debug logging
+  if (process.env.NODE_ENV === 'development') {
+    console.log('AumChart Debug:', {
+      realDataLength: realData.length,
+      isLoading,
+      error: error?.message,
+      shouldShowMockData,
+      isUsingMockData: shouldShowMockData
+    });
+  }
+
   // Use real data if available, otherwise use mock data
   const chartData = realData.length > 0 ? realData : mockData;
-  const isUsingMockData = realData.length === 0 && !isLoading && !error;
+  const isUsingMockData = shouldShowMockData;
 
   // Loading state
   if (isLoading) {
@@ -105,8 +126,8 @@ export const AumChart = () => {
     );
   }
 
-  // Error state
-  if (error) {
+  // Error state (only show for errors that aren't "Firm integration config not found")
+  if (error && !error.message?.includes("Firm integration config not found")) {
     return (
       <div className="bg-white p-4 rounded-lg border">
         <div className="flex flex-col mb-2">
@@ -160,12 +181,22 @@ export const AumChart = () => {
           </div>
         </div>
         <div className="flex justify-between items-center mt-1">
-          <p className="text-sm text-gray-500">
-            {isUsingMockData 
-              ? "Showing sample data - Connect to Orion and sync your data to see real AUM trends"
-              : "Hover over data points to see detailed values"
-            }
-          </p>
+          {isUsingMockData ? (
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <span>Showing sample data -</span>
+              <button
+                onClick={() => navigate('/settings?tab=integrations')}
+                className="text-blue-600 hover:text-blue-800 underline font-medium"
+              >
+                Connect to Orion
+              </button>
+              <span>and sync your data to see real AUM trends</span>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">
+              Hover over data points to see detailed values
+            </p>
+          )}
           {aumResponse?.summary && !isUsingMockData && (
             <div className="text-sm text-gray-600">
               <span className="font-medium">Latest: </span>
@@ -178,7 +209,7 @@ export const AumChart = () => {
             </div>
           )}
           {isUsingMockData && (
-            <div className="text-sm text-orange-600">
+            <div className="text-sm" style={{ color: 'oklch(0.4244 0.1809 265.64)' }}>
               <span className="font-medium">Sample Data</span>
             </div>
           )}
@@ -186,11 +217,6 @@ export const AumChart = () => {
       </div>
       
       <div className={`h-[300px] ${isUsingMockData ? 'relative' : ''}`}>
-        {isUsingMockData && (
-          <div className="absolute top-2 right-2 z-10 bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs font-medium">
-            Sample Data
-          </div>
-        )}
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={chartData}
@@ -203,8 +229,8 @@ export const AumChart = () => {
           >
             <defs>
               <linearGradient id="colorAum" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={isUsingMockData ? "#F97316" : "#0D47A1"} stopOpacity={0.8}/>
-                <stop offset="95%" stopColor={isUsingMockData ? "#F97316" : "#0D47A1"} stopOpacity={0.3}/>
+                <stop offset="5%" stopColor={isUsingMockData ? "#0D47A1" : "#0D47A1"} stopOpacity={0.8}/>
+                <stop offset="95%" stopColor={isUsingMockData ? "#0D47A1" : "#0D47A1"} stopOpacity={0.3}/>
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
@@ -235,7 +261,7 @@ export const AumChart = () => {
             <Area 
               type="monotone" 
               dataKey="aum" 
-              stroke={isUsingMockData ? "#F97316" : "#0D47A1"} 
+              stroke={isUsingMockData ? "#6366f1" : "#0D47A1"} 
               fillOpacity={1}
               fill="url(#colorAum)" 
             />
