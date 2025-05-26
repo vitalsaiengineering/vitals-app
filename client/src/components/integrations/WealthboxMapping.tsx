@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { FieldOption, MappingSection } from '@/types/mapping';
-import { SaveIcon, Plus, AlertCircle } from 'lucide-react';
+import { SaveIcon, Plus, AlertCircle, Info } from 'lucide-react';
 import FieldMappingRow from '@/components/mapping/FieldMappingRow';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useWealthboxFields } from '@/hooks/use-wealthbox-fields';
+import { fieldHasOptions } from '@/services/wealthbox-api';
 import axios from 'axios';
 
 const WealthboxMapping: React.FC = () => {
@@ -50,6 +51,29 @@ const WealthboxMapping: React.FC = () => {
     },
     [searchOptions]
   );
+
+  // Helper function to get field info for display
+  const getFieldInfo = useCallback((fieldValue: string): { field: FieldOption | null; isNested: boolean; parentField?: FieldOption } => {
+    const allOptions = getOptions('all');
+    
+    // First check if it's a direct field
+    const directField = allOptions.find(option => option.value === fieldValue);
+    if (directField) {
+      return { field: directField, isNested: false };
+    }
+    
+    // Check if it's a nested option
+    for (const option of allOptions) {
+      if (fieldHasOptions(option)) {
+        const nestedOption = option.options!.find(nested => nested.value === fieldValue);
+        if (nestedOption) {
+          return { field: nestedOption, isNested: true, parentField: option };
+        }
+      }
+    }
+    
+    return { field: null, isNested: false };
+  }, [getOptions]);
   
   const [sections, setSections] = useState<MappingSection[]>([
     {
@@ -300,6 +324,39 @@ const WealthboxMapping: React.FC = () => {
     }
   };
 
+  // Enhanced field info display component
+  const FieldInfoDisplay: React.FC<{ fieldValue: string }> = ({ fieldValue }) => {
+    if (!fieldValue) return null;
+    
+    const { field, isNested, parentField } = getFieldInfo(fieldValue);
+    
+    if (!field) return null;
+    
+    return (
+      <div className="mt-2 p-2 bg-muted/50 rounded-md text-sm">
+        <div className="flex items-center gap-2">
+          <Info className="w-4 h-4 text-muted-foreground" />
+          <div>
+            {isNested && parentField && (
+              <div className="text-muted-foreground">
+                From field: <span className="font-medium">{parentField.label}</span>
+              </div>
+            )}
+            <div className="font-medium">{field.label}</div>
+            {field.fieldType && !isNested && (
+              <div className="text-xs text-muted-foreground">
+                {field.fieldType} • {field.documentType}
+                {fieldHasOptions(field) && (
+                  <span className="ml-2">• {field.options!.length} options available</span>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderDefinitionsSection = () => {
     const section = segmentationSections[0];
     
@@ -312,15 +369,18 @@ const WealthboxMapping: React.FC = () => {
         <CardContent className="p-0">
           <div className="border-t border-border">
             {section.mappings.map((mapping) => (
-              <FieldMappingRow
-                key={mapping.sourceField}
-                mapping={mapping}
-                onMappingChange={(sourceField, targetField) => 
-                  handleSegmentationMappingChange(0, sourceField, targetField)
-                }
-                sourceSystem="Firm"
-                targetSystem="Segmentation Engine"
-              />
+              <div key={mapping.sourceField}>
+                <FieldMappingRow
+                  mapping={mapping}
+                  onMappingChange={(sourceField, targetField) => 
+                    handleSegmentationMappingChange(0, sourceField, targetField)
+                  }
+                  sourceSystem="Firm"
+                  targetSystem="Segmentation Engine"
+                  onSearch={handleFieldSearch}
+                />
+                <FieldInfoDisplay fieldValue={mapping.targetField} />
+              </div>
             ))}
             <div className="border-t border-border p-4">
               <Button 
@@ -333,6 +393,42 @@ const WealthboxMapping: React.FC = () => {
                 Add More Tiers
               </Button>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  // Enhanced FieldMappingCard with field info display
+  const EnhancedFieldMappingCard: React.FC<{
+    title: string;
+    description?: string;
+    mappings: any[];
+    onMappingChange: (sourceField: string, targetField: string) => void;
+    sourceSystem: string;
+    targetSystem: string;
+    sectionIndex: number;
+  }> = ({ title, description, mappings, onMappingChange, sourceSystem, targetSystem, sectionIndex }) => {
+    return (
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+          {description && <CardDescription>{description}</CardDescription>}
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="border-t border-border">
+            {mappings.map((mapping) => (
+              <div key={mapping.sourceField}>
+                <FieldMappingRow
+                  mapping={mapping}
+                  onMappingChange={onMappingChange}
+                  sourceSystem={sourceSystem}
+                  targetSystem={targetSystem}
+                  onSearch={handleFieldSearch}
+                />
+                <FieldInfoDisplay fieldValue={mapping.targetField} />
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -400,8 +496,16 @@ const WealthboxMapping: React.FC = () => {
           </Alert>
         ) : (
           <>
+            {/* Info banner about field types */}
+            <Alert className="mb-6">
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                Fields with dropdown options can be expanded to select specific values. Field types and available options are shown below each selection.
+              </AlertDescription>
+            </Alert>
+
             {sections.map((section, index) => (
-              <FieldMappingCard
+              <EnhancedFieldMappingCard
                 key={index}
                 title={section.title}
                 description={section.description}
@@ -411,7 +515,7 @@ const WealthboxMapping: React.FC = () => {
                 }
                 sourceSystem="Firm"
                 targetSystem="Wealthbox"
-                onSearch={handleFieldSearch}
+                sectionIndex={index}
               />
             ))}
             

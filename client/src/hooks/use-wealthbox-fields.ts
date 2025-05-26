@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FieldOption } from '@/types/mapping';
-import { fetchAllWealthboxFieldOptions } from '@/services/wealthbox-api';
+import { fetchAllWealthboxFieldOptions, fieldHasOptions, searchWithinFieldOptions } from '@/services/wealthbox-api';
 import { useToast } from '@/hooks/use-toast';
 
 type FieldCategory = 'customFields' | 'contactTypes' | 'contactRoles' | 'all';
@@ -66,7 +66,26 @@ export function useWealthboxFields(accessToken: string) {
   );
 
   /**
-   * Search across all field options
+   * Flatten options to include nested options for searching
+   */
+  const flattenOptionsForSearch = useCallback((options: FieldOption[]): FieldOption[] => {
+    const flattened: FieldOption[] = [];
+    
+    for (const option of options) {
+      // Add the parent field
+      flattened.push(option);
+      
+      // Add nested options if they exist
+      if (fieldHasOptions(option)) {
+        flattened.push(...option.options!);
+      }
+    }
+    
+    return flattened;
+  }, []);
+
+  /**
+   * Enhanced search across all field options including nested options
    */
   const searchOptions = useCallback(
     (searchTerm: string): FieldOption[] => {
@@ -77,18 +96,49 @@ export function useWealthboxFields(accessToken: string) {
       }
       
       const searchTermLower = searchTerm.toLowerCase();
-      return allOptions.filter(option => 
-        option.label.toLowerCase().includes(searchTermLower)
-      );
+      const matchingOptions: FieldOption[] = [];
+      
+      for (const option of allOptions) {
+        // Check if the parent field matches
+        const parentMatches = option.label.toLowerCase().includes(searchTermLower);
+        
+        if (fieldHasOptions(option)) {
+          // Search within nested options
+          const matchingNestedOptions = searchWithinFieldOptions(option, searchTerm);
+          
+          if (parentMatches || matchingNestedOptions.length > 0) {
+            // If parent matches or has matching nested options, include the field
+            // but only show matching nested options if parent doesn't match
+            matchingOptions.push({
+              ...option,
+              options: parentMatches ? option.options : matchingNestedOptions
+            });
+          }
+        } else if (parentMatches) {
+          // Simple field that matches
+          matchingOptions.push(option);
+        }
+      }
+      
+      return matchingOptions;
     },
     [getOptions]
   );
+
+  /**
+   * Get all available options including nested ones (flattened for simple selection)
+   */
+  const getAllFlattenedOptions = useCallback((): FieldOption[] => {
+    const allOptions = getOptions('all');
+    return flattenOptionsForSearch(allOptions);
+  }, [getOptions, flattenOptionsForSearch]);
 
   return {
     isLoading,
     hasError,
     getOptions,
     searchOptions,
+    getAllFlattenedOptions,
     refreshOptions: fetchOptions,
   };
 }

@@ -1,6 +1,9 @@
 export interface FieldOption {
   label: string;
   value: string;
+  fieldType?: string;
+  documentType?: string;
+  options?: FieldOption[];
 }
 
 export interface FieldMapping {
