@@ -24,6 +24,11 @@ import {
   getWealthboxUsers
 } from "./wealthbox";
 import {
+  setupOrionConnectionHandler,
+  testOrionConnectionHandler,
+  getOrionStatusHandler
+} from "./orion";
+import {
   getDataMappingsHandler,
   saveDataMappingsHandler
 } from "./api/data-mapping";
@@ -963,6 +968,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Wealthbox Users route - Direct token-based access for advisors dropdown
   app.get("/api/wealthbox/users", getWealthboxUsersHandler);
+
+  // Orion integration routes - firm_admin and advisor users can access
+  app.post("/api/orion/setup-connection", setupOrionConnectionHandler);
+  app.post("/api/orion/test-connection", testOrionConnectionHandler);
+  app.get("/api/orion/status", requireAuth, getOrionStatusHandler);
 
   // Wealthbox sync routes
   app.post(
