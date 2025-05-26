@@ -8,6 +8,9 @@ import {
   getWealthboxStatus,
   setupWealthboxOAuth,
   getWealthboxToken,
+  setupOrionConnection,
+  testOrionConnection,
+  getOrionStatus,
 } from "@/lib/api";
 import {
   Card,
@@ -37,6 +40,14 @@ export default function Settings() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [accessToken, setAccessToken] = useState("");
   const [activeTab, setActiveTab] = useState("user-management");
+
+  // Orion integration state
+  const [orionClientId, setOrionClientId] = useState("");
+  const [orionClientSecret, setOrionClientSecret] = useState("");
+  const [isConnectingOrion, setIsConnectingOrion] = useState(false);
+  const [orionConnectionStatus, setOrionConnectionStatus] = useState<
+    "none" | "success" | "error"
+  >("none");
 
   // State for data mapping
   const [location, setLocation] = useLocation();
@@ -104,6 +115,20 @@ export default function Settings() {
       retry: false,
     });
 
+  // Define interface for Orion status
+  interface OrionStatus {
+    connected?: boolean;
+    tokenExpiry?: string;
+    message?: string;
+  }
+
+  // Get Orion status
+  const { data: orionStatus, isLoading: isLoadingOrionStatus } =
+    useQuery<OrionStatus>({
+      queryKey: ["/api/orion/status"],
+      retry: false,
+    });
+
   // Test WealthBox connection
   const testConnectionMutation = useMutation({
     mutationFn: testWealthboxConnection,
@@ -142,6 +167,13 @@ export default function Settings() {
       setConnectionStatus("success");
     }
   }, [wealthboxStatus]);
+
+  // Set initial Orion connection status
+  useEffect(() => {
+    if (orionStatus?.connected) {
+      setOrionConnectionStatus("success");
+    }
+  }, [orionStatus]);
 
   // Import WealthBox data
   const importMutation = useMutation({
@@ -199,6 +231,71 @@ export default function Settings() {
         variant: "destructive",
       });
       setIsSyncing(false);
+    },
+  });
+
+  // Setup Orion connection
+  const setupOrionMutation = useMutation({
+    mutationFn: ({ clientId, clientSecret }: { clientId: string; clientSecret: string }) =>
+      setupOrionConnection(clientId, clientSecret),
+    onSuccess: (data) => {
+      if (data.success) {
+        setOrionConnectionStatus("success");
+        toast({
+          title: "Orion connection successful",
+          description: "Successfully connected to Orion API.",
+        });
+      } else {
+        setOrionConnectionStatus("error");
+        toast({
+          title: "Connection failed",
+          description: data.message || "Failed to connect to Orion API.",
+          variant: "destructive",
+        });
+      }
+      setIsConnectingOrion(false);
+    },
+    onError: (error: any) => {
+      setOrionConnectionStatus("error");
+      toast({
+        title: "Connection error",
+        description:
+          error.message || "An error occurred while connecting to Orion.",
+        variant: "destructive",
+      });
+      setIsConnectingOrion(false);
+    },
+  });
+
+  // Test Orion connection
+  const testOrionMutation = useMutation({
+    mutationFn: testOrionConnection,
+    onSuccess: (data) => {
+      if (data.success) {
+        setOrionConnectionStatus("success");
+        toast({
+          title: "Connection test successful",
+          description: "Orion API connection is working properly.",
+        });
+      } else {
+        setOrionConnectionStatus("error");
+        toast({
+          title: "Connection test failed",
+          description: data.message || "Failed to test Orion API connection.",
+          variant: "destructive",
+        });
+      }
+      setIsConnectingOrion(false);
+    },
+    onError: (error: any) => {
+      setOrionConnectionStatus("error");
+      toast({
+        title: "Connection test error",
+        description:
+          error.message || "An error occurred while testing Orion connection.",
+        variant: "destructive",
+      });
+      setIsConnectingOrion(false);
     },
   });
 
@@ -306,6 +403,25 @@ export default function Settings() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleOrionConnect = () => {
+    if (!orionClientId || !orionClientSecret) {
+      toast({
+        title: "Missing credentials",
+        description: "Please enter both Client ID and Client Secret.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsConnectingOrion(true);
+    setupOrionMutation.mutate({ clientId: orionClientId, clientSecret: orionClientSecret });
+  };
+
+  const handleOrionTest = () => {
+    setIsConnectingOrion(true);
+    testOrionMutation.mutate();
   };
 
   // Handle changing the active mapping type
@@ -620,6 +736,163 @@ export default function Settings() {
     );
   };
 
+  const renderOrionIntegration = () => {
+    return (
+      <>
+        {isAuthorized && orionConnectionStatus === "success" && (
+          <Alert className="mb-6 bg-green-50 border-green-200">
+            <AlertTitle className="text-green-800">Success!</AlertTitle>
+            <AlertDescription className="text-green-700">
+              Your Orion API connection was successful. You can now access your portfolio data.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {isAuthorized && orionConnectionStatus === "error" && (
+          <Alert className="mb-6 bg-red-50 border-red-200">
+            <AlertTitle className="text-red-800">Connection Failed</AlertTitle>
+            <AlertDescription className="text-red-700">
+              There was a problem connecting to the Orion API. Please check
+              your credentials and try again.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center">
+              <svg
+                className="w-8 h-8 mr-3 text-purple-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                ></path>
+              </svg>
+              <div>
+                <CardTitle>Orion Integration</CardTitle>
+                <CardDescription>
+                  Connect to your Orion account using Client ID and Client Secret
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="orion-client-id">Client ID</Label>
+                  <Input
+                    id="orion-client-id"
+                    type="text"
+                    value={orionClientId}
+                    onChange={(e) => setOrionClientId(e.target.value)}
+                    placeholder="Enter your Orion Client ID"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="orion-client-secret">Client Secret</Label>
+                  <Input
+                    id="orion-client-secret"
+                    type="password"
+                    value={orionClientSecret}
+                    onChange={(e) => setOrionClientSecret(e.target.value)}
+                    placeholder="Enter your Orion Client Secret"
+                  />
+                </div>
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h3 className="text-sm font-medium mb-2">
+                  About Orion API Integration
+                </h3>
+                <p className="text-xs text-gray-600">
+                  The Orion API integration allows you to access portfolio data, client information,
+                  and AUM over time. Your credentials are securely stored and used to authenticate
+                  API requests to the Orion platform.
+                </p>
+              </div>
+
+              <Separator />
+
+              <div>
+                <h3 className="text-lg font-medium mb-2">
+                  Integration Features
+                </h3>
+                <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                  <li>Access portfolio client data</li>
+                  <li>Retrieve AUM over time analytics</li>
+                  <li>Real-time portfolio performance metrics</li>
+                  <li>Secure token-based authentication</li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <div className="text-sm text-gray-500">
+              {orionStatus?.connected && (
+                <span>
+                  Connected to Orion •{" "}
+                  {orionStatus.tokenExpiry
+                    ? `Expires: ${new Date(orionStatus.tokenExpiry).toLocaleDateString()}`
+                    : "Active"}
+                </span>
+              )}
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                onClick={handleOrionTest}
+                disabled={isConnectingOrion || orionConnectionStatus !== "success"}
+                variant="outline"
+              >
+                {isConnectingOrion ? "Testing..." : "Test Connection"}
+              </Button>
+              <Button
+                onClick={handleOrionConnect}
+                disabled={isConnectingOrion}
+                variant="default"
+              >
+                {isConnectingOrion ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Connecting...
+                  </>
+                ) : (
+                  "Connect to Orion"
+                )}
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
+      </>
+    );
+  };
+
   return (
     <div className="container p-8 space-y-6">
       <div className="mb-8">
@@ -704,6 +977,7 @@ export default function Settings() {
             </CardHeader>
             <CardContent className="space-y-4">
               {renderWealthboxIntegration()}
+              {renderOrionIntegration()}
             </CardContent>
           </Card>
         </TabsContent>

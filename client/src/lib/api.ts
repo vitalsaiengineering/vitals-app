@@ -193,6 +193,25 @@ export const getWealthboxToken = async () => {
   return response.json();
 };
 
+// Orion Integration
+export const setupOrionConnection = async (clientId: string, clientSecret: string) => {
+  const response = await apiRequest("POST", "/api/orion/setup-connection", {
+    clientId,
+    clientSecret,
+  });
+  return response.json();
+};
+
+export const testOrionConnection = async () => {
+  const response = await apiRequest("POST", "/api/orion/test-connection");
+  return response.json();
+};
+
+export const getOrionStatus = async () => {
+  const response = await apiRequest("GET", "/api/orion/status");
+  return response.json();
+};
+
 // AI Query
 export const executeAiQuery = async (query: string) => {
   const response = await apiRequest("POST", "/api/ai/query", { query });
