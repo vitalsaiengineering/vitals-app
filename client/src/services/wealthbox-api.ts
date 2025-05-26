@@ -16,10 +16,19 @@ interface WealthboxApiResponse<T> {
   data: T[];
 }
 
+// Interface for field option items within a field
+interface WealthboxFieldOptionItem {
+  id: string | number;
+  label: string;
+}
+
 // Interface for field items returned from API
 interface WealthboxFieldItem {
   id?: string | number;
   name: string;
+  field_type?: string;
+  document_type?: string;
+  options?: WealthboxFieldOptionItem[];
   [key: string]: any;
 }
 
@@ -66,6 +75,12 @@ const convertToFieldOptions = (items: WealthboxFieldItem[]): FieldOption[] => {
   return items.map(item => ({
     label: item.name,
     value: item.id ? String(item.id) : item.name,
+    fieldType: item.field_type,
+    documentType: item.document_type,
+    options: item.options ? item.options.map(option => ({
+      label: option.label,
+      value: String(option.id),
+    })) : undefined,
   }));
 };
 
@@ -123,6 +138,46 @@ export const searchWealthboxFieldOptions = async (
   
   const searchTermLower = searchTerm.toLowerCase();
   return combinedOptions.filter(option => 
+    option.label.toLowerCase().includes(searchTermLower)
+  );
+};
+
+/**
+ * Helper function to check if a field has nested options
+ */
+export const fieldHasOptions = (field: FieldOption): boolean => {
+  return field.options !== undefined && field.options.length > 0;
+};
+
+/**
+ * Helper function to get all available options for a field
+ * Returns the field's nested options if available, otherwise returns the field itself as an option
+ */
+export const getFieldOptions = (field: FieldOption): FieldOption[] => {
+  if (fieldHasOptions(field)) {
+    return field.options!;
+  }
+  return [{ label: field.label, value: field.value }];
+};
+
+/**
+ * Searches within nested field options for fields that have them
+ * This is useful when you want to search within the options of a specific field
+ */
+export const searchWithinFieldOptions = (
+  field: FieldOption,
+  searchTerm: string
+): FieldOption[] => {
+  if (!fieldHasOptions(field)) {
+    return [];
+  }
+  
+  if (!searchTerm) {
+    return field.options!;
+  }
+  
+  const searchTermLower = searchTerm.toLowerCase();
+  return field.options!.filter(option => 
     option.label.toLowerCase().includes(searchTermLower)
   );
 };
