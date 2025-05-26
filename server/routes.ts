@@ -442,6 +442,376 @@ async function getClientDistributionReportHandler(req: Request, res: Response) {
 }
 // --- END: Mock Data and Handler ---
 
+// Add after the existing report interfaces and before the export function
+
+// --- START: Interfaces for Book Development Report ---
+interface BookDevelopmentClient {
+  id: string;
+  name: string;
+  segment: 'Platinum' | 'Gold' | 'Silver';
+  yearsWithFirm: number;
+  yearsWithFirmText: string;
+  sinceDateText: string;
+  aum: number;
+}
+
+interface YearlySegmentDataPoint {
+  year: number;
+  value: number;
+  previousYearValue?: number;
+}
+
+interface BookDevelopmentSegmentData {
+  name: 'Platinum' | 'Gold' | 'Silver';
+  color: string;
+  fillColor?: string;
+  dataAUM: YearlySegmentDataPoint[];
+  dataClientCount: YearlySegmentDataPoint[];
+  clients: BookDevelopmentClient[];
+}
+
+interface BookDevelopmentReportData {
+  allSegmentsData: BookDevelopmentSegmentData[];
+}
+// --- END: Interfaces for Book Development Report ---
+
+// --- START: Mock Data and Handler for Book Development Report ---
+const SEGMENT_COLORS = {
+  Platinum: {
+    base: 'hsl(222, 47%, 44%)',
+    badgeBg: 'bg-blue-100',
+    badgeText: 'text-blue-700',
+    badgeBorder: 'border-blue-200',
+  },
+  Gold: {
+    base: 'hsl(216, 65%, 58%)',
+    badgeBg: 'bg-sky-100',
+    badgeText: 'text-sky-700',
+    badgeBorder: 'border-sky-200',
+  },
+  Silver: {
+    base: 'hsl(210, 55%, 78%)',
+    badgeBg: 'bg-slate-100',
+    badgeText: 'text-slate-600',
+    badgeBorder: 'border-slate-200',
+  },
+};
+
+async function getMockBookDevelopmentReportData(organizationId: number): Promise<BookDevelopmentReportData> {
+  const clients = await storage.getClientsByOrganization(organizationId);
+  
+  // Group clients by segment
+  const clientsBySegment = _.groupBy(clients, (client) => {
+    // Mock segment assignment based on client data or use a default mapping
+    const clientId = client.id;
+    if (clientId % 3 === 0) return 'Platinum';
+    if (clientId % 3 === 1) return 'Gold';
+    return 'Silver';
+  });
+
+  console.log("clientsBySegment", clientsBySegment);
+
+  // Generate historical data based on actual client join dates
+  const generateYearlyData = (
+    baseClients: any[],
+    startValue: number,
+    growthRate: number,
+    isAUM: boolean
+  ): YearlySegmentDataPoint[] => {
+    let currentVal = startValue;
+    let prevVal: number | undefined = undefined;
+    const data: YearlySegmentDataPoint[] = [];
+    
+    for (let year = 2015; year <= 2025; year++) {
+      const point: YearlySegmentDataPoint = {
+        year,
+        value: Math.round(currentVal),
+        previousYearValue: prevVal !== undefined ? Math.round(prevVal) : undefined
+      };
+      data.push(point);
+      prevVal = currentVal;
+      
+      // Calculate growth based on actual client data where possible
+      const clientsJoinedThisYear = baseClients.filter(client => {
+        const joinYear = new Date(client.createdAt).getFullYear();
+        return joinYear === year;
+      }).length;
+      
+      const baseGrowth = Math.random() * growthRate * (isAUM ? 1 : 0.5) + (isAUM ? 0.02 : 0.01);
+      const clientInfluencedGrowth = clientsJoinedThisYear * 0.01; // Small boost for each new client
+      
+      currentVal *= (1 + baseGrowth + clientInfluencedGrowth);
+      
+      if (isAUM && currentVal < 1000000) currentVal = 1000000 * (1 + Math.random() * 0.1);
+      else if (!isAUM && currentVal < 5) currentVal = 5 * (1 + Math.random() * 0.1);
+    }
+    return data;
+  };
+
+  // Create formatted client data for each segment
+  const formatClientsForSegment = (clients: any[], segment: 'Platinum' | 'Gold' | 'Silver'): BookDevelopmentClient[] => {
+    return clients.map((client, index) => {
+      const yearsWithFirm = Math.max(1, new Date().getFullYear() - new Date(client.createdAt).getFullYear());
+      const joinDate = new Date(client.createdAt);
+      const sinceDateText = `Since ${joinDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;
+      
+      // Mock AUM based on segment
+      const baseAUM = segment === 'Platinum' ? 30000000 : segment === 'Gold' ? 10000000 : 5000000;
+      const mockAUM = baseAUM + (Math.random() * baseAUM * 0.5);
+
+      return {
+        id: String(client.id),
+        name: client.name || `${client.firstName || ''} ${client.lastName || ''}`.trim(),
+        segment,
+        yearsWithFirm,
+        yearsWithFirmText: `${yearsWithFirm} year${yearsWithFirm !== 1 ? 's' : ''}`,
+        sinceDateText,
+        aum: Math.round(mockAUM)
+      };
+    });
+  };
+
+  // Process each segment
+  const allSegmentsData: BookDevelopmentSegmentData[] = [
+    {
+      name: 'Platinum',
+      color: SEGMENT_COLORS.Platinum.base,
+      fillColor: SEGMENT_COLORS.Platinum.base,
+      dataAUM: generateYearlyData(clientsBySegment.Platinum || [], 70000000, 0.08, true),
+      dataClientCount: generateYearlyData(clientsBySegment.Platinum || [], 10, 0.05, false),
+      clients: formatClientsForSegment(clientsBySegment.Platinum || [], 'Platinum')
+    },
+    {
+      name: 'Gold',
+      color: SEGMENT_COLORS.Gold.base,
+      fillColor: SEGMENT_COLORS.Gold.base,
+      dataAUM: generateYearlyData(clientsBySegment.Gold || [], 40000000, 0.06, true),
+      dataClientCount: generateYearlyData(clientsBySegment.Gold || [], 25, 0.04, false),
+      clients: formatClientsForSegment(clientsBySegment.Gold || [], 'Gold')
+    },
+    {
+      name: 'Silver',
+      color: SEGMENT_COLORS.Silver.base,
+      fillColor: SEGMENT_COLORS.Silver.base,
+      dataAUM: generateYearlyData(clientsBySegment.Silver || [], 20000000, 0.05, true),
+      dataClientCount: generateYearlyData(clientsBySegment.Silver || [], 40, 0.03, false),
+      clients: formatClientsForSegment(clientsBySegment.Silver || [], 'Silver')
+    }
+  ];
+
+  return { allSegmentsData };
+}
+
+async function getBookDevelopmentReportHandler(req: Request, res: Response) {
+  const user = req.user as any;
+  const organizationId = user?.organizationId;
+  
+  try {
+    const reportData = await getMockBookDevelopmentReportData(organizationId);
+    res.json(reportData);
+  } catch (error) {
+    console.error("Error fetching book development report data:", error);
+    res.status(500).json({ 
+      message: "Failed to fetch book development report data", 
+      error: error instanceof Error ? error.message : "Unknown error" 
+    });
+  }
+}
+// --- END: Mock Data and Handler for Book Development Report ---
+
+// Add this route registration in the registerRoutes function, after the existing report routes:
+// Add this line after the other report route registrations:
+
+// filepath: /home/runner/workspace/server/routes.ts
+// ... existing code ...
+// --- END: Mock Data and Handler for Book Development Report ---
+
+// --- START: Interfaces for Client Birthday Report ---
+interface BirthdayClient {
+  id: string;
+  clientName: string;
+  grade: 'Platinum' | 'Gold' | 'Silver' | 'Bronze' | string; // Allow for other grades
+  dateOfBirth: string; // YYYY-MM-DD
+  nextBirthdayDisplay: string; // e.g., "In 5 days" or "Jan 15"
+  nextBirthdayDate: string; // YYYY-MM-DD of the upcoming birthday
+  turningAge: number;
+  aum: number;
+  clientTenure: string; // e.g., "5 years"
+  advisorName: string;
+}
+
+interface BirthdayReportFilters {
+  grades: string[];
+  advisors: string[];
+  // Months and Tenures are static, can be defined on frontend or sent if dynamic
+}
+
+interface ClientBirthdayReportData {
+  clients: BirthdayClient[];
+  filters: BirthdayReportFilters;
+}
+// --- END: Interfaces for Client Birthday Report ---
+
+// --- START: Handler and Logic for Client Birthday Report ---
+
+// Helper function to calculate next birthday and turning age
+function calculateBirthdayDetails(dobString: string): { nextBirthdayDisplay: string, nextBirthdayDate: string, turningAge: number, daysUntilNextBirthday: number } {
+  const dob = new Date(dobString);
+  if (isNaN(dob.getTime())) {
+    return { nextBirthdayDisplay: 'N/A', nextBirthdayDate: 'N/A', turningAge: 0, daysUntilNextBirthday: Infinity };
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Normalize today to start of day
+
+  let nextBirthday = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+  if (nextBirthday < today) {
+    nextBirthday.setFullYear(today.getFullYear() + 1);
+  }
+
+  const turningAge = nextBirthday.getFullYear() - dob.getFullYear();
+
+  const timeDiff = nextBirthday.getTime() - today.getTime();
+  const daysUntilNextBirthday = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+  let nextBirthdayDisplay = '';
+  if (daysUntilNextBirthday === 0) {
+    nextBirthdayDisplay = 'Today!';
+  } else if (daysUntilNextBirthday === 1) {
+    nextBirthdayDisplay = 'Tomorrow';
+  } else if (daysUntilNextBirthday <= 30) {
+    nextBirthdayDisplay = `In ${daysUntilNextBirthday} days`;
+  } else {
+    nextBirthdayDisplay = nextBirthday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+  
+  // Append the date for clarity if it's not "Today" or "Tomorrow"
+  if (daysUntilNextBirthday > 1) {
+      nextBirthdayDisplay += ` (${nextBirthday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})`;
+  }
+
+  return {
+    nextBirthdayDisplay,
+    nextBirthdayDate: nextBirthday.toISOString().split('T')[0],
+    turningAge,
+    daysUntilNextBirthday
+  };
+}
+
+// Helper function to calculate client tenure
+function calculateClientTenure(joinDateString: string): string {
+  const joinDate = new Date(joinDateString);
+  if (isNaN(joinDate.getTime())) return 'N/A';
+
+  const today = new Date();
+  let years = today.getFullYear() - joinDate.getFullYear();
+  const months = today.getMonth() - joinDate.getMonth();
+
+  if (months < 0 || (months === 0 && today.getDate() < joinDate.getDate())) {
+    years--;
+  }
+  return years <= 0 ? '<1 year' : `${years} year${years > 1 ? 's' : ''}`;
+}
+
+async function getClientBirthdayReportHandler(req: Request, res: Response) {
+  const user = req.user as any;
+  const organizationId = user?.organizationId;
+
+  // Extract filter query parameters
+  const {
+    nameSearch,
+    grade: gradeFilter,
+    month: monthFilter, // Expect month number 1-12
+    tenure: tenureFilter, // Expect "1-2", "2-5", "5-10", "10+"
+    advisor: advisorFilter,
+  } = req.query;
+
+  try {
+    const allClientsRaw = await storage.getClientsByOrganization(organizationId);
+    const allAdvisorsRaw = await storage.getUsersByOrganization(organizationId, ['advisor']);
+
+    const advisorMap = new Map(allAdvisorsRaw.map(adv => [adv.id, adv.name || `${adv.firstName} ${adv.lastName}`.trim()]));
+
+    let processedClients: BirthdayClient[] = allClientsRaw.map(client => {
+      // Assuming client.dateOfBirth and client.createdAt exist
+      // If not, these will need to be mocked or sourced
+      const dob = client.age ? new Date(new Date().getFullYear() - client.age, 0, 1).toISOString().split('T')[0] : '1970-01-01'; // Fallback if no DOB
+      const joinDate = client.createdAt ? new Date(client.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]; // Fallback
+      
+      const birthdayDetails = calculateBirthdayDetails(dob);
+      const clientTenureYears = calculateClientTenure(joinDate);
+      
+      return {
+        id: String(client.id),
+        clientName: client.name || `${client.firstName || ''} ${client.lastName || ''}`.trim(),
+        grade: client.segment || 'N/A',
+        dateOfBirth: dob,
+        nextBirthdayDisplay: birthdayDetails.nextBirthdayDisplay,
+        nextBirthdayDate: birthdayDetails.nextBirthdayDate,
+        turningAge: birthdayDetails.turningAge,
+        daysUntilNextBirthday: birthdayDetails.daysUntilNextBirthday, // For sorting
+        aum: (client as any).aum || Math.floor(Math.random() * 5000000) + 100000, // Mock AUM if not present
+        clientTenure: clientTenureYears,
+        advisorName: client.primaryAdvisorId ? advisorMap.get(client.primaryAdvisorId) || 'Unassigned' : 'Unassigned',
+        // Raw tenure years for filtering
+        _tenureYears: new Date().getFullYear() - new Date(joinDate).getFullYear(),
+        _nextBirthdayMonth: new Date(birthdayDetails.nextBirthdayDate).getMonth() + 1 // 1-12 for month
+      };
+    });
+
+    // Apply filters
+    if (nameSearch && typeof nameSearch === 'string') {
+      processedClients = processedClients.filter(c => c.clientName.toLowerCase().includes(nameSearch.toLowerCase()));
+    }
+    if (gradeFilter && typeof gradeFilter === 'string' && gradeFilter !== 'All Grades') {
+      processedClients = processedClients.filter(c => c.grade === gradeFilter);
+    }
+    if (monthFilter && typeof monthFilter === 'string' && monthFilter !== 'Any month') {
+      const monthNum = parseInt(monthFilter, 10);
+      processedClients = processedClients.filter(c => c._nextBirthdayMonth === monthNum);
+    }
+    if (advisorFilter && typeof advisorFilter === 'string' && advisorFilter !== 'All Advisors') {
+      processedClients = processedClients.filter(c => c.advisorName === advisorFilter);
+    }
+    if (tenureFilter && typeof tenureFilter === 'string' && tenureFilter !== 'Any tenure') {
+      processedClients = processedClients.filter(c => {
+        const years = c._tenureYears;
+        if (tenureFilter === '1-2 years') return years >= 1 && years <= 2;
+        if (tenureFilter === '2-5 years') return years > 2 && years <= 5;
+        if (tenureFilter === '5-10 years') return years > 5 && years <= 10;
+        if (tenureFilter === '10+ years') return years > 10;
+        return true;
+      });
+    }
+
+    // Sort by days until next birthday (ascending)
+    processedClients.sort((a, b) => (a as any).daysUntilNextBirthday - (b as any).daysUntilNextBirthday);
+
+    // Prepare filter options for frontend dropdowns
+    const uniqueGrades = [...new Set(allClientsRaw.map(c => c.segment || 'N/A'))].sort();
+    const uniqueAdvisors = [...advisorMap.values()].sort();
+
+    const reportData: ClientBirthdayReportData = {
+      clients: processedClients.map(({ daysUntilNextBirthday, _tenureYears, _nextBirthdayMonth, ...client }) => client), // Remove temporary fields
+      filters: {
+        grades: uniqueGrades,
+        advisors: uniqueAdvisors,
+      },
+    };
+
+    res.json(reportData);
+  } catch (error) {
+    console.error("Error fetching client birthday report data:", error);
+    res.status(500).json({
+      message: "Failed to fetch client birthday report data",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+}
+// --- END: Handler and Logic for Client Birthday Report ---
+
+
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup session
   app.use(
@@ -1068,11 +1438,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // --- START: Register new route ---
   app.get("/api/analytics/age-demographics-report", requireAuth, getAgeDemographicsReportHandler);
-  // --- END: Register new route ---
+  // --- END
+  // :/} Register new route ---
 
   // --- START: Register new route for Client Distribution ---
   app.get("/api/analytics/client-distribution-report", requireAuth, getClientDistributionReportHandler);
   // --- END: Register new route ---
+
+app.get("/api/analytics/book-development-report", requireAuth, getBookDevelopmentReportHandler);
+
+// --- START: Register new route for Client Birthday Report ---
+app.get("/api/analytics/birthday-report", requireAuth, getClientBirthdayReportHandler);
+// --- END: Register new route for Client Birthday Report ---
 
   // Save WealthBox configuration
   app.get("/api/wealthbox/auth/setup", async (req, res) => {

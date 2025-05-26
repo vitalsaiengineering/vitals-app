@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Users, CalendarDays, TrendingUp, DollarSign, Briefcase, UserCheck } from 'lucide-react'; // Added UserCheck for Advisor
+import { Search } from 'lucide-react';
 import {
   getClientBirthdayReportData,
   type ClientBirthdayReportData,
@@ -12,9 +12,8 @@ import {
   type GetClientBirthdayReportParams,
   type BirthdayReportFilters as ReportFilterOptions
 } from '@/lib/clientData';
-import { useToast } from '@/hooks/use-toast';
 
-// Define Grade colors - adapt from BookDevelopmentBySegmentReport or define new ones
+// Define Grade colors
 const GRADE_COLORS: Record<string, { badgeBg: string; badgeText: string; badgeBorder: string }> = {
   Platinum: { badgeBg: 'bg-blue-100', badgeText: 'text-blue-700', badgeBorder: 'border-blue-200' },
   Gold: { badgeBg: 'bg-yellow-100', badgeText: 'text-yellow-700', badgeBorder: 'border-yellow-200' },
@@ -50,7 +49,6 @@ export default function ClientBirthdayReport() {
   const [filterOptions, setFilterOptions] = useState<ReportFilterOptions>({ grades: [], advisors: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
   // Filter states
   const [nameSearch, setNameSearch] = useState('');
@@ -69,7 +67,6 @@ export default function ClientBirthdayReport() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load birthday report data';
       setError(errorMessage);
-      toast({ title: "Error", description: errorMessage, variant: "destructive" });
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -89,14 +86,13 @@ export default function ClientBirthdayReport() {
     if (selectedTenure !== 'Any tenure') params.tenure = selectedTenure;
     if (selectedAdvisor !== 'All Advisors') params.advisor = selectedAdvisor;
     
-    // Debounce or delay fetching if desired, for now direct fetch
+    // Debounce search input
     const timer = setTimeout(() => {
         fetchReportData(params);
-    }, 500); // Debounce search input
+    }, 500);
 
     return () => clearTimeout(timer);
   }, [nameSearch, selectedGrade, selectedMonth, selectedTenure, selectedAdvisor]);
-
 
   const handleResetFilters = () => {
     setNameSearch('');
@@ -104,10 +100,9 @@ export default function ClientBirthdayReport() {
     setSelectedMonth('Any month');
     setSelectedTenure('Any tenure');
     setSelectedAdvisor('All Advisors');
-    // fetchReportData(); // Re-fetch with no filters (covered by useEffect)
   };
 
-  if (isLoading && reportData.length === 0 && !error) { // Show loading only on initial load
+  if (isLoading && reportData.length === 0 && !error) {
     return <div className="p-6 text-center">Loading birthday report...</div>;
   }
 

@@ -119,6 +119,14 @@ const initialMockReports: Report[] = [
     isFavorite: false,
     integrations: ["Data Sources"],
   },
+  {
+    id: "11",
+    name: "Active clients over segments",
+    description: "Analyze active clients across different segments.",
+    routePath: "active-clients-over-segments",
+    isFavorite: false,
+    integrations: ["Data Sources"],
+  }
 ];
 
 export default function Reporting() {
