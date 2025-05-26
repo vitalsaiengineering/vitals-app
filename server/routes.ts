@@ -32,7 +32,8 @@ import {
   syncOrionAumHistoryHandler,
   getOrionAumTimeSeriesHandler,
   getOrionSyncJobStatusHandler,
-  getUserOrionSyncJobsHandler
+  getUserOrionSyncJobsHandler,
+  getOrionAumChartDataHandler
 } from "./orion";
 import {
   getDataMappingsHandler,
@@ -987,6 +988,7 @@ app.post("/api/orion/sync-aum-history", requireAuth, syncOrionAumHistoryHandler)
 app.get("/api/orion/aum-time-series", requireAuth, getOrionAumTimeSeriesHandler);
 app.get("/api/orion/sync-jobs/:jobId", requireAuth, getOrionSyncJobStatusHandler);
 app.get("/api/orion/sync-jobs", requireAuth, getUserOrionSyncJobsHandler);
+app.get("/api/orion/aum-chart-data", requireAuth, getOrionAumChartDataHandler);
 
   // Wealthbox sync routes
   app.post(
