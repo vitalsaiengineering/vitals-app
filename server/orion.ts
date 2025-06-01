@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { storage } from "./storage";
+import { and, or } from "drizzle-orm";
 
 // Orion API base URL
 const ORION_API_BASE_URL = "https://stagingapi.orionadvisor.com/api/v1";
@@ -230,11 +231,17 @@ export async function storeOrionClientData(
     const { clients } = await import("../shared/schema");
     const { eq: clientEq } = await import("drizzle-orm");
 
-    // Check if client already exists by Orion ID
+    // Check if client already exists by name and email 
     const existingClients = await clientDb
       .select()
       .from(clients)
-      .where(clientEq(clients.orionClientId, clientData.id?.toString()));
+      .where(
+        and(
+          clientEq(clients.firstName, mappedClient.firstName),
+          clientEq(clients.lastName, mappedClient.lastName),
+          clientEq(clients.emailAddress, mappedClient.emailAddress)
+        )
+      );
 
     let client;
     if (existingClients.length > 0) {
