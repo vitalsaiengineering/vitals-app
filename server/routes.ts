@@ -1675,35 +1675,67 @@ app.get("/api/analytics/client-inception", requireAuth, getClientInceptionHandle
     }
   });
 
-  // async function fetchWealthboxUsers(accessToken: string) {
-  //   const wealthboxUsersResponse = await fetch(
-  //     `/api/wealthbox/users?access_token=${accessToken}`,
-  //   );
-  //   if (!wealthboxUsersResponse.ok) {
-  //     throw new Error("Failed to fetch Wealthbox users");
-  //   }
+  // OAuth token exchange endpoint
+  app.post("/api/wealthbox/oauth/token", requireAuth, async (req, res) => {
+    try {
+      const { code } = req.body;
+      const user = req.user as any;
 
-  //   console.log("Wealthbox users response:", wealthboxUsersResponse);
+      if (!code) {
+        return res.status(400).json({
+          success: false,
+          message: "Authorization code is required"
+        });
+      }
 
-  //   const wealthboxUsersData = await wealthboxUsersResponse.json();
-  //   // Save users to your storage
-  //   const saveUsersPromises = wealthboxUsersData.data.users.map(
-  //     async (wealthboxUser: any) => {
-  //       const userData = {
-  //         id: wealthboxUser.id,
-  //         name: wealthboxUser.name,
-  //         email: wealthboxUser.email,
-  //         // Map other properties as necessary
-  //       };
-  //       return await storage.createUser(userData); // Ensure createUser handles existing users
-  //     },
-  //   );
-  //   await Promise.all(saveUsersPromises);
-  //   console.log("Wealthbox users saved successfully.");
-  // }
+      // Exchange authorization code for access token
+      const tokenResponse = await fetch("https://app.crmworkspace.com/oauth/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          grant_type: "authorization_code",
+          client_id: "MbnIzrEtWejPZ96qHXFwxbkU1R9euNqfrSeynciUgL0",
+          redirect_uri: "https://app.advisorvitals.com/",
+          code: code,
+        }),
+      });
 
-  // AI query route
-  app.post("/api/ai/query", requireAuth, aiQueryHandler);
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text();
+        console.error("Token exchange failed:", errorText);
+        return res.status(400).json({
+          success: false,
+          message: "Failed to exchange authorization code for token"
+        });
+      }
+
+      const tokenData = await tokenResponse.json();
+
+      // Save the token to the user's record
+      await storage.updateUser(user.id, {
+        wealthboxToken: tokenData.access_token,
+        wealthboxRefreshToken: tokenData.refresh_token,
+        wealthboxTokenExpiry: new Date(Date.now() + tokenData.expires_in * 1000),
+        wealthboxConnected: true,
+      });
+
+      res.json({
+        success: true,
+        access_token: tokenData.access_token,
+        expires_in: tokenData.expires_in,
+      });
+    } catch (error: any) {
+      console.error("OAuth token exchange error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error during token exchange"
+      });
+    }
+  });
+
+  app.get("/api/wealthbox/token", requireAuth, getWealthboxTokenHandler);
 
   // Wealthbox integration routes - firm_admin and advisor users can access
   app.post("/api/wealthbox/test-connection", testWealthboxConnectionHandler);
@@ -1712,7 +1744,6 @@ app.get("/api/analytics/client-inception", requireAuth, getClientInceptionHandle
     requireRole(["firm_admin", "advisor"]),
     importWealthboxDataHandler,
   );
-  app.get("/api/wealthbox/token", requireAuth, getWealthboxTokenHandler);
   app.get("/api/data-mappings", requireAuth, getDataMappingsHandler);
   app.post("/api/data-mappings", requireAuth, saveDataMappingsHandler);
   app.get("/api/wealthbox/status", requireAuth, (req, res) => {

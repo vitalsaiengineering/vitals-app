@@ -130,6 +130,11 @@ export const setupWealthboxOAuth = async (
   return response.json();
 } 
 
+export const exchangeWealthboxOAuthCode = async (code: string) => {
+  const response = await apiRequest("POST", "/api/wealthbox/oauth/token", { code });
+  return response.json();
+};
+
 export const testWealthboxConnection = async (accessToken: string) => {
   const response = await apiRequest("POST", "/api/wealthbox/test-connection", { accessToken });
   return response.json();
@@ -233,12 +238,7 @@ export const executeAiQuery = async (query: string) => {
   return response.json();
 };
 
-// Orion API Integration
-export const getOrionStatus = async () => {
-  const response = await apiRequest("GET", "/api/orion/status");
-  return response.json();
-};
-
+// Orion API Integration - Additional functions
 export const connectToOrion = async () => {
   const response = await apiRequest("GET", "/api/orion/token");
   return response.json();

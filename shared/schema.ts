@@ -266,7 +266,6 @@ export const advisorAuthTokens = pgTable("advisor_auth_tokens", {
   expiresAt: timestamp("expires_at", { withTimezone: true }),
   scope: varchar("scope", { length: 500 }),
   additionalData: json("additional_data").default({}),
-  integrationType: integer("integration_type").notNull().default(1),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
