@@ -6,13 +6,17 @@ import AgeDemographicsReport from '@/components/reporting/AgeDemographicsReport'
 import ClientDistributionByStateReport from '@/components/reporting/ClientDistributionByStateReport'; // Import the new report
 import BookDevelopmentBySegmentReport from '@/components/reporting/BookDevelopmentBySegmentReport';
 import ClientBirthdayReport from '@/components/reporting/ClientBirthdayReport';
+import ClientSegmentationDashboard from '@/components/reporting/ClientSegmentationDashboard';
+import ClientDashboard from '@/components/reporting/ClientDashboard';
 
 // Define a registry for report components
 const reportRegistry: { [key: string]: { component: React.FC<any>, title: string } } = {
   'age-demographics': { component: AgeDemographicsReport, title: 'Client Age Demographics' },
   'client-distribution-by-state': { component: ClientDistributionByStateReport, title: 'Client Distribution by State' },
-  'birthday-report': { component: ClientBirthdayReport, title: 'Birthday Report' },
-  'active-clients-over-segments': { component: BookDevelopmentBySegmentReport, title: 'Active Clients Over Segments' },
+  'birthday-report': { component: ClientBirthdayReport, title: 'Client Birthday Report' },
+  'client-segmentation-dashboard': { component: ClientSegmentationDashboard, title: 'Client Segmentation Dashboard' },
+  'client-dashboard': { component: ClientDashboard, title: 'Client Dashboard' },
+  'active-clients-over-segments': { component: BookDevelopmentBySegmentReport, title: 'Book Development by Segment' },
 
   // Add other reports here as they are created
   // 'clients-aum-overtime': { component: ClientsAUMOverTimeReport, title: 'Clients & AUM Over Time' },

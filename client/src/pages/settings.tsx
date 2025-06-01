@@ -33,6 +33,7 @@ import DataMappingSection from "@/components/integrations/DataMappingSection";
 import WealthboxMapping from "@/components/integrations/WealthboxMapping";
 import OrionMapping from "@/components/integrations/OrionMapping";
 import VitalsMapping from "@/components/integrations/VitalsMapping";
+import Users from "./admin/users";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -1158,16 +1159,14 @@ export default function Settings() {
         {/* User Management Content */}
         <TabsContent value="user-management">
           <Card>
-            <CardHeader>
+            {/* <CardHeader>
               <CardTitle>User Management</CardTitle>
               <CardDescription>
                 Manage users, permissions, and roles for your organization.
               </CardDescription>
-            </CardHeader>
+            </CardHeader> */}
             <CardContent className="space-y-4">
-              <p className="text-muted-foreground">
-                User management is coming soon.
-              </p>
+              <Users/>
             </CardContent>
           </Card>
         </TabsContent>

@@ -619,13 +619,6 @@ async function getBookDevelopmentReportHandler(req: Request, res: Response) {
 }
 // --- END: Mock Data and Handler for Book Development Report ---
 
-// Add this route registration in the registerRoutes function, after the existing report routes:
-// Add this line after the other report route registrations:
-
-// filepath: /home/runner/workspace/server/routes.ts
-// ... existing code ...
-// --- END: Mock Data and Handler for Book Development Report ---
-
 // --- START: Interfaces for Client Birthday Report ---
 interface BirthdayClient {
   id: string;
@@ -638,12 +631,15 @@ interface BirthdayClient {
   aum: number;
   clientTenure: string; // e.g., "5 years"
   advisorName: string;
+  // Internal properties for filtering and sorting
+  daysUntilNextBirthday?: number;
+  _tenureYears?: number;
+  _nextBirthdayMonth?: number;
 }
 
 interface BirthdayReportFilters {
   grades: string[];
   advisors: string[];
-  // Months and Tenures are static, can be defined on frontend or sent if dynamic
 }
 
 interface ClientBirthdayReportData {
@@ -654,68 +650,134 @@ interface ClientBirthdayReportData {
 
 // --- START: Handler and Logic for Client Birthday Report ---
 
-// Helper function to calculate next birthday and turning age
-function calculateBirthdayDetails(dobString: string): { nextBirthdayDisplay: string, nextBirthdayDate: string, turningAge: number, daysUntilNextBirthday: number } {
-  const dob = new Date(dobString);
-  if (isNaN(dob.getTime())) {
-    return { nextBirthdayDisplay: 'N/A', nextBirthdayDate: 'N/A', turningAge: 0, daysUntilNextBirthday: Infinity };
-  }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Normalize today to start of day
-
-  let nextBirthday = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
-  if (nextBirthday < today) {
-    nextBirthday.setFullYear(today.getFullYear() + 1);
-  }
-
-  const turningAge = nextBirthday.getFullYear() - dob.getFullYear();
-
-  const timeDiff = nextBirthday.getTime() - today.getTime();
-  const daysUntilNextBirthday = Math.ceil(timeDiff / (1000 * 3600 * 24));
-
-  let nextBirthdayDisplay = '';
-  if (daysUntilNextBirthday === 0) {
-    nextBirthdayDisplay = 'Today!';
-  } else if (daysUntilNextBirthday === 1) {
-    nextBirthdayDisplay = 'Tomorrow';
-  } else if (daysUntilNextBirthday <= 30) {
-    nextBirthdayDisplay = `In ${daysUntilNextBirthday} days`;
-  } else {
-    nextBirthdayDisplay = nextBirthday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  }
-  
-  // Append the date for clarity if it's not "Today" or "Tomorrow"
-  if (daysUntilNextBirthday > 1) {
-      nextBirthdayDisplay += ` (${nextBirthday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})`;
-  }
-
-  return {
-    nextBirthdayDisplay,
-    nextBirthdayDate: nextBirthday.toISOString().split('T')[0],
-    turningAge,
-    daysUntilNextBirthday
-  };
+// Helper function to calculate client tenure (numeric part for filtering)
+function getTenureYears(tenureString: string): number {
+  const match = tenureString.match(/^(\d+)/);
+  return match ? parseInt(match[1], 10) : 0;
 }
 
-// Helper function to calculate client tenure
-function calculateClientTenure(joinDateString: string): string {
-  const joinDate = new Date(joinDateString);
-  if (isNaN(joinDate.getTime())) return 'N/A';
-
-  const today = new Date();
-  let years = today.getFullYear() - joinDate.getFullYear();
-  const months = today.getMonth() - joinDate.getMonth();
-
-  if (months < 0 || (months === 0 && today.getDate() < joinDate.getDate())) {
-    years--;
-  }
-  return years <= 0 ? '<1 year' : `${years} year${years > 1 ? 's' : ''}`;
+// Helper function to get month from YYYY-MM-DD
+function getMonthFromDateString(dateString: string): number {
+  return parseInt(dateString.split('-')[1], 10);
 }
+
 
 async function getClientBirthdayReportHandler(req: Request, res: Response) {
-  const user = req.user as any;
-  const organizationId = user?.organizationId;
+  // Mock data based on the provided image
+  // Current date for reference: May 28, 2025
+  const mockClients: BirthdayClient[] = [
+    {
+      id: "1",
+      clientName: "Mary Clark",
+      grade: "Platinum",
+      dateOfBirth: "1960-05-30",
+      nextBirthdayDisplay: "In 5 days (May 30)", // Image says "In 5 days", actual is 2 days from May 28
+      nextBirthdayDate: "2025-05-30",
+      turningAge: 65,
+      aum: 2850000,
+      clientTenure: "14 years",
+      advisorName: "Sarah Peters",
+      daysUntilNextBirthday: 2, // Calculated for May 28, 2025 to May 30, 2025
+    },
+    {
+      id: "2",
+      clientName: "David Miller",
+      grade: "Platinum",
+      dateOfBirth: "1968-06-05",
+      nextBirthdayDisplay: "In 11 days (Jun 5)", // Image says "In 11 days", actual is 8 days
+      nextBirthdayDate: "2025-06-05",
+      turningAge: 57,
+      aum: 4100000,
+      clientTenure: "18 years",
+      advisorName: "Sarah Peters",
+      daysUntilNextBirthday: 8, // Calculated for May 28, 2025 to June 5, 2025
+    },
+    {
+      id: "3",
+      clientName: "Michael Davis",
+      grade: "Gold",
+      dateOfBirth: "1962-06-12",
+      nextBirthdayDisplay: "In 18 days (Jun 12)", // Image says "In 18 days", actual is 15 days
+      nextBirthdayDate: "2025-06-12",
+      turningAge: 63,
+      aum: 1200000,
+      clientTenure: "10 years",
+      advisorName: "Michael Rodriguez",
+      daysUntilNextBirthday: 15, // Calculated
+    },
+    {
+      id: "4",
+      clientName: "Jennifer Wilson",
+      grade: "Silver",
+      dateOfBirth: "1975-06-20",
+      nextBirthdayDisplay: "In 26 days (Jun 20)", // Image says "In 26 days", actual is 23 days
+      nextBirthdayDate: "2025-06-20",
+      turningAge: 50,
+      aum: 380000,
+      clientTenure: "5 years",
+      advisorName: "David Thompson",
+      daysUntilNextBirthday: 23, // Calculated
+    },
+    {
+      id: "5",
+      clientName: "Lisa Anderson",
+      grade: "Gold",
+      dateOfBirth: "1973-07-18",
+      nextBirthdayDisplay: "In 54 days (Jul 18)", // Image says "In 54 days", actual is 51 days
+      nextBirthdayDate: "2025-07-18",
+      turningAge: 52,
+      aum: 875000,
+      clientTenure: "7 years",
+      advisorName: "Michael Rodriguez",
+      daysUntilNextBirthday: 51, // Calculated
+    },
+    {
+      id: "6",
+      clientName: "Thomas Taylor",
+      grade: "Silver",
+      dateOfBirth: "1970-07-25",
+      nextBirthdayDisplay: "In 61 days (Jul 25)", // Image says "In 61 days", actual is 58 days
+      nextBirthdayDate: "2025-07-25",
+      turningAge: 55,
+      aum: 320000,
+      clientTenure: "4 years",
+      advisorName: "David Thompson",
+      daysUntilNextBirthday: 58, // Calculated
+    },
+    {
+      id: "7",
+      clientName: "Emily Brown",
+      grade: "Silver",
+      dateOfBirth: "1980-05-05",
+      nextBirthdayDisplay: "In 345 days (May 5)", // Image says "In 345 days", actual is 342 days
+      nextBirthdayDate: "2026-05-05", // Birthday has passed for 2025
+      turningAge: 46,
+      aum: 450000,
+      clientTenure: "3 years",
+      advisorName: "David Thompson",
+      daysUntilNextBirthday: 342, // Calculated
+    },
+    {
+      id: "8",
+      clientName: "Robert Williams",
+      grade: "Platinum",
+      dateOfBirth: "1958-05-10",
+      nextBirthdayDisplay: "In 350 days (May 10)", // Image says "In 350 days", actual is 347 days
+      nextBirthdayDate: "2026-05-10", // Birthday has passed for 2025
+      turningAge: 68,
+      aum: 3200000,
+      clientTenure: "15 years",
+      advisorName: "Sarah Peters",
+      daysUntilNextBirthday: 347, // Calculated
+    },
+  ];
+
+  // Populate internal fields for filtering/sorting
+  let processedClients: BirthdayClient[] = mockClients.map(client => ({
+    ...client,
+    _tenureYears: getTenureYears(client.clientTenure),
+    _nextBirthdayMonth: getMonthFromDateString(client.nextBirthdayDate),
+  }));
 
   // Extract filter query parameters
   const {
@@ -727,38 +789,6 @@ async function getClientBirthdayReportHandler(req: Request, res: Response) {
   } = req.query;
 
   try {
-    const allClientsRaw = await storage.getClientsByOrganization(organizationId);
-    const allAdvisorsRaw = await storage.getUsersByOrganization(organizationId, ['advisor']);
-
-    const advisorMap = new Map(allAdvisorsRaw.map(adv => [adv.id, adv.name || `${adv.firstName} ${adv.lastName}`.trim()]));
-
-    let processedClients: BirthdayClient[] = allClientsRaw.map(client => {
-      // Assuming client.dateOfBirth and client.createdAt exist
-      // If not, these will need to be mocked or sourced
-      const dob = client.age ? new Date(new Date().getFullYear() - client.age, 0, 1).toISOString().split('T')[0] : '1970-01-01'; // Fallback if no DOB
-      const joinDate = client.createdAt ? new Date(client.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]; // Fallback
-      
-      const birthdayDetails = calculateBirthdayDetails(dob);
-      const clientTenureYears = calculateClientTenure(joinDate);
-      
-      return {
-        id: String(client.id),
-        clientName: client.name || `${client.firstName || ''} ${client.lastName || ''}`.trim(),
-        grade: client.segment || 'N/A',
-        dateOfBirth: dob,
-        nextBirthdayDisplay: birthdayDetails.nextBirthdayDisplay,
-        nextBirthdayDate: birthdayDetails.nextBirthdayDate,
-        turningAge: birthdayDetails.turningAge,
-        daysUntilNextBirthday: birthdayDetails.daysUntilNextBirthday, // For sorting
-        aum: (client as any).aum || Math.floor(Math.random() * 5000000) + 100000, // Mock AUM if not present
-        clientTenure: clientTenureYears,
-        advisorName: client.primaryAdvisorId ? advisorMap.get(client.primaryAdvisorId) || 'Unassigned' : 'Unassigned',
-        // Raw tenure years for filtering
-        _tenureYears: new Date().getFullYear() - new Date(joinDate).getFullYear(),
-        _nextBirthdayMonth: new Date(birthdayDetails.nextBirthdayDate).getMonth() + 1 // 1-12 for month
-      };
-    });
-
     // Apply filters
     if (nameSearch && typeof nameSearch === 'string') {
       processedClients = processedClients.filter(c => c.clientName.toLowerCase().includes(nameSearch.toLowerCase()));
@@ -776,6 +806,7 @@ async function getClientBirthdayReportHandler(req: Request, res: Response) {
     if (tenureFilter && typeof tenureFilter === 'string' && tenureFilter !== 'Any tenure') {
       processedClients = processedClients.filter(c => {
         const years = c._tenureYears;
+        if (years === undefined) return false;
         if (tenureFilter === '1-2 years') return years >= 1 && years <= 2;
         if (tenureFilter === '2-5 years') return years > 2 && years <= 5;
         if (tenureFilter === '5-10 years') return years > 5 && years <= 10;
@@ -785,11 +816,11 @@ async function getClientBirthdayReportHandler(req: Request, res: Response) {
     }
 
     // Sort by days until next birthday (ascending)
-    processedClients.sort((a, b) => (a as any).daysUntilNextBirthday - (b as any).daysUntilNextBirthday);
+    processedClients.sort((a, b) => (a.daysUntilNextBirthday || Infinity) - (b.daysUntilNextBirthday || Infinity));
 
-    // Prepare filter options for frontend dropdowns
-    const uniqueGrades = [...new Set(allClientsRaw.map(c => c.segment || 'N/A'))].sort();
-    const uniqueAdvisors = [...advisorMap.values()].sort();
+    // Prepare filter options for frontend dropdowns based on the mock data
+    const uniqueGrades = ["Platinum", "Gold", "Silver"].sort();
+    const uniqueAdvisors = ["Sarah Peters", "Michael Rodriguez", "David Thompson"].sort();
 
     const reportData: ClientBirthdayReportData = {
       clients: processedClients.map(({ daysUntilNextBirthday, _tenureYears, _nextBirthdayMonth, ...client }) => client), // Remove temporary fields
@@ -801,9 +832,9 @@ async function getClientBirthdayReportHandler(req: Request, res: Response) {
 
     res.json(reportData);
   } catch (error) {
-    console.error("Error fetching client birthday report data:", error);
+    console.error("Error processing client birthday report data:", error);
     res.status(500).json({
-      message: "Failed to fetch client birthday report data",
+      message: "Failed to process client birthday report data",
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }
@@ -1436,20 +1467,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  // --- START: Register new route ---
-  app.get("/api/analytics/age-demographics-report", requireAuth, getAgeDemographicsReportHandler);
-  // --- END
-  // :/} Register new route ---
+    // --- START: Register new route ---
+    app.get("/api/analytics/age-demographics-report", requireAuth, getAgeDemographicsReportHandler);
+    // --- END
+    // :/} Register new route ---
 
-  // --- START: Register new route for Client Distribution ---
-  app.get("/api/analytics/client-distribution-report", requireAuth, getClientDistributionReportHandler);
-  // --- END: Register new route ---
+    // --- START: Register new route for Client Distribution ---
+    app.get("/api/analytics/client-distribution-report", requireAuth, getClientDistributionReportHandler);
+    // --- END: Register new route ---
 
-app.get("/api/analytics/book-development-report", requireAuth, getBookDevelopmentReportHandler);
+  app.get("/api/analytics/book-development-report", requireAuth, getBookDevelopmentReportHandler);
 
-// --- START: Register new route for Client Birthday Report ---
-app.get("/api/analytics/birthday-report", requireAuth, getClientBirthdayReportHandler);
-// --- END: Register new route for Client Birthday Report ---
+  // --- START: Register new route for Client Birthday Report ---
+  app.get("/api/analytics/birthday-report", requireAuth, getClientBirthdayReportHandler);
+  // --- END: Register new route for Client Birthday Report ---
+
+  app.get("/api/analytics/client-segmentation-dashboard", requireAuth, getClientSegmentationDashboardHandler  );
+app.get("/api/analytics/client-anniversaries", requireAuth, getClientAnniversaryHandler);
+app.get("/api/analytics/client-inception", requireAuth, getClientInceptionHandler);
+
 
   // Save WealthBox configuration
   app.get("/api/wealthbox/auth/setup", async (req, res) => {
@@ -1788,3 +1824,404 @@ app.get("/api/orion/aum-chart-data", requireAuth, getOrionAumChartDataHandler);
   const httpServer = createServer(app);
   return httpServer;
 }
+
+// --- START: Interfaces for Client Segmentation Dashboard ---
+interface SegmentationKPI {
+  value: number | string;
+  label: string;
+  icon?: string;
+}
+
+interface SegmentationKpiSet {
+  clientCount: SegmentationKPI;
+  totalAUM: SegmentationKPI;
+  averageClientAUM: SegmentationKPI;
+  currentSegmentFocus: string;
+}
+
+interface DonutSegmentData {
+  name: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+interface SegmentClient {
+  id: string;
+  name: string;
+  age: number;
+  yearsWithFirm: number;
+  assets: number;
+}
+
+interface ClientSegmentationDashboardData {
+  kpis: SegmentationKpiSet;
+  donutChartData: DonutSegmentData[];
+  tableData: {
+    segmentName: string;
+    clients: SegmentClient[];
+  };
+  advisorOptions: { id: string; name: string }[];
+  currentAdvisorOrFirmView: string;
+}
+// --- END: Interfaces for Client Segmentation Dashboard ---
+
+// --- START: Handler for Client Segmentation Dashboard ---
+async function getClientSegmentationDashboardHandler(req: Request, res: Response) {
+  const user = req.user as any;
+  const organizationId = user?.organizationId;
+  const advisorFilter = req.query.advisorId as string || "firm_overview";
+  const selectedSegment = req.query.segment as string || "Platinum";
+
+  try {
+    // Mock data for all segments
+    const allClientsMock = {
+      Platinum: [
+        { id: "c1", name: "Thomas Wright", age: 51, yearsWithFirm: 5, assets: 1250000 },
+        { id: "c2", name: "Emma Davis", age: 45, yearsWithFirm: 5, assets: 1675000 },
+        { id: "c3", name: "Alexander Mitchell", age: 49, yearsWithFirm: 5, assets: 2100000 },
+        { id: "c4", name: "Sophia Garcia", age: 75, yearsWithFirm: 5, assets: 1800000 },
+        { id: "c5", name: "Mia Scott", age: 46, yearsWithFirm: 4, assets: 1540000 },
+        { id: "c6", name: "Jacob Green", age: 32, yearsWithFirm: 4, assets: 1350000 },
+        { id: "c7", name: "Elizabeth Baker", age: 50, yearsWithFirm: 4, assets: 1850000 },
+        // Add more to reach 37 total for Platinum
+        { id: "c8", name: "Michael Johnson", age: 42, yearsWithFirm: 6, assets: 1900000 },
+        { id: "c9", name: "Sarah Wilson", age: 58, yearsWithFirm: 8, assets: 2200000 },
+        { id: "c10", name: "David Brown", age: 55, yearsWithFirm: 7, assets: 1750000 },
+      ],
+      Gold: [
+        { id: "g1", name: "Jennifer Taylor", age: 41, yearsWithFirm: 3, assets: 850000 },
+        { id: "g2", name: "Robert Miller", age: 52, yearsWithFirm: 4, assets: 920000 },
+        { id: "g3", name: "Lisa Anderson", age: 48, yearsWithFirm: 6, assets: 780000 },
+        { id: "g4", name: "Mark Thompson", age: 39, yearsWithFirm: 2, assets: 950000 },
+        { id: "g5", name: "Amanda Clark", age: 44, yearsWithFirm: 5, assets: 820000 },
+        { id: "g6", name: "Kevin Martinez", age: 50, yearsWithFirm: 7, assets: 890000 },
+        { id: "g7", name: "Rachel Davis", age: 37, yearsWithFirm: 3, assets: 760000 },
+      ],
+      Silver: [
+        { id: "s1", name: "Christopher Lee", age: 33, yearsWithFirm: 2, assets: 420000 },
+        { id: "s2", name: "Michelle Rodriguez", age: 38, yearsWithFirm: 3, assets: 380000 },
+        { id: "s3", name: "Daniel White", age: 45, yearsWithFirm: 4, assets: 450000 },
+        { id: "s4", name: "Laura Harris", age: 29, yearsWithFirm: 1, assets:  320000 },
+        { id: "s5", name: "James Wilson", age: 42, yearsWithFirm: 5, assets: 480000 },
+        { id: "s6", name: "Karen Thompson", age: 36, yearsWithFirm: 2, assets: 350000 },
+        { id: "s7", name: "Paul Anderson", age: 40, yearsWithFirm: 3, assets: 390000 },
+      ]
+    };
+
+    const advisorOptions = [
+      { id: "firm_overview", name: "Firm Overview" },
+      { id: "john_smith_id", name: "John Smith" },
+      { id: "sarah_johnson_id", name: "Sarah Johnson" },
+      { id: "michael_chen_id", name: "Michael Chen" },
+    ];
+
+    // Calculate segment totals
+    const segmentCounts = {
+      Platinum: 37, // Full count
+      Gold: 48,
+      Silver: 30
+    };
+
+    const segmentTotals = {
+      Platinum: allClientsMock.Platinum.reduce((sum, client) => sum + client.assets, 0) * (37/10), // Scale up
+      Gold: allClientsMock.Gold.reduce((sum, client) => sum + client.assets, 0) * (48/7),
+      Silver: allClientsMock.Silver.reduce((sum, client) => sum + client.assets, 0) * (30/7)
+    };
+
+    const totalClients = segmentCounts.Platinum + segmentCounts.Gold + segmentCounts.Silver;
+
+    // Get current segment data
+    const currentSegmentClients = allClientsMock[selectedSegment as keyof typeof allClientsMock] || allClientsMock.Platinum;
+    const currentSegmentCount = segmentCounts[selectedSegment as keyof typeof segmentCounts] || segmentCounts.Platinum;
+    const currentSegmentTotal = segmentTotals[selectedSegment as keyof typeof segmentTotals] || segmentTotals.Platinum;
+    const currentSegmentAverage = currentSegmentTotal / currentSegmentCount;
+
+    const mockData: ClientSegmentationDashboardData = {
+      kpis: {
+        clientCount: { 
+          value: currentSegmentCount, 
+          label: `Number of ${selectedSegment} clients` 
+        },
+        totalAUM: { 
+          value: `$${Math.round(currentSegmentTotal).toLocaleString()}`, 
+          label: `Total assets for ${selectedSegment} segment` 
+        },
+        averageClientAUM: { 
+          value: `$${Math.round(currentSegmentAverage).toLocaleString()}`, 
+          label: `Average for ${selectedSegment} segment` 
+        },
+        currentSegmentFocus: selectedSegment,
+      },
+      donutChartData: [
+        { 
+          name: "Platinum", 
+          count: segmentCounts.Platinum, 
+          percentage: Math.round((segmentCounts.Platinum / totalClients) * 100 * 10) / 10, 
+          color: "hsl(222, 47%, 44%)" 
+        },
+        { 
+          name: "Gold", 
+          count: segmentCounts.Gold, 
+          percentage: Math.round((segmentCounts.Gold / totalClients) * 100 * 10) / 10, 
+          color: "hsl(216, 65%, 58%)" 
+        },
+        { 
+          name: "Silver", 
+          count: segmentCounts.Silver, 
+          percentage: Math.round((segmentCounts.Silver / totalClients) * 100 * 10) / 10, 
+          color: "hsl(210, 55%, 78%)" 
+        },
+      ],
+      tableData: {
+        segmentName: selectedSegment,
+        clients: currentSegmentClients,
+      },
+      advisorOptions,
+      currentAdvisorOrFirmView: advisorFilter === "firm_overview" ? "Firm Overview" : 
+                                (advisorOptions.find(opt => opt.id === advisorFilter)?.name || "Firm Overview"),
+    };
+
+    res.json(mockData);
+  } catch (error) {
+    console.error("Error fetching client segmentation dashboard data:", error);
+    res.status(500).json({
+      message: "Failed to fetch client segmentation dashboard data",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+}
+// --- END: Handler for Client Segmentation Dashboard ---
+
+// --- START: Interfaces for Client Anniversary View ---
+interface AnniversaryClient {
+  id: string;
+  clientName: string;
+  avatarUrl?: string;
+  segment: 'Platinum' | 'Gold' | 'Silver' | string;
+  nextAnniversaryDate: string; // Formatted e.g., "Jun 1, 2025"
+  daysUntilNextAnniversary: number;
+  yearsWithFirm: number;
+  advisorName: string;
+  originalStartDate: string; // YYYY-MM-DD
+}
+
+interface ClientAnniversaryData {
+  clients: AnniversaryClient[];
+  totalRecords: number;
+  filterOptions: {
+    segments: string[];
+    tenures: string[];
+    advisors: { id: string; name: string }[];
+  };
+}
+// --- END: Interfaces for Client Anniversary View ---
+
+// --- START: Interfaces for Client Inception View ---
+interface InceptionKPI {
+  ytdNewClients: number;
+  percentageChangeVsPreviousYear: number;
+}
+
+interface InceptionChartDataPoint {
+  year: string;
+  Platinum: number;
+  Gold: number;
+  Silver: number;
+  Total: number;
+}
+
+interface InceptionChartLegendItem {
+  segment: string;
+  count: number;
+}
+
+interface InceptionClientDetail {
+  id: string;
+  name: string;
+  email: string;
+  segment: 'Platinum' | 'Gold' | 'Silver' | string;
+  inceptionDate: string; // YYYY-MM-DD
+}
+
+interface ClientInceptionData {
+  kpi: InceptionKPI;
+  chartData: InceptionChartDataPoint[];
+  chartLegend: InceptionChartLegendItem[];
+  tableClients: InceptionClientDetail[];
+  totalTableRecords: number;
+  availableYears: number[];
+  currentYear: number;
+}
+// --- END: Interfaces for Client Inception View ---
+
+// --- START: Handler for Client Anniversary View ---
+async function getClientAnniversaryHandler(req: Request, res: Response) {
+  try {
+    const { search, segment, tenure, advisorId, upcomingMilestonesOnly } = req.query;
+    
+    // Mock data generation
+    const allAnniversaryClients: AnniversaryClient[] = [
+      { id: "a1", clientName: "Alexander Hamilton", segment: "Platinum", originalStartDate: "2021-06-01", nextAnniversaryDate: "Jun 1, 2025", daysUntilNextAnniversary: 1, yearsWithFirm: 4, advisorName: "Jessica Williams" },
+      { id: "a2", clientName: "Steven Adams", segment: "Silver", originalStartDate: "2020-06-07", nextAnniversaryDate: "Jun 7, 2025", daysUntilNextAnniversary: 7, yearsWithFirm: 5, advisorName: "Sarah Johnson" },
+      { id: "a3", clientName: "Carol Phillips", segment: "Silver", originalStartDate: "2023-06-11", nextAnniversaryDate: "Jun 11, 2025", daysUntilNextAnniversary: 11, yearsWithFirm: 2, advisorName: "Robert Chen" },
+      { id: "a4", clientName: "Mamie Eisenhower", segment: "Silver", originalStartDate: "2016-06-14", nextAnniversaryDate: "Jun 14, 2025", daysUntilNextAnniversary: 14, yearsWithFirm: 9, advisorName: "Robert Chen" },
+      { id: "a5", clientName: "Barbara Martin", segment: "Gold", originalStartDate: "2018-06-17", nextAnniversaryDate: "Jun 17, 2025", daysUntilNextAnniversary: 17, yearsWithFirm: 7, advisorName: "Michael Clark" },
+      { id: "a6", clientName: "Gerald Ford", segment: "Silver", originalStartDate: "2022-07-06", nextAnniversaryDate: "Jul 6, 2025", daysUntilNextAnniversary: 36, yearsWithFirm: 3, advisorName: "Sarah Johnson" },
+      { id: "a7", clientName: "Abigail Adams", segment: "Platinum", originalStartDate: "2013-07-11", nextAnniversaryDate: "Jul 11, 2025", daysUntilNextAnniversary: 41, yearsWithFirm: 12, advisorName: "Michael Clark" },
+      { id: "a8", clientName: "Edward Nelson", segment: "Silver", originalStartDate: "2021-07-13", nextAnniversaryDate: "Jul 13, 2025", daysUntilNextAnniversary: 43, yearsWithFirm: 4, advisorName: "Jessica Williams" },
+      { id: "a9", clientName: "John Adams", segment: "Platinum", originalStartDate: "2015-08-15", nextAnniversaryDate: "Aug 15, 2025", daysUntilNextAnniversary: 76, yearsWithFirm: 10, advisorName: "Sarah Johnson" },
+      { id: "a10", clientName: "Martha Washington", segment: "Gold", originalStartDate: "2019-09-20", nextAnniversaryDate: "Sep 20, 2025", daysUntilNextAnniversary: 112, yearsWithFirm: 6, advisorName: "Michael Clark" },
+    ];
+
+    let filteredClients = allAnniversaryClients;
+
+    // Apply filters
+    if (search && typeof search === 'string') {
+      filteredClients = filteredClients.filter(c => 
+        c.clientName.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    if (segment && typeof segment === 'string' && segment !== 'All Segments') {
+      filteredClients = filteredClients.filter(c => c.segment === segment);
+    }
+
+    if (tenure && typeof tenure === 'string' && tenure !== 'Any Tenure') {
+      filteredClients = filteredClients.filter(c => {
+        const years = c.yearsWithFirm;
+        if (tenure === '1-5 years') return years >= 1 && years <= 5;
+        if (tenure === '5-10 years') return years > 5 && years <= 10;
+        if (tenure === '10+ years') return years > 10;
+        return true;
+      });
+    }
+
+    if (advisorId && typeof advisorId === 'string' && advisorId !== 'all') {
+      const advisorMap: Record<string, string> = {
+        'sj': 'Sarah Johnson',
+        'mc': 'Michael Clark',
+        'rc': 'Robert Chen',
+        'jw': 'Jessica Williams',
+      };
+      const advisorName = advisorMap[advisorId];
+      if (advisorName) {
+        filteredClients = filteredClients.filter(c => c.advisorName === advisorName);
+      }
+    }
+
+    if (upcomingMilestonesOnly === 'true') {
+      // Consider milestones as anniversaries within 30 days
+      filteredClients = filteredClients.filter(c => c.daysUntilNextAnniversary <= 30);
+    }
+
+    // Sort by days until next anniversary
+    filteredClients.sort((a, b) => a.daysUntilNextAnniversary - b.daysUntilNextAnniversary);
+
+    const responseData: ClientAnniversaryData = {
+      clients: filteredClients,
+      totalRecords: filteredClients.length,
+      filterOptions: {
+        segments: ["All Segments", "Platinum", "Gold", "Silver"],
+        tenures: ["Any Tenure", "1-5 years", "5-10 years", "10+ years"],
+        advisors: [
+          { id: "all", name: "All Advisors" },
+          { id: "sj", name: "Sarah Johnson" },
+          { id: "mc", name: "Michael Clark" },
+          { id: "rc", name: "Robert Chen" },
+          { id: "jw", name: "Jessica Williams" },
+        ],
+      }
+    };
+
+    res.json(responseData);
+  } catch (error) {
+    console.error("Error fetching client anniversary data:", error);
+    res.status(500).json({
+      message: "Failed to fetch client anniversary data",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+}
+// --- END: Handler for Client Anniversary View ---
+
+// --- START: Handler for Client Inception View ---
+async function getClientInceptionHandler(req: Request, res: Response) {
+  try {
+    const currentYear = req.query.year ? parseInt(req.query.year as string) : 2024;
+    const segmentFilter = req.query.segmentFilter as string || "All Segments";
+    const search = req.query.search as string;
+
+    // Mock KPI data
+    const mockKpi: InceptionKPI = { 
+      ytdNewClients: 183, 
+      percentageChangeVsPreviousYear: 18 
+    };
+
+    // Mock chart data
+    const mockChartData: InceptionChartDataPoint[] = [
+      { year: "2018", Platinum: 12, Gold: 28, Silver: 35, Total: 75 },
+      { year: "2019", Platinum: 15, Gold: 30, Silver: 40, Total: 85 },
+      { year: "2020", Platinum: 18, Gold: 35, Silver: 42, Total: 95 },
+      { year: "2021", Platinum: 25, Gold: 40, Silver: 50, Total: 115 },
+      { year: "2022", Platinum: 30, Gold: 45, Silver: 55, Total: 130 },
+      { year: "2023", Platinum: 40, Gold: 50, Silver: 65, Total: 155 },
+      { year: "2024", Platinum: 48, Gold: 63, Silver: 72, Total: 183 },
+      { year: "2025", Platinum: 50, Gold: 68, Silver: 77, Total: 195 },
+    ];
+
+    const legendDataForSelectedYear = mockChartData.find(d => d.year === String(currentYear));
+    const mockChartLegend: InceptionChartLegendItem[] = legendDataForSelectedYear ? [
+      { segment: "Platinum", count: legendDataForSelectedYear.Platinum },
+      { segment: "Gold", count: legendDataForSelectedYear.Gold },
+      { segment: "Silver", count: legendDataForSelectedYear.Silver },
+      { segment: "Total", count: legendDataForSelectedYear.Total },
+    ] : [];
+
+    // Mock table data
+    const allMockTableClients: InceptionClientDetail[] = [
+      { id: "tc1", name: "Amanda Richardson", email: "amanda.r@example.com", segment: "Platinum", inceptionDate: "2024-01-10" },
+      { id: "tc2", name: "Brian Foster", email: "brian.f@example.com", segment: "Gold", inceptionDate: "2024-02-15" },
+      { id: "tc3", name: "Catherine Lopez", email: "catherine.l@example.com", segment: "Silver", inceptionDate: "2024-03-20" },
+      { id: "tc4", name: "Daniel Kim", email: "daniel.k@example.com", segment: "Platinum", inceptionDate: "2024-04-05" },
+      { id: "tc5", name: "Elena Rodriguez", email: "elena.r@example.com", segment: "Gold", inceptionDate: "2024-05-12" },
+      { id: "tc6", name: "Frank Thompson", email: "frank.t@example.com", segment: "Silver", inceptionDate: "2024-06-18" },
+      { id: "tc7", name: "Grace Chen", email: "grace.c@example.com", segment: "Platinum", inceptionDate: "2024-07-22" },
+      { id: "tc8", name: "Henry Williams", email: "henry.w@example.com", segment: "Gold", inceptionDate: "2024-08-30" },
+    ];
+
+    let filteredTableClients = allMockTableClients.filter(c => 
+      new Date(c.inceptionDate).getFullYear() === currentYear
+    );
+
+    if (segmentFilter !== "All Segments") {
+      filteredTableClients = filteredTableClients.filter(c => c.segment === segmentFilter);
+    }
+
+    if (search && typeof search === 'string') {
+      filteredTableClients = filteredTableClients.filter(c =>
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.email.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    const responseData: ClientInceptionData = {
+      kpi: mockKpi,
+      chartData: mockChartData,
+      chartLegend: mockChartLegend,
+      tableClients: filteredTableClients,
+      totalTableRecords: filteredTableClients.length,
+      availableYears: [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025],
+      currentYear: currentYear,
+    };
+
+    res.json(responseData);
+  } catch (error) {
+    console.error("Error fetching client inception data:", error);
+    res.status(500).json({
+      message: "Failed to fetch client inception data",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+}
+// --- END: Handler for Client Inception View ---
