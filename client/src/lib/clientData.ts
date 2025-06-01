@@ -1212,4 +1212,152 @@ export async function getClientDistributionReportData(): Promise<ClientDistribut
 }
 // --- END: Added for Client Distribution by State Report ---
 
-// ...rest of clientData.ts
+// --- START: Added for Client Segmentation Dashboard ---
+export interface SegmentationKPI {
+  value: number | string;
+  label: string;
+  icon?: string;
+}
+
+export interface SegmentationKpiSet {
+  clientCount: SegmentationKPI;
+  totalAUM: SegmentationKPI;
+  averageClientAUM: SegmentationKPI;
+  currentSegmentFocus: string;
+}
+
+export interface DonutSegmentData {
+  name: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+export interface SegmentClient {
+  id: string;
+  name: string;
+  age: number;
+  yearsWithFirm: number;
+  assets: number;
+}
+
+export interface ClientSegmentationDashboardData {
+  kpis: SegmentationKpiSet;
+  donutChartData: DonutSegmentData[];
+  tableData: {
+    segmentName: string;
+    clients: SegmentClient[];
+  };
+  advisorOptions: { id: string; name: string }[];
+  currentAdvisorOrFirmView: string;
+}
+
+export interface GetClientSegmentationDashboardParams {
+  advisorId?: string;
+  segment?: string;
+}
+
+export async function getClientSegmentationDashboardData(params?: GetClientSegmentationDashboardParams): Promise<ClientSegmentationDashboardData> {
+  try {
+    const data = await dataService.fetchData("analytics/client-segmentation-dashboard", params);
+    return data as ClientSegmentationDashboardData;
+  } catch (error) {
+    console.error("Error fetching client segmentation dashboard data:", error);
+    throw error;
+  }
+}
+// --- END: Added for Client Segmentation Dashboard ---
+
+// --- START: Added for Client Dashboard ---
+export interface AnniversaryClient {
+  id: string;
+  clientName: string;
+  avatarUrl?: string;
+  segment: 'Platinum' | 'Gold' | 'Silver' | string;
+  nextAnniversaryDate: string;
+  daysUntilNextAnniversary: number;
+  yearsWithFirm: number;
+  advisorName: string;
+  originalStartDate: string;
+}
+
+export interface ClientAnniversaryData {
+  clients: AnniversaryClient[];
+  totalRecords: number;
+  filterOptions: {
+    segments: string[];
+    tenures: string[];
+    advisors: { id: string; name: string }[];
+  };
+}
+
+export interface GetClientAnniversaryParams {
+  search?: string;
+  segment?: string;
+  tenure?: string;
+  advisorId?: string;
+  upcomingMilestonesOnly?: boolean;
+}
+
+export interface InceptionKPI {
+  ytdNewClients: number;
+  percentageChangeVsPreviousYear: number;
+}
+
+export interface InceptionChartDataPoint {
+  year: string;
+  Platinum: number;
+  Gold: number;
+  Silver: number;
+  Total: number;
+}
+
+export interface InceptionChartLegendItem {
+  segment: string;
+  count: number;
+}
+
+export interface InceptionClientDetail {
+  id: string;
+  name: string;
+  email: string;
+  segment: 'Platinum' | 'Gold' | 'Silver' | string;
+  inceptionDate: string;
+}
+
+export interface ClientInceptionData {
+  kpi: InceptionKPI;
+  chartData: InceptionChartDataPoint[];
+  chartLegend: InceptionChartLegendItem[];
+  tableClients: InceptionClientDetail[];
+  totalTableRecords: number;
+  availableYears: number[];
+  currentYear: number;
+}
+
+export interface GetClientInceptionParams {
+  search?: string;
+  year?: number;
+  segmentFilter?: string;
+}
+
+export async function getClientAnniversaryData(params?: GetClientAnniversaryParams): Promise<ClientAnniversaryData> {
+  try {
+    const data = await dataService.fetchData("analytics/client-anniversaries", params);
+    return data as ClientAnniversaryData;
+  } catch (error) {
+    console.error("Error fetching client anniversary data:", error);
+    throw error;
+  }
+}
+
+export async function getClientInceptionData(params?: GetClientInceptionParams): Promise<ClientInceptionData> {
+  try {
+    const data = await dataService.fetchData("analytics/client-inception", params);
+    return data as ClientInceptionData;
+  } catch (error) {
+    console.error("Error fetching client inception data:", error);
+    throw error;
+  }
+}
+// --- END: Added for Client Dashboard ---

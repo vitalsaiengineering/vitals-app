@@ -126,7 +126,23 @@ const initialMockReports: Report[] = [
     routePath: "active-clients-over-segments",
     isFavorite: false,
     integrations: ["Data Sources"],
-  }
+  },
+    {
+    id: "12",
+    name: "Client Segmentation Dashboard",
+    routePath: "client-segmentation-dashboard",
+    description: "View and analyze your client base by segment and advisor assignment.",
+    integrations: ["Data Sources"],
+    isFavorite: false,
+  },
+    {
+    id: "13",
+    name: "Client Dashboard",
+    routePath: "client-dashboard",
+    description: "Track client acquisition and segmentation metrics, and view upcoming anniversaries.",
+    integrations: ["Data Sources"],
+    isFavorite: false,
+  },
 ];
 
 export default function Reporting() {
