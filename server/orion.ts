@@ -18,7 +18,7 @@ const ENDPOINTS = {
 };
 
 /**
- * Get Orion advisor auth token by user ID and firm integration config ID
+ * Get Orion auth token by user ID and firm integration config ID
  */
 export async function getOrionAdvisorAuthToken(
   userId: number,

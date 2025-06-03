@@ -12,7 +12,7 @@ const OrionMapping: React.FC = () => {
   const [sections, setSections] = useState<MappingSection[]>([
     {
       title: 'Portfolio Fields',
-      description: 'Map portfolio data fields to Orion Advisor fields',
+      description: 'Map portfolio data fields to Orion fields',
       mappings: [
         {
           sourceField: 'accountNumber',
@@ -58,7 +58,7 @@ const OrionMapping: React.FC = () => {
     },
     {
       title: 'Performance Metrics',
-      description: 'Map performance metrics to Orion Advisor fields',
+      description: 'Map performance metrics to Orion fields',
       mappings: [
         {
           sourceField: 'timeWeightedReturn',
@@ -119,8 +119,8 @@ const OrionMapping: React.FC = () => {
   return (
     <div>
       <PageHeader 
-        title="Orion Advisor Integration"
-        description="Map your portfolio data fields to corresponding Orion Advisor fields"
+        title="Orion Integration"
+        description="Map your portfolio data fields to corresponding Orion fields"
         backLink="/settings"
         onBack={() => {
           window.history.pushState({}, "", "/settings?tab=data-mapping");
