@@ -1713,11 +1713,52 @@ app.get("/api/analytics/client-inception", requireAuth, getClientInceptionHandle
 
       const tokenData = await tokenResponse.json();
 
-      // Save the token to the user's record
+      // Get or create WealthBox integration type
+      const integrationType = await storage.getIntegrationTypeByName("wealthbox");
+      if (!integrationType) {
+        return res.status(500).json({
+          success: false,
+          message: "WealthBox integration type not found"
+        });
+      }
+
+      // Store the tokens in advisor_auth_tokens table
+      const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
+      
+      // Check if the user already has a token for WealthBox
+      const existingToken = await storage.getAdvisorAuthTokenByUserId(user.id, user.organizationId);
+      
+      if (existingToken) {
+        // Update existing token
+        await storage.updateAdvisorAuthToken(existingToken.id, {
+          ...existingToken,
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token,
+          tokenType: tokenData.token_type || "Bearer",
+          expiresAt: expiresAt,
+          scope: tokenData.scope,
+          updatedAt: new Date(),
+        });
+      } else {
+        // Create new token record
+        await storage.createAdvisorAuthToken({
+          advisorId: user.id,
+          firmIntegrationConfigId: null, // Will be null for now, can be set later if needed
+          integrationType: 1, // 1 for WealthBox
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token,
+          tokenType: tokenData.token_type || "Bearer",
+          expiresAt: expiresAt,
+          scope: tokenData.scope,
+          additionalData: {},
+        });
+      }
+
+      // Also update the user record for backward compatibility
       await storage.updateUser(user.id, {
         wealthboxToken: tokenData.access_token,
         wealthboxRefreshToken: tokenData.refresh_token,
-        wealthboxTokenExpiry: new Date(Date.now() + tokenData.expires_in * 1000),
+        wealthboxTokenExpiry: expiresAt,
         wealthboxConnected: true,
       });
 
