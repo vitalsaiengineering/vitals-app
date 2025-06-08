@@ -8,7 +8,9 @@ import BookDevelopmentBySegmentReport from '@/components/reporting/BookDevelopme
 import ClientBirthdayReport from '@/components/reporting/ClientBirthdayReport';
 import ClientSegmentationDashboard from '@/components/reporting/ClientSegmentationDashboard';
 import ClientDashboard from '@/components/reporting/ClientDashboard';
-
+import ReferralAnalyticsReport from '@/components/reporting/ReferralAnalyticsReport';
+import ClientReferralRate from '@/components/reporting/ClientReferralRate';
+import AdvisoryFirmDashboard from '@/components/reporting/AdvisoryFirmDashboard'; // Import the new report
 // Define a registry for report components
 const reportRegistry: { [key: string]: { component: React.FC<any>, title: string } } = {
   'age-demographics': { component: AgeDemographicsReport, title: 'Client Age Demographics' },
@@ -17,7 +19,9 @@ const reportRegistry: { [key: string]: { component: React.FC<any>, title: string
   'client-segmentation-dashboard': { component: ClientSegmentationDashboard, title: 'Client Segmentation Dashboard' },
   'client-dashboard': { component: ClientDashboard, title: 'Client Dashboard' },
   'active-clients-over-segments': { component: BookDevelopmentBySegmentReport, title: 'Book Development by Segment' },
-
+  'referral-analytics': { component: ReferralAnalyticsReport, title: 'Referral Analytics' },
+  'client-referral-rate': { component: ClientReferralRate, title: 'Client Referral Rate ' },
+  'advisory-firm-dashboard': { component: AdvisoryFirmDashboard, title: 'Advisory Firm Dashboard' },
   // Add other reports here as they are created
   // 'clients-aum-overtime': { component: ClientsAUMOverTimeReport, title: 'Clients & AUM Over Time' },
   // 'net-new-assets': { component: NetNewAssetsReport, title: 'Net New Assets' },
