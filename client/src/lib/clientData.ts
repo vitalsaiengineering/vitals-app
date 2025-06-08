@@ -6,6 +6,92 @@ export interface AgeGroup {
   colorClass: string;
 }
 
+// --- START: Added for Advisory Firm Dashboard ---
+export interface StaffMember {
+  id: string;
+  initials: string;
+  name: string;
+  totalActivities: number;
+  meetings: number;
+  emails: number;
+  tasks: number;
+  isHighlighted?: boolean;
+}
+
+export interface ActivitySummary {
+  activityType: string;
+  mtd: number;
+  qtd: number;
+  ytd: number;
+  ttm: number;
+  trend: 'up' | 'down' | 'neutral';
+}
+
+export interface StaffDetail {
+  id: string;
+  name: string;
+  activities: ActivitySummary[];
+}
+
+export interface MonthlyData {
+  month: string;
+  shortMonth: string;
+  totalActivities: number;
+}
+
+export interface WeeklyData {
+  day: string;
+  meetings: number;
+  calls: number;
+  emails: number;
+  tasks: number;
+  notes: number;
+  workflows: number;
+}
+
+export interface ActivityBreakdown {
+  name: string;
+  value: number;
+  color: string;
+}
+
+export interface AdvisoryFirmDashboardData {
+  totalActivities: number;
+  clientMeetings: number;
+  tasksCompleted: number;
+  notesCreated: number;
+  messagesSent: number;
+  topPerformers: StaffMember[];
+  needsAttention: StaffMember[];
+  monthlyData: MonthlyData[];
+  weeklyData: WeeklyData[];
+  activityBreakdown: ActivityBreakdown[];
+  staffDetails: StaffDetail[];
+}
+
+export interface GetAdvisoryFirmDashboardParams {
+  advisorId?: number;
+  startDate?: string;
+  endDate?: string;
+  department?: string;
+}
+
+/**
+ * Fetches advisory firm dashboard data from the API
+ * @param params Optional parameters including advisorId, date range, and department
+ * @returns Promise with the advisory firm dashboard data
+ */
+export async function getAdvisoryFirmDashboardData(params?: GetAdvisoryFirmDashboardParams): Promise<AdvisoryFirmDashboardData> {
+  try {
+    const data = await dataService.fetchData("analytics/advisory-firm-dashboard", params);
+    return data as AdvisoryFirmDashboardData;
+  } catch (error) {
+    console.error("Error fetching advisory firm dashboard data:", error);
+    throw error;
+  }
+}
+// --- END: Added for Advisory Firm Dashboard ---
+
 // Data service for API calls
 export const dataService = {
   fetchData: async (
@@ -1188,7 +1274,51 @@ export async function getClientBirthdayReportData(params?: GetClientBirthdayRepo
 }
 // --- END: Added for Client Birthday Report ---
 
-// ...rest of clientData.ts
+// --- START: Added for Referral Analytics ---
+export interface ReferralClient {
+  id: string;
+  clientName: string;
+  segment: 'Platinum' | 'Gold' | 'Silver';
+  referredBy: string;
+  primaryAdvisor?: string; // Add this field
+  aum: number;
+  referralDate: string;
+}
+
+export interface ReferralSource {
+  id: string;
+  name: string;
+  company?: string;
+  totalReferrals: number;
+  percentage: number;
+  clients: ReferralClient[];
+  totalAUM: number;
+}
+
+export interface ReferralAnalyticsData {
+  totalReferrals: number;
+  allReferrals: ReferralClient[];
+  referralSources: ReferralSource[];
+  filterOptions: {
+    referrers: { id: string; name: string }[];
+  };
+}
+
+export interface GetReferralAnalyticsParams {
+  search?: string;
+  referrer?: string;
+}
+
+export async function getReferralAnalyticsData(params?: GetReferralAnalyticsParams): Promise<ReferralAnalyticsData> {
+  try {
+    const data = await dataService.fetchData("dashboard/referral-analytics", params);
+    return data as ReferralAnalyticsData;
+  } catch (error) {
+    console.error("Error fetching referral analytics data:", error);
+    throw error;
+  }
+}
+// --- END: Added for Referral Analytics ---
 
 /**
  * Fetches the client distribution by state report data from the API.
@@ -1366,3 +1496,44 @@ export async function getClientInceptionData(params?: GetClientInceptionParams):
   }
 }
 // --- END: Added for Client Dashboard ---
+
+// --- START: Added for Client Referral Rate ---
+export interface ReferralRateKPI {
+  currentRate: number;
+  rateChange: number;
+  newClientsThisMonth: number;
+  referredClientsThisMonth: number;
+}
+
+export interface ReferralRateDataPoint {
+  month: string;
+  shortMonth: string;
+  referralRate: number;
+  referredClients: number;
+  totalNewClients: number;
+}
+
+export interface ClientReferralRateData {
+  kpi: ReferralRateKPI;
+  chartData: ReferralRateDataPoint[];
+}
+
+export interface GetClientReferralRateParams {
+  advisorId?: number;
+}
+
+/**
+ * Fetches client referral rate data from the API
+ * @param params Optional parameters including advisorId
+ * @returns Promise with the client referral rate data
+ */
+export async function getClientReferralRateData(params?: GetClientReferralRateParams): Promise<ClientReferralRateData> {
+  try {
+    const data = await dataService.fetchData("analytics/client-referral-rate", params);
+    return data as ClientReferralRateData;
+  } catch (error) {
+    console.error("Error fetching client referral rate data:", error);
+    throw error;
+  }
+}
+// --- END: Added for Client Referral Rate ---
