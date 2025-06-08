@@ -127,7 +127,7 @@ const initialMockReports: Report[] = [
     isFavorite: false,
     integrations: ["Data Sources"],
   },
-    {
+  {
     id: "12",
     name: "Client Segmentation Dashboard",
     routePath: "client-segmentation-dashboard",
@@ -135,11 +135,27 @@ const initialMockReports: Report[] = [
     integrations: ["Data Sources"],
     isFavorite: false,
   },
-    {
+  {
     id: "13",
     name: "Client Dashboard",
     routePath: "client-dashboard",
     description: "Track client acquisition and segmentation metrics, and view upcoming anniversaries.",
+    integrations: ["Data Sources"],
+    isFavorite: false,
+  },
+  {
+    id: "14",
+    name: "Client Referral Rate",
+    routePath: "client-referral-rate",
+    description: "Analyze client referral rates and sources.",
+    integrations: ["Data Sources"],
+    isFavorite: false,
+  },
+  {
+    id: "15",
+    name: "Advisory Firm Dashboard",
+    routePath: "advisory-firm-dashboard",
+    description: "View key metrics for your advisory firm, including client demographics and referral sources.",
     integrations: ["Data Sources"],
     isFavorite: false,
   },
