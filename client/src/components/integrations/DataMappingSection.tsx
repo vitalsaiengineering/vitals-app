@@ -7,7 +7,8 @@ import FieldMappingCard from "../mapping/FieldMappingCard";
 import { FieldMapping, MappingSection } from "@/types/mapping";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { exchangeWealthboxOAuthCode, importWealthboxData } from "@/lib/api";
+import { exchangeWealthboxOAuthCode, importWealthboxData, exchangeOrionOAuthCode, syncOrionClients } from "@/lib/api";
+import { getOAuthUrl } from "@/config/integrations";
 
 // Import the image assets directly
 // These paths assume the images are in the /public folder
@@ -93,7 +94,7 @@ const getIntegrationConfig = (integrationType: string): IntegrationConfig | null
       color: "bg-blue-50",
       showConnect: true,
       connectText: "Connect Wealthbox",
-      oauthUrl: "https://app.crmworkspace.com/oauth/authorize?client_id=MbnIzrEtWejPZ96qHXFwxbkU1R9euNqfrSeynciUgL0&redirect_uri=https://app.advisorvitals.com/&response_type=code&scope=login+data",
+      oauthUrl: getOAuthUrl("wealthbox"),
       mappingSections: [
         {
           title: "Contact Information",
@@ -143,7 +144,7 @@ const getIntegrationConfig = (integrationType: string): IntegrationConfig | null
       color: "bg-violet-50",
       showConnect: true,
       connectText: "Connect Orion",
-      oauthUrl: "https://stagingapi.orionadvisor.com/api/oauth/?response_type=code&redirect_uri=https://app.advisorvitals.com/&client_id=2112&state=Login",
+      oauthUrl: getOAuthUrl("orion"),
       mappingSections: [
         {
           title: "Portfolio Holdings",
@@ -235,11 +236,40 @@ const DataMappingSection: React.FC<DataMappingSectionProps> = ({
     },
   });
 
+  // Sync Orion data mutation
+  const orionSyncMutation = useMutation({
+    mutationFn: () => syncOrionClients(),
+    onSuccess: (data) => {
+      if (data.success) {
+        toast({
+          title: "Orion sync started successfully",
+          description: "Your Orion data sync has been initiated.",
+        });
+      } else {
+        toast({
+          title: "Sync initiation failed",
+          description: data.message || "Failed to start Orion data sync.",
+          variant: "destructive",
+        });
+      }
+      setIsImporting(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Sync failed",
+        description: error.message || "There was a problem starting your Orion data sync.",
+        variant: "destructive",
+      });
+      setIsImporting(false);
+    },
+  });
+
   // Handle OAuth callback
   useEffect(() => {
     const handleOAuthCallback = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
+      const state = urlParams.get('state');
       const error = urlParams.get('error');
 
       if (error) {
@@ -255,29 +285,55 @@ const DataMappingSection: React.FC<DataMappingSectionProps> = ({
 
       if (code) {
         try {
-          // Exchange authorization code for access token
-          const tokenResponse = await exchangeWealthboxOAuthCode(code);
+          // Determine which integration based on state parameter or URL pattern
+          const isOrionOAuth = state === 'Login' || window.location.href.includes('state=Login');
           
-          if (tokenResponse.success) {
-            toast({
-              title: "Successfully Connected",
-              description: "Your Wealthbox account has been connected successfully.",
-            });
+          if (isOrionOAuth) {
+            // Handle Orion OAuth
+            const tokenResponse = await exchangeOrionOAuthCode(code);
+            
+            if (tokenResponse.success) {
+              toast({
+                title: "Successfully Connected",
+                description: "Your Orion account has been connected successfully.",
+              });
 
-            // Trigger data import automatically
-            setIsImporting(true);
-            importMutation.mutate();
+              // Trigger Orion data sync automatically
+              setIsImporting(true);
+              orionSyncMutation.mutate();
+            } else {
+              toast({
+                title: "Connection Failed",
+                description: "Failed to complete Orion OAuth connection.",
+                variant: "destructive",
+              });
+            }
           } else {
-            toast({
-              title: "Connection Failed",
-              description: "Failed to complete OAuth connection.",
-              variant: "destructive",
-            });
+            // Handle Wealthbox OAuth (existing logic)
+            const tokenResponse = await exchangeWealthboxOAuthCode(code);
+            
+            if (tokenResponse.success) {
+              toast({
+                title: "Successfully Connected",
+                description: "Your Wealthbox account has been connected successfully.",
+              });
+
+              // Trigger data import automatically
+              setIsImporting(true);
+              importMutation.mutate();
+            } else {
+              toast({
+                title: "Connection Failed",
+                description: "Failed to complete OAuth connection.",
+                variant: "destructive",
+              });
+            }
           }
         } catch (error: any) {
+          const integrationName = (window.location.href.includes('state=Login')) ? 'Orion' : 'Wealthbox';
           toast({
             title: "Connection Error",
-            description: error.message || "Failed to exchange authorization code.",
+            description: error.message || `Failed to exchange ${integrationName} authorization code.`,
             variant: "destructive",
           });
         }
@@ -288,7 +344,7 @@ const DataMappingSection: React.FC<DataMappingSectionProps> = ({
     };
 
     handleOAuthCallback();
-  }, [toast, importMutation]);
+  }, [toast, importMutation, orionSyncMutation]);
 
   useEffect(() => {
     if (activeMapping) {
@@ -386,7 +442,7 @@ const DataMappingSection: React.FC<DataMappingSectionProps> = ({
         key: "wealthbox",
         showConnect: true,
         connectText: "Connect Wealthbox",
-        oauthUrl: "https://app.crmworkspace.com/oauth/authorize?client_id=MbnIzrEtWejPZ96qHXFwxbkU1R9euNqfrSeynciUgL0&redirect_uri=https://app.advisorvitals.com/&response_type=code&scope=login+data"
+        oauthUrl: getOAuthUrl("wealthbox")
       },
       {
         name: "Orion",
@@ -396,7 +452,7 @@ const DataMappingSection: React.FC<DataMappingSectionProps> = ({
         key: "orion",
         showConnect: true,
         connectText: "Connect Orion",
-        oauthUrl: "https://stagingapi.orionadvisor.com/api/oauth/?response_type=code&redirect_uri=https://app.advisorvitals.com/&client_id=2112&state=Login"
+        oauthUrl: getOAuthUrl("orion")
       }
     ];
 

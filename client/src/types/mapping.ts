@@ -1,3 +1,5 @@
+import React from 'react';
+
 export interface FieldOption {
   label: string;
   value: string;
@@ -8,7 +10,7 @@ export interface FieldOption {
 
 export interface FieldMapping {
   sourceField: string;
-  sourceLabel: string;
+  sourceLabel: string | React.ReactNode;
   targetField: string;
   targetOptions: FieldOption[];
   customInput?: boolean;

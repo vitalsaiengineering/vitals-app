@@ -21,10 +21,13 @@ import {
   Status,
   statusValues,
   clients,
-  Client,
   InsertClient,
   portfolios,
-  Portfolio
+  Portfolio,
+  Activity,
+  DataMapping,
+  InsertDataMapping,
+  firmDataMappings
 } from "@shared/schema";
 
 // export interface IFirmIntegrationConfig {
@@ -73,6 +76,10 @@ export interface IStorage {
     organizationId: number,
   ): Promise<AdvisorAuthTokens | undefined>;
 
+  getAdvisorAuthTokensByAdvisorId(
+    advisorId: number,
+  ): Promise<AdvisorAuthTokens[]>;
+
   createAdvisorAuthToken(
     token: InsertAdvisorAuthToken,
   ): Promise<AdvisorAuthTokens>;
@@ -96,6 +103,19 @@ export interface IStorage {
 
   getRoles(): Promise<Role[]>
   getStatuses(): Promise<Status[]>
+  
+  // Client methods
+  getClientsByAdvisor(advisorId: number): Promise<Client[]>;
+  createClient(client: InsertClient): Promise<Client>;
+  upsertClientByWealthboxId(wealthboxId: string, client: Partial<Client>): Promise<Client>;
+  
+  // Activity methods
+  upsertActivityByWealthboxId(wealthboxId: string, activity: Partial<Activity>): Promise<Activity>;
+  
+  // Data mapping methods
+  getDataMappings(userId: number): Promise<DataMapping[]>;
+  createDataMapping(mapping: InsertDataMapping): Promise<DataMapping>;
+  deleteDataMapping(id: number): Promise<void>;
 }
 
 export class PostgresStorage implements IStorage {
@@ -257,33 +277,44 @@ export class PostgresStorage implements IStorage {
     advisorId: number,
     organizationId: number,
   ): Promise<AdvisorAuthTokens | undefined> {
+    console.log("getAdvisorAuthTokenByUserId", { advisorId, organizationId });
     const wealthboxIntegration =
       await this.getIntegrationTypeByName("wealthbox");
-
-    const integrationConfigs = await db
-      .select()
-      .from(firmIntegrationConfigs)
-      .where(
-        and(
-          eq(firmIntegrationConfigs.firmId, organizationId),
-          eq(firmIntegrationConfigs.integrationTypeId, wealthboxIntegration.id),
-        ),
-      );
-
+    // console.log("wealthboxIntegration", wealthboxIntegration);
+    // const integrationConfigs = await db
+    //   .select()
+    //   .from(firmIntegrationConfigs)
+    //   .where(
+    //     and(
+    //       eq(firmIntegrationConfigs.firmId, organizationId),
+    //       eq(firmIntegrationConfigs.integrationTypeId, wealthboxIntegration.id),
+    //     ),
+    //   );
+    // console.log("integrationConfigs", integrationConfigs);
     const results = await db
       .select()
       .from(advisorAuthTokens)
       .where(
         and(
           eq(advisorAuthTokens.advisorId, advisorId),
-          eq(
-            advisorAuthTokens.firmIntegrationConfigId,
-            integrationConfigs[0].id,
-          ),
+          // eq(
+          //   advisorAuthTokens.integrationType,
+          //   wealthboxIntegration.id,
+          // ),
         ),
       );
-
+    console.log("results", results);
     return results[0];
+  }
+
+  async getAdvisorAuthTokensByAdvisorId(
+    advisorId: number,
+  ): Promise<AdvisorAuthTokens[]> {
+    const results = await db
+      .select()
+      .from(advisorAuthTokens)
+      .where(eq(advisorAuthTokens.advisorId, advisorId));
+    return results;
   }
 
   async createAdvisorAuthToken(
@@ -336,4 +367,117 @@ export class PostgresStorage implements IStorage {
     return statusValues;
   }
   
+  // Client methods
+  async getClientsByAdvisor(advisorId: number): Promise<Client[]> {
+    const results = await db
+      .select()
+      .from(clients)
+      .where(eq(clients.primaryAdvisorId, advisorId));
+    return results;
+  }
+
+  async createClient(client: InsertClient): Promise<Client> {
+    const results = await db.insert(clients).values(client).returning();
+    return results[0];
+  }
+
+  async upsertClientByWealthboxId(wealthboxId: string, client: Partial<Client>): Promise<Client> {
+    // First try to find existing client by wealthboxClientId
+    const existingClient = await db
+      .select()
+      .from(clients)
+      .where(eq(clients.wealthboxClientId, wealthboxId))
+      .limit(1);
+
+    if (existingClient.length > 0) {
+      // Update existing client
+      const results = await db
+        .update(clients)
+        .set({
+          ...client,
+          updatedAt: new Date(),
+        })
+        .where(eq(clients.wealthboxClientId, wealthboxId))
+        .returning();
+      
+      if (!results || results.length === 0) {
+        throw new Error("Failed to update client");
+      }
+      return results[0];
+    } else {
+      // Create new client with wealthboxClientId
+      const clientData: InsertClient = {
+        firmId: client.firmId || 0,
+        firstName: client.firstName || '',
+        lastName: client.lastName || '',
+        title: client.title,
+        contactType: client.contactType,
+        segment: client.segment,
+        wealthboxClientId: wealthboxId,
+        primaryAdvisorId: client.primaryAdvisorId,
+        age: client.age,
+        emailAddress: client.emailAddress,
+        phoneNumber: client.phoneNumber,
+        aum: client.aum,
+        isActive: client.isActive,
+        representativeName: client.representativeName,
+        representativeId: client.representativeId,
+        startDate: client.startDate,
+        contactInfo: client.contactInfo as any || {},
+        source: client.source || 'wealthbox',
+        status: client.status || 'active',
+        ...client,
+      };
+      
+      const results = await db
+        .insert(clients)
+        .values(clientData)
+        .returning();
+      
+      if (!results || results.length === 0) {
+        throw new Error("Failed to create client");
+      }
+      return results[0];
+    }
+  }
+  
+  // Activity methods
+  async upsertActivityByWealthboxId(wealthboxId: string, activity: Partial<Activity>): Promise<Activity> {
+    // Since there's no activities table in the schema, we'll return a mock activity
+    // In a real implementation, you'd need to create an activities table
+    console.warn('Activities table not implemented - returning mock activity');
+    return {
+      id: 1,
+      clientId: activity.clientId || 0,
+      type: activity.type || 'unknown',
+      details: activity.details || {},
+      date: activity.date || new Date(),
+      createdAt: new Date(),
+      advisorId: activity.advisorId || 0,
+    } as Activity;
+  }
+  
+  // Data mapping methods
+  async getDataMappings(userId: number): Promise<DataMapping[]> {
+    // Get user's organization first
+    const user = await this.getUser(userId);
+    if (!user || !user.organizationId) {
+      return [];
+    }
+
+    const results = await db
+      .select()
+      .from(firmDataMappings)
+      .where(eq(firmDataMappings.firmId, user.organizationId));
+    return results;
+  }
+
+  async createDataMapping(mapping: InsertDataMapping): Promise<DataMapping> {
+    const results = await db.insert(firmDataMappings).values(mapping).returning();
+    return results[0];
+  }
+
+  async deleteDataMapping(id: number): Promise<void> {
+    await db.delete(firmDataMappings).where(eq(firmDataMappings.id, id));
+  }
 }

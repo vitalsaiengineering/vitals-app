@@ -11,38 +11,41 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useWealthboxFields } from '@/hooks/use-wealthbox-fields';
 import { fieldHasOptions } from '@/services/wealthbox-api';
 import axios from 'axios';
+import { useQuery } from '@tanstack/react-query';
 
 const WealthboxMapping: React.FC = () => {
   const { toast } = useToast();
   const [wealthboxToken, setWealthboxToken] = useState<string>('');
   const [tokenLoading, setTokenLoading] = useState(true);
   const [tokenError, setTokenError] = useState(false);
+
   const { isLoading, hasError, getOptions, searchOptions } = useWealthboxFields(wealthboxToken);
-  
+
   // Fetch the Wealthbox token when the component mounts
-  useEffect(() => {
-    const fetchWealthboxToken = async () => {
-      try {
-        setTokenLoading(true);
-        setTokenError(false);
-        
-        const response = await axios.get('/api/wealthbox/token');
-        if (response.data.success && response.data.token) {
-          setWealthboxToken(response.data.token);
-        } else {
-          console.error('No Wealthbox token available:', response.data);
-          setTokenError(true);
-        }
-      } catch (error) {
-        console.error('Error fetching Wealthbox token:', error);
+useEffect(() => {
+  const fetchWealthboxToken = async () => {
+    try {
+      setTokenLoading(true);
+      setTokenError(false);
+      
+      const response = await axios.get('/api/wealthbox/token');
+      if (response.data.success && response.data.token) {
+        setWealthboxToken(response.data.token);
+      } else {
+        console.error('No Wealthbox token available:', response.data);
         setTokenError(true);
-      } finally {
-        setTokenLoading(false);
       }
-    };
-    
-    fetchWealthboxToken();
-  }, []);
+    } catch (error) {
+      console.error('Error fetching Wealthbox token:', error);
+      setTokenError(true);
+    } finally {
+      setTokenLoading(false);
+    }
+  };
+  
+  fetchWealthboxToken();
+}, []);
+  
   
   // Callback to search for field options as user types
   const handleFieldSearch = useCallback(
@@ -82,25 +85,85 @@ const WealthboxMapping: React.FC = () => {
       mappings: [
         {
           sourceField: 'activeClient',
-          sourceLabel: 'Which field indicates an Active Client of the firm?',
+          sourceLabel: (
+            <>
+              <strong>Active Clients</strong>
+              <br />
+              Which field indicates an Active Client of the firm?
+            </>
+          ),
           targetField: '',
           targetOptions: [],
         },
         {
           sourceField: 'prospectiveClient',
-          sourceLabel: 'Which field indicates a Prospective Client of the firm?',
+          sourceLabel: (
+            <>
+              <strong>Prospects</strong>
+              <br />
+              Which field indicates a Prospective Client of the firm?
+            </>
+          ),
+          targetField: '',
+          targetOptions: [],
+        },
+        {
+          sourceField: 'lostClient',
+          sourceLabel: (
+            <>
+              <strong>Past Clients</strong>
+              <br />
+              Which field indicates a Lost Client of the firm?
+            </>
+          ),
+          targetField: '',
+          targetOptions: [],
+        },
+        {
+          sourceField: 'deceasedClient',
+          sourceLabel: (
+            <>
+              <strong>Deceased Clients</strong>
+              <br />
+              Which field indicates a Deceased Client of the firm?
+            </>
+          ),
           targetField: '',
           targetOptions: [],
         },
         {
           sourceField: 'leadAdvisor',
-          sourceLabel: 'Which field indicates the Lead Advisor for a client?',
+          sourceLabel: (
+            <>
+              <strong>Primary Advisor</strong>
+              <br />
+              Which field indicates the Lead Advisor for a client?
+            </>
+          ),
           targetField: '',
           targetOptions: [],
         },
         {
-          sourceField: 'clientSegmentation',
-          sourceLabel: 'Which field indicates client segmentation for your clients?',
+          sourceField: 'inceptionDate',
+          sourceLabel: (
+            <>
+              <strong>Client Inception</strong>
+              <br />
+              Which field indicates the Inception Date for your clients?
+            </>
+          ),
+          targetField: '',
+          targetOptions: [],
+        },
+        {
+          sourceField: 'referralSource',
+          sourceLabel: (
+            <>
+              <strong>Referral Source</strong>
+              <br />
+              Which field indicates the Referral Source for your clients?
+            </>
+          ),
           targetField: '',
           targetOptions: [],
         },
@@ -399,45 +462,9 @@ const WealthboxMapping: React.FC = () => {
     );
   };
 
-  // Enhanced FieldMappingCard with field info display
-  const EnhancedFieldMappingCard: React.FC<{
-    title: string;
-    description?: string;
-    mappings: any[];
-    onMappingChange: (sourceField: string, targetField: string) => void;
-    sourceSystem: string;
-    targetSystem: string;
-    sectionIndex: number;
-  }> = ({ title, description, mappings, onMappingChange, sourceSystem, targetSystem, sectionIndex }) => {
-    return (
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          {description && <CardDescription>{description}</CardDescription>}
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="border-t border-border">
-            {mappings.map((mapping) => (
-              <div key={mapping.sourceField}>
-                <FieldMappingRow
-                  mapping={mapping}
-                  onMappingChange={onMappingChange}
-                  sourceSystem={sourceSystem}
-                  targetSystem={targetSystem}
-                  onSearch={handleFieldSearch}
-                />
-                <FieldInfoDisplay fieldValue={mapping.targetField} />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
   if (tokenError) {
     return (
-      <div>
+      <div className="animate-fade-in">
         <PageHeader 
           title="Wealthbox Integration"
           description="Map your firm's data fields to corresponding Wealthbox CRM fields"
@@ -448,7 +475,7 @@ const WealthboxMapping: React.FC = () => {
           }}
         />
         
-        <div className="max-w-4xl mx-auto">
+        <div className="mapping-container">
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
@@ -470,7 +497,7 @@ const WealthboxMapping: React.FC = () => {
   }
 
   return (
-    <div>
+    <div className="animate-fade-in">
       <PageHeader 
         title="Wealthbox Integration"
         description="Map your firm's data fields to corresponding Wealthbox CRM fields"
@@ -481,7 +508,7 @@ const WealthboxMapping: React.FC = () => {
         }}
       />
 
-      <div className="max-w-4xl mx-auto">
+      <div className="mapping-container">
         {(isLoading || tokenLoading) ? (
           <div className="text-center p-8">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
@@ -505,7 +532,7 @@ const WealthboxMapping: React.FC = () => {
             </Alert>
 
             {sections.map((section, index) => (
-              <EnhancedFieldMappingCard
+              <FieldMappingCard
                 key={index}
                 title={section.title}
                 description={section.description}
@@ -513,18 +540,18 @@ const WealthboxMapping: React.FC = () => {
                 onMappingChange={(sourceField, targetField) => 
                   handleMappingChange(index, sourceField, targetField)
                 }
-                sourceSystem="Firm"
+                sourceSystem="Vitals"
                 targetSystem="Wealthbox"
-                sectionIndex={index}
+                onSearch={handleFieldSearch}
               />
             ))}
             
-            <h2 className="text-2xl font-semibold mt-8 mb-4">Client Segmentation</h2>
+            {/* <h2 className="text-2xl font-semibold mt-8 mb-4">Client Segmentation</h2>
             <p className="text-muted-foreground mb-6">Configure client segmentation settings for Wealthbox integration</p>
             
-            {renderDefinitionsSection()}
+            {renderDefinitionsSection()} */}
             
-            <div className="flex justify-end mt-6 mb-10">
+            <div className="flex justify-end mt-6">
               <Button onClick={handleSave} className="px-6">
                 <SaveIcon className="w-4 h-4 mr-2" />
                 Save Mappings

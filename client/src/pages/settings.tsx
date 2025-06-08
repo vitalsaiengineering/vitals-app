@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import {
   testWealthboxConnection,
@@ -13,6 +13,8 @@ import {
   getOrionStatus,
   connectToOrion,
   exchangeWealthboxOAuthCode,
+  exchangeOrionOAuthCode,
+  syncOrionClients,
 } from "@/lib/api";
 import {
   Card,
@@ -36,9 +38,11 @@ import WealthboxMapping from "@/components/integrations/WealthboxMapping";
 import OrionMapping from "@/components/integrations/OrionMapping";
 import VitalsMapping from "@/components/integrations/VitalsMapping";
 import Users from "./admin/users";
+import { getOAuthUrl } from "@/config/integrations";
 
 export default function Settings() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isConnecting, setIsConnecting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -87,6 +91,9 @@ export default function Settings() {
   } = useQuery<TokenResponse>({
     queryKey: ["/api/wealthbox/token"],
     retry: false,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
 
   useEffect(() => {
@@ -274,6 +281,34 @@ export default function Settings() {
         variant: "destructive",
       });
       setIsSyncing(false);
+    },
+  });
+
+  // Sync Orion data mutation
+  const orionSyncMutation = useMutation({
+    mutationFn: () => syncOrionClients(),
+    onSuccess: (data) => {
+      if (data.success) {
+        toast({
+          title: "Orion sync started successfully",
+          description: "Your Orion data sync has been initiated.",
+        });
+      } else {
+        toast({
+          title: "Sync initiation failed",
+          description: data.message || "Failed to start Orion data sync.",
+          variant: "destructive",
+        });
+      }
+      setIsConnectingOrion(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Sync failed",
+        description: error.message || "There was a problem starting your Orion data sync.",
+        variant: "destructive",
+      });
+      setIsConnectingOrion(false);
     },
   });
 
@@ -675,7 +710,7 @@ export default function Settings() {
   const handleOAuth = async () => {
     try {
       // Redirect directly to the Wealthbox OAuth URL
-      const authUrl = "https://app.crmworkspace.com/oauth/authorize?client_id=MbnIzrEtWejPZ96qHXFwxbkU1R9euNqfrSeynciUgL0&redirect_uri=https://app.advisorvitals.com/&response_type=code&scope=login+data";
+      const authUrl = getOAuthUrl("wealthbox");
       window.location.href = authUrl;
     } catch (error) {
       toast({
@@ -691,6 +726,7 @@ export default function Settings() {
     const handleOAuthCallback = async () => {
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
+      const state = urlParams.get('state');
       const error = urlParams.get('error');
 
       if (error) {
@@ -706,29 +742,58 @@ export default function Settings() {
 
       if (code) {
         try {
-          // Exchange authorization code for access token
-          const tokenResponse = await exchangeWealthboxOAuthCode(code);
+          // Determine which integration based on state parameter
+          const isOrionOAuth = state === 'Login' || window.location.href.includes('state=Login');
           
-          if (tokenResponse.success) {
-            toast({
-              title: "Successfully Connected",
-              description: "Your Wealthbox account has been connected successfully.",
-            });
+          if (isOrionOAuth) {
+            // Handle Orion OAuth
+            const tokenResponse = await exchangeOrionOAuthCode(code);
+            
+            if (tokenResponse.success) {
+              toast({
+                title: "Successfully Connected",
+                description: "Your Orion account has been connected successfully.",
+              });
 
-            // Trigger data import automatically
-            setIsImporting(true);
-            importMutation.mutate(undefined);
+              // Trigger Orion data sync automatically
+              setIsConnectingOrion(true);
+              orionSyncMutation.mutate(tokenResponse.access_token);
+            } else {
+              toast({
+                title: "Connection Failed",
+                description: "Failed to complete Orion OAuth connection.",
+                variant: "destructive",
+              });
+            }
           } else {
-            toast({
-              title: "Connection Failed",
-              description: "Failed to complete OAuth connection.",
-              variant: "destructive",
-            });
+            // Handle Wealthbox OAuth (existing logic)
+            const tokenResponse = await exchangeWealthboxOAuthCode(code);
+            
+            if (tokenResponse.success) {
+              // Invalidate token query to refetch fresh token
+              queryClient.invalidateQueries({ queryKey: ["/api/wealthbox/token"] });
+              
+              toast({
+                title: "Authentication Successful",
+                description: "Thank you for authenticating your Wealthbox account.",
+              });
+
+              // Trigger data import automatically
+              setIsImporting(true);
+              importMutation.mutate(tokenResponse.access_token);
+            } else {
+              toast({
+                title: "Connection Failed",
+                description: "Failed to complete OAuth connection.",
+                variant: "destructive",
+              });
+            }
           }
         } catch (error: any) {
+          const integrationName = (state === 'Login' || window.location.href.includes('state=Login')) ? 'Orion' : 'Wealthbox';
           toast({
             title: "Connection Error",
-            description: error.message || "Failed to exchange authorization code.",
+            description: error.message || `Failed to exchange ${integrationName} authorization code.`,
             variant: "destructive",
           });
         }
@@ -739,7 +804,7 @@ export default function Settings() {
     };
 
     handleOAuthCallback();
-  }, [toast, importMutation]);
+  }, []);
 
   const handleOrionConnect = () => {
     if (!orionClientId || !orionClientSecret) {
@@ -1180,7 +1245,7 @@ export default function Settings() {
         value={activeTab}
         onValueChange={setActiveTab}
       >
-        <TabsList className="grid grid-cols-4 gap-4 w-full">
+        <TabsList className="grid grid-cols-3 gap-4 w-full">
           <TabsTrigger
             value="user-management"
             className="flex items-center gap-2"
@@ -1192,10 +1257,10 @@ export default function Settings() {
             <Network size={18} />
             <span>Data Mapping</span>
           </TabsTrigger>
-          <TabsTrigger value="integrations" className="flex items-center gap-2">
+          {/* <TabsTrigger value="integrations" className="flex items-center gap-2">
             <Plug size={18} />
             <span>Integrations</span>
-          </TabsTrigger>
+          </TabsTrigger> */}
           <TabsTrigger
             value="firm-information"
             className="flex items-center gap-2"
@@ -1225,7 +1290,7 @@ export default function Settings() {
           {activeMapping === "vitals" ? (
             <VitalsMapping />
           ) : activeMapping === "wealthbox" ? (
-            <WealthboxMapping />
+            <WealthboxMapping accessToken={accessToken} />
           ) : activeMapping === "orion" ? (
             <OrionMapping />
           ) : (

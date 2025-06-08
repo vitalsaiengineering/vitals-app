@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import {
   testWealthboxConnection,
@@ -60,6 +60,9 @@ export default function Integrations() {
   } = useQuery<TokenData>({
     queryKey: ["/api/wealthbox/token"],
     retry: false,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
   });
   useEffect(() => {
     if (tokenData?.token) {

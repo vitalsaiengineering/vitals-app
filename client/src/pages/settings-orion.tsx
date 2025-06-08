@@ -4,9 +4,9 @@
 const renderOrionIntegration = () => {
   return (
     <div className="border rounded-md p-4">
-      <h3 className="text-lg font-medium mb-2">Orion Portfolio Solutions</h3>
+      <h3 className="text-lg font-medium mb-2">Orion</h3>
       <div className="text-sm text-muted-foreground mb-4">
-        Connect to Orion Portfolio Solutions to access client portfolio data, AUM metrics, and investment information.
+        Connect to Orion to access client portfolio data, AUM metrics, and investment information.
       </div>
       
       <div className="flex items-center gap-4">

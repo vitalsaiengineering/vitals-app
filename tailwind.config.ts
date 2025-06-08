@@ -13,7 +13,7 @@ export default {
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
-        "vitals-blue": "#1E40AF",
+        "vitals-blue": "#001027",
         "vitals-lightBlue": "#60A5FA",
         "vitals-gray": "#F3F4F6",
         "vitals-red": "#EF4444",
@@ -26,7 +26,7 @@ export default {
           foreground: "hsl(var(--popover-foreground))",
         },
         primary: {
-          DEFAULT: "hsl(var(--primary))",
+          DEFAULT: "#001027",
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {

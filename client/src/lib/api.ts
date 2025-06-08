@@ -135,6 +135,11 @@ export const exchangeWealthboxOAuthCode = async (code: string) => {
   return response.json();
 };
 
+export const exchangeOrionOAuthCode = async (code: string) => {
+  const response = await apiRequest("POST", "/api/orion/oauth/token", { code });
+  return response.json();
+};
+
 export const testWealthboxConnection = async (accessToken: string) => {
   const response = await apiRequest("POST", "/api/wealthbox/test-connection", { accessToken });
   return response.json();
@@ -214,6 +219,21 @@ export const testOrionConnection = async () => {
 
 export const getOrionStatus = async () => {
   const response = await apiRequest("GET", "/api/orion/status");
+  return response.json();
+};
+
+export const syncOrionClients = async () => {
+  const response = await apiRequest("POST", "/api/orion/sync-clients");
+  return response.json();
+};
+
+export const syncOrionAccounts = async () => {
+  const response = await apiRequest("POST", "/api/orion/sync-accounts");
+  return response.json();
+};
+
+export const syncOrionAumHistory = async () => {
+  const response = await apiRequest("POST", "/api/orion/sync-aum-history");
   return response.json();
 };
 

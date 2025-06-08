@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { User, Client, Activity } from "@shared/schema";
 import { storage } from "./storage";
 import { getWealthboxToken } from "./utils/wealthbox-token";
+import { getValidWealthboxToken, createWealthboxHeaders, makeWealthboxRequest } from "./utils/wealthbox-auth";
 
 // Wealthbox API base URL
 const WEALTHBOX_API_BASE_URL = "https://api.crmworkspace.com/v1";
@@ -14,7 +15,7 @@ const ENDPOINTS = {
 };
 
 /**
- * Tests connection to Wealthbox API with the provided access token
+ * Tests connection to Wealthbox API with Bearer token authentication
  */
 export async function testWealthboxConnection(
   accessToken: string | null,
@@ -28,10 +29,7 @@ export async function testWealthboxConnection(
   try {
     const response = await fetch(`${ENDPOINTS.CONTACTS}?limit=1`, {
       method: "GET",
-      headers: {
-        ACCESS_TOKEN: accessToken,
-        "Content-Type": "application/json",
-      },
+      headers: createWealthboxHeaders(accessToken),
     });
 
     if (response.ok) {
@@ -44,6 +42,26 @@ export async function testWealthboxConnection(
     return false;
   } catch (error) {
     console.error("Error connecting to Wealthbox API:", error);
+    return false;
+  }
+}
+
+/**
+ * Tests connection to Wealthbox API using stored user tokens
+ */
+export async function testWealthboxConnectionWithUserToken(
+  userId: number,
+): Promise<boolean> {
+  try {
+    const accessToken = await getValidWealthboxToken(userId);
+    if (!accessToken) {
+      console.error("No valid Wealthbox access token for user");
+      return false;
+    }
+    
+    return await testWealthboxConnection(accessToken);
+  } catch (error) {
+    console.error("Error testing Wealthbox connection with user token:", error);
     return false;
   }
 }
@@ -100,85 +118,6 @@ export async function importWealthboxContacts(
 }
 
 /**
- * Import activities from Wealthbox
- */
-export async function importWealthboxActivities(
-  accessToken: string | null,
-  userId: number,
-): Promise<{ success: boolean; imported: number; failed: number }> {
-  if (!accessToken) {
-    console.error(
-      "No Wealthbox access token provided for importing activities",
-    );
-    return { success: false, imported: 0, failed: 0 };
-  }
-
-  try {
-    // Get all activities from Wealthbox (paginated)
-    let allActivities = await fetchAllActivities(accessToken);
-
-    const user = await storage.getUser(userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    let imported = 0;
-    let failed = 0;
-
-    // Process each activity
-    for (const activity of allActivities) {
-      try {
-        // We need to find the client for this activity
-        let clientId: number | null = null;
-
-        if (activity.contact_ids && activity.contact_ids.length > 0) {
-          // Find the first client that matches any of the contact_ids
-          const clients = await storage.getClientsByAdvisor(userId);
-          const matchingClient = clients.find(
-            (c) =>
-              c.wealthboxClientId &&
-              activity.contact_ids.includes(c.wealthboxClientId),
-          );
-
-          if (matchingClient) {
-            clientId = matchingClient.id;
-          }
-        }
-
-        // If we couldn't find a client, skip this activity
-        if (!clientId) {
-          console.warn(`No matching client found for activity ${activity.id}`);
-          failed++;
-          continue;
-        }
-
-        // Map Wealthbox activity to our activity model
-        const mappedActivity = mapWealthboxActivityToActivity(
-          activity,
-          userId,
-          clientId,
-        );
-
-        // Store the activity in our system
-        await storage.upsertActivityByWealthboxId(
-          activity.id.toString(),
-          mappedActivity,
-        );
-        imported++;
-      } catch (error) {
-        console.error(`Failed to import activity ${activity.id}:`, error);
-        failed++;
-      }
-    }
-
-    return { success: true, imported, failed };
-  } catch (error) {
-    console.error("Error importing Wealthbox activities:", error);
-    return { success: false, imported: 0, failed: 0 };
-  }
-}
-
-/**
  * Handles requests to test Wealthbox connection
  */
 export async function testWealthboxConnectionHandler(
@@ -223,6 +162,7 @@ export async function testWealthboxConnectionHandler(
 export async function importWealthboxDataHandler(req: Request, res: Response) {
   try {
     let { accessToken } = req.body;
+    console.log("importWealthboxDataHandler", { accessToken });
     const user = req.user as any;
     const userId = user?.id;
     const organizationId = user?.organizationId;
@@ -263,22 +203,13 @@ export async function importWealthboxDataHandler(req: Request, res: Response) {
       organizationId,
     );
 
-    // Import activities
-    const activitiesResult = await importWealthboxActivities(
-      accessToken,
-      userId,
-    );
 
     // Return combined results
     return res.json({
-      success: contactsResult.success && activitiesResult.success,
+      success: contactsResult.success,
       contacts: {
         imported: contactsResult.imported,
         failed: contactsResult.failed,
-      },
-      activities: {
-        imported: activitiesResult.imported,
-        failed: activitiesResult.failed,
       },
     });
   } catch (error) {
@@ -290,7 +221,7 @@ export async function importWealthboxDataHandler(req: Request, res: Response) {
 }
 
 /**
- * Fetches all contacts from Wealthbox using pagination
+ * Fetches all contacts from Wealthbox using pagination with Bearer token
  */
 async function fetchAllContacts(
   accessToken: string,
@@ -302,13 +233,10 @@ async function fetchAllContacts(
 
   while (hasMore) {
     const response = await fetch(
-      `${ENDPOINTS.CONTACTS}?limit=${limit}&page=${page}`,
+      `${ENDPOINTS.CONTACTS}?page=${page}`,
       {
         method: "GET",
-        headers: {
-          ACCESS_TOKEN: accessToken,
-          "Content-Type": "application/json",
-        },
+        headers: createWealthboxHeaders(accessToken),
       },
     );
 
@@ -322,51 +250,11 @@ async function fetchAllContacts(
     allContacts = [...allContacts, ...data.contacts];
 
     // Check if there are more pages
-    hasMore = data.contacts.length === limit;
+    hasMore = data.meta.total_pages === page;
     page++;
   }
 
   return allContacts;
-}
-
-/**
- * Fetches all activities from Wealthbox using pagination
- */
-async function fetchAllActivities(
-  accessToken: string,
-  limit: number = 100,
-): Promise<any[]> {
-  let allActivities: any[] = [];
-  let page = 1;
-  let hasMore = true;
-
-  while (hasMore) {
-    const response = await fetch(
-      `${ENDPOINTS.ACTIVITIES}?limit=${limit}&page=${page}`,
-      {
-        method: "GET",
-        headers: {
-          ACCESS_TOKEN: accessToken,
-          "Content-Type": "application/json",
-        },
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch activities: ${response.status} ${response.statusText}`,
-      );
-    }
-
-    const data = await response.json();
-    allActivities = [...allActivities, ...data.activities];
-
-    // Check if there are more pages
-    hasMore = data.activities.length === limit;
-    page++;
-  }
-
-  return allActivities;
 }
 
 /**
@@ -378,48 +266,32 @@ function mapWealthboxContactToClient(
   advisorId: number,
 ): Partial<Client> {
   return {
-    name: `${contact.first_name || ""} ${contact.last_name || ""}`.trim(),
-    email: contact.email || null,
-    organizationId,
-    advisorId,
-    address:
-      contact.addresses && contact.addresses.length > 0
-        ? `${contact.addresses[0].street || ""}, ${contact.addresses[0].city || ""}, ${contact.addresses[0].state || ""} ${contact.addresses[0].zip || ""}`.trim()
-        : null,
-    state:
-      contact.addresses && contact.addresses.length > 0
-        ? contact.addresses[0].state || null
-        : null,
+    firmId: organizationId,
+    primaryAdvisorId: advisorId,
+    firstName: contact.first_name || contact.name || "",
+    lastName: contact.last_name || "",
+    title: contact.type !== "Person" ? (contact.name || null) : null,
+    contactType: contact.type || null,
+    segment: contact.segment || null,
+    emailAddress: contact.email_addresses && contact.email_addresses.length > 0 ? contact.email_addresses[0].address : null,
     age: contact.age || null,
-    aum: contact.aum || null,
-    revenue: contact.revenue || null,
+    phoneNumber: contact.phone_numbers && contact.phone_numbers.length > 0 ? contact.phone_numbers[0].address : null,
+    contactInfo: contact.street_addresses && contact.street_addresses.length > 0 ? {
+      address: `${contact.street_addresses[0].street_line_1 || ""}, ${contact.street_addresses[0].city || ""}, ${contact.street_addresses[0].state || ""} ${contact.street_addresses[0].zip_code || ""}`.trim(),
+      state: contact.street_addresses[0].state || null,
+      city: contact.street_addresses[0].city || null,
+      zip: contact.street_addresses[0].zip_code || null,
+    } : {},
+    source: "wealthbox",
     wealthboxClientId: contact.id.toString(),
-    metadata: contact,
+    isActive: true,
+    status: "active" as const,
   };
 }
 
-/**
- * Maps a Wealthbox activity to our activity model
- */
-function mapWealthboxActivityToActivity(
-  activity: any,
-  advisorId: number,
-  clientId: number,
-): Partial<Activity> {
-  return {
-    date: new Date(activity.created_at || activity.date || Date.now()),
-    title: activity.title || activity.summary || "Untitled Activity",
-    type: activity.type || "other",
-    advisorId,
-    clientId,
-    description: activity.description || activity.notes || null,
-    wealthboxActivityId: activity.id.toString(),
-    metadata: activity,
-  };
-}
 
 /**
- * Fetches all users from Wealthbox API
+ * Fetches all users from Wealthbox API with Bearer token authentication
  */
 export async function fetchWealthboxUsers(
   accessToken: string | null,
@@ -432,10 +304,7 @@ export async function fetchWealthboxUsers(
   try {
     const response = await fetch(`${ENDPOINTS.USERS}`, {
       method: "GET",
-      headers: {
-        ACCESS_TOKEN: accessToken,
-        "Content-Type": "application/json",
-      },
+      headers: createWealthboxHeaders(accessToken),
     });
 
     if (!response.ok) {
@@ -477,10 +346,7 @@ export async function fetchActiveClientsByAge(
 
     const response = await fetch(url, {
       method: "GET",
-      headers: {
-        ACCESS_TOKEN: accessToken,
-        "Content-Type": "application/json",
-      },
+      headers: createWealthboxHeaders(accessToken),
     });
 
     if (!response.ok) {
@@ -597,10 +463,7 @@ export async function fetchActiveClientsByState(
 
     const response = await fetch(url, {
       method: "GET",
-      headers: {
-        ACCESS_TOKEN: accessToken,
-        "Content-Type": "application/json",
-      },
+      headers: createWealthboxHeaders(accessToken),
     });
 
     if (!response.ok) {
@@ -824,8 +687,6 @@ export async function getWealthboxUsersHandler(req: Request, res: Response) {
       error: error.message || "Failed to fetch Wealthbox users",
     });
   }
-
-
 }
 
 /**
