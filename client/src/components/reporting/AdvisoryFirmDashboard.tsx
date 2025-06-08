@@ -176,6 +176,10 @@ export const AdvisoryFirmDashboard: React.FC<AdvisoryFirmDashboardProps> = ({
 
   const handleStaffClick = (staffId: string) => {
     setSelectedStaff(staffId);
+    // Switch to staff tab to show the table if not already there
+    if (activeTab !== 'staff') {
+      setActiveTab('staff');
+    }
   };
 
   const selectedStaffDetail = data.staffDetails.find(s => s.id === selectedStaff);
@@ -319,7 +323,7 @@ export const AdvisoryFirmDashboard: React.FC<AdvisoryFirmDashboardProps> = ({
             </Card>
           </div>
 
-          {/* Weekly Activity Breakdown */}
+          {/* Weekly Activity Breakdown - Fixed to show stacked bars */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg font-semibold">Weekly Activity Breakdown</CardTitle>
@@ -345,11 +349,8 @@ export const AdvisoryFirmDashboard: React.FC<AdvisoryFirmDashboardProps> = ({
                     />
                     <Tooltip content={<WeeklyTooltip />} />
                     <Bar dataKey="meetings" stackId="a" fill="#1E40AF" />
-                    <Bar dataKey="calls" stackId="a" fill="#3B82F6" />
-                    <Bar dataKey="emails" stackId="a" fill="#60A5FA" />
-                    <Bar dataKey="tasks" stackId="a" fill="#93C5FD" />
-                    <Bar dataKey="notes" stackId="a" fill="#DBEAFE" />
-                    <Bar dataKey="workflows" stackId="a" fill="#EFF6FF" />
+                    <Bar dataKey="notes" stackId="a" fill="#3B82F6" />
+                    <Bar dataKey="workflows" stackId="a" fill="#60A5FA" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -374,7 +375,9 @@ export const AdvisoryFirmDashboard: React.FC<AdvisoryFirmDashboardProps> = ({
                     key={staff.id}
                     onClick={() => handleStaffClick(staff.id)}
                     className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                      staff.isHighlighted 
+                      selectedStaff === staff.id
+                        ? 'bg-blue-50 border border-blue-200' 
+                        : staff.isHighlighted 
                         ? 'bg-blue-50 border border-blue-200' 
                         : 'hover:bg-gray-50'
                     }`}
@@ -412,7 +415,9 @@ export const AdvisoryFirmDashboard: React.FC<AdvisoryFirmDashboardProps> = ({
                     key={staff.id}
                     onClick={() => handleStaffClick(staff.id)}
                     className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
-                      staff.isHighlighted 
+                      selectedStaff === staff.id
+                        ? 'bg-blue-50 border border-blue-200' 
+                        : staff.isHighlighted 
                         ? 'bg-blue-50 border border-blue-200' 
                         : 'hover:bg-gray-50'
                     }`}
