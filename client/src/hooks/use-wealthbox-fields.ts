@@ -5,7 +5,7 @@ import { useToast } from '@/hooks/use-toast';
 
 type FieldCategory = 'customFields' | 'contactTypes' | 'contactRoles' | 'all';
 
-export function useWealthboxFields(accessToken: string) {
+export function useWealthboxFields() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [fieldOptions, setFieldOptions] = useState<Record<string, FieldOption[]>>({
@@ -15,18 +15,13 @@ export function useWealthboxFields(accessToken: string) {
   });
   const { toast } = useToast();
 
-  // Function to fetch all field options from Wealthbox
+  // Function to fetch all field options from our backend
   const fetchOptions = useCallback(async () => {
-    if (!accessToken) {
-      setHasError(true);
-      return;
-    }
-
     setIsLoading(true);
     setHasError(false);
 
     try {
-      const options = await fetchAllWealthboxFieldOptions(accessToken);
+      const options = await fetchAllWealthboxFieldOptions();
       setFieldOptions(options);
     } catch (error) {
       console.error('Error in useWealthboxFields:', error);
@@ -39,14 +34,12 @@ export function useWealthboxFields(accessToken: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [accessToken, toast]);
+  }, [toast]);
 
-  // Fetch options on initial load if we have an access token
+  // Fetch options on initial load
   useEffect(() => {
-    if (accessToken) {
-      fetchOptions();
-    }
-  }, [accessToken, fetchOptions]);
+    fetchOptions();
+  }, [fetchOptions]);
 
   /**
    * Get options from a specific category or combine all categories

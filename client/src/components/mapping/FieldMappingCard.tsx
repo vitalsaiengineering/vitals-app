@@ -26,8 +26,8 @@ const FieldMappingCard: React.FC<FieldMappingCardProps> = ({
 }) => {
   return (
     <Card className="mb-6">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
+          <CardHeader style={{ backgroundColor: '#001027' }} className="text-white px-8 py-6 rounded-t-2xl">
+          <CardTitle>{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CardContent className="p-0">

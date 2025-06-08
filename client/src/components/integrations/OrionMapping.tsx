@@ -11,85 +11,54 @@ const OrionMapping: React.FC = () => {
   
   const [sections, setSections] = useState<MappingSection[]>([
     {
-      title: 'Portfolio Fields',
-      description: 'Map portfolio data fields to Orion fields',
+      title: 'Investment Holdings',
+      description: 'Map investment holdings and position data',
       mappings: [
         {
-          sourceField: 'accountNumber',
-          sourceLabel: 'Which field represents Account Number?',
-          targetField: 'account_number',
+          sourceField: 'investmentStrategy',
+          sourceLabel: (
+            <div>
+              <div className="font-bold">Investment Strategy</div>
+              <div className="font-normal">Which field in Orion shows the investment strategy for your client?</div>
+            </div>
+          ),
+          targetField: 'investment_strategy',
           targetOptions: [
-            { label: 'Account Number', value: 'account_number' },
-            { label: 'Account ID', value: 'account_id' },
-            { label: 'Portfolio ID', value: 'portfolio_id' },
+            { label: 'Investment Strategy: Primary', value: 'investment_strategy' },
+            { label: 'Strategy Type: Classification', value: 'strategy_type' },
+            { label: 'Portfolio Strategy: Method', value: 'portfolio_strategy' },
           ],
         },
         {
-          sourceField: 'accountValue',
-          sourceLabel: 'Which field represents Account Value?',
-          targetField: 'market_value',
+          sourceField: 'platform',
+          sourceLabel: (
+            <div>
+              <div className="font-bold">Platform</div>
+              <div className="font-normal">Which field in Orion shows the platform you hold investments with?</div>
+            </div>
+          ),
+          targetField: 'platform',
           targetOptions: [
-            { label: 'Market Value', value: 'market_value' },
-            { label: 'Asset Value', value: 'asset_value' },
-            { label: 'Portfolio Value', value: 'portfolio_value' },
+            { label: 'Platform: Custodian', value: 'platform' },
+            { label: 'Custodian: Institution', value: 'custodian' },
+            { label: 'Broker: Platform', value: 'broker' },
           ],
         },
         {
-          sourceField: 'accountType',
-          sourceLabel: 'Which field indicates Account Type?',
-          targetField: 'account_type',
+          sourceField: 'partnerships',
+          sourceLabel: (
+            <div>
+              <div className="font-bold">Partnerships</div>
+              <div className="font-normal">Which field in Orion shows business partners involved with your portfolio management?</div>
+            </div>
+          ),
+          targetField: 'partnerships',
           targetOptions: [
-            { label: 'Account Type', value: 'account_type' },
-            { label: 'Registration Type', value: 'registration_type' },
-            { label: 'Account Registration', value: 'account_registration' },
+            { label: 'Partnerships: Business', value: 'partnerships' },
+            { label: 'Business Partners: Entities', value: 'business_partners' },
+            { label: 'Partner Firms: Collaborators', value: 'partner_firms' },
           ],
         },
-        {
-          sourceField: 'custodian',
-          sourceLabel: 'Which field indicates the Custodian?',
-          targetField: 'custodian',
-          targetOptions: [
-            { label: 'Custodian', value: 'custodian' },
-            { label: 'Custodial Institution', value: 'custodial_institution' },
-            { label: 'Held At', value: 'held_at' },
-          ],
-        },
-      ],
-    },
-    {
-      title: 'Performance Metrics',
-      description: 'Map performance metrics to Orion fields',
-      mappings: [
-        {
-          sourceField: 'timeWeightedReturn',
-          sourceLabel: 'Which field represents Time-Weighted Return?',
-          targetField: 'twr',
-          targetOptions: [
-            { label: 'TWR', value: 'twr' },
-            { label: 'Time-Weighted Return', value: 'time_weighted_return' },
-            { label: 'Performance Return', value: 'performance_return' },
-          ],
-        },
-        {
-          sourceField: 'benchmark',
-          sourceLabel: 'Which field indicates the Benchmark?',
-          targetField: 'benchmark',
-          targetOptions: [
-            { label: 'Benchmark', value: 'benchmark' },
-            { label: 'Index', value: 'index' },
-            { label: 'Comparison Index', value: 'comparison_index' },
-          ],
-        },
-        {
-          sourceField: 'internalRateOfReturn',
-          sourceLabel: 'Which field indicates Internal Rate of Return?',
-          targetField: 'irr',
-          targetOptions: [
-            { label: 'IRR', value: 'irr' },
-            { label: 'Money-Weighted Return', value: 'money_weighted_return' },
-            { label: 'Internal Rate of Return', value: 'internal_rate_of_return' },
-          ],
-        }
       ],
     },
   ]);
@@ -112,15 +81,15 @@ const OrionMapping: React.FC = () => {
     
     toast({
       title: "Mapping saved",
-      description: "Your Orion field mapping has been saved successfully.",
+      description: "Your Orion Advisor Services field mapping has been saved successfully.",
     });
   };
 
   return (
-    <div>
+    <div className="animate-fade-in">
       <PageHeader 
-        title="Orion Integration"
-        description="Map your portfolio data fields to corresponding Orion fields"
+        title="Orion Advisor Services"
+        description="Map your firm's portfolio data fields to Orion Advisor Services"
         backLink="/settings"
         onBack={() => {
           window.history.pushState({}, "", "/settings?tab=data-mapping");
@@ -128,7 +97,7 @@ const OrionMapping: React.FC = () => {
         }}
       />
 
-      <div className="max-w-4xl mx-auto">
+      <div className="mapping-container">
         {sections.map((section, index) => (
           <FieldMappingCard
             key={index}
@@ -143,7 +112,7 @@ const OrionMapping: React.FC = () => {
           />
         ))}
         
-        <div className="flex justify-end mt-6 mb-10">
+        <div className="flex justify-end mt-6">
           <Button onClick={handleSave} className="px-6">
             <SaveIcon className="w-4 h-4 mr-2" />
             Save Mappings

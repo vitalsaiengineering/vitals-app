@@ -39,13 +39,13 @@ import {
   getDataMappingsHandler,
   saveDataMappingsHandler,
 } from "./api/data-mapping";
-import { synchronizeWealthboxData } from "./sync-service";
 import {
   getOpportunitiesByPipelineHandler,
   getOpportunityStagesHandler,
 } from "./opportunities";
 import { getWealthboxTokenHandler } from "./api/wealthbox-token";
-import { getWealthboxToken } from "./utils/wealthbox-token";
+import { getValidWealthboxToken, createWealthboxHeaders } from "./utils/wealthbox-auth";
+import { getWealthboxFieldOptionsHandler, searchWealthboxFieldOptionsHandler } from "./api/wealthbox-fields";
 
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
@@ -1955,7 +1955,7 @@ app.get(
     try {
       const { code } = req.body;
       const user = req.user as any;
-
+      console.log("Wealthbox OAuth token exchange endpoint called with code:", code);
       if (!code) {
         return res.status(400).json({
           success: false,
@@ -1963,22 +1963,25 @@ app.get(
         });
       }
 
-      // Exchange authorization code for access token
-      const tokenResponse = await fetch(
-        "https://app.crmworkspace.com/oauth/token",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-          body: new URLSearchParams({
-            grant_type: "authorization_code",
-            client_id: "MbnIzrEtWejPZ96qHXFwxbkU1R9euNqfrSeynciUgL0",
-            redirect_uri: "https://app.advisorvitals.com/",
-            code: code,
-          }),
-        }
-      );
+      // Exchange authorization code for access token using query parameters
+      const tokenUrl = new URL("https://app.crmworkspace.com/oauth/token");
+      tokenUrl.searchParams.append("client_id", "MbnIzrEtWejPZ96qHXFwxbkU1R9euNqfrSeynciUgL0");
+      tokenUrl.searchParams.append("client_secret", "oWxszypXFkNm-SKLwpnwRBS2zbzWhTa2ciJDbAFTxJA");
+      tokenUrl.searchParams.append("code", code);
+      tokenUrl.searchParams.append("grant_type", "authorization_code");
+      tokenUrl.searchParams.append("redirect_uri", "https://moved-repeatedly-mongrel.ngrok-free.app/settings");
+
+      const tokenResponse = await fetch(tokenUrl.toString(), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Accept": "application/json",
+          "Content-Length": "255"
+        }),
+      });
 
       if (!tokenResponse.ok) {
         const errorText = await tokenResponse.text();
@@ -1990,6 +1993,7 @@ app.get(
       }
 
       const tokenData = await tokenResponse.json();
+      console.log("Wealthbox token data:", tokenData);
 
       // Get or create WealthBox integration type
       const integrationType = await storage.getIntegrationTypeByName("wealthbox");
@@ -2032,14 +2036,6 @@ app.get(
         });
       }
 
-      // Also update the user record for backward compatibility
-      await storage.updateUser(user.id, {
-        wealthboxToken: tokenData.access_token,
-        wealthboxRefreshToken: tokenData.refresh_token,
-        wealthboxTokenExpiry: expiresAt,
-        wealthboxConnected: true,
-      });
-
       res.json({
         success: true,
         access_token: tokenData.access_token,
@@ -2054,14 +2050,103 @@ app.get(
     }
   });
 
+  // Orion OAuth token exchange endpoint
+  app.post("/api/orion/oauth/token", requireAuth, async (req, res) => {
+    try {
+      const { code } = req.body;
+      console.log("Orion OAuth token exchange endpoint called with code:", code);
+      const user = req.user as any;
+
+      if (!code) {
+        return res.status(400).json({
+          success: false,
+          message: "Authorization code is required"
+        });
+      }
+
+      // Exchange authorization code for access token
+      const tokenUrl = `https://stagingapi.orionadvisor.com/api/v1/Security/Token?grant_type=authorization_code&code=${code}&client_id=2112&redirect_uri=http://localhost:5001/settings&response_type=code&client_secret=4dc339e2-7ab1-41cb-8d7f-104262ab4ed4`;
+      
+      const tokenResponse = await fetch(tokenUrl, {
+        method: "POST"
+      });
+      console.log("Orion token response:", tokenResponse);
+
+      if (!tokenResponse.ok) {
+        const errorText = await tokenResponse.text();
+        console.error("Orion token exchange failed:", errorText);
+        return res.status(400).json({
+          success: false,
+          message: "Failed to exchange authorization code for token"
+        });
+      }
+
+      const tokenData = await tokenResponse.json();
+
+      // Get or create Orion integration type
+      const integrationType = await storage.getIntegrationTypeByName("orion");
+      if (!integrationType) {
+        return res.status(500).json({
+          success: false,
+          message: "Orion integration type not found"
+        });
+      }
+
+      // Store the tokens in advisor_auth_tokens table
+      const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
+      
+      // Check if the user already has a token for Orion (integration type 2)
+      const existingTokens = await storage.getAdvisorAuthTokensByAdvisorId(user.id);
+      const existingOrionToken = existingTokens.find(token => token.integrationType === 2);
+      
+      if (existingOrionToken) {
+        // Update existing token
+        await storage.updateAdvisorAuthToken(existingOrionToken.id, {
+          ...existingOrionToken,
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token,
+          tokenType: tokenData.token_type || "Bearer",
+          expiresAt: expiresAt,
+          scope: tokenData.scope || null,
+          updatedAt: new Date(),
+        });
+      } else {
+        // Create new token record
+        await storage.createAdvisorAuthToken({
+          advisorId: user.id,
+          firmIntegrationConfigId: null, // Will be null for now, can be set later if needed
+          integrationType: 2, // 2 for Orion
+          accessToken: tokenData.access_token,
+          refreshToken: tokenData.refresh_token,
+          tokenType: tokenData.token_type || "Bearer",
+          expiresAt: expiresAt,
+          scope: tokenData.scope || null,
+          additionalData: {},
+        });
+      }
+
+      res.json({
+        success: true,
+        access_token: tokenData.access_token,
+        expires_in: tokenData.expires_in,
+      });
+    } catch (error: any) {
+      console.error("Orion OAuth token exchange error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error during token exchange"
+      });
+    }
+  });
+
   app.get("/api/wealthbox/token", requireAuth, getWealthboxTokenHandler);
 
   // Wealthbox integration routes - firm_admin and advisor users can access
   app.post("/api/wealthbox/test-connection", testWealthboxConnectionHandler);
   app.post(
     "/api/wealthbox/import-data",
-    requireRole(["firm_admin", "advisor"]),
-    importWealthboxDataHandler
+    // requireRole(["firm_admin", "advisor"]),
+    importWealthboxDataHandler,
   );
   app.get("/api/data-mappings", requireAuth, getDataMappingsHandler);
   app.post("/api/data-mappings", requireAuth, saveDataMappingsHandler);
@@ -2103,6 +2188,10 @@ app.get(
   // Wealthbox Users route - Direct token-based access for advisors dropdown
   app.get("/api/wealthbox/users", getWealthboxUsersHandler);
 
+  // Wealthbox Field Options routes - Server-side proxy to avoid CORS issues
+  app.get("/api/wealthbox/field-options", requireAuth, getWealthboxFieldOptionsHandler);
+  app.get("/api/wealthbox/field-options/search", requireAuth, searchWealthboxFieldOptionsHandler);
+
   // Orion integration routes - firm_admin and advisor users can access
   app.post("/api/orion/setup-connection", setupOrionConnectionHandler);
   app.post("/api/orion/test-connection", testOrionConnectionHandler);
@@ -2131,56 +2220,6 @@ app.get(
     getOrionAumChartDataHandler
   );
 
-  // Wealthbox sync routes
-  app.post(
-    "/api/wealthbox/sync",
-    requireRole(["firm_admin", "advisor"]),
-    async (req, res) => {
-      const user = req.user as any;
-      const { accessToken } = req.body;
-
-      // Get token from user, request, or default configuration
-      let token = accessToken || user.wealthboxToken;
-
-      // If no token available, try to get from configuration
-      if (!token) {
-        token = await getWealthboxToken(user.id);
-        if (!token) {
-          return res.status(400).json({
-            success: false,
-            message: "Wealthbox access token required",
-          });
-        }
-        console.log("Using configured Wealthbox token for sync");
-      }
-
-      // Start synchronization
-      try {
-        const syncResult = await synchronizeWealthboxData(
-          token,
-          user.id,
-          user.organizationId
-        );
-
-        res.json({
-          success: true,
-          message: "Synchronization completed",
-          contacts: syncResult.results.contacts,
-          activities: syncResult.results.activities,
-          opportunities: syncResult.results.opportunities,
-        });
-      } catch (error: any) {
-        console.error("Error during synchronization:", error);
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
-        res.status(500).json({
-          success: false,
-          message: "Synchronization failed",
-          error: errorMessage,
-        });
-      }
-    }
-  );
 
   const httpServer = createServer(app);
   return httpServer;
