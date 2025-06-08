@@ -3343,10 +3343,6 @@ async function getClientReferralRateHandler(req: Request, res: Response) {
 }
 // --- END: Mock Data and Handler for Client Referral Rate ---
 
-// Add this route registration in the registerRoutes function, after the existing analytics routes:
-
-
-
 // --- START: Interfaces for Advisory Firm Dashboard ---
 interface StaffMember {
   id: string;
@@ -3383,9 +3379,6 @@ interface MonthlyData {
 interface WeeklyData {
   day: string;
   meetings: number;
-  calls: number;
-  emails: number;
-  tasks: number;
   notes: number;
   workflows: number;
 }
@@ -3449,11 +3442,11 @@ async function getMockAdvisoryFirmDashboardData(
       { month: 'Dec 2024', shortMonth: 'Dec', totalActivities: 1800 }
     ],
     weeklyData: [
-      { day: 'Mon', meetings: 15, calls: 8, emails: 25, tasks: 18, notes: 12, workflows: 7 },
-      { day: 'Tue', meetings: 18, calls: 12, emails: 32, tasks: 22, notes: 15, workflows: 9 },
-      { day: 'Wed', meetings: 15, calls: 10, emails: 28, tasks: 20, notes: 20, workflows: 10 },
-      { day: 'Thu', meetings: 12, calls: 8, emails: 22, tasks: 15, notes: 18, workflows: 8 },
-      { day: 'Fri', meetings: 10, calls: 6, emails: 18, tasks: 12, notes: 14, workflows: 6 }
+      { day: 'Mon', meetings: 15, notes: 12, workflows: 7 },
+      { day: 'Tue', meetings: 18, notes: 15, workflows: 9 },
+      { day: 'Wed', meetings: 15, notes: 20, workflows: 10 },
+      { day: 'Thu', meetings: 12, notes: 18, workflows: 8 },
+      { day: 'Fri', meetings: 10, notes: 14, workflows: 6 }
     ],
     activityBreakdown: [
       { name: 'Meetings', value: 67, color: '#3B82F6' },
@@ -3473,7 +3466,10 @@ async function getMockAdvisoryFirmDashboardData(
           { activityType: 'Prospect Calls', mtd: 4, qtd: 13, ytd: 50, ttm: 59, trend: 'up' },
           { activityType: 'Follow-up Emails', mtd: 3, qtd: 9, ytd: 36, ttm: 42, trend: 'neutral' },
           { activityType: 'Tasks Completed', mtd: 3, qtd: 8, ytd: 32, ttm: 37, trend: 'up' },
-          { activityType: 'Notes Added', mtd: 9, qtd: 27, ytd: 108, ttm: 126, trend: 'down' }
+          { activityType: 'Notes Added', mtd: 9, qtd: 27, ytd: 108, ttm: 126, trend: 'down' },
+          { activityType: 'Workflows Initiated', mtd: 2, qtd: 6, ytd: 24, ttm: 28, trend: 'up' },
+          { activityType: 'SMS Messages', mtd: 5, qtd: 15, ytd: 60, ttm: 70, trend: 'neutral' },
+          { activityType: 'Documents Created', mtd: 3, qtd: 9, ytd: 36, ttm: 42, trend: 'up' }
         ]
       },
       {
@@ -3484,7 +3480,94 @@ async function getMockAdvisoryFirmDashboardData(
           { activityType: 'Prospect Calls', mtd: 13, qtd: 39, ytd: 156, ttm: 184, trend: 'up' },
           { activityType: 'Follow-up Emails', mtd: 31, qtd: 92, ytd: 369, ttm: 430, trend: 'neutral' },
           { activityType: 'Tasks Completed', mtd: 21, qtd: 63, ytd: 254, ttm: 288, trend: 'up' },
-          { activityType: 'Notes Added', mtd: 28, qtd: 84, ytd: 334, ttm: 390, trend: 'down' }
+          { activityType: 'Notes Added', mtd: 28, qtd: 84, ytd: 334, ttm: 390, trend: 'down' },
+          { activityType: 'Workflows Initiated', mtd: 9, qtd: 27, ytd: 107, ttm: 122, trend: 'up' },
+          { activityType: 'SMS Messages', mtd: 20, qtd: 60, ytd: 240, ttm: 273, trend: 'neutral' },
+          { activityType: 'Documents Created', mtd: 13, qtd: 40, ytd: 160, ttm: 184, trend: 'up' }
+        ]
+      },
+      {
+        id: 'sj',
+        name: 'Sarah Johnson',
+        activities: [
+          { activityType: 'Client Meetings', mtd: 8, qtd: 24, ytd: 96, ttm: 108, trend: 'up' },
+          { activityType: 'Prospect Calls', mtd: 12, qtd: 36, ytd: 144, ttm: 168, trend: 'up' },
+          { activityType: 'Follow-up Emails', mtd: 29, qtd: 87, ytd: 348, ttm: 402, trend: 'neutral' },
+          { activityType: 'Tasks Completed', mtd: 15, qtd: 45, ytd: 180, ttm: 210, trend: 'up' },
+          { activityType: 'Notes Added', mtd: 18, qtd: 54, ytd: 216, ttm: 252, trend: 'down' },
+          { activityType: 'Workflows Initiated', mtd: 6, qtd: 18, ytd: 72, ttm: 84, trend: 'up' },
+          { activityType: 'SMS Messages', mtd: 14, qtd: 42, ytd: 168, ttm: 196, trend: 'neutral' },
+          { activityType: 'Documents Created', mtd: 9, qtd: 27, ytd: 108, ttm: 126, trend: 'up' }
+        ]
+      },
+      {
+        id: 'er',
+        name: 'Emily Rodriguez',
+        activities: [
+          { activityType: 'Client Meetings', mtd: 7, qtd: 22, ytd: 88, ttm: 99, trend: 'up' },
+          { activityType: 'Prospect Calls', mtd: 10, qtd: 30, ytd: 120, ttm: 140, trend: 'up' },
+          { activityType: 'Follow-up Emails', mtd: 25, qtd: 76, ytd: 304, ttm: 352, trend: 'neutral' },
+          { activityType: 'Tasks Completed', mtd: 14, qtd: 41, ytd: 164, ttm: 188, trend: 'up' },
+          { activityType: 'Notes Added', mtd: 16, qtd: 48, ytd: 192, ttm: 224, trend: 'down' },
+          { activityType: 'Workflows Initiated', mtd: 5, qtd: 15, ytd: 60, ttm: 70, trend: 'up' },
+          { activityType: 'SMS Messages', mtd: 12, qtd: 36, ytd: 144, ttm: 168, trend: 'neutral' },
+          { activityType: 'Documents Created', mtd: 8, qtd: 24, ytd: 96, ttm: 112, trend: 'up' }
+        ]
+      },
+      {
+        id: 'dk',
+        name: 'David Kim',
+        activities: [
+          { activityType: 'Client Meetings', mtd: 6, qtd: 18, ytd: 72, ttm: 81, trend: 'up' },
+          { activityType: 'Prospect Calls', mtd: 9, qtd: 27, ytd: 108, ttm: 126, trend: 'up' },
+          { activityType: 'Follow-up Emails', mtd: 23, qtd: 69, ytd: 276, ttm: 318, trend: 'neutral' },
+          { activityType: 'Tasks Completed', mtd: 13, qtd: 39, ytd: 156, ttm: 180, trend: 'up' },
+          { activityType: 'Notes Added', mtd: 15, qtd: 45, ytd: 180, ttm: 210, trend: 'down' },
+          { activityType: 'Workflows Initiated', mtd: 4, qtd: 12, ytd: 48, ttm: 56, trend: 'up' },
+          { activityType: 'SMS Messages', mtd: 10, qtd: 30, ytd: 120, ttm: 140, trend: 'neutral' },
+          { activityType: 'Documents Created', mtd: 7, qtd: 21, ytd: 84, ttm: 98, trend: 'up' }
+        ]
+      },
+      {
+        id: 'lt',
+        name: 'Lisa Thompson',
+        activities: [
+          { activityType: 'Client Meetings', mtd: 5, qtd: 16, ytd: 64, ttm: 72, trend: 'up' },
+          { activityType: 'Prospect Calls', mtd: 8, qtd: 24, ytd: 96, ttm: 112, trend: 'up' },
+          { activityType: 'Follow-up Emails', mtd: 24, qtd: 71, ytd: 284, ttm: 328, trend: 'neutral' },
+          { activityType: 'Tasks Completed', mtd: 12, qtd: 35, ytd: 140, ttm: 161, trend: 'up' },
+          { activityType: 'Notes Added', mtd: 14, qtd: 42, ytd: 168, ttm: 196, trend: 'down' },
+          { activityType: 'Workflows Initiated', mtd: 4, qtd: 11, ytd: 44, ttm: 51, trend: 'up' },
+          { activityType: 'SMS Messages', mtd: 9, qtd: 27, ytd: 108, ttm: 126, trend: 'neutral' },
+          { activityType: 'Documents Created', mtd: 6, qtd: 18, ytd: 72, ttm: 84, trend: 'up' }
+        ]
+      },
+      {
+        id: 'rw',
+        name: 'Robert Wilson',
+        activities: [
+          { activityType: 'Client Meetings', mtd: 3, qtd: 8, ytd: 32, ttm: 36, trend: 'up' },
+          { activityType: 'Prospect Calls', mtd: 5, qtd: 15, ytd: 60, ttm: 70, trend: 'up' },
+          { activityType: 'Follow-up Emails', mtd: 11, qtd: 34, ytd: 136, ttm: 157, trend: 'neutral' },
+          { activityType: 'Tasks Completed', mtd: 6, qtd: 18, ytd: 72, ttm: 83, trend: 'up' },
+          { activityType: 'Notes Added', mtd: 8, qtd: 24, ytd: 96, ttm: 112, trend: 'down' },
+          { activityType: 'Workflows Initiated', mtd: 2, qtd: 6, ytd: 24, ttm: 28, trend: 'up' },
+          { activityType: 'SMS Messages', mtd: 4, qtd: 12, ytd: 48, ttm: 56, trend: 'neutral' },
+          { activityType: 'Documents Created', mtd: 3, qtd: 9, ytd: 36, ttm: 42, trend: 'up' }
+        ]
+      },
+      {
+        id: 'ma',
+        name: 'Mark Anderson',
+        activities: [
+          { activityType: 'Client Meetings', mtd: 2, qtd: 5, ytd: 20, ttm: 23, trend: 'up' },
+          { activityType: 'Prospect Calls', mtd: 3, qtd: 9, ytd: 36, ttm: 42, trend: 'up' },
+          { activityType: 'Follow-up Emails', mtd: 7, qtd: 22, ytd: 88, ttm: 102, trend: 'neutral' },
+          { activityType: 'Tasks Completed', mtd: 4, qtd: 12, ytd: 48, ttm: 55, trend: 'up' },
+          { activityType: 'Notes Added', mtd: 5, qtd: 15, ytd: 60, ttm: 70, trend: 'down' },
+          { activityType: 'Workflows Initiated', mtd: 1, qtd: 3, ytd: 12, ttm: 14, trend: 'up' },
+          { activityType: 'SMS Messages', mtd: 3, qtd: 9, ytd: 36, ttm: 42, trend: 'neutral' },
+          { activityType: 'Documents Created', mtd: 2, qtd: 6, ytd: 24, ttm: 28, trend: 'up' }
         ]
       }
     ]
