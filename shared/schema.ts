@@ -9,6 +9,7 @@ import {
   json,
   text,
   pgEnum,
+  numeric
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -172,7 +173,9 @@ export const clients = pgTable("clients", {
   age: integer("age"),
   emailAddress: varchar("email_address", { length: 255 }),
   phoneNumber: varchar("phone_number", { length: 30 }),
-  aum: varchar("aum", { length: 50 }).default("0"), // Using varchar to match DECIMAL(20,2)
+  aum: numeric("aum", { precision: 20, scale: 2 }).default("0.00"),
+  cashBalance: numeric("cash_balance", { precision: 20, scale: 2 }),
+  segment: varchar("segment", { length: 100 }),
   isActive: boolean("is_active").default(true),
   representativeName: varchar("representative_name", { length: 255 }),
   representativeId: integer("representative_id"),

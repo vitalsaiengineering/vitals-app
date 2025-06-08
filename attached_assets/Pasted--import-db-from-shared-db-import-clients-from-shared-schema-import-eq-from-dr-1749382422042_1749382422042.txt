@@ -1,0 +1,70 @@
+
+import { db } from './shared/db';
+import { clients } from './shared/schema';
+import { eq } from 'drizzle-orm';
+
+async function updateClientSegments() {
+  try {
+    console.log('Starting to update client segments...');
+    
+    // Get all clients
+    const allClients = await db.select().from(clients);
+    console.log(`Found ${allClients.length} clients to update`);
+    
+    // Define segment options
+    const segments = ['Gold', 'Platinum', 'Silver'];
+    
+    for (const client of allClients) {
+      // Randomly assign a segment
+      // Distribution: 50% Gold, 30% Silver, 20% Platinum
+      const random = Math.random();
+      let segment: string;
+      
+      if (random < 0.5) {
+        segment = 'Gold';
+      } else if (random < 0.8) {
+        segment = 'Silver';
+      } else {
+        segment = 'Platinum';
+      }
+      
+      // Update the client with new segment
+      await db
+        .update(clients)
+        .set({ segment })
+        .where(eq(clients.id, client.id));
+      
+      console.log(`Updated client ${client.firstName} ${client.lastName} with segment: ${segment}`);
+    }
+    
+    console.log('Successfully updated all client segments!');
+    
+    // Show statistics
+    const updatedClients = await db.select().from(clients);
+    const segmentCounts = {
+      Gold: 0,
+      Silver: 0,
+      Platinum: 0
+    };
+    
+    updatedClients.forEach(client => {
+      if (client.segment && segmentCounts.hasOwnProperty(client.segment)) {
+        segmentCounts[client.segment as keyof typeof segmentCounts]++;
+      }
+    });
+    
+    console.log('\n=== Segment Distribution ===');
+    console.log(`Gold: ${segmentCounts.Gold} clients`);
+    console.log(`Silver: ${segmentCounts.Silver} clients`);
+    console.log(`Platinum: ${segmentCounts.Platinum} clients`);
+    console.log(`Total: ${segmentCounts.Gold + segmentCounts.Silver + segmentCounts.Platinum} clients`);
+    
+  } catch (error) {
+    console.error('Error updating client segments:', error);
+  } finally {
+    process.exit(0);
+  }
+}
+
+// Run the update
+updateClientSegments();
