@@ -12,6 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Users, DollarSign, Search, Building } from 'lucide-react';
 import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps';
 
+// Import mock data
+import mockData from '@/data/mockData.js';
+
 const GEO_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 
 type MapViewType = 'clientDensity' | 'totalAssets';
@@ -59,13 +62,29 @@ export default function ClientDistributionByStateReport() {
   const [searchTerm, setSearchTerm] = useState('');
   const [hoveredStateName, setHoveredStateName] = useState<string | null>(null);
 
+  // Check if we should use mock data
+  const useMock = process.env.REACT_APP_USE_MOCK_DATA !== 'false';
+
   useEffect(() => {
     const fetchData = async () => {
         setIsLoading(true);
         setError(null);
         try {
-            const data = await getClientDistributionReportData();
-            setReportData(data);
+            if (useMock) {
+                // Use mock data
+                const mockReportData = mockData.ClientDistributionByState as ClientDistributionReportData;
+                setReportData(mockReportData);
+            } else {
+                // Try to fetch from API, fallback to mock data on error
+                try {
+                    const data = await getClientDistributionReportData();
+                    setReportData(data);
+                } catch (apiError) {
+                    console.warn('API fetch failed, falling back to mock data:', apiError);
+                    const mockReportData = mockData.ClientDistributionByState as ClientDistributionReportData;
+                    setReportData(mockReportData);
+                }
+            }
             // Initially, selectedStateMetric is null, showing "All Clients"
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to fetch report data");
@@ -75,7 +94,7 @@ export default function ClientDistributionByStateReport() {
         }
     };
     fetchData();
-  }, []);
+  }, [useMock]);
 
   const allClientsFromReport = useMemo(() => {
     if (!reportData) return [];

@@ -1245,6 +1245,11 @@ export interface ClientSegmentationDashboardData {
   kpis: SegmentationKpiSet;
   donutChartData: DonutSegmentData[];
   tableData: {
+    allSegments: {
+      Platinum: SegmentClient[];
+      Gold: SegmentClient[];
+      Silver: SegmentClient[];
+    };
     segmentName: string;
     clients: SegmentClient[];
   };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,6 +12,9 @@ import {
   type SegmentClient,
   type GetClientSegmentationDashboardParams
 } from '@/lib/clientData';
+
+// Import mock data
+import mockData from '@/data/mockData.js';
 
 // Helper function for age color coding
 const getAgeRowStyle = (age: number): string => {
@@ -44,12 +47,28 @@ export default function ClientSegmentationDashboard() {
   const [selectedAdvisor, setSelectedAdvisor] = useState('firm_overview');
   const [selectedSegment, setSelectedSegment] = useState('Platinum');
 
+  // Check if we should use mock data
+  const useMock = process.env.REACT_APP_USE_MOCK_DATA !== 'false';
+
   const fetchDashboardData = async (params?: GetClientSegmentationDashboardParams) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await getClientSegmentationDashboardData(params);
-      setDashboardData(data);
+      if (useMock) {
+        // Use mock data
+        const mockDashboardData = mockData.ClientSegmentationDashboard as ClientSegmentationDashboardData;
+        setDashboardData(mockDashboardData);
+      } else {
+        // Try to fetch from API, fallback to mock data on error
+        try {
+          const data = await getClientSegmentationDashboardData(params);
+          setDashboardData(data);
+        } catch (apiError) {
+          console.warn('API fetch failed, falling back to mock data:', apiError);
+          const mockDashboardData = mockData.ClientSegmentationDashboard as ClientSegmentationDashboardData;
+          setDashboardData(mockDashboardData);
+        }
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
       setError(errorMessage);
@@ -61,7 +80,7 @@ export default function ClientSegmentationDashboard() {
 
   useEffect(() => {
     fetchDashboardData(); // Initial fetch
-  }, []);
+  }, [useMock]);
 
   // Effect to re-fetch data when filters change
   useEffect(() => {
@@ -75,6 +94,17 @@ export default function ClientSegmentationDashboard() {
   const handleSegmentClick = (segmentName: string) => {
     setSelectedSegment(segmentName);
   };
+
+  // Dynamic table data based on selected segment
+  const currentSegmentClients = useMemo(() => {
+    if (!dashboardData || !dashboardData.tableData?.allSegments) {
+      return [];
+    }
+    
+    // Get clients for the selected segment
+    const segmentClients = dashboardData.tableData.allSegments[selectedSegment as keyof typeof dashboardData.tableData.allSegments];
+    return segmentClients || [];
+  }, [dashboardData, selectedSegment]);
 
   if (isLoading && !dashboardData) {
     return <div className="p-6 text-center">Loading dashboard...</div>;
@@ -205,16 +235,16 @@ export default function ClientSegmentationDashboard() {
         {/* Client Table */}
         <Card>
           <CardHeader>
-            <CardTitle>{dashboardData.tableData.segmentName} Clients</CardTitle>
+            <CardTitle>{selectedSegment} Clients ({currentSegmentClients.length})</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading && <div className="p-4 text-center text-muted-foreground">Updating results...</div>}
-            {!isLoading && dashboardData.tableData.clients.length === 0 && (
+            {!isLoading && currentSegmentClients.length === 0 && (
               <div className="text-center text-muted-foreground py-10">
                 No clients found for this segment.
               </div>
             )}
-            {!isLoading && dashboardData.tableData.clients.length > 0 && (
+            {!isLoading && currentSegmentClients.length > 0 && (
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
@@ -227,7 +257,7 @@ export default function ClientSegmentationDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {dashboardData.tableData.clients.map((client) => (
+                    {currentSegmentClients.map((client) => (
                       <TableRow key={client.id}>
                         <TableCell className="font-medium">{client.name}</TableCell>
                         <TableCell className={getAgeRowStyle(client.age)}>

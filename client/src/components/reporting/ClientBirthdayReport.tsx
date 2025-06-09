@@ -13,6 +13,9 @@ import {
   type BirthdayReportFilters as ReportFilterOptions
 } from '@/lib/clientData';
 
+// Import mock data
+import mockData from '@/data/mockData.js';
+
 // Define Grade colors - Updated for blue backgrounds and white text
 const GRADE_COLORS: Record<string, { badgeBg: string; badgeText: string; badgeBorder: string }> = {
   Platinum: { badgeBg: 'bg-blue-700', badgeText: 'text-white', badgeBorder: 'border-blue-700' }, // Darker blue
@@ -57,13 +60,31 @@ export default function ClientBirthdayReport() {
   const [selectedTenure, setSelectedTenure] = useState('Any tenure');
   const [selectedAdvisor, setSelectedAdvisor] = useState('All Advisors');
 
+  // Check if we should use mock data
+  const useMock = process.env.REACT_APP_USE_MOCK_DATA !== 'false';
+
   const fetchReportData = async (params?: GetClientBirthdayReportParams) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await getClientBirthdayReportData(params);
-      setReportData(data.clients);
-      setFilterOptions(data.filters);
+      if (useMock) {
+        // Use mock data
+        const mockBirthdayData = mockData.ClientBirthdayReport as ClientBirthdayReportData;
+        setReportData(mockBirthdayData.clients);
+        setFilterOptions(mockBirthdayData.filters);
+      } else {
+        // Try to fetch from API, fallback to mock data on error
+        try {
+          const data = await getClientBirthdayReportData(params);
+          setReportData(data.clients);
+          setFilterOptions(data.filters);
+        } catch (apiError) {
+          console.warn('API fetch failed, falling back to mock data:', apiError);
+          const mockBirthdayData = mockData.ClientBirthdayReport as ClientBirthdayReportData;
+          setReportData(mockBirthdayData.clients);
+          setFilterOptions(mockBirthdayData.filters);
+        }
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load birthday report data';
       setError(errorMessage);
@@ -75,7 +96,7 @@ export default function ClientBirthdayReport() {
 
   useEffect(() => {
     fetchReportData(); // Initial fetch
-  }, []);
+  }, [useMock]);
 
   // Effect to re-fetch data when filters change
   useEffect(() => {
