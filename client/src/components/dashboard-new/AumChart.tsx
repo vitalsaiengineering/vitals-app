@@ -14,6 +14,9 @@ import { getOrionAumChartData } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
 import { useLocation } from 'wouter';
 
+// Import mock data
+import mockData from '@/data/mockData.js';
+
 // Interface for chart data
 interface ChartDataPoint {
   period: string;
@@ -22,6 +25,14 @@ interface ChartDataPoint {
   dataPoints: number;
   periodStart: string;
   periodEnd: string;
+}
+
+// Interface for segment chart data
+interface SegmentChartData {
+  year: number;
+  Platinum: number;
+  Gold: number;
+  Silver: number;
 }
 
 const formatCurrency = (amount: number) => {
@@ -35,8 +46,11 @@ const formatCurrency = (amount: number) => {
 };
 
 export const AumChart = () => {
-  const [aggregation, setAggregation] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
+  const [aggregation, setAggregation] = useState<'monthly' | 'quarterly' | 'yearly'>('yearly');
   const [, navigate] = useLocation();
+
+  // Check if we should use mock data
+  const useMock = process.env.REACT_APP_USE_MOCK_DATA !== 'false';
 
   // Fetch Orion AUM data
   const { 
@@ -49,6 +63,7 @@ export const AumChart = () => {
     queryFn: () => getOrionAumChartData({ aggregation }),
     retry: 2,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled: !useMock, // Only fetch from API if not using mock data
   });
 
   // Define a unified tickFormatter function that always returns a string
@@ -56,23 +71,40 @@ export const AumChart = () => {
     return formatCurrency(value);
   };
 
-  // Mock data for when no real data is available
-  const mockData = [
-    { period: '2023-01', aum: 800000, date: '2023-01-01', dataPoints: 1 },
-    { period: '2023-02', aum: 900000, date: '2023-02-01', dataPoints: 1 },
-    { period: '2023-03', aum: 1290000, date: '2023-03-01', dataPoints: 1 },
-    { period: '2023-04', aum: 1450000, date: '2023-04-01', dataPoints: 1 },
-    { period: '2023-05', aum: 1555000, date: '2023-05-01', dataPoints: 1 },
-    { period: '2023-06', aum: 1600000, date: '2023-06-01', dataPoints: 1 },
-    { period: '2023-07', aum: 1650000, date: '2023-07-01', dataPoints: 1 },
-    { period: '2023-08', aum: 1700000, date: '2023-08-01', dataPoints: 1 },
-    { period: '2023-09', aum: 1750000, date: '2023-09-01', dataPoints: 1 },
-    { period: '2023-10', aum: 1900000, date: '2023-10-01', dataPoints: 1 },
-    { period: '2023-11', aum: 2000000, date: '2023-11-01', dataPoints: 1 },
-    { period: '2023-12', aum: 2000000, date: '2023-12-01', dataPoints: 1 },
-  ];
+  // Get mock data from BookDevelopmentBySegmentReport
+  const getMockSegmentData = (): SegmentChartData[] => {
+    try {
+      const segmentReport = mockData.BookDevelopmentBySegmentReport;
+      const years = [2019, 2020, 2021, 2022, 2023, 2024, 2025];
+      
+      return years.map(year => {
+        const dataPoint: SegmentChartData = { year, Platinum: 0, Gold: 0, Silver: 0 };
+        
+        segmentReport.allSegmentsData.forEach((segment: any) => {
+          const yearData = segment.dataAUM.find((data: any) => data.year === year);
+          if (yearData) {
+            dataPoint[segment.name as keyof Omit<SegmentChartData, 'year'>] = yearData.value;
+          }
+        });
+        
+        return dataPoint;
+      });
+    } catch (error) {
+      console.error('Error loading mock segment data:', error);
+      // Fallback data
+      return [
+        { year: 2019, Platinum: 40000000, Gold: 25000000, Silver: 12000000 },
+        { year: 2020, Platinum: 43000000, Gold: 27000000, Silver: 13000000 },
+        { year: 2021, Platinum: 46000000, Gold: 29000000, Silver: 14000000 },
+        { year: 2022, Platinum: 50000000, Gold: 31000000, Silver: 15000000 },
+        { year: 2023, Platinum: 54000000, Gold: 33000000, Silver: 16000000 },
+        { year: 2024, Platinum: 58000000, Gold: 36000000, Silver: 17000000 },
+        { year: 2025, Platinum: 63000000, Gold: 39000000, Silver: 18000000 },
+      ];
+    }
+  };
 
-  // Transform data for the chart
+  // Transform original API data for legacy chart
   const realData = aumResponse?.data?.map((item: ChartDataPoint) => ({
     period: item.period,
     aum: item.aum,
@@ -81,12 +113,15 @@ export const AumChart = () => {
   })) || [];
 
   // Check if we should show mock data
-  const shouldShowMockData = (
+  const shouldShowMockData = useMock || (
     realData.length === 0 && !isLoading && (
       !error || 
       (error && error.message?.includes("Firm integration config not found"))
     )
   );
+
+  // Get chart data based on what we're showing
+  const segmentChartData = shouldShowMockData ? getMockSegmentData() : [];
 
   // Debug logging
   if (process.env.NODE_ENV === 'development') {
@@ -95,21 +130,18 @@ export const AumChart = () => {
       isLoading,
       error: error?.message,
       shouldShowMockData,
-      isUsingMockData: shouldShowMockData
+      useMock,
+      segmentDataLength: segmentChartData.length
     });
   }
 
-  // Use real data if available, otherwise use mock data
-  const chartData = realData.length > 0 ? realData : mockData;
-  const isUsingMockData = shouldShowMockData;
-
   // Loading state
-  if (isLoading) {
+  if (isLoading && !useMock) {
     return (
       <div className="bg-white p-4 rounded-lg border">
         <div className="flex flex-col mb-2">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold">Average AUM Over Time</h2>
+            <h2 className="text-lg font-semibold">Book Development By Segment</h2>
           </div>
           <p className="text-sm text-gray-500 mt-1">
             Loading portfolio data from Orion...
@@ -127,12 +159,12 @@ export const AumChart = () => {
   }
 
   // Error state (only show for errors that aren't "Firm integration config not found")
-  if (error && !error.message?.includes("Firm integration config not found")) {
+  if (error && !error.message?.includes("Firm integration config not found") && !useMock) {
     return (
       <div className="bg-white p-4 rounded-lg border">
         <div className="flex flex-col mb-2">
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold">Average AUM Over Time</h2>
+            <h2 className="text-lg font-semibold">Book Development By Segment</h2>
             <button 
               onClick={() => refetch()}
               className="text-sm text-blue-600 hover:underline"
@@ -160,28 +192,26 @@ export const AumChart = () => {
     );
   }
 
-
+  const handleViewFullReport = () => {
+    navigate('/reporting/active-clients-over-segments');
+  };
 
   return (
-          <div className="bg-white p-4 rounded-lg border">
-        <div className="flex flex-col mb-2">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold">Average AUM Over Time</h2>
-            <div className="flex items-center space-x-2">
-            <select
-              value={aggregation}
-              onChange={(e) => setAggregation(e.target.value as 'monthly' | 'quarterly' | 'yearly')}
-              className="text-sm border rounded px-2 py-1"
+    <div className="bg-white p-4 rounded-lg border">
+      <div className="flex flex-col mb-2">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold">Book Development By Segment</h2>
+          <div className="flex items-center space-x-2">
+            <button 
+              onClick={handleViewFullReport}
+              className="text-sm text-blue-600 hover:underline cursor-pointer"
             >
-              <option value="monthly">Monthly</option>
-              <option value="quarterly">Quarterly</option>
-              <option value="yearly">Yearly</option>
-            </select>
-            <a href="#" className="text-sm text-blue-600 hover:underline">View Full Report</a>
+              View Full Report
+            </button>
           </div>
         </div>
         <div className="flex justify-between items-center mt-1">
-          {isUsingMockData ? (
+          {shouldShowMockData ? (
             <div className="flex items-center gap-2 text-sm text-gray-500">
               <span>Showing sample data -</span>
               <button
@@ -190,25 +220,14 @@ export const AumChart = () => {
               >
                 Connect to Orion
               </button>
-              <span>and sync your data to see real AUM trends</span>
+              <span>and sync your data to see real AUM trends by segment</span>
             </div>
           ) : (
             <p className="text-sm text-gray-500">
-              Hover over data points to see detailed values
+              Hover over data points to see detailed values by segment
             </p>
           )}
-          {aumResponse?.summary && !isUsingMockData && (
-            <div className="text-sm text-gray-600">
-              <span className="font-medium">Latest: </span>
-              {formatCurrency(aumResponse.summary.latestAum)}
-              {aumResponse.summary.growth !== 0 && (
-                <span className={`ml-2 ${aumResponse.summary.growth > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  ({aumResponse.summary.growth > 0 ? '+' : ''}{aumResponse.summary.growth}%)
-                </span>
-              )}
-            </div>
-          )}
-          {isUsingMockData && (
+          {shouldShowMockData && (
             <div className="text-sm" style={{ color: 'oklch(0.4244 0.1809 265.64)' }}>
               <span className="font-medium">Sample Data</span>
             </div>
@@ -216,10 +235,10 @@ export const AumChart = () => {
         </div>
       </div>
       
-      <div className={`h-[300px] ${isUsingMockData ? 'relative' : ''}`}>
+      <div className={`h-[300px] ${shouldShowMockData ? 'relative' : ''}`}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
-            data={chartData}
+            data={segmentChartData}
             margin={{
               top: 10,
               right: 30,
@@ -227,15 +246,9 @@ export const AumChart = () => {
               bottom: 20,
             }}
           >
-            <defs>
-              <linearGradient id="colorAum" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={isUsingMockData ? "#0D47A1" : "#0D47A1"} stopOpacity={0.8}/>
-                <stop offset="95%" stopColor={isUsingMockData ? "#0D47A1" : "#0D47A1"} stopOpacity={0.3}/>
-              </linearGradient>
-            </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
             <XAxis 
-              dataKey="period" 
+              dataKey="year" 
               axisLine={false} 
               tickLine={false}
               tick={{ fontSize: 12, fill: '#888' }}
@@ -247,8 +260,7 @@ export const AumChart = () => {
               tick={{ fontSize: 12, fill: '#888' }}
             />
             <Tooltip 
-              formatter={(value: number) => [formatCurrency(value), 'Average AUM']}
-              labelFormatter={(label) => `Period: ${label}`}
+              formatter={(value: number, name: string) => [formatCurrency(value), `${name} Segment AUM`]}
               labelStyle={{ color: '#555' }}
               contentStyle={{ 
                 backgroundColor: 'white', 
@@ -257,13 +269,34 @@ export const AumChart = () => {
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}
             />
-
+            <Legend />
+            
             <Area 
               type="monotone" 
-              dataKey="aum" 
-              stroke={isUsingMockData ? "#6366f1" : "#0D47A1"} 
-              fillOpacity={1}
-              fill="url(#colorAum)" 
+              dataKey="Silver" 
+              stackId="1"
+              stroke="hsl(210, 55%, 78%)" 
+              fill="hsl(210, 55%, 78%)" 
+              fillOpacity={0.85}
+              name="Silver"
+            />
+            <Area 
+              type="monotone" 
+              dataKey="Gold" 
+              stackId="1"
+              stroke="hsl(216, 65%, 58%)" 
+              fill="hsl(216, 65%, 58%)" 
+              fillOpacity={0.85}
+              name="Gold"
+            />
+            <Area 
+              type="monotone" 
+              dataKey="Platinum" 
+              stackId="1"
+              stroke="hsl(222, 47%, 44%)" 
+              fill="hsl(222, 47%, 44%)" 
+              fillOpacity={0.85}
+              name="Platinum"
             />
           </AreaChart>
         </ResponsiveContainer>

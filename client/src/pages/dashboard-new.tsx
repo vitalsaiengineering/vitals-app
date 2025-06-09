@@ -23,6 +23,7 @@ import {
 } from "recharts";
 import { FilterBar } from "@/components/dashboard/filter-bar";
 import { AiQuery } from "@/components/dashboard/ai-query";
+import mockData from "../data/mockData.js";
 
 // List of mock advisors (for demo purposes)
 const ADVISORS = [
@@ -34,7 +35,7 @@ const ADVISORS = [
 ];
 
 export default function Dashboard() {
-  const [selectedAdvisor, setSelectedAdvisor] = useState("firm");
+  const [selectedAdvisor, setSelectedAdvisor] = useState<string>("firm");
   const [filters, setFilters] = useState<{
     firmId: number | null;
     advisorId: number | null;
@@ -45,6 +46,13 @@ export default function Dashboard() {
     wealthboxUserId: null,
   });
   
+  const useMock = process.env.REACT_APP_USE_MOCK_DATA !== 'false'; // Default to true for development
+
+  // Fetch current user for filter bar
+  const { data: currentUser } = useQuery<any>({
+    queryKey: ["/api/me"],
+  });
+
   // Effect to initialize with localStorage value if available
   useEffect(() => {
     const storedView = localStorage.getItem("selectedAdvisorView");
@@ -66,17 +74,16 @@ export default function Dashboard() {
   }) => {
     setFilters(newFilters);
     
-    // Map wealthboxUserId to one of our advisor IDs for demo purposes
-    if (newFilters.wealthboxUserId !== null) {
-      // This is a simplified mapping just for demo
-      const advisorIdMap: Record<number, string> = {
-        1: "advisor1",
-        2: "advisor2",
-        3: "advisor3",
-        4: "advisor4",
-      };
-      
-      const mappedAdvisorId = advisorIdMap[newFilters.wealthboxUserId] || "firm";
+    // Map advisorId to string key for our data
+    const advisorMapping: { [key: number]: string } = {
+      1: "advisor1", // Maria Reynolds
+      2: "advisor2", // Thomas Chen  
+      3: "advisor3", // Aisha Patel
+      4: "advisor4", // Jackson Miller
+    };
+
+    if (newFilters.advisorId && advisorMapping[newFilters.advisorId]) {
+      const mappedAdvisorId = advisorMapping[newFilters.advisorId];
       setSelectedAdvisor(mappedAdvisorId);
     } else {
       setSelectedAdvisor("firm");
@@ -85,6 +92,26 @@ export default function Dashboard() {
   
   // Sample data - different for each advisor
   const getClientAgeData = (advisor: string) => {
+    if (useMock) {
+      // Use mock data as base and adjust for different advisors
+      const baseData = mockData.ClientAgeDistribution;
+      const variations = {
+        "advisor1": [0.4, 1.6, 1.3, 0.7, 0.7], // Maria Reynolds - younger clients
+        "advisor2": [-0.6, -0.7, 1.8, 1.2, -0.2], // Thomas Chen - older clients  
+        "advisor3": [1.5, 0.8, -0.3, -0.6, 0.4], // Aisha Patel - mixed
+        "advisor4": [-0.6, -0.5, 0.2, 0.7, 0.1], // Jackson Miller
+      };
+      
+      if (variations[advisor as keyof typeof variations]) {
+        return baseData.map((item, index) => ({
+          ...item,
+          value: Math.max(0, item.value + variations[advisor as keyof typeof variations][index])
+        }));
+      }
+      return baseData;
+    }
+    
+    // Original hardcoded data for fallback
     switch(advisor) {
       case "advisor1": // Maria Reynolds
         return [
@@ -119,17 +146,16 @@ export default function Dashboard() {
           { name: "Over 75", value: 8 },
         ];
       default: // Firm Overview
-        return [
-          { name: "Under 30", value: 8 },
-          { name: "30-45", value: 22 },
-          { name: "46-60", value: 38 },
-          { name: "61-75", value: 25 },
-          { name: "Over 75", value: 7 },
-        ];
+        return mockData.ClientAgeDistribution;
     }
   };
   
   const getClientSegmentation = (advisor: string) => {
+    if (useMock) {
+      return mockData.ClientSegmentation;
+    }
+    
+    // Original hardcoded data for fallback
     switch(advisor) {
       case "advisor1": // Maria Reynolds
         return [
@@ -165,7 +191,24 @@ export default function Dashboard() {
   };
 
   const getAumData = (advisor: string) => {
-    // Just use the same data structure but with different multipliers for each advisor
+    if (useMock) {
+      // Use mock data as base and apply multiplier for different advisors
+      const multipliers = {
+        "advisor1": 0.65, // Maria Reynolds
+        "advisor2": 0.48, // Thomas Chen
+        "advisor3": 0.72, // Aisha Patel
+        "advisor4": 0.55, // Jackson Miller
+        "firm": 1.0     // Firm Overview (default)
+      };
+      
+      const multiplier = multipliers[advisor as keyof typeof multipliers] || 1;
+      return mockData.AumOverTime.map(item => ({
+        ...item,
+        aum: Math.round(item.aum * multiplier)
+      }));
+    }
+    
+    // Original hardcoded data for fallback
     const multipliers = {
       "advisor1": 0.65, // Maria Reynolds
       "advisor2": 0.48, // Thomas Chen
@@ -389,11 +432,6 @@ export default function Dashboard() {
     return ageMap[entry.name] || "#1E88E5";
   };
 
-  // Fetch current user for filter bar
-  const { data: currentUser } = useQuery<any>({
-    queryKey: ["/api/me"],
-  });
-
   return (
     <div className="container mx-auto py-8">
       {/* Dashboard Header */}
@@ -587,7 +625,9 @@ export default function Dashboard() {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value: any) => [`${value}%`, "Percentage"]} />
+                    <Tooltip formatter={(value: any, name: string) => {
+                      return [`${value} clients (${value}%)`, 'Count'];
+                    }} />
                   </PieChart>
                 </ResponsiveContainer>
               </Link>

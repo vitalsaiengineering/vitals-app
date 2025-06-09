@@ -13,6 +13,9 @@ import {
   type GetClientAnniversaryParams
 } from '@/lib/clientData';
 
+// Import mock data
+import mockData from '@/data/mockData.js';
+
 // Grade badge colors
 const getGradeBadgeClasses = (grade: string) => {
   const GRADE_COLORS: Record<string, { badgeBg: string; badgeText: string }> = {
@@ -40,12 +43,28 @@ export default function ClientAnniversaryView({ globalSearch }: ClientAnniversar
   const [selectedAdvisor, setSelectedAdvisor] = useState('all');
   const [showUpcomingMilestones, setShowUpcomingMilestones] = useState(false);
 
+  // Check if we should use mock data
+  const useMock = process.env.REACT_APP_USE_MOCK_DATA !== 'false';
+
   const fetchAnniversaryData = async (params?: GetClientAnniversaryParams) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await getClientAnniversaryData(params);
-      setAnniversaryData(data);
+      if (useMock) {
+        // Use mock data
+        const mockAnniversaryData = mockData.ClientAnniversaryData as ClientAnniversaryData;
+        setAnniversaryData(mockAnniversaryData);
+      } else {
+        // Try to fetch from API, fallback to mock data on error
+        try {
+          const data = await getClientAnniversaryData(params);
+          setAnniversaryData(data);
+        } catch (apiError) {
+          console.warn('API fetch failed, falling back to mock data:', apiError);
+          const mockAnniversaryData = mockData.ClientAnniversaryData as ClientAnniversaryData;
+          setAnniversaryData(mockAnniversaryData);
+        }
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load anniversary data';
       setError(errorMessage);
@@ -57,7 +76,7 @@ export default function ClientAnniversaryView({ globalSearch }: ClientAnniversar
 
   useEffect(() => {
     fetchAnniversaryData(); // Initial fetch
-  }, []);
+  }, [useMock]);
 
   // Effect to re-fetch data when filters change
   useEffect(() => {

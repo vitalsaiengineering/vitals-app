@@ -25,6 +25,9 @@ import {
   type BookDevelopmentSegmentData 
 } from '@/lib/clientData';
 
+// Import mock data
+import mockData from '@/data/mockData.js';
+
 type ChartView = 'clientCount' | 'assetsUnderManagement';
 type SegmentName = 'Platinum' | 'Gold' | 'Silver';
 
@@ -156,24 +159,54 @@ export default function BookDevelopmentBySegmentReport() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState<{ key: keyof BookDevelopmentClient | null; direction: 'ascending' | 'descending' }>({ key: null, direction: 'ascending' });
 
+  // Check if we should use mock data
+  const useMock = process.env.REACT_APP_USE_MOCK_DATA !== 'false';
+
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
-        setIsLoading(true);
-        const data = await getBookDevelopmentReportData();
-        setReportData(data);
-        const allSegmentNames = data.allSegmentsData.map(s => s.name);
-        setSelectedSegments(allSegmentNames);
+        if (useMock) {
+          // Use mock data
+          const mockReportData = mockData.BookDevelopmentBySegmentReport as BookDevelopmentReportData;
+          if (!mockReportData || !mockReportData.allSegmentsData) {
+            throw new Error('Invalid mock data: missing allSegmentsData');
+          }
+          setReportData(mockReportData);
+          const allSegmentNames = mockReportData.allSegmentsData?.map(s => s.name) || [];
+          setSelectedSegments(allSegmentNames);
+        } else {
+          // Try to fetch from API, fallback to mock data on error
+          try {
+            const data = await getBookDevelopmentReportData();
+            if (!data || !data.allSegmentsData) {
+              throw new Error('Invalid API response: missing allSegmentsData');
+            }
+            setReportData(data);
+            const allSegmentNames = data.allSegmentsData?.map(s => s.name) || [];
+            setSelectedSegments(allSegmentNames);
+          } catch (apiError) {
+            console.warn('API fetch failed, falling back to mock data:', apiError);
+            const mockReportData = mockData.BookDevelopmentBySegmentReport as BookDevelopmentReportData;
+            if (!mockReportData || !mockReportData.allSegmentsData) {
+              throw new Error('Fallback failed: invalid mock data structure');
+            }
+            setReportData(mockReportData);
+            const allSegmentNames = mockReportData.allSegmentsData?.map(s => s.name) || [];
+            setSelectedSegments(allSegmentNames);
+          }
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load report data');
-        console.error(err);
+        console.error('BookDevelopmentBySegmentReport error:', err);
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchData();
-  }, []);
+  }, [useMock]);
 
   const handleSegmentToggle = (segmentName: SegmentName) => {
     setSelectedSegments(prev =>
@@ -185,13 +218,13 @@ export default function BookDevelopmentBySegmentReport() {
   };
 
   const handleClearSegmentFilters = () => {
-    setSelectedSegments(reportData?.allSegmentsData.map(s => s.name) || []);
+    setSelectedSegments(reportData?.allSegmentsData?.map(s => s.name) || []);
     setCurrentPage(1);
   };
   
   const handleTableSegmentChange = (value: string) => {
     if (value === "All Segments") {
-        setSelectedSegments(reportData?.allSegmentsData.map(s => s.name) || []);
+        setSelectedSegments(reportData?.allSegmentsData?.map(s => s.name) || []);
     } else {
         setSelectedSegments([value as SegmentName]);
     }
@@ -199,23 +232,23 @@ export default function BookDevelopmentBySegmentReport() {
   };
 
   const filteredAndSortedClients = useMemo(() => {
-    if (!reportData) return [];
+    if (!reportData || !reportData.allSegmentsData) return [];
 
     let clientsToShow: BookDevelopmentClient[] = [];
     if (selectedSegments.length === reportData.allSegmentsData.length || selectedSegments.length === 0) {
-      clientsToShow = reportData.allSegmentsData.flatMap(s => s.clients);
+      clientsToShow = reportData.allSegmentsData.flatMap(s => s.clients || []);
     } else {
       clientsToShow = reportData.allSegmentsData
         .filter(s => selectedSegments.includes(s.name))
-        .flatMap(s => s.clients);
+        .flatMap(s => s.clients || []);
     }
 
     if (filterSearchTerm) {
       const lowerSearchTerm = filterSearchTerm.toLowerCase();
       clientsToShow = clientsToShow.filter(client =>
-        client.name.toLowerCase().includes(lowerSearchTerm) ||
-        client.segment.toLowerCase().includes(lowerSearchTerm) ||
-        client.aum.toString().includes(lowerSearchTerm)
+        client.name?.toLowerCase().includes(lowerSearchTerm) ||
+        client.segment?.toLowerCase().includes(lowerSearchTerm) ||
+        client.aum?.toString().includes(lowerSearchTerm)
       );
     }
     
@@ -234,7 +267,7 @@ export default function BookDevelopmentBySegmentReport() {
     }
 
     return clientsToShow;
-  }, [reportData, selectedSegments, filterSearchTerm, sortConfig]); 
+  }, [reportData, selectedSegments, filterSearchTerm, sortConfig]);
 
   const paginatedClients = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -263,6 +296,7 @@ export default function BookDevelopmentBySegmentReport() {
         fillColor: segment.fillColor || segment.color,
         dataAUM: segment.dataAUM,
         dataClientCount: segment.dataClientCount,
+        clients: segment.clients,
         data: chartView === 'assetsUnderManagement' ? segment.dataAUM : segment.dataClientCount,
       }));
   }, [reportData, selectedSegments, chartView]);
@@ -303,7 +337,7 @@ export default function BookDevelopmentBySegmentReport() {
 
   const getSegmentBadgeClasses = (segmentName: SegmentName) => {
     const config = SEGMENT_COLORS[segmentName];
-    return `${config.badgeBg} ${config.badgeText} ${config.badgeBorder}`;
+    return `${config?.badgeBg} ${config?.badgeText} ${config?.badgeBorder}`;
   };
 
   return (
@@ -355,7 +389,7 @@ export default function BookDevelopmentBySegmentReport() {
                     stackId="1" 
                     stroke={series.color}
                     fill={series.fillColor || series.color} 
-                    fillOpacity={0.65} 
+                    fillOpacity={0.85} 
                     strokeWidth={2}
                     activeDot={{ r: 4, fill: series.color, strokeWidth: 0 }}
                     dot={false}
@@ -433,19 +467,19 @@ export default function BookDevelopmentBySegmentReport() {
               <TableBody>
                 {paginatedClients.length > 0 ? (
                   paginatedClients.map(client => (
-                    <TableRow key={client.id} className="hover:bg-muted/30 transition-colors">
-                      <TableCell className="font-medium">{client.name}</TableCell>
+                    <TableRow key={client?.id} className="hover:bg-muted/30 transition-colors">
+                      <TableCell className="font-medium">{client?.name || ''}</TableCell>
                       <TableCell>
-                        <span className={`px-2 py-0.5 text-[11px] font-medium rounded-full border ${getSegmentBadgeClasses(client.segment)}`}>
-                          {client.segment}
+                        <span className={`px-2 py-0.5 text-[11px] font-medium rounded-full border ${getSegmentBadgeClasses(client?.segment)}`}>
+                          {client?.segment || ''}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <div>{client.yearsWithFirmText}</div>
-                        <div className="text-xs text-muted-foreground">{client.sinceDateText}</div>
+                        <div>{client?.yearsWithFirmText || ''}</div>
+                        <div className="text-xs text-muted-foreground">{client?.sinceDateText || ''}</div>
                       </TableCell>
                       <TableCell className="text-right">
-                        {client.aum.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        {client?.aum?.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }) || '' }
                       </TableCell>
                       <TableCell className="text-right">
                         <Button size="sm" variant="default">View Contact</Button>

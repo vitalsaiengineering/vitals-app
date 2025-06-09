@@ -30,8 +30,9 @@ import * as RechartsPrimitive from "recharts";
 
 // Import the new data fetching function and the interface
 import { getAgeDemographicsReportData, AgeDemographicsData } from '@/lib/clientData';
-// Remove direct import of mock data if it was here, or ensure it's only for type reference if needed.
-// We will fetch data instead of using ageDemographicsMockData directly.
+
+// Import mock data
+import mockData from '@/data/mockData.js';
 
 // ... (Existing interfaces like AgeDemographicsData might be slightly different from the one in clientData.ts, ensure consistency or use the imported one)
 // For this example, I'll assume the AgeDemographicsData interface defined in this file is the one we want to use for structuring the fetched data.
@@ -128,16 +129,30 @@ export default function AgeDemographicsReport({ reportId /*, advisorId */ }: Age
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Check if we should use mock data
+  const useMock = process.env.REACT_APP_USE_MOCK_DATA !== 'false';
+
   // Fetch data on component mount
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        // Pass advisorId here if it's a prop and your API uses it
-        // const data = await getAgeDemographicsReportData(advisorId); 
-        const data = await getAgeDemographicsReportData(); // Assuming no advisorId needed for now or handled by API
-        setReportData(data);
+        if (useMock) {
+          // Use mock data
+          const mockReportData = mockData.AgeDemographicsReport as AgeDemographicsData;
+          setReportData(mockReportData);
+        } else {
+          // Try to fetch from API, fallback to mock data on error
+          try {
+            const data = await getAgeDemographicsReportData();
+            setReportData(data);
+          } catch (apiError) {
+            console.warn('API fetch failed, falling back to mock data:', apiError);
+            const mockReportData = mockData.AgeDemographicsReport as AgeDemographicsData;
+            setReportData(mockReportData);
+          }
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch report data");
         console.error(err);
@@ -146,7 +161,7 @@ export default function AgeDemographicsReport({ reportId /*, advisorId */ }: Age
       }
     };
     fetchData();
-  }, [reportId /*, advisorId */]); // Re-fetch if reportId or advisorId changes
+  }, [reportId, useMock]); // Re-fetch if reportId or useMock changes
 
   // Define the desired stacking order (bottom to top)
   const desiredSegmentOrder = ['platinum', 'gold', 'silver'];

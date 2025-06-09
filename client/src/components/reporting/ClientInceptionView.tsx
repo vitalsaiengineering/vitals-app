@@ -11,6 +11,9 @@ import {
   type GetClientInceptionParams
 } from '@/lib/clientData';
 
+// Import mock data
+import mockData from '@/data/mockData.js';
+
 // Grade badge colors
 const getGradeBadgeClasses = (grade: string) => {
   const GRADE_COLORS: Record<string, { badgeBg: string; badgeText: string }> = {
@@ -54,12 +57,28 @@ export default function ClientInceptionView({ globalSearch }: ClientInceptionVie
   const [selectedYear, setSelectedYear] = useState(2024);
   const [selectedSegmentFilter, setSelectedSegmentFilter] = useState('All Segments');
 
+  // Check if we should use mock data
+  const useMock = process.env.REACT_APP_USE_MOCK_DATA !== 'false';
+
   const fetchInceptionData = async (params?: GetClientInceptionParams) => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await getClientInceptionData(params);
-      setInceptionData(data);
+      if (useMock) {
+        // Use mock data
+        const mockInceptionData = mockData.ClientInceptionData as ClientInceptionData;
+        setInceptionData(mockInceptionData);
+      } else {
+        // Try to fetch from API, fallback to mock data on error
+        try {
+          const data = await getClientInceptionData(params);
+          setInceptionData(data);
+        } catch (apiError) {
+          console.warn('API fetch failed, falling back to mock data:', apiError);
+          const mockInceptionData = mockData.ClientInceptionData as ClientInceptionData;
+          setInceptionData(mockInceptionData);
+        }
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load inception data';
       setError(errorMessage);
@@ -71,7 +90,7 @@ export default function ClientInceptionView({ globalSearch }: ClientInceptionVie
 
   useEffect(() => {
     fetchInceptionData(); // Initial fetch
-  }, []);
+  }, [useMock]);
 
   // Effect to re-fetch data when filters change
   useEffect(() => {

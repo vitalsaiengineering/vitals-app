@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
 import axios from 'axios';
 
+// Import mock data
+import { getAllClients } from '@/utils/clientDataUtils.js';
+
 interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -22,6 +25,37 @@ export const AskVitals = () => {
   ]);
   const [loading, setLoading] = useState(false);
 
+  // Check if we should use mock data
+  const useMock = process.env.REACT_APP_USE_MOCK_DATA !== 'false';
+
+  // Function to get the highest grossing client from mock data
+  const getHighestGrossingClient = () => {
+    try {
+      const clients = getAllClients();
+      const highestAumClient = clients.reduce((highest, current) => {
+        return current.aum > highest.aum ? current : highest;
+      });
+      return {
+        name: highestAumClient.name,
+        aum: highestAumClient.aum
+      };
+    } catch (error) {
+      console.error('Error getting highest grossing client:', error);
+      return {
+        name: 'John Anderson',
+        aum: 2500000 // Fallback values
+      };
+    }
+  };
+
+  // Function to format currency
+  const formatCurrency = (amount: number) => {
+    if (amount >= 1000000) {
+      return `$${(amount / 1000000).toFixed(1)}M`;
+    }
+    return `$${amount.toLocaleString()}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim() || loading) return;
@@ -37,26 +71,61 @@ export const AskVitals = () => {
     setLoading(true);
 
     try {
-      // Attempt to send the query to the backend
-      const response = await axios.post('/api/ai/query', { query: userMessage.content });
-      
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: response.data.response || "I apologize, but I couldn't process that request."
-      };
+      if (useMock) {
+        // Mock interaction with 2-3 second delay
+        const delay = 2000 + Math.random() * 1000; // 2-3 seconds
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        // Get highest grossing client data
+        const highestClient = getHighestGrossingClient();
+        
+        const mockResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: `Your highest grossing client is ${highestClient.name} with an AUM of ${formatCurrency(highestClient.aum)}.`
+        };
 
-      setMessages(prev => [...prev, aiMessage]);
+        setMessages(prev => [...prev, mockResponse]);
+      } else {
+        // Attempt to send the query to the backend
+        const response = await axios.post('/api/ai/query', { query: userMessage.content });
+        
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: response.data.response || "I apologize, but I couldn't process that request."
+        };
+
+        setMessages(prev => [...prev, aiMessage]);
+      }
     } catch (error) {
       console.error('Error querying AI:', error);
-      // Fallback message if API call fails
-      const fallbackMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: "I apologize, but I'm having trouble connecting to my knowledge base right now. Please try again later."
-      };
       
-      setMessages(prev => [...prev, fallbackMessage]);
+      if (!useMock) {
+        // Fallback to mock response if API fails
+        const delay = 2000 + Math.random() * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        const highestClient = getHighestGrossingClient();
+        
+        const fallbackMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: `Your highest grossing client is ${highestClient.name} with an AUM of ${formatCurrency(highestClient.aum)}.`
+        };
+        
+        setMessages(prev => [...prev, fallbackMessage]);
+      } else {
+        // Error in mock mode
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: "I apologize, but I'm having trouble processing that request right now. Please try again."
+        };
+        
+        setMessages(prev => [...prev, errorMessage]);
+      }
     } finally {
       setLoading(false);
     }
