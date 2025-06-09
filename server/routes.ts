@@ -1694,7 +1694,7 @@ app.get("/api/analytics/client-inception", requireAuth, getClientInceptionHandle
       tokenUrl.searchParams.append("client_secret", "oWxszypXFkNm-SKLwpnwRBS2zbzWhTa2ciJDbAFTxJA");
       tokenUrl.searchParams.append("code", code);
       tokenUrl.searchParams.append("grant_type", "authorization_code");
-      tokenUrl.searchParams.append("redirect_uri", "https://moved-repeatedly-mongrel.ngrok-free.app/settings");
+      tokenUrl.searchParams.append("redirect_uri", "https://app.advisorvitals.com/settings");
 
       const tokenResponse = await fetch(tokenUrl.toString(), {
         method: "POST",
