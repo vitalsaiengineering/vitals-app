@@ -479,13 +479,13 @@ useEffect(() => {
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Unable to retrieve your Wealthbox authentication token. Please make sure you have connected your Wealthbox account in the integrations settings.
+              Unable to retrieve your Wealthbox authentication token. Please make sure you have connected your Wealthbox account using the Connect Wealthbox button.
             </AlertDescription>
           </Alert>
           
           <Button 
             onClick={() => {
-              window.history.pushState({}, "", "/settings?tab=integrations");
+              window.history.pushState({}, "", "/settings?tab=data-mapping");
               window.dispatchEvent(new Event('popstate'));
             }}
           >
