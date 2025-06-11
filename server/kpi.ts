@@ -530,6 +530,123 @@ export async function getBookDevelopmentReportHandler(
 
 // --- Client Birthday Report ---
 
+async function getClientBirthdayReportData(
+  organizationId: number,
+  advisorIds?: number[]
+): Promise<{ clients: any[]; filters: any }> {
+  // Fetch real clients from the database
+  const clients = await storage.getClientsByOrganization(organizationId);
+  
+  // If advisorIds are specified, filter clients by those advisors
+  let filteredClients = clients;
+  if (advisorIds && advisorIds.length > 0) {
+    filteredClients = clients.filter(client => 
+      advisorIds.includes(client.primaryAdvisorId || 0)
+    );
+  }
+
+  // Get all users (advisors) for name lookup
+  const allUsers = await storage.getUsersByOrganization(organizationId);
+  const userLookup = allUsers.reduce((acc, user) => {
+    acc[user.id] = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+    return acc;
+  }, {} as { [key: number]: string });
+
+  // Helper function to calculate days until next birthday
+  const calculateDaysUntilBirthday = (dateOfBirth: string): { days: number; nextBirthdayDate: string; turningAge: number } => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    
+    // Parse the birth date
+    const birthDate = new Date(dateOfBirth);
+    const birthMonth = birthDate.getMonth();
+    const birthDay = birthDate.getDate();
+    
+    // Calculate next birthday this year
+    let nextBirthday = new Date(currentYear, birthMonth, birthDay);
+    
+    // If birthday has passed this year, use next year
+    if (nextBirthday < today) {
+      nextBirthday = new Date(currentYear + 1, birthMonth, birthDay);
+    }
+    
+    // Calculate days until birthday
+    const timeDiff = nextBirthday.getTime() - today.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+    
+    // Calculate turning age
+    const turningAge = nextBirthday.getFullYear() - birthDate.getFullYear();
+    
+    return {
+      days: daysDiff,
+      nextBirthdayDate: nextBirthday.toISOString().split('T')[0],
+      turningAge
+    };
+  };
+
+  // Helper function to calculate client tenure
+  const calculateTenure = (client: any): { years: number; tenureText: string } => {
+    const joinDate = client.inceptionDate ? new Date(client.inceptionDate) : new Date(client.createdAt);
+    const today = new Date();
+    const years = Math.max(1, today.getFullYear() - joinDate.getFullYear());
+    return {
+      years,
+      tenureText: `${years} year${years !== 1 ? 's' : ''}`
+    };
+  };
+
+  // Helper function to format birthday display
+  const formatBirthdayDisplay = (days: number, nextBirthdayDate: string): string => {
+    if (days === 0) return "Today";
+    if (days === 1) return "Tomorrow";
+    if (days <= 30) return `In ${days} days`;
+    
+    const date = new Date(nextBirthdayDate);
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
+  // Process clients and calculate birthday information
+  const birthdayClients = filteredClients
+    .filter(client => client.dateOfBirth) // Only include clients with birth dates
+    .map(client => {
+      const { days, nextBirthdayDate, turningAge } = calculateDaysUntilBirthday(client.dateOfBirth!); // Non-null assertion since we filtered above
+      const { years, tenureText } = calculateTenure(client);
+      const advisorName = userLookup[client.primaryAdvisorId || 0] || "Unknown Advisor";
+
+      return {
+        id: String(client.id),
+        clientName: `${client.firstName || ""} ${client.lastName || ""}`.trim(),
+        grade: client.segment || "Silver", // Use client segment as grade
+        dateOfBirth: client.dateOfBirth!,
+        nextBirthdayDisplay: formatBirthdayDisplay(days, nextBirthdayDate),
+        nextBirthdayDate,
+        turningAge,
+        aum: Math.round(parseFloat(client.aum || "0")),
+        clientTenure: tenureText,
+        advisorName,
+        daysUntilNextBirthday: days,
+        _tenureYears: years,
+        _nextBirthdayMonth: new Date(nextBirthdayDate).getMonth() + 1, // 1-based month
+      };
+    })
+    .sort((a, b) => a.daysUntilNextBirthday - b.daysUntilNextBirthday);
+
+  // Generate filter options from actual data
+  const gradeSet = new Set(birthdayClients.map(c => c.grade));
+  const uniqueGrades = Array.from(gradeSet).sort();
+  
+  const advisorSet = new Set(birthdayClients.map(c => c.advisorName));
+  const uniqueAdvisors = Array.from(advisorSet).sort();
+
+  return {
+    clients: birthdayClients,
+    filters: {
+      grades: uniqueGrades,
+      advisors: uniqueAdvisors,
+    },
+  };
+}
+
 // Helper function to calculate client tenure (numeric part for filtering)
 function getTenureYears(tenureString: string): number {
   const match = tenureString.match(/^(\d+)/);
@@ -547,18 +664,17 @@ export async function getClientBirthdayReportHandler(
 ) {
   const user = req.user as any;
   const organizationId = user?.organizationId;
+  const advisorIdQuery = req.query.advisorId as string | undefined;
+  const advisorId = advisorIdQuery ? parseInt(advisorIdQuery, 10) : undefined;
 
   try {
-    // Get mock data from dedicated function
-    const mockData = await getMockClientBirthdayReportData(organizationId);
-    const { clients: mockClients, filters } = mockData;
+    // Get real data from the database
+    const { clients: allClients, filters } = await getClientBirthdayReportData(
+      organizationId, 
+      advisorId ? [advisorId] : undefined
+    );
 
-    // Populate internal fields for filtering/sorting
-    let processedClients: BirthdayClient[] = mockClients.map((client) => ({
-      ...client,
-      _tenureYears: getTenureYears(client.clientTenure),
-      _nextBirthdayMonth: getMonthFromDateString(client.nextBirthdayDate),
-    }));
+    let processedClients = allClients;
 
     // Extract filter query parameters
     const {
@@ -619,14 +735,12 @@ export async function getClientBirthdayReportHandler(
       });
     }
 
-    // Sort by days until next birthday (ascending)
+    // Sort by days until next birthday (ascending) - already sorted but re-sort after filtering
     processedClients.sort(
-      (a, b) =>
-        (a.daysUntilNextBirthday || Infinity) -
-        (b.daysUntilNextBirthday || Infinity)
+      (a, b) => a.daysUntilNextBirthday - b.daysUntilNextBirthday
     );
 
-    const reportData: ClientBirthdayReportData = {
+    const reportData = {
       clients: processedClients.map(
         ({
           daysUntilNextBirthday,
