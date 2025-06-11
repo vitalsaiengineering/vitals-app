@@ -1573,6 +1573,83 @@ export async function getReferralAnalyticsHandler(req: Request, res: Response) {
 
 // --- Client Referral Rate ---
 
+async function getClientReferralRateData(
+  organizationId: number,
+  advisorIds?: number[]
+): Promise<ClientReferralRateData> {
+  // Fetch real clients from the database
+  const clients = await storage.getClientsByOrganization(organizationId);
+  
+  // If advisorIds are specified, filter clients by those advisors
+  let filteredClients = clients;
+  if (advisorIds && advisorIds.length > 0) {
+    filteredClients = clients.filter((client) =>
+      advisorIds.includes(client.primaryAdvisorId || 0)
+    );
+  }
+
+  // Generate last 12 months of data
+  const chartData: any[] = [];
+  const today = new Date();
+  
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    const year = date.getFullYear();
+    const month = date.getMonth(); // 0-based
+    
+    // Filter clients who joined in this month
+    const monthlyClients = filteredClients.filter((client) => {
+      const inceptionDate = client.inceptionDate 
+        ? new Date(client.inceptionDate)
+        : new Date(client.createdAt);
+      return inceptionDate.getFullYear() === year && inceptionDate.getMonth() === month;
+    });
+
+    // Count total new clients and referred clients for this month
+    const totalNewClients = monthlyClients.length;
+    const referredClients = monthlyClients.filter((client) => client.referredBy).length;
+    
+    // Calculate referral rate: (Number of referred clients / Total number of clients) x 100
+    const referralRate = totalNewClients > 0 
+      ? Math.round((referredClients / totalNewClients) * 100 * 10) / 10 // Round to 1 decimal
+      : 0;
+
+    // Format month name
+    const monthName = date.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    const shortMonth = date.toLocaleDateString("en-US", { month: "short" });
+
+    chartData.push({
+      month: monthName,
+      shortMonth: shortMonth,
+      referralRate,
+      referredClients,
+      totalNewClients,
+    });
+  }
+
+  // Get current month data (last in array)
+  const currentMonth = chartData[chartData.length - 1];
+  const previousMonth = chartData[chartData.length - 2];
+
+  // Calculate KPIs
+  const currentRate = currentMonth.referralRate;
+  const rateChange = previousMonth 
+    ? Math.round((currentRate - previousMonth.referralRate) * 10) / 10
+    : 0;
+  const newClientsThisMonth = currentMonth.totalNewClients;
+  const referredClientsThisMonth = currentMonth.referredClients;
+
+  return {
+    kpi: {
+      currentRate,
+      rateChange,
+      newClientsThisMonth,
+      referredClientsThisMonth,
+    },
+    chartData,
+  };
+}
+
 export async function getClientReferralRateHandler(
   req: Request,
   res: Response
@@ -1583,13 +1660,11 @@ export async function getClientReferralRateHandler(
   const advisorId = advisorIdQuery ? parseInt(advisorIdQuery, 10) : undefined;
 
   try {
-    const reportData = await getMockClientReferralRateData(organizationId);
-
-    // You could filter or modify data based on advisorId if needed
-    if (advisorId) {
-      // Optionally adjust data for specific advisor
-      // For now, returning the same data regardless of advisor
-    }
+    // Get real data from the database
+    const reportData = await getClientReferralRateData(
+      organizationId,
+      advisorId ? [advisorId] : undefined
+    );
 
     res.json(reportData);
   } catch (error) {
