@@ -764,6 +764,132 @@ export async function getClientBirthdayReportHandler(
 
 // --- Client Segmentation Dashboard ---
 
+async function getClientSegmentationDashboardData(
+  organizationId: number,
+  selectedSegment: string = "Platinum",
+  advisorIds?: number[]
+): Promise<ClientSegmentationDashboardData> {
+  // Fetch real clients from the database
+  const clients = await storage.getClientsByOrganization(organizationId);
+  
+  // If advisorIds are specified, filter clients by those advisors
+  let filteredClients = clients;
+  if (advisorIds && advisorIds.length > 0) {
+    filteredClients = clients.filter(client => 
+      advisorIds.includes(client.primaryAdvisorId || 0)
+    );
+  }
+
+  // Get all users (advisors) for advisor options
+  const allUsers = await storage.getUsersByOrganization(organizationId);
+  const advisors = allUsers.filter(user => user.roleId === 5); // Assuming roleId 5 is for advisors
+  
+  const advisorOptions = [
+    { id: "firm_overview", name: "Firm Overview" },
+    ...advisors.map(advisor => ({
+      id: String(advisor.id),
+      name: `${advisor.firstName || ""} ${advisor.lastName || ""}`.trim()
+    }))
+  ];
+
+  // Group clients by segment
+  const clientsBySegment = _.groupBy(filteredClients, (client) => {
+    return client.segment || "Silver"; // Use actual segment, fallback to Silver
+  });
+
+  // Calculate segment counts and totals
+  const segmentData = Object.keys(clientsBySegment).map(segment => {
+    const segmentClients = clientsBySegment[segment];
+    const clientCount = segmentClients.length;
+    const totalAum = segmentClients.reduce((sum, client) => 
+      sum + parseFloat(client.aum || "0"), 0
+    );
+    
+    return {
+      segment,
+      clientCount,
+      totalAum: Math.round(totalAum)
+    };
+  });
+
+  // Calculate totals
+  const totalClients = segmentData.reduce((sum, data) => sum + data.clientCount, 0);
+  const totalAum = segmentData.reduce((sum, data) => sum + data.totalAum, 0);
+
+  // Get current segment data
+  const currentSegmentData = segmentData.find(data => data.segment === selectedSegment) || {
+    segment: selectedSegment,
+    clientCount: 0,
+    totalAum: 0
+  };
+
+  const averageClientAum = currentSegmentData.clientCount > 0 
+    ? currentSegmentData.totalAum / currentSegmentData.clientCount 
+    : 0;
+
+  // Generate KPIs
+  const kpis = {
+    clientCount: {
+      value: currentSegmentData.clientCount,
+      label: `Number of ${selectedSegment} clients`,
+    },
+    totalAUM: {
+      value: `$${currentSegmentData.totalAum.toLocaleString()}`,
+      label: `Total assets for ${selectedSegment} segment`,
+    },
+    averageClientAUM: {
+      value: `$${Math.round(averageClientAum).toLocaleString()}`,
+      label: `Average for ${selectedSegment} segment`,
+    },
+    currentSegmentFocus: selectedSegment,
+  };
+
+  // Generate donut chart data with predefined colors
+  const segmentColors: { [key: string]: string } = {
+    Platinum: "hsl(222, 47%, 44%)",
+    Gold: "hsl(216, 65%, 58%)",
+    Silver: "hsl(210, 55%, 78%)",
+    Bronze: "hsl(30, 50%, 60%)",
+    // Add more colors for additional segments if needed
+  };
+
+  const donutChartData = segmentData.map(data => ({
+    name: data.segment,
+    count: data.clientCount,
+    percentage: totalClients > 0 
+      ? Math.round((data.clientCount / totalClients) * 100 * 10) / 10 
+      : 0,
+    color: segmentColors[data.segment] || "hsl(200, 50%, 50%)", // Default color
+  }));
+
+  // Format clients for the selected segment table
+  const currentSegmentClients = clientsBySegment[selectedSegment] || [];
+  const tableClients = currentSegmentClients.map(client => {
+    // Calculate years with firm
+    const joinDate = client.inceptionDate ? new Date(client.inceptionDate) : new Date(client.createdAt);
+    const yearsWithFirm = Math.max(1, new Date().getFullYear() - joinDate.getFullYear());
+    
+    return {
+      id: String(client.id),
+      name: `${client.firstName || ""} ${client.lastName || ""}`.trim(),
+      age: client.age || 0,
+      yearsWithFirm,
+      assets: Math.round(parseFloat(client.aum || "0")),
+    };
+  });
+
+  return {
+    kpis,
+    donutChartData,
+    tableData: {
+      segmentName: selectedSegment,
+      clients: tableClients,
+    },
+    advisorOptions,
+    currentAdvisorOrFirmView: "Firm Overview",
+  };
+}
+
 export async function getClientSegmentationDashboardHandler(
   req: Request,
   res: Response
@@ -774,11 +900,23 @@ export async function getClientSegmentationDashboardHandler(
   const selectedSegment = (req.query.segment as string) || "Platinum";
 
   try {
-    const mockData = await getMockClientSegmentationDashboardData(
+    // Determine advisor filtering
+    let advisorIds: number[] | undefined;
+    if (advisorFilter !== "firm_overview") {
+      const advisorId = parseInt(advisorFilter, 10);
+      if (!isNaN(advisorId)) {
+        advisorIds = [advisorId];
+      }
+    }
+
+    // Use real data processing
+    const dashboardData = await getClientSegmentationDashboardData(
       organizationId,
-      selectedSegment
+      selectedSegment,
+      advisorIds
     );
-    res.json(mockData);
+
+    res.json(dashboardData);
   } catch (error) {
     console.error("Error fetching client segmentation dashboard data:", error);
     res.status(500).json({

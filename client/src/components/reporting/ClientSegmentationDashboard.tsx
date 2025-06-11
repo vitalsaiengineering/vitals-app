@@ -126,17 +126,13 @@ export default function ClientSegmentationDashboard() {
 
   // Dynamic table data based on selected segment
   const currentSegmentClients = useMemo(() => {
-    if (!dashboardData || !dashboardData.tableData?.allSegments) {
+    if (!dashboardData || !dashboardData.tableData?.clients) {
       return [];
     }
 
-    // Get clients for the selected segment
-    const segmentClients =
-      dashboardData.tableData.allSegments[
-        selectedSegment as keyof typeof dashboardData.tableData.allSegments
-      ];
-    return segmentClients || [];
-  }, [dashboardData, selectedSegment]);
+    // API returns clients for the current segment directly
+    return dashboardData.tableData.clients;
+  }, [dashboardData]);
 
   if (isLoading && !dashboardData) {
     return <div className="p-6 text-center">Loading dashboard...</div>;
@@ -288,7 +284,7 @@ export default function ClientSegmentationDashboard() {
         <Card>
           <CardHeader>
             <CardTitle>
-              {selectedSegment} Clients ({currentSegmentClients.length})
+              {dashboardData?.tableData?.segmentName || selectedSegment} Clients ({currentSegmentClients.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
