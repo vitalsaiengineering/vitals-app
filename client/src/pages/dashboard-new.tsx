@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/StatCard";
-import { Users, TrendingUp, DollarSign, BadgePercent, ExternalLink } from "lucide-react";
+import {
+  Users,
+  TrendingUp,
+  DollarSign,
+  BadgePercent,
+  ExternalLink,
+} from "lucide-react";
 import { Link } from "wouter";
 import {
   BarChart,
@@ -45,8 +57,8 @@ export default function Dashboard() {
     advisorId: null,
     wealthboxUserId: null,
   });
-  
-  const useMock = process.env.REACT_APP_USE_MOCK_DATA !== 'false'; // Default to true for development
+
+  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false"; // Default to true for development
 
   // Fetch current user for filter bar
   const { data: currentUser } = useQuery<any>({
@@ -73,11 +85,11 @@ export default function Dashboard() {
     wealthboxUserId: number | null;
   }) => {
     setFilters(newFilters);
-    
+
     // Map advisorId to string key for our data
     const advisorMapping: { [key: number]: string } = {
       1: "advisor1", // Maria Reynolds
-      2: "advisor2", // Thomas Chen  
+      2: "advisor2", // Thomas Chen
       3: "advisor3", // Aisha Patel
       4: "advisor4", // Jackson Miller
     };
@@ -89,30 +101,33 @@ export default function Dashboard() {
       setSelectedAdvisor("firm");
     }
   };
-  
+
   // Sample data - different for each advisor
   const getClientAgeData = (advisor: string) => {
     if (useMock) {
       // Use mock data as base and adjust for different advisors
       const baseData = mockData.ClientAgeDistribution;
       const variations = {
-        "advisor1": [0.4, 1.6, 1.3, 0.7, 0.7], // Maria Reynolds - younger clients
-        "advisor2": [-0.6, -0.7, 1.8, 1.2, -0.2], // Thomas Chen - older clients  
-        "advisor3": [1.5, 0.8, -0.3, -0.6, 0.4], // Aisha Patel - mixed
-        "advisor4": [-0.6, -0.5, 0.2, 0.7, 0.1], // Jackson Miller
+        advisor1: [0.4, 1.6, 1.3, 0.7, 0.7], // Maria Reynolds - younger clients
+        advisor2: [-0.6, -0.7, 1.8, 1.2, -0.2], // Thomas Chen - older clients
+        advisor3: [1.5, 0.8, -0.3, -0.6, 0.4], // Aisha Patel - mixed
+        advisor4: [-0.6, -0.5, 0.2, 0.7, 0.1], // Jackson Miller
       };
-      
+
       if (variations[advisor as keyof typeof variations]) {
         return baseData.map((item, index) => ({
           ...item,
-          value: Math.max(0, item.value + variations[advisor as keyof typeof variations][index])
+          value: Math.max(
+            0,
+            item.value + variations[advisor as keyof typeof variations][index]
+          ),
         }));
       }
       return baseData;
     }
-    
+
     // Original hardcoded data for fallback
-    switch(advisor) {
+    switch (advisor) {
       case "advisor1": // Maria Reynolds
         return [
           { name: "Under 30", value: 12 },
@@ -149,14 +164,14 @@ export default function Dashboard() {
         return mockData.ClientAgeDistribution;
     }
   };
-  
+
   const getClientSegmentation = (advisor: string) => {
     if (useMock) {
       return mockData.ClientSegmentation;
     }
-    
+
     // Original hardcoded data for fallback
-    switch(advisor) {
+    switch (advisor) {
       case "advisor1": // Maria Reynolds
         return [
           { name: "Platinum", value: 40, color: "#0088FE" },
@@ -194,31 +209,31 @@ export default function Dashboard() {
     if (useMock) {
       // Use mock data as base and apply multiplier for different advisors
       const multipliers = {
-        "advisor1": 0.65, // Maria Reynolds
-        "advisor2": 0.48, // Thomas Chen
-        "advisor3": 0.72, // Aisha Patel
-        "advisor4": 0.55, // Jackson Miller
-        "firm": 1.0     // Firm Overview (default)
+        advisor1: 0.65, // Maria Reynolds
+        advisor2: 0.48, // Thomas Chen
+        advisor3: 0.72, // Aisha Patel
+        advisor4: 0.55, // Jackson Miller
+        firm: 1.0, // Firm Overview (default)
       };
-      
+
       const multiplier = multipliers[advisor as keyof typeof multipliers] || 1;
-      return mockData.AumOverTime.map(item => ({
+      return mockData.AumOverTime.map((item) => ({
         ...item,
-        aum: Math.round(item.aum * multiplier)
+        aum: Math.round(item.aum * multiplier),
       }));
     }
-    
+
     // Original hardcoded data for fallback
     const multipliers = {
-      "advisor1": 0.65, // Maria Reynolds
-      "advisor2": 0.48, // Thomas Chen
-      "advisor3": 0.72, // Aisha Patel
-      "advisor4": 0.55, // Jackson Miller
-      "firm": 1.0     // Firm Overview (default)
+      advisor1: 0.65, // Maria Reynolds
+      advisor2: 0.48, // Thomas Chen
+      advisor3: 0.72, // Aisha Patel
+      advisor4: 0.55, // Jackson Miller
+      firm: 1.0, // Firm Overview (default)
     };
-    
+
     const multiplier = multipliers[advisor as keyof typeof multipliers] || 1;
-    
+
     return [
       { month: "Jan '23", aum: 15200000 * multiplier },
       { month: "Feb '23", aum: 15800000 * multiplier },
@@ -249,7 +264,7 @@ export default function Dashboard() {
 
   // Get KPI data based on selected advisor
   const getKpiData = (advisor: string) => {
-    switch(advisor) {
+    switch (advisor) {
       case "advisor1": // Maria Reynolds
         return [
           {
@@ -413,21 +428,21 @@ export default function Dashboard() {
   const clientSegmentation = getClientSegmentation(selectedAdvisor);
   const aumData = getAumData(selectedAdvisor);
   const kpiData = getKpiData(selectedAdvisor);
-  
+
   // Get the current advisor name for display
   const getCurrentAdvisorName = () => {
-    const advisor = ADVISORS.find(a => a.id === selectedAdvisor);
+    const advisor = ADVISORS.find((a) => a.id === selectedAdvisor);
     return advisor ? advisor.name : "Firm Overview";
   };
 
   // Custom color function for age brackets - green for younger, transitioning to red for older
   const getAgeBarColor = (entry: { name: string; value: number }) => {
     const ageMap: Record<string, string> = {
-      "Under 30": "#4ade80",  // Green for youngest
-      "30-45": "#86efac",     // Light green
-      "46-60": "#fcd34d",     // Yellow
-      "61-75": "#fb923c",     // Orange
-      "Over 75": "#ef4444",   // Red for oldest
+      "Under 30": "#4ade80", // Green for youngest
+      "30-45": "#86efac", // Light green
+      "46-60": "#fcd34d", // Yellow
+      "61-75": "#fb923c", // Orange
+      "Over 75": "#ef4444", // Red for oldest
     };
     return ageMap[entry.name] || "#1E88E5";
   };
@@ -452,7 +467,7 @@ export default function Dashboard() {
           <FilterBar user={currentUser} onFilterChange={handleFilterChange} />
         )}
       </div>
-      
+
       <div className="animate-fade-in">
         {/* KPI Cards */}
         <div className="grid gap-6 mb-8 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
@@ -473,8 +488,8 @@ export default function Dashboard() {
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
               <span>Assets Under Management (AUM) Over Time</span>
-              <Link 
-                href="/reporting?report=clients-aum-overtime" 
+              <Link
+                href="/reporting?report=clients-aum-overtime"
                 className="flex items-center text-sm text-primary hover:underline ml-2"
               >
                 View Full Report <ExternalLink className="h-3 w-3 ml-1" />
@@ -483,33 +498,39 @@ export default function Dashboard() {
             <CardDescription>24 month history showing growth</CardDescription>
           </CardHeader>
           <CardContent>
-            <Link href="/reporting?report=clients-aum-overtime" className="block h-80">
+            <Link
+              href="/reporting?report=clients-aum-overtime"
+              className="block h-80"
+            >
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={aumData}
                   margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis 
-                    dataKey="month" 
-                    tickFormatter={(value, i) => i % 3 === 0 ? value : ''} 
+                  <XAxis
+                    dataKey="month"
+                    tickFormatter={(value, i) => (i % 3 === 0 ? value : "")}
                   />
-                  <YAxis 
-                    tickFormatter={(value) => 
-                      `$${(Number(value) / 1000000).toFixed(1)}M`} 
+                  <YAxis
+                    tickFormatter={(value) =>
+                      `$${(Number(value) / 1000000).toFixed(1)}M`
+                    }
                   />
-                  <Tooltip 
-                    formatter={(value: any) => 
-                      [`$${(Number(value) / 1000000).toFixed(2)}M`, "AUM"]} 
+                  <Tooltip
+                    formatter={(value: any) => [
+                      `$${(Number(value) / 1000000).toFixed(2)}M`,
+                      "AUM",
+                    ]}
                   />
                   <Legend />
-                  <Area 
-                    type="monotone" 
-                    dataKey="aum" 
-                    stroke="#1E88E5" 
-                    fill="#1E88E5" 
-                    fillOpacity={0.2} 
-                    name="AUM" 
+                  <Area
+                    type="monotone"
+                    dataKey="aum"
+                    stroke="#1E88E5"
+                    fill="#1E88E5"
+                    fillOpacity={0.2}
+                    name="AUM"
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -522,8 +543,8 @@ export default function Dashboard() {
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
                 <span>Clients by Age Bracket</span>
-                <Link 
-                  href="/reporting?report=age-demographics" 
+                <Link
+                  href="/reporting?report=age-demographics"
                   className="flex items-center text-sm text-primary hover:underline ml-2"
                 >
                   View Full Report <ExternalLink className="h-3 w-3 ml-1" />
@@ -533,34 +554,44 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="h-[350px]">
               {/* Using a full height and width container for the chart to scale properly */}
-              <Link href="/reporting?report=age-demographics" className="block w-full h-full">
+              <Link
+                href="/reporting?report=age-demographics"
+                className="block w-full h-full"
+              >
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart 
-                    data={clientAgeData} 
+                  <BarChart
+                    data={clientAgeData}
                     layout="horizontal"
                     margin={{ top: 5, right: 20, left: 20, bottom: 25 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                    <XAxis 
-                      dataKey="name"
-                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      horizontal={true}
+                      vertical={false}
                     />
-                    <YAxis 
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fill: "#6b7280", fontSize: 12 }}
+                    />
+                    <YAxis
                       type="number"
                       tickFormatter={(value) => `${value}%`}
-                      domain={[0, 'dataMax + 5']}
+                      domain={[0, "dataMax + 5"]}
                     />
-                    <Tooltip 
-                      cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
+                    <Tooltip
+                      cursor={{ fill: "rgba(0, 0, 0, 0.05)" }}
                       formatter={(value: any) => [`${value}%`, "Percentage"]}
                     />
-                    <Bar 
-                      dataKey="value" 
-                      name="Percentage" 
+                    <Bar
+                      dataKey="value"
+                      name="Percentage"
                       radius={[4, 4, 0, 0]}
                     >
                       {clientAgeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={getAgeBarColor(entry)} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={getAgeBarColor(entry)}
+                        />
                       ))}
                     </Bar>
                   </BarChart>
@@ -573,8 +604,8 @@ export default function Dashboard() {
             <CardHeader>
               <CardTitle className="flex justify-between items-center">
                 <span>Client Segmentation</span>
-                <Link 
-                  href="/reporting?report=client-segmentation" 
+                <Link
+                  href="/reporting?report=client-segmentation"
                   className="flex items-center text-sm text-primary hover:underline ml-2"
                 >
                   View Full Report <ExternalLink className="h-3 w-3 ml-1" />
@@ -583,7 +614,10 @@ export default function Dashboard() {
               <CardDescription>Distribution by client value</CardDescription>
             </CardHeader>
             <CardContent className="h-[350px]">
-              <Link href="/reporting?report=client-segmentation" className="block w-full h-full">
+              <Link
+                href="/reporting?report=client-segmentation"
+                className="block w-full h-full"
+              >
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -602,7 +636,8 @@ export default function Dashboard() {
                         index,
                       }) => {
                         const RADIAN = Math.PI / 180;
-                        const radius = 25 + innerRadius + (outerRadius - innerRadius);
+                        const radius =
+                          25 + innerRadius + (outerRadius - innerRadius);
                         const x = cx + radius * Math.cos(-midAngle * RADIAN);
                         const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
@@ -611,11 +646,12 @@ export default function Dashboard() {
                             x={x}
                             y={y}
                             fill={clientSegmentation[index].color}
-                            textAnchor={x > cx ? 'start' : 'end'}
+                            textAnchor={x > cx ? "start" : "end"}
                             dominantBaseline="central"
                             className="text-xs font-medium"
                           >
-                            {clientSegmentation[index].name} ({(percent * 100).toFixed(0)}%)
+                            {clientSegmentation[index].name} (
+                            {(percent * 100).toFixed(0)}%)
                           </text>
                         );
                       }}
@@ -625,9 +661,11 @@ export default function Dashboard() {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value: any, name: string) => {
-                      return [`${value} clients (${value}%)`, 'Count'];
-                    }} />
+                    <Tooltip
+                      formatter={(value: any, name: string) => {
+                        return [`${value} clients (${value}%)`, "Count"];
+                      }}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               </Link>
