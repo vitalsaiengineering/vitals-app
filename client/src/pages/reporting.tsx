@@ -67,6 +67,7 @@ const initialMockReports: Report[] = [
     routePath: "client-inception-report",
     description: "Analyze when clients joined your practice.",
     integrations: ["Data Sources"],
+    status: "Coming Soon",
     isFavorite: false,
   },
   {
@@ -75,6 +76,7 @@ const initialMockReports: Report[] = [
     routePath: "client-segmentation-report",
     description: "Visualize client segmentation across different categories.",
     integrations: ["Data Sources"],
+    status: "Coming Soon",
     isFavorite: false,
   },
   {
@@ -92,6 +94,7 @@ const initialMockReports: Report[] = [
     routePath: "net-new-assets",
     description: "Track growth of assets under management over time.",
     integrations: ["Data Sources"],
+    status: "Coming Soon",
     isFavorite: false,
   },
   {
@@ -108,6 +111,7 @@ const initialMockReports: Report[] = [
     routePath: "revenue-vs-client-expense",
     description: "Compare client revenue against expenses over time.",
     integrations: ["Data Sources"],
+    status: "Coming Soon",
     isFavorite: false,
   },
   {
@@ -116,14 +120,6 @@ const initialMockReports: Report[] = [
     description: "Visualize client and AUM distribution across US states.",
     icon: Map, // Using the Map icon
     routePath: "client-distribution-by-state",
-    isFavorite: false,
-    integrations: ["Data Sources"],
-  },
-  {
-    id: "11",
-    name: "Active clients over segments",
-    description: "Analyze active clients across different segments.",
-    routePath: "active-clients-over-segments",
     isFavorite: false,
     integrations: ["Data Sources"],
   },

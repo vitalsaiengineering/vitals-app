@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
-import { 
+import React, { useState, useEffect } from "react";
+import { useLocation } from "wouter";
+import {
   BarChart as RechartsBarChart,
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
-  Legend
-} from 'recharts';
+  Legend,
+} from "recharts";
 
 // Import mock data
-import mockData from '@/data/mockData.js';
+import mockData from "@/data/mockData.js";
 
 // Define types for chart data
 interface ChartDataPoint {
@@ -45,7 +45,7 @@ export const ClientsAgeChart = () => {
   const [, navigate] = useLocation();
 
   // Check if we should use mock data
-  const useMock = process.env.REACT_APP_USE_MOCK_DATA !== 'false';
+  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false";
 
   useEffect(() => {
     const loadData = () => {
@@ -53,87 +53,106 @@ export const ClientsAgeChart = () => {
         if (useMock) {
           // Use centralized mock data from AgeDemographics report
           const ageDemographicsData = mockData.AgeDemographicsReport;
-          
+
           // Transform the data to match chart format
-          const transformedData: ChartDataPoint[] = ageDemographicsData.byAgeBracket.map((bracket: AgeBracket) => {
-            // Extract segment counts from detailed breakdown
-            const platinum = bracket.detailedBreakdown.find((item: SegmentBreakdown) => item.segment === 'Platinum')?.clients || 0;
-            const gold = bracket.detailedBreakdown.find((item: SegmentBreakdown) => item.segment === 'Gold')?.clients || 0;
-            const silver = bracket.detailedBreakdown.find((item: SegmentBreakdown) => item.segment === 'Silver')?.clients || 0;
-            
-            return {
-              name: bracket.bracket,
-              premium: platinum,    // Map Platinum → Premium
-              standard: gold,      // Map Gold → Standard  
-              basic: silver,       // Map Silver → Basic
-              // Keep the AUM data for potential future use
-              premiumAum: (bracket.detailedBreakdown.find((item: SegmentBreakdown) => item.segment === 'Platinum')?.aum || 0) / 1000000,
-              standardAum: (bracket.detailedBreakdown.find((item: SegmentBreakdown) => item.segment === 'Gold')?.aum || 0) / 1000000,
-              basicAum: (bracket.detailedBreakdown.find((item: SegmentBreakdown) => item.segment === 'Silver')?.aum || 0) / 1000000
-            };
-          });
-          
+          const transformedData: ChartDataPoint[] =
+            ageDemographicsData.byAgeBracket.map((bracket: AgeBracket) => {
+              // Extract segment counts from detailed breakdown
+              const platinum =
+                bracket.detailedBreakdown.find(
+                  (item: SegmentBreakdown) => item.segment === "Platinum"
+                )?.clients || 0;
+              const gold =
+                bracket.detailedBreakdown.find(
+                  (item: SegmentBreakdown) => item.segment === "Gold"
+                )?.clients || 0;
+              const silver =
+                bracket.detailedBreakdown.find(
+                  (item: SegmentBreakdown) => item.segment === "Silver"
+                )?.clients || 0;
+
+              return {
+                name: bracket.bracket,
+                premium: platinum, // Map Platinum → Premium
+                standard: gold, // Map Gold → Standard
+                basic: silver, // Map Silver → Basic
+                // Keep the AUM data for potential future use
+                premiumAum:
+                  (bracket.detailedBreakdown.find(
+                    (item: SegmentBreakdown) => item.segment === "Platinum"
+                  )?.aum || 0) / 1000000,
+                standardAum:
+                  (bracket.detailedBreakdown.find(
+                    (item: SegmentBreakdown) => item.segment === "Gold"
+                  )?.aum || 0) / 1000000,
+                basicAum:
+                  (bracket.detailedBreakdown.find(
+                    (item: SegmentBreakdown) => item.segment === "Silver"
+                  )?.aum || 0) / 1000000,
+              };
+            });
+
           setChartData(transformedData);
         } else {
           // Fallback to original hardcoded data if not using mock
           const fallbackData: ChartDataPoint[] = [
-            { 
-              name: '<20', 
+            {
+              name: "<20",
               premium: 0,
               standard: 1,
               basic: 1,
               premiumAum: 0,
               standardAum: 0.8,
-              basicAum: 0.5
+              basicAum: 0.5,
             },
-            { 
-              name: '20-40', 
+            {
+              name: "20-40",
               premium: 3,
               standard: 2,
               basic: 3,
               premiumAum: 3.5,
               standardAum: 1.8,
-              basicAum: 1.2
+              basicAum: 1.2,
             },
-            { 
-              name: '41-60', 
+            {
+              name: "41-60",
               premium: 3,
               standard: 4,
               basic: 4,
               premiumAum: 4.2,
               standardAum: 3.6,
-              basicAum: 2.8
+              basicAum: 2.8,
             },
-            { 
-              name: '61-80', 
+            {
+              name: "61-80",
               premium: 4,
               standard: 3,
               basic: 3,
               premiumAum: 5.1,
               standardAum: 2.7,
-              basicAum: 2.1
+              basicAum: 2.1,
             },
-            { 
-              name: '>80', 
+            {
+              name: ">80",
               premium: 2,
               standard: 1,
               basic: 1,
               premiumAum: 2.5,
               standardAum: 0.7,
-              basicAum: 0.3
+              basicAum: 0.3,
             },
           ];
           setChartData(fallbackData);
         }
       } catch (error) {
-        console.error('Error loading chart data:', error);
+        console.error("Error loading chart data:", error);
         // Fallback to original hardcoded data on error
         const fallbackData: ChartDataPoint[] = [
-          { name: '<20', premium: 0, standard: 1, basic: 1 },
-          { name: '20-40', premium: 3, standard: 2, basic: 3 },
-          { name: '41-60', premium: 3, standard: 4, basic: 4 },
-          { name: '61-80', premium: 4, standard: 3, basic: 3 },
-          { name: '>80', premium: 2, standard: 1, basic: 1 },
+          { name: "<20", premium: 0, standard: 1, basic: 1 },
+          { name: "20-40", premium: 3, standard: 2, basic: 3 },
+          { name: "41-60", premium: 3, standard: 4, basic: 4 },
+          { name: "61-80", premium: 4, standard: 3, basic: 3 },
+          { name: ">80", premium: 2, standard: 1, basic: 1 },
         ];
         setChartData(fallbackData);
       }
@@ -143,7 +162,7 @@ export const ClientsAgeChart = () => {
   }, [useMock]);
 
   const handleViewFullReport = () => {
-    navigate('/reporting/age-demographics');
+    navigate("/reporting/age-demographics");
   };
 
   return (
@@ -151,16 +170,18 @@ export const ClientsAgeChart = () => {
       <div className="flex justify-between items-center mb-4">
         <div>
           <h2 className="text-lg font-semibold">Age Demographics</h2>
-          <p className="text-sm text-gray-500">Distribution across age groups</p>
+          <p className="text-sm text-gray-500">
+            Distribution across age groups
+          </p>
         </div>
-        <button 
+        <button
           onClick={handleViewFullReport}
           className="text-sm text-blue-600 hover:underline cursor-pointer"
         >
           View Full Report
         </button>
       </div>
-      
+
       <div className="h-[250px]">
         <ResponsiveContainer width="100%" height="100%">
           <RechartsBarChart
@@ -172,35 +193,44 @@ export const ClientsAgeChart = () => {
               bottom: 20,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f5f5f5" />
-            <XAxis 
-              dataKey="name" 
-              axisLine={false} 
-              tickLine={false}
-              tick={{ fontSize: 12, fill: '#888' }}
+            <CartesianGrid
+              strokeDasharray="3 3"
+              vertical={false}
+              stroke="#f5f5f5"
             />
-            <YAxis 
-              axisLine={false} 
+            <XAxis
+              dataKey="name"
+              axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 12, fill: '#888' }}
+              tick={{ fontSize: 12, fill: "#888" }}
+            />
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 12, fill: "#888" }}
             />
             <Tooltip
-              formatter={(value) => [`${value}`, 'Clients']}
-              labelStyle={{ color: '#555' }}
-              contentStyle={{ 
-                backgroundColor: 'white', 
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              formatter={(value) => [`${value}`, "Clients"]}
+              labelStyle={{ color: "#555" }}
+              contentStyle={{
+                backgroundColor: "white",
+                border: "1px solid #ddd",
+                borderRadius: "4px",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
               }}
             />
-            
+
             <Bar dataKey="basic" stackId="a" fill="#B3D4FF" name="Basic" />
-            <Bar dataKey="standard" stackId="a" fill="#4A89DC" name="Standard" />
+            <Bar
+              dataKey="standard"
+              stackId="a"
+              fill="#4A89DC"
+              name="Standard"
+            />
             <Bar dataKey="premium" stackId="a" fill="#1E3A8A" name="Premium" />
           </RechartsBarChart>
         </ResponsiveContainer>
       </div>
     </div>
   );
-}; 
+};
