@@ -40,11 +40,11 @@ async function getAgeDemographicsReportData(
 ): Promise<AgeDemographicsData> {
   // Fetch real clients from the database
   const clients = await storage.getClientsByOrganization(organizationId);
-  
+
   // If advisorIds are specified, filter clients by those advisors
   let filteredClients = clients;
   if (advisorIds && advisorIds.length > 0) {
-    filteredClients = clients.filter(client => 
+    filteredClients = clients.filter((client) =>
       advisorIds.includes(client.primaryAdvisorId || 0)
     );
   }
@@ -61,7 +61,7 @@ async function getAgeDemographicsReportData(
   });
 
   const ageBrackets = ["<20", "21-40", "41-60", "61-80", ">80"];
-  
+
   // Calculate total clients (excluding Unknown age)
   let totalClients = 0;
   ageBrackets.forEach((bracket) => {
@@ -79,7 +79,7 @@ async function getAgeDemographicsReportData(
   // Helper function to calculate total AUM for a segment
   const calculateSegmentAum = (clients: any[], segment: string): number => {
     return clients
-      .filter(client => determineSegment(client.aum || "0") === segment)
+      .filter((client) => determineSegment(client.aum || "0") === segment)
       .reduce((sum, client) => sum + parseFloat(client.aum || "0"), 0);
   };
 
@@ -87,34 +87,40 @@ async function getAgeDemographicsReportData(
   const byAgeBracketData: AgeBracketDataEntry[] = ageBrackets.map((bracket) => {
     const bracketClients = clientsByAgeGroups[bracket] || [];
     const clientCount = bracketClients.length;
-    const clientPercentage = totalClients > 0 ? (clientCount / totalClients) * 100 : 0;
+    const clientPercentage =
+      totalClients > 0 ? (clientCount / totalClients) * 100 : 0;
 
     // Calculate AUM by segment for this bracket
     const segments = ["Platinum", "Gold", "Silver"];
-    const detailedBreakdown: SegmentBreakdown[] = segments.map(segment => {
-      const segmentClients = bracketClients.filter(client => 
-        determineSegment(client.aum || "0") === segment
-      );
-      const segmentAum = calculateSegmentAum(bracketClients, segment);
-      
-      return {
-        segment,
-        clients: segmentClients.length,
-        aum: Math.round(segmentAum),
-      };
-    }).filter(breakdown => breakdown.clients > 0); // Only include segments with clients
+    const detailedBreakdown: SegmentBreakdown[] = segments
+      .map((segment) => {
+        const segmentClients = bracketClients.filter(
+          (client) => determineSegment(client.aum || "0") === segment
+        );
+        const segmentAum = calculateSegmentAum(bracketClients, segment);
+
+        return {
+          segment,
+          clients: segmentClients.length,
+          aum: Math.round(segmentAum),
+        };
+      })
+      .filter((breakdown) => breakdown.clients > 0); // Only include segments with clients
 
     // Calculate total AUM for this bracket
-    const totalBracketAum = bracketClients.reduce((sum, client) => 
-      sum + parseFloat(client.aum || "0"), 0
+    const totalBracketAum = bracketClients.reduce(
+      (sum, client) => sum + parseFloat(client.aum || "0"),
+      0
     );
 
     // Calculate total AUM across all clients for percentage calculation
-    const totalAllClientsAum = filteredClients.reduce((sum, client) => 
-      sum + parseFloat(client.aum || "0"), 0
+    const totalAllClientsAum = filteredClients.reduce(
+      (sum, client) => sum + parseFloat(client.aum || "0"),
+      0
     );
 
-    const aumPercentage = totalAllClientsAum > 0 ? (totalBracketAum / totalAllClientsAum) * 100 : 0;
+    const aumPercentage =
+      totalAllClientsAum > 0 ? (totalBracketAum / totalAllClientsAum) * 100 : 0;
 
     return {
       bracket,
@@ -127,18 +133,22 @@ async function getAgeDemographicsReportData(
   });
 
   // Calculate total AUM across all clients
-  const totalAUM = filteredClients.reduce((sum, client) => 
-    sum + parseFloat(client.aum || "0"), 0
+  const totalAUM = filteredClients.reduce(
+    (sum, client) => sum + parseFloat(client.aum || "0"),
+    0
   );
 
   // Calculate average client age
-  const clientsWithAge = filteredClients.filter(client => client.age);
-  const averageClientAge = clientsWithAge.length > 0 
-    ? parseFloat((
-        clientsWithAge.reduce((sum, client) => sum + (client.age || 0), 0) / 
-        clientsWithAge.length
-      ).toFixed(1))
-    : 0;
+  const clientsWithAge = filteredClients.filter((client) => client.age);
+  const averageClientAge =
+    clientsWithAge.length > 0
+      ? parseFloat(
+          (
+            clientsWithAge.reduce((sum, client) => sum + (client.age || 0), 0) /
+            clientsWithAge.length
+          ).toFixed(1)
+        )
+      : 0;
 
   // Format client details
   const clientDetails: ClientReportDetail[] = filteredClients.map((client) => ({
@@ -146,7 +156,9 @@ async function getAgeDemographicsReportData(
     name: `${client.firstName || ""} ${client.lastName || ""}`.trim(),
     age: client.age || 0,
     segment: determineSegment(client.aum || "0"),
-    joinDate: client.startDate ? client.startDate.toISOString().split('T')[0] : client.createdAt.toISOString().split('T')[0],
+    joinDate: client.startDate
+      ? client.startDate.toISOString().split("T")[0]
+      : client.createdAt.toISOString().split("T")[0],
     aum: Math.round(parseFloat(client.aum || "0")),
   }));
 
@@ -197,30 +209,76 @@ async function getClientDistributionReportData(
 ): Promise<ClientDistributionReportData> {
   // Fetch real clients from the database
   const clients = await storage.getClientsByOrganization(organizationId);
-  
+
   // If advisorIds are specified, filter clients by those advisors
   let filteredClients = clients;
   if (advisorIds && advisorIds.length > 0) {
-    filteredClients = clients.filter(client => 
+    filteredClients = clients.filter((client) =>
       advisorIds.includes(client.primaryAdvisorId || 0)
     );
   }
 
   // Helper for state code to name mapping
   const stateCodeToNameMapping: { [key: string]: string } = {
-    AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California",
-    CO: "Colorado", CT: "Connecticut", DE: "Delaware", FL: "Florida", GA: "Georgia",
-    HI: "Hawaii", ID: "Idaho", IL: "Illinois", IN: "Indiana", IA: "Iowa",
-    KS: "Kansas", KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland",
-    MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi", MO: "Missouri",
-    MT: "Montana", NE: "Nebraska", NV: "Nevada", NH: "New Hampshire", NJ: "New Jersey",
-    NM: "New Mexico", NY: "New York", NC: "North Carolina", ND: "North Dakota", OH: "Ohio",
-    OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania", RI: "Rhode Island", SC: "South Carolina",
-    SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah", VT: "Vermont",
-    VA: "Virginia", WA: "Washington", WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming",
-    AS: "American Samoa", DC: "District of Columbia", FM: "Federated States of Micronesia",
-    GU: "Guam", MH: "Marshall Islands", MP: "Northern Mariana Islands", PW: "Palau",
-    PR: "Puerto Rico", VI: "U.S. Virgin Islands",
+    AL: "Alabama",
+    AK: "Alaska",
+    AZ: "Arizona",
+    AR: "Arkansas",
+    CA: "California",
+    CO: "Colorado",
+    CT: "Connecticut",
+    DE: "Delaware",
+    FL: "Florida",
+    GA: "Georgia",
+    HI: "Hawaii",
+    ID: "Idaho",
+    IL: "Illinois",
+    IN: "Indiana",
+    IA: "Iowa",
+    KS: "Kansas",
+    KY: "Kentucky",
+    LA: "Louisiana",
+    ME: "Maine",
+    MD: "Maryland",
+    MA: "Massachusetts",
+    MI: "Michigan",
+    MN: "Minnesota",
+    MS: "Mississippi",
+    MO: "Missouri",
+    MT: "Montana",
+    NE: "Nebraska",
+    NV: "Nevada",
+    NH: "New Hampshire",
+    NJ: "New Jersey",
+    NM: "New Mexico",
+    NY: "New York",
+    NC: "North Carolina",
+    ND: "North Dakota",
+    OH: "Ohio",
+    OK: "Oklahoma",
+    OR: "Oregon",
+    PA: "Pennsylvania",
+    RI: "Rhode Island",
+    SC: "South Carolina",
+    SD: "South Dakota",
+    TN: "Tennessee",
+    TX: "Texas",
+    UT: "Utah",
+    VT: "Vermont",
+    VA: "Virginia",
+    WA: "Washington",
+    WV: "West Virginia",
+    WI: "Wisconsin",
+    WY: "Wyoming",
+    AS: "American Samoa",
+    DC: "District of Columbia",
+    FM: "Federated States of Micronesia",
+    GU: "Guam",
+    MH: "Marshall Islands",
+    MP: "Northern Mariana Islands",
+    PW: "Palau",
+    PR: "Puerto Rico",
+    VI: "U.S. Virgin Islands",
   };
 
   // Helper function to determine segment based on AUM
@@ -238,13 +296,13 @@ async function getClientDistributionReportData(
     // Try to extract state from contactInfo
     const contactInfo = client.contactInfo as any;
     let state = "Unknown";
-    
+
     if (contactInfo?.address?.state) {
       state = contactInfo.address.state.toUpperCase();
     } else if (contactInfo?.state) {
       state = contactInfo.state.toUpperCase();
     }
-    
+
     return state;
   });
 
@@ -257,7 +315,7 @@ async function getClientDistributionReportData(
     metricLabel: "clients" as const,
   };
   let topStateByAUMSummary = {
-    stateName: "N/A", 
+    stateName: "N/A",
     value: "$0",
     metricLabel: "AUM" as const,
   };
@@ -280,17 +338,19 @@ async function getClientDistributionReportData(
     let currentTotalAumForState = 0;
 
     // Process client details for this state
-    clientDetailsByStateProcessed[stateCode] = actualClientsInState.map((client) => {
-      const clientAum = parseFloat(client.aum || "0");
-      currentTotalAumForState += clientAum;
-      
-      return {
-        id: String(client.id),
-        name: `${client.firstName || ""} ${client.lastName || ""}`.trim(),
-        segment: determineSegment(client.aum || "0"),
-        aum: Math.round(clientAum),
-      };
-    });
+    clientDetailsByStateProcessed[stateCode] = actualClientsInState.map(
+      (client) => {
+        const clientAum = parseFloat(client.aum || "0");
+        currentTotalAumForState += clientAum;
+
+        return {
+          id: String(client.id),
+          name: `${client.firstName || ""} ${client.lastName || ""}`.trim(),
+          segment: determineSegment(client.aum || "0"),
+          aum: Math.round(clientAum),
+        };
+      }
+    );
 
     stateMetrics.push({
       stateCode: stateCode,
@@ -339,10 +399,13 @@ export async function getClientDistributionReportHandler(
   const advisorIdQuery = req.query.advisorId as string | undefined;
   const advisorId = advisorIdQuery ? parseInt(advisorIdQuery, 10) : undefined;
   const organizationId = user?.organizationId;
-  
+
   try {
     // Use real data processing
-    const reportData = await getClientDistributionReportData(organizationId, advisorId ? [advisorId] : undefined);
+    const reportData = await getClientDistributionReportData(
+      organizationId,
+      advisorId ? [advisorId] : undefined
+    );
     res.json(reportData);
   } catch (error) {
     console.error("Error fetching client distribution report data:", error);
@@ -361,11 +424,11 @@ async function getBookDevelopmentReportData(
 ): Promise<BookDevelopmentReportData> {
   // Fetch real clients from the database
   const clients = await storage.getClientsByOrganization(organizationId);
-  
+
   // If advisorIds are specified, filter clients by those advisors
   let filteredClients = clients;
   if (advisorIds && advisorIds.length > 0) {
-    filteredClients = clients.filter(client => 
+    filteredClients = clients.filter((client) =>
       advisorIds.includes(client.primaryAdvisorId || 0)
     );
   }
@@ -413,19 +476,23 @@ async function getBookDevelopmentReportData(
       const point = {
         year,
         value: Math.round(currentVal),
-        previousYearValue: prevVal !== undefined ? Math.round(prevVal) : undefined,
+        previousYearValue:
+          prevVal !== undefined ? Math.round(prevVal) : undefined,
       };
       data.push(point);
       prevVal = currentVal;
 
-             // Calculate growth based on actual client join dates (use inceptionDate, fallback to createdAt)
-       const clientsJoinedThisYear = baseClients.filter((client) => {
-         const joinDate = client.inceptionDate ? new Date(client.inceptionDate) : new Date(client.createdAt);
-         const joinYear = joinDate.getFullYear();
-         return joinYear === year;
-       }).length;
+      // Calculate growth based on actual client join dates (use inceptionDate, fallback to createdAt)
+      const clientsJoinedThisYear = baseClients.filter((client) => {
+        const joinDate = client.inceptionDate
+          ? new Date(client.inceptionDate)
+          : new Date(client.createdAt);
+        const joinYear = joinDate.getFullYear();
+        return joinYear === year;
+      }).length;
 
-      const baseGrowth = Math.random() * growthRate * (isAUM ? 1 : 0.5) + (isAUM ? 0.02 : 0.01);
+      const baseGrowth =
+        Math.random() * growthRate * (isAUM ? 1 : 0.5) + (isAUM ? 0.02 : 0.01);
       const clientInfluencedGrowth = clientsJoinedThisYear * 0.01;
 
       currentVal *= 1 + baseGrowth + clientInfluencedGrowth;
@@ -440,68 +507,98 @@ async function getBookDevelopmentReportData(
     return data;
   };
 
-     // Helper function to format clients for segment
-   const formatClientsForSegment = (clients: any[], segment: "Platinum" | "Gold" | "Silver"): any[] => {
-     return clients.map((client) => {
-       // Use inceptionDate if available, fallback to createdAt
-       const joinDate = client.inceptionDate ? new Date(client.inceptionDate) : new Date(client.createdAt);
-       const yearsWithFirm = Math.max(
-         1,
-         new Date().getFullYear() - joinDate.getFullYear()
-       );
-       const sinceDateText = `Since ${joinDate.toLocaleDateString("en-US", {
-         month: "short",
-         year: "numeric",
-       })}`;
+  // Helper function to format clients for segment
+  const formatClientsForSegment = (
+    clients: any[],
+    segment: "Platinum" | "Gold" | "Silver"
+  ): any[] => {
+    return clients.map((client) => {
+      // Use inceptionDate if available, fallback to createdAt
+      const joinDate = client.inceptionDate
+        ? new Date(client.inceptionDate)
+        : new Date(client.createdAt);
+      const yearsWithFirm = Math.max(
+        1,
+        new Date().getFullYear() - joinDate.getFullYear()
+      );
+      const sinceDateText = `Since ${joinDate.toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+      })}`;
 
-       const clientAum = parseFloat(client.aum || "0");
+      const clientAum = parseFloat(client.aum || "0");
 
-       return {
-         id: String(client.id),
-         name: `${client.firstName || ""} ${client.lastName || ""}`.trim(),
-         segment,
-         yearsWithFirm,
-         yearsWithFirmText: `${yearsWithFirm} year${yearsWithFirm !== 1 ? "s" : ""}`,
-         sinceDateText,
-         aum: Math.round(clientAum),
-       };
-     });
-   };
+      return {
+        id: String(client.id),
+        name: `${client.firstName || ""} ${client.lastName || ""}`.trim(),
+        segment,
+        yearsWithFirm,
+        yearsWithFirmText: `${yearsWithFirm} year${
+          yearsWithFirm !== 1 ? "s" : ""
+        }`,
+        sinceDateText,
+        aum: Math.round(clientAum),
+      };
+    });
+  };
 
   // Calculate base values for each segment based on real data
-  const calculateSegmentBaseValues = (segmentClients: any[], segment: "Platinum" | "Gold" | "Silver") => {
-    const totalAum = segmentClients.reduce((sum, client) => sum + parseFloat(client.aum || "0"), 0);
+  const calculateSegmentBaseValues = (
+    segmentClients: any[],
+    segment: "Platinum" | "Gold" | "Silver"
+  ) => {
+    const totalAum = segmentClients.reduce(
+      (sum, client) => sum + parseFloat(client.aum || "0"),
+      0
+    );
     const clientCount = segmentClients.length;
-    
+
     // Base AUM values scaled by actual data
-    const baseAumMultiplier = segment === "Platinum" ? 70000000 : segment === "Gold" ? 40000000 : 20000000;
+    const baseAumMultiplier =
+      segment === "Platinum"
+        ? 70000000
+        : segment === "Gold"
+        ? 40000000
+        : 20000000;
     const baseAum = Math.max(baseAumMultiplier, totalAum * 10); // Scale up for historical projection
-    
+
     // Base client count scaled by actual data
-    const baseClientMultiplier = segment === "Platinum" ? 10 : segment === "Gold" ? 25 : 40;
+    const baseClientMultiplier =
+      segment === "Platinum" ? 10 : segment === "Gold" ? 25 : 40;
     const baseClientCount = Math.max(baseClientMultiplier, clientCount * 2); // Scale up for historical projection
 
     return { baseAum, baseClientCount };
   };
 
   // Generate data for all segments
-  const allSegmentsData: any[] = ["Platinum", "Gold", "Silver"].map((segmentName) => {
-    const segment = segmentName as "Platinum" | "Gold" | "Silver";
-    const segmentClients = clientsBySegment[segment] || [];
-    const { baseAum, baseClientCount } = calculateSegmentBaseValues(segmentClients, segment);
-    
-    // Growth rates vary by segment
-    const growthRate = segment === "Platinum" ? 0.08 : segment === "Gold" ? 0.06 : 0.05;
+  const allSegmentsData: any[] = ["Platinum", "Gold", "Silver"].map(
+    (segmentName) => {
+      const segment = segmentName as "Platinum" | "Gold" | "Silver";
+      const segmentClients = clientsBySegment[segment] || [];
+      const { baseAum, baseClientCount } = calculateSegmentBaseValues(
+        segmentClients,
+        segment
+      );
 
-    return {
-      name: segment,
-      color: SEGMENT_COLORS[segment].base,
-      fillColor: SEGMENT_COLORS[segment].base,
-      dataAUM: generateYearlyData(segmentClients, baseAum, growthRate, true),
-      dataClientCount: generateYearlyData(segmentClients, baseClientCount, growthRate, false),
-      clients: formatClientsForSegment(segmentClients, segment),
-    };
-  });
+      // Growth rates vary by segment
+      const growthRate =
+        segment === "Platinum" ? 0.08 : segment === "Gold" ? 0.06 : 0.05;
+
+      return {
+        name: segment,
+        color: SEGMENT_COLORS[segment].base,
+        fillColor: SEGMENT_COLORS[segment].base,
+        dataAUM: generateYearlyData(segmentClients, baseAum, growthRate, true),
+        dataClientCount: generateYearlyData(
+          segmentClients,
+          baseClientCount,
+          growthRate,
+          false
+        ),
+        clients: formatClientsForSegment(segmentClients, segment),
+      };
+    }
+  );
 
   return { allSegmentsData };
 }
@@ -517,7 +614,10 @@ export async function getBookDevelopmentReportHandler(
 
   try {
     // Use real data processing
-    const reportData = await getBookDevelopmentReportData(organizationId, advisorId ? [advisorId] : undefined);
+    const reportData = await getBookDevelopmentReportData(
+      organizationId,
+      advisorId ? [advisorId] : undefined
+    );
     res.json(reportData);
   } catch (error) {
     console.error("Error fetching book development report data:", error);
@@ -536,11 +636,11 @@ async function getClientBirthdayReportData(
 ): Promise<{ clients: any[]; filters: any }> {
   // Fetch real clients from the database
   const clients = await storage.getClientsByOrganization(organizationId);
-  
+
   // If advisorIds are specified, filter clients by those advisors
   let filteredClients = clients;
   if (advisorIds && advisorIds.length > 0) {
-    filteredClients = clients.filter(client => 
+    filteredClients = clients.filter((client) =>
       advisorIds.includes(client.primaryAdvisorId || 0)
     );
   }
@@ -553,65 +653,77 @@ async function getClientBirthdayReportData(
   }, {} as { [key: number]: string });
 
   // Helper function to calculate days until next birthday
-  const calculateDaysUntilBirthday = (dateOfBirth: string): { days: number; nextBirthdayDate: string; turningAge: number } => {
+  const calculateDaysUntilBirthday = (
+    dateOfBirth: string
+  ): { days: number; nextBirthdayDate: string; turningAge: number } => {
     const today = new Date();
     const currentYear = today.getFullYear();
-    
+
     // Parse the birth date
     const birthDate = new Date(dateOfBirth);
     const birthMonth = birthDate.getMonth();
     const birthDay = birthDate.getDate();
-    
+
     // Calculate next birthday this year
     let nextBirthday = new Date(currentYear, birthMonth, birthDay);
-    
+
     // If birthday has passed this year, use next year
     if (nextBirthday < today) {
       nextBirthday = new Date(currentYear + 1, birthMonth, birthDay);
     }
-    
+
     // Calculate days until birthday
     const timeDiff = nextBirthday.getTime() - today.getTime();
     const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-    
+
     // Calculate turning age
     const turningAge = nextBirthday.getFullYear() - birthDate.getFullYear();
-    
+
     return {
       days: daysDiff,
-      nextBirthdayDate: nextBirthday.toISOString().split('T')[0],
-      turningAge
+      nextBirthdayDate: nextBirthday.toISOString().split("T")[0],
+      turningAge,
     };
   };
 
   // Helper function to calculate client tenure
-  const calculateTenure = (client: any): { years: number; tenureText: string } => {
-    const joinDate = client.inceptionDate ? new Date(client.inceptionDate) : new Date(client.createdAt);
+  const calculateTenure = (
+    client: any
+  ): { years: number; tenureText: string } => {
+    const joinDate = client.inceptionDate
+      ? new Date(client.inceptionDate)
+      : new Date(client.createdAt);
     const today = new Date();
     const years = Math.max(1, today.getFullYear() - joinDate.getFullYear());
     return {
       years,
-      tenureText: `${years} year${years !== 1 ? 's' : ''}`
+      tenureText: `${years} year${years !== 1 ? "s" : ""}`,
     };
   };
 
   // Helper function to format birthday display
-  const formatBirthdayDisplay = (days: number, nextBirthdayDate: string): string => {
+  const formatBirthdayDisplay = (
+    days: number,
+    nextBirthdayDate: string
+  ): string => {
     if (days === 0) return "Today";
     if (days === 1) return "Tomorrow";
     if (days <= 30) return `In ${days} days`;
-    
+
     const date = new Date(nextBirthdayDate);
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
   // Process clients and calculate birthday information
   const birthdayClients = filteredClients
-    .filter(client => client.dateOfBirth) // Only include clients with birth dates
-    .map(client => {
-      const { days, nextBirthdayDate, turningAge } = calculateDaysUntilBirthday(client.dateOfBirth!); // Non-null assertion since we filtered above
+    .filter((client) => client.dateOfBirth) // Only include clients with birth dates
+    .map((client) => {
+      const { days, nextBirthdayDate, turningAge } = calculateDaysUntilBirthday(
+        client.dateOfBirth!
+      ); // Non-null assertion since we filtered above
       const { years, tenureText } = calculateTenure(client);
-      const advisorName = userLookup[client.primaryAdvisorId || 0] || "Unknown Advisor";
+      const advisorName =
+        userLookup[client.primaryAdvisorId || 0] || "Unknown Advisor";
 
       return {
         id: String(client.id),
@@ -632,10 +744,10 @@ async function getClientBirthdayReportData(
     .sort((a, b) => a.daysUntilNextBirthday - b.daysUntilNextBirthday);
 
   // Generate filter options from actual data
-  const gradeSet = new Set(birthdayClients.map(c => c.grade));
+  const gradeSet = new Set(birthdayClients.map((c) => c.grade));
   const uniqueGrades = Array.from(gradeSet).sort();
-  
-  const advisorSet = new Set(birthdayClients.map(c => c.advisorName));
+
+  const advisorSet = new Set(birthdayClients.map((c) => c.advisorName));
   const uniqueAdvisors = Array.from(advisorSet).sort();
 
   return {
@@ -670,7 +782,7 @@ export async function getClientBirthdayReportHandler(
   try {
     // Get real data from the database
     const { clients: allClients, filters } = await getClientBirthdayReportData(
-      organizationId, 
+      organizationId,
       advisorId ? [advisorId] : undefined
     );
 
@@ -771,25 +883,25 @@ async function getClientSegmentationDashboardData(
 ): Promise<ClientSegmentationDashboardData> {
   // Fetch real clients from the database
   const clients = await storage.getClientsByOrganization(organizationId);
-  
+
   // If advisorIds are specified, filter clients by those advisors
   let filteredClients = clients;
   if (advisorIds && advisorIds.length > 0) {
-    filteredClients = clients.filter(client => 
+    filteredClients = clients.filter((client) =>
       advisorIds.includes(client.primaryAdvisorId || 0)
     );
   }
 
   // Get all users (advisors) for advisor options
   const allUsers = await storage.getUsersByOrganization(organizationId);
-  const advisors = allUsers.filter(user => user.roleId === 5); // Assuming roleId 5 is for advisors
-  
+  const advisors = allUsers.filter((user) => user.roleId === 5); // Assuming roleId 5 is for advisors
+
   const advisorOptions = [
     { id: "firm_overview", name: "Firm Overview" },
-    ...advisors.map(advisor => ({
+    ...advisors.map((advisor) => ({
       id: String(advisor.id),
-      name: `${advisor.firstName || ""} ${advisor.lastName || ""}`.trim()
-    }))
+      name: `${advisor.firstName || ""} ${advisor.lastName || ""}`.trim(),
+    })),
   ];
 
   // Group clients by segment
@@ -798,34 +910,41 @@ async function getClientSegmentationDashboardData(
   });
 
   // Calculate segment counts and totals
-  const segmentData = Object.keys(clientsBySegment).map(segment => {
+  const segmentData = Object.keys(clientsBySegment).map((segment) => {
     const segmentClients = clientsBySegment[segment];
     const clientCount = segmentClients.length;
-    const totalAum = segmentClients.reduce((sum, client) => 
-      sum + parseFloat(client.aum || "0"), 0
+    const totalAum = segmentClients.reduce(
+      (sum, client) => sum + parseFloat(client.aum || "0"),
+      0
     );
-    
+
     return {
       segment,
       clientCount,
-      totalAum: Math.round(totalAum)
+      totalAum: Math.round(totalAum),
     };
   });
 
   // Calculate totals
-  const totalClients = segmentData.reduce((sum, data) => sum + data.clientCount, 0);
+  const totalClients = segmentData.reduce(
+    (sum, data) => sum + data.clientCount,
+    0
+  );
   const totalAum = segmentData.reduce((sum, data) => sum + data.totalAum, 0);
 
   // Get current segment data
-  const currentSegmentData = segmentData.find(data => data.segment === selectedSegment) || {
+  const currentSegmentData = segmentData.find(
+    (data) => data.segment === selectedSegment
+  ) || {
     segment: selectedSegment,
     clientCount: 0,
-    totalAum: 0
+    totalAum: 0,
   };
 
-  const averageClientAum = currentSegmentData.clientCount > 0 
-    ? currentSegmentData.totalAum / currentSegmentData.clientCount 
-    : 0;
+  const averageClientAum =
+    currentSegmentData.clientCount > 0
+      ? currentSegmentData.totalAum / currentSegmentData.clientCount
+      : 0;
 
   // Generate KPIs
   const kpis = {
@@ -853,22 +972,28 @@ async function getClientSegmentationDashboardData(
     // Add more colors for additional segments if needed
   };
 
-  const donutChartData = segmentData.map(data => ({
+  const donutChartData = segmentData.map((data) => ({
     name: data.segment,
     count: data.clientCount,
-    percentage: totalClients > 0 
-      ? Math.round((data.clientCount / totalClients) * 100 * 10) / 10 
-      : 0,
+    percentage:
+      totalClients > 0
+        ? Math.round((data.clientCount / totalClients) * 100 * 10) / 10
+        : 0,
     color: segmentColors[data.segment] || "hsl(200, 50%, 50%)", // Default color
   }));
 
   // Format clients for the selected segment table
   const currentSegmentClients = clientsBySegment[selectedSegment] || [];
-  const tableClients = currentSegmentClients.map(client => {
+  const tableClients = currentSegmentClients.map((client) => {
     // Calculate years with firm
-    const joinDate = client.inceptionDate ? new Date(client.inceptionDate) : new Date(client.createdAt);
-    const yearsWithFirm = Math.max(1, new Date().getFullYear() - joinDate.getFullYear());
-    
+    const joinDate = client.inceptionDate
+      ? new Date(client.inceptionDate)
+      : new Date(client.createdAt);
+    const yearsWithFirm = Math.max(
+      1,
+      new Date().getFullYear() - joinDate.getFullYear()
+    );
+
     return {
       id: String(client.id),
       name: `${client.firstName || ""} ${client.lastName || ""}`.trim(),
@@ -928,6 +1053,124 @@ export async function getClientSegmentationDashboardHandler(
 
 // --- Client Anniversary ---
 
+async function getClientAnniversaryData(
+  organizationId: number,
+  advisorIds?: number[]
+): Promise<ClientAnniversaryData> {
+  // Fetch real clients from the database
+  const clients = await storage.getClientsByOrganization(organizationId);
+
+  // If advisorIds are specified, filter clients by those advisors
+  let filteredClients = clients;
+  if (advisorIds && advisorIds.length > 0) {
+    filteredClients = clients.filter((client) =>
+      advisorIds.includes(client.primaryAdvisorId || 0)
+    );
+  }
+
+  // Get all users (advisors) for name lookup
+  const allUsers = await storage.getUsersByOrganization(organizationId);
+  const userLookup = allUsers.reduce((acc, user) => {
+    acc[user.id] = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+    return acc;
+  }, {} as { [key: number]: string });
+
+  // Helper function to calculate days until next anniversary
+  const calculateDaysUntilAnniversary = (
+    inceptionDate: string
+  ): { days: number; nextAnniversaryDate: string; yearsWithFirm: number } => {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+
+    // Parse the inception date
+    const startDate = new Date(inceptionDate);
+    const startMonth = startDate.getMonth();
+    const startDay = startDate.getDate();
+
+    // Calculate next anniversary this year
+    let nextAnniversary = new Date(currentYear, startMonth, startDay);
+
+    // If anniversary has passed this year, use next year
+    if (nextAnniversary < today) {
+      nextAnniversary = new Date(currentYear + 1, startMonth, startDay);
+    }
+
+    // Calculate days until anniversary
+    const timeDiff = nextAnniversary.getTime() - today.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+    // Calculate years with firm
+    const yearsWithFirm = Math.max(
+      1,
+      today.getFullYear() - startDate.getFullYear()
+    );
+
+    return {
+      days: daysDiff,
+      nextAnniversaryDate: nextAnniversary.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      yearsWithFirm,
+    };
+  };
+
+  // Process clients and calculate anniversary information
+  const anniversaryClients = filteredClients
+    .filter((client) => client.inceptionDate) // Only include clients with inception dates
+    .map((client) => {
+      // Handle inceptionDate - convert to string format YYYY-MM-DD
+      const inceptionDateString = new Date(client.inceptionDate!)
+        .toISOString()
+        .split("T")[0];
+
+      const { days, nextAnniversaryDate, yearsWithFirm } =
+        calculateDaysUntilAnniversary(inceptionDateString);
+      const advisorName =
+        userLookup[client.primaryAdvisorId || 0] || "Unknown Advisor";
+
+      return {
+        id: String(client.id),
+        clientName: `${client.firstName || ""} ${client.lastName || ""}`.trim(),
+        segment: client.segment || "Silver",
+        originalStartDate: inceptionDateString,
+        nextAnniversaryDate,
+        daysUntilNextAnniversary: days,
+        yearsWithFirm,
+        advisorName,
+      };
+    })
+    .sort((a, b) => a.daysUntilNextAnniversary - b.daysUntilNextAnniversary);
+
+  // Generate filter options from actual data
+  const segmentSet = new Set(anniversaryClients.map((c) => c.segment));
+  const uniqueSegments = ["All Segments", ...Array.from(segmentSet).sort()];
+
+  const tenureOptions = ["Any Tenure", "1-5 years", "5-10 years", "10+ years"];
+
+  const advisorSet = new Set(anniversaryClients.map((c) => c.advisorName));
+  const uniqueAdvisors = [
+    { id: "all", name: "All Advisors" },
+    ...Array.from(advisorSet)
+      .sort()
+      .map((name) => ({
+        id: name.toLowerCase().replace(/\s+/g, "_"),
+        name,
+      })),
+  ];
+
+  return {
+    clients: anniversaryClients,
+    totalRecords: anniversaryClients.length,
+    filterOptions: {
+      segments: uniqueSegments,
+      tenures: tenureOptions,
+      advisors: uniqueAdvisors,
+    },
+  };
+}
+
 export async function getClientAnniversaryHandler(req: Request, res: Response) {
   try {
     const { search, segment, tenure, advisorId, upcomingMilestonesOnly } =
@@ -935,9 +1178,29 @@ export async function getClientAnniversaryHandler(req: Request, res: Response) {
     const user = req.user as any;
     const organizationId = user?.organizationId;
 
-    // Get mock data from dedicated function
-    const mockData = await getMockClientAnniversaryData(organizationId);
-    let filteredClients = mockData.clients;
+    // Determine advisor filtering
+    let advisorIds: number[] | undefined;
+    if (advisorId && typeof advisorId === "string" && advisorId !== "all") {
+      // Try to find advisor by ID
+      const allUsers = await storage.getUsersByOrganization(organizationId);
+      const advisor = allUsers.find((u) => {
+        const advisorName = `${u.firstName || ""} ${u.lastName || ""}`.trim();
+        return (
+          advisorName.toLowerCase().replace(/\s+/g, "_") === advisorId ||
+          String(u.id) === advisorId
+        );
+      });
+
+      if (advisor) {
+        advisorIds = [advisor.id];
+      }
+    }
+
+    // Get real data from the database
+    const { clients: allClients, filterOptions } =
+      await getClientAnniversaryData(organizationId, advisorIds);
+
+    let filteredClients = allClients;
 
     // Apply filters
     if (search && typeof search === "string") {
@@ -960,18 +1223,6 @@ export async function getClientAnniversaryHandler(req: Request, res: Response) {
       });
     }
 
-    if (advisorId && typeof advisorId === "string" && advisorId !== "all") {
-      // Use the same advisor mapping from the mock data function
-      const advisorName = mockData.filterOptions.advisors.find(
-        (advisor) => advisor.id === advisorId
-      )?.name;
-      if (advisorName && advisorName !== "All Advisors") {
-        filteredClients = filteredClients.filter(
-          (c) => c.advisorName === advisorName
-        );
-      }
-    }
-
     if (upcomingMilestonesOnly === "true") {
       // Consider milestones as anniversaries within 30 days
       filteredClients = filteredClients.filter(
@@ -987,7 +1238,7 @@ export async function getClientAnniversaryHandler(req: Request, res: Response) {
     const responseData: ClientAnniversaryData = {
       clients: filteredClients,
       totalRecords: filteredClients.length,
-      filterOptions: mockData.filterOptions, // Use filter options from mock data function
+      filterOptions,
     };
 
     res.json(responseData);
@@ -1002,6 +1253,118 @@ export async function getClientAnniversaryHandler(req: Request, res: Response) {
 
 // --- Client Inception ---
 
+async function getClientInceptionData(
+  organizationId: number,
+  currentYear: number = 2024,
+  advisorIds?: number[]
+): Promise<ClientInceptionData> {
+  // Fetch real clients from the database
+  const clients = await storage.getClientsByOrganization(organizationId);
+
+  // If advisorIds are specified, filter clients by those advisors
+  let filteredClients = clients;
+  if (advisorIds && advisorIds.length > 0) {
+    filteredClients = clients.filter((client) =>
+      advisorIds.includes(client.primaryAdvisorId || 0)
+    );
+  }
+
+  // Group clients by their inception year
+  const clientsByYear = _.groupBy(filteredClients, (client) => {
+    let inceptionDate: Date;
+
+    if (client.inceptionDate) {
+      inceptionDate = new Date(client.inceptionDate);
+    } else {
+      inceptionDate = new Date(client.createdAt);
+    }
+
+    const year = inceptionDate.getFullYear();
+
+    return year;
+  });
+
+  // Generate historical chart data from 2018 to 2025
+  const chartData: any[] = [];
+  const years = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025];
+
+  years.forEach((year) => {
+    const yearClients = clientsByYear[year] || [];
+
+    // Group by segment for this year
+    const segmentCounts = {
+      Platinum: yearClients.filter(
+        (c) => (c.segment || "Silver") === "Platinum"
+      ).length,
+      Gold: yearClients.filter((c) => (c.segment || "Silver") === "Gold")
+        .length,
+      Silver: yearClients.filter((c) => (c.segment || "Silver") === "Silver")
+        .length,
+    };
+
+    chartData.push({
+      year: year.toString(),
+      Platinum: segmentCounts.Platinum,
+      Gold: segmentCounts.Gold,
+      Silver: segmentCounts.Silver,
+      Total: yearClients.length,
+    });
+  });
+
+  // Calculate YTD new clients and percentage change
+  const currentYearClients = clientsByYear[currentYear] || [];
+  const previousYearClients = clientsByYear[currentYear - 1] || [];
+
+  const ytdNewClients = currentYearClients.length;
+  const previousYearCount = previousYearClients.length;
+  const percentageChange =
+    previousYearCount > 0
+      ? Math.round(
+          ((ytdNewClients - previousYearCount) / previousYearCount) * 100
+        )
+      : 0;
+
+  // Generate KPI data
+  const kpi = {
+    ytdNewClients,
+    percentageChangeVsPreviousYear: percentageChange,
+  };
+
+  // Generate legend data for selected year
+  const legendDataForSelectedYear = chartData.find(
+    (d) => d.year === String(currentYear)
+  );
+  const chartLegend = legendDataForSelectedYear
+    ? [
+        { segment: "Platinum", count: legendDataForSelectedYear.Platinum },
+        { segment: "Gold", count: legendDataForSelectedYear.Gold },
+        { segment: "Silver", count: legendDataForSelectedYear.Silver },
+        { segment: "Total", count: legendDataForSelectedYear.Total },
+      ]
+    : [];
+
+  // Generate table data for current year
+  const tableClients = currentYearClients.map((client) => ({
+    id: String(client.id),
+    name: `${client.firstName || ""} ${client.lastName || ""}`.trim(),
+    email: client.emailAddress || "",
+    segment: client.segment || "Silver",
+    inceptionDate: client.inceptionDate
+      ? new Date(client.inceptionDate).toISOString().split("T")[0]
+      : client.createdAt.toISOString().split("T")[0],
+  }));
+
+  return {
+    kpi,
+    chartData,
+    chartLegend,
+    tableClients,
+    totalTableRecords: tableClients.length,
+    availableYears: years,
+    currentYear,
+  };
+}
+
 export async function getClientInceptionHandler(req: Request, res: Response) {
   try {
     const currentYear = req.query.year
@@ -1012,13 +1375,10 @@ export async function getClientInceptionHandler(req: Request, res: Response) {
     const user = req.user as any;
     const organizationId = user?.organizationId;
 
-    // Get mock data from dedicated function
-    const mockData = await getMockClientInceptionData(
-      organizationId,
-      currentYear
-    );
+    // Get real data from the database
+    const data = await getClientInceptionData(organizationId, currentYear);
 
-    let filteredTableClients = mockData.tableClients;
+    let filteredTableClients = data.tableClients;
 
     if (segmentFilter !== "All Segments") {
       filteredTableClients = filteredTableClients.filter(
@@ -1035,7 +1395,7 @@ export async function getClientInceptionHandler(req: Request, res: Response) {
     }
 
     const responseData: ClientInceptionData = {
-      ...mockData,
+      ...data,
       tableClients: filteredTableClients,
       totalTableRecords: filteredTableClients.length,
     };
