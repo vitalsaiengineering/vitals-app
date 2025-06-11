@@ -1412,17 +1412,125 @@ export async function getClientInceptionHandler(req: Request, res: Response) {
 
 // --- Referral Analytics ---
 
+async function getReferralAnalyticsData(
+  organizationId: number,
+  advisorIds?: number[]
+): Promise<ReferralAnalyticsData> {
+  // Fetch real clients from the database
+  const clients = await storage.getClientsByOrganization(organizationId);
+  
+  // If advisorIds are specified, filter clients by those advisors
+  let filteredClients = clients;
+  if (advisorIds && advisorIds.length > 0) {
+    filteredClients = clients.filter((client) =>
+      advisorIds.includes(client.primaryAdvisorId || 0)
+    );
+  }
+
+  // Get all users for name lookup (both referrers and primary advisors)
+  const allUsers = await storage.getUsersByOrganization(organizationId);
+  const userLookup = allUsers.reduce((acc, user) => {
+    acc[user.id] = {
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      email: user.email || "",
+    };
+    return acc;
+  }, {} as { [key: number]: { name: string; email: string } });
+
+  // Filter clients who have a referredBy value (were referred by someone)
+  const referredClients = filteredClients.filter((client) => client.referredBy);
+
+  // Group referred clients by referrer
+  const clientsByReferrer = _.groupBy(referredClients, (client) => 
+    client.referredBy
+  );
+
+  // Calculate total referrals
+  const totalReferrals = referredClients.length;
+
+  // Generate referral sources data
+  const referralSources = Object.keys(clientsByReferrer).map((referrerId) => {
+    const referrerClients = clientsByReferrer[referrerId];
+    const referrerInfo = userLookup[parseInt(referrerId)] || {
+      name: "Unknown Referrer",
+      email: "",
+    };
+    
+    const totalReferralsForSource = referrerClients.length;
+    const percentage = totalReferrals > 0 
+      ? Math.round((totalReferralsForSource / totalReferrals) * 100)
+      : 0;
+    
+    // Calculate total AUM for this referrer's clients
+    const totalAUM = referrerClients.reduce(
+      (sum, client) => sum + parseFloat(client.aum || "0"),
+      0
+    );
+
+    // Format clients referred by this source
+    const formattedClients = referrerClients.map((client) => {
+      const primaryAdvisorInfo = userLookup[client.primaryAdvisorId || 0] || {
+        name: "Unknown Advisor",
+        email: "",
+      };
+
+      return {
+        id: String(client.id),
+        clientName: `${client.firstName || ""} ${client.lastName || ""}`.trim(),
+        segment: (client.segment || "Silver") as "Platinum" | "Gold" | "Silver",
+        referredBy: referrerInfo.name,
+        primaryAdvisor: primaryAdvisorInfo.name,
+        aum: Math.round(parseFloat(client.aum || "0")),
+        referralDate: client.inceptionDate
+          ? new Date(client.inceptionDate).toISOString().split("T")[0]
+          : client.createdAt.toISOString().split("T")[0],
+      };
+    });
+
+    return {
+      id: referrerId,
+      name: referrerInfo.name,
+      company: "", // Could be added to user schema if needed
+      totalReferrals: totalReferralsForSource,
+      percentage,
+      totalAUM: Math.round(totalAUM),
+      clients: formattedClients,
+    };
+  }).sort((a, b) => b.totalReferrals - a.totalReferrals); // Sort by total referrals desc
+
+  // Generate all referrals list
+  const allReferrals = referralSources.flatMap((source) => source.clients);
+
+  // Generate filter options
+  const filterOptions = {
+    referrers: [
+      { id: "all", name: "All Referrers" },
+      ...referralSources.map((source) => ({
+        id: source.id,
+        name: source.name,
+      })),
+    ],
+  };
+
+  return {
+    totalReferrals,
+    allReferrals,
+    referralSources,
+    filterOptions,
+  };
+}
+
 export async function getReferralAnalyticsHandler(req: Request, res: Response) {
   try {
     const { search, referrer } = req.query;
     const user = req.user as any;
     const organizationId = user?.organizationId;
 
-    // Get mock data from dedicated function
-    const mockData = await getMockReferralAnalyticsData(organizationId);
+    // Get real data from the database
+    const data = await getReferralAnalyticsData(organizationId);
 
-    // Start with all referrals from the mock data
-    let filteredReferrals = [...mockData.allReferrals];
+    // Start with all referrals from the real data
+    let filteredReferrals = [...data.allReferrals];
 
     // Apply filters
     if (search && typeof search === "string") {
@@ -1434,23 +1542,23 @@ export async function getReferralAnalyticsHandler(req: Request, res: Response) {
     }
 
     if (referrer && typeof referrer === "string" && referrer !== "all") {
-      // Use the same referrer mapping from the mock data function
-      const referrerName = mockData.filterOptions.referrers.find(
+      // Find referrer by ID
+      const referrerInfo = data.filterOptions.referrers.find(
         (ref) => ref.id === referrer
-      )?.name;
-      if (referrerName && referrerName !== "All Referrers") {
+      );
+      if (referrerInfo && referrerInfo.name !== "All Referrers") {
         filteredReferrals = filteredReferrals.filter(
-          (r) => r.referredBy === referrerName
+          (r) => r.referredBy === referrerInfo.name
         );
       }
     }
 
     // Return the exact same structure as expected by the frontend
     const responseData: ReferralAnalyticsData = {
-      totalReferrals: mockData.totalReferrals,
+      totalReferrals: data.totalReferrals,
       allReferrals: filteredReferrals,
-      referralSources: mockData.referralSources,
-      filterOptions: mockData.filterOptions,
+      referralSources: data.referralSources,
+      filterOptions: data.filterOptions,
     };
 
     res.json(responseData);
