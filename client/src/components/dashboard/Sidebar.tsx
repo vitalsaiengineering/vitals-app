@@ -147,7 +147,7 @@ export const Sidebar = () => {
     {
       icon: LayoutDashboard,
       title: "Dashboard",
-      href: "/",
+      href: "/dashboard",
       hasSubmenu: false,
     },
     {

@@ -202,7 +202,9 @@ export default function ClientBirthdayReport() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reportData.map((client) => {
+                  {reportData
+                    .sort((a, b) => a.nextBirthdayDisplay.localeCompare(b.nextBirthdayDisplay))
+                    .map((client) => {
                     const gradeClasses = getGradeBadgeClasses(client.grade);
                     return (
                       <TableRow key={client.id}>
@@ -221,7 +223,9 @@ export default function ClientBirthdayReport() {
                         <TableCell>{client.clientTenure}</TableCell>
                         <TableCell>{client.advisorName}</TableCell>
                         <TableCell className="text-right">
-                          <Button size="sm" variant="outline">View Contact</Button>
+                          <Button variant="default" size="sm">
+                            View Client
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );

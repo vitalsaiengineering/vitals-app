@@ -329,14 +329,7 @@ export default function ClientSegmentationDashboard() {
                           })}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            className="bg-blue-600 text-white hover:bg-blue-700"
-                            onClick={() => {
-                              /* Navigate to client detail */
-                            }}
-                          >
-                            <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                        <Button variant="default" size="sm">
                             View Contact
                           </Button>
                         </TableCell>

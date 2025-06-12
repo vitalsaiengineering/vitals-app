@@ -134,7 +134,7 @@ export const Dashboard = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      <Header />
+      {/* <Header /> */}
 
       <div className="flex-1 overflow-auto bg-gray-50 p-6">
         <div className="mb-8">

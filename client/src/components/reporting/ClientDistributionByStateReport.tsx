@@ -426,8 +426,8 @@ export default function ClientDistributionByStateReport() {
                         })}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="outline" size="sm">
-                          View Contact
+                        <Button variant="default" size="sm">
+                          View Client
                         </Button>
                       </TableCell>
                     </TableRow>
