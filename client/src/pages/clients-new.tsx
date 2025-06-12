@@ -189,6 +189,50 @@ const Clients = () => {
         />
       </div>
 
+            {/* Summary Stats */}
+            {filteredClients.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="text-2xl font-bold text-blue-900">
+              {filteredClients.length}
+            </div>
+            <div className="text-sm text-blue-700">
+              {searchTerm ? "Filtered" : "Total"} Clients
+            </div>
+          </div>
+          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+            <div className="text-2xl font-bold text-green-900">
+              {formatCurrency(
+                filteredClients.reduce((sum, client) => sum + client.aum, 0)
+              )}
+            </div>
+            <div className="text-sm text-green-700">Total AUM</div>
+          </div>
+          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+            <div className="text-2xl font-bold text-purple-900">
+              {Math.round(
+                filteredClients.reduce((sum, client) => sum + client.age, 0) /
+                  filteredClients.length
+              )}
+            </div>
+            <div className="text-sm text-purple-700">Average Age</div>
+          </div>
+          <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+            <div className="text-2xl font-bold text-orange-900">
+              {Math.round(
+                filteredClients.reduce(
+                  (sum, client) => sum + client.tenure,
+                  0
+                ) / filteredClients.length
+              )}
+            </div>
+            <div className="text-sm text-orange-700">
+              Average Tenure (Years)
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Client Table */}
       <div className="rounded-md border shadow-sm">
         <Table>
@@ -262,49 +306,7 @@ const Clients = () => {
         </Table>
       </div>
 
-      {/* Summary Stats */}
-      {filteredClients.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <div className="text-2xl font-bold text-blue-900">
-              {filteredClients.length}
-            </div>
-            <div className="text-sm text-blue-700">
-              {searchTerm ? "Filtered" : "Total"} Clients
-            </div>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-            <div className="text-2xl font-bold text-green-900">
-              {formatCurrency(
-                filteredClients.reduce((sum, client) => sum + client.aum, 0)
-              )}
-            </div>
-            <div className="text-sm text-green-700">Total AUM</div>
-          </div>
-          <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-            <div className="text-2xl font-bold text-purple-900">
-              {Math.round(
-                filteredClients.reduce((sum, client) => sum + client.age, 0) /
-                  filteredClients.length
-              )}
-            </div>
-            <div className="text-sm text-purple-700">Average Age</div>
-          </div>
-          <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-            <div className="text-2xl font-bold text-orange-900">
-              {Math.round(
-                filteredClients.reduce(
-                  (sum, client) => sum + client.tenure,
-                  0
-                ) / filteredClients.length
-              )}
-            </div>
-            <div className="text-sm text-orange-700">
-              Average Tenure (Years)
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

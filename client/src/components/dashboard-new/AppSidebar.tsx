@@ -202,7 +202,7 @@ export const AppSidebar = () => {
           <SidebarItem
             icon={LayoutDashboard}
             label="Dashboard"
-            href="/"
+            href="/dashboard"
             active={location === "/"}
             collapsed={collapsed}
           />

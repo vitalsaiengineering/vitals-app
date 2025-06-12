@@ -420,10 +420,7 @@ export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralA
                           </TableCell>
                           <TableCell className="text-gray-700">{formatDate(referral.referralDate)}</TableCell>
                           <TableCell className="text-right">
-                            <Button 
-                              size="sm" 
-                              className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 h-auto"
-                            >
+                          <Button variant="default" size="sm">
                               View Contact
                             </Button>
                           </TableCell>

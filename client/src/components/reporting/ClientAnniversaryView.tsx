@@ -223,7 +223,9 @@ export default function ClientAnniversaryView({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {anniversaryData.clients.map((client) => {
+                  {anniversaryData.clients
+                    .sort((a, b) => a.daysUntilNextAnniversary - b.daysUntilNextAnniversary)
+                    .map((client) => {
                     const gradeClasses = getGradeBadgeClasses(client.segment);
                     const isHighlighted = highlightedRowId === client.id;
 
@@ -268,11 +270,7 @@ export default function ClientAnniversaryView({
                         </TableCell>
                         <TableCell>{client.advisorName}</TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            className="bg-blue-600 text-white hover:bg-blue-700"
-                          >
-                            <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                        <Button variant="default" size="sm">
                             View Contact
                           </Button>
                         </TableCell>

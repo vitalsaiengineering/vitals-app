@@ -317,7 +317,23 @@ export default function ClientBirthdayReport() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reportData.map((client) => {
+                  {reportData
+                    .sort((a, b) => {
+                      const dateA = new Date(a.nextBirthdayDisplay);
+                      const dateB = new Date(b.nextBirthdayDisplay);
+                      const today = new Date();
+                      
+                      // Adjust dates to current year for comparison
+                      dateA.setFullYear(today.getFullYear());
+                      dateB.setFullYear(today.getFullYear());
+                      
+                      // If the date has passed this year, move it to next year
+                      if (dateA < today) dateA.setFullYear(today.getFullYear() + 1);
+                      if (dateB < today) dateB.setFullYear(today.getFullYear() + 1);
+                      
+                      return dateA.getTime() - dateB.getTime();
+                    })
+                    .map((client) => {
                     const gradeClasses = getGradeBadgeClasses(client.grade);
                     return (
                       <TableRow key={client.id}>
@@ -377,12 +393,7 @@ export default function ClientBirthdayReport() {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="bg-white text-blue-600 border-blue-600 hover:bg-blue-50 hover:text-blue-700"
-                          >
-                            <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                        <Button variant="default" size="sm">
                             View Contact
                           </Button>
                         </TableCell>

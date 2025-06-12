@@ -351,12 +351,8 @@ export default function ClientInceptionView({
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="bg-white text-blue-600 border-blue-600 hover:bg-blue-50"
-                            >
-                              View
+                            <Button size="sm" variant="default">
+                              View Client
                             </Button>
                           </TableCell>
                         </TableRow>
