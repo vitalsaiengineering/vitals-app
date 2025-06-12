@@ -1,7 +1,7 @@
 -- Add new columns to clients table
 ALTER TABLE clients 
 ADD COLUMN date_of_birth DATE,
-ADD COLUMN referred_by VARCHAR(255),
+ADD COLUMN referred_by INTEGER REFERENCES users(id),
 ADD COLUMN inception_date DATE;
 
 -- Add indexes for performance on the new columns
