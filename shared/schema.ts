@@ -185,7 +185,7 @@ export const clients = pgTable("clients", {
   contactInfo: json("contact_info").notNull().default({}),
   source: varchar("source", { length: 50 }),
   dateOfBirth: date("date_of_birth"),
-  referredBy: varchar("referred_by", { length: 255 }),
+  referredBy: integer("referred_by").references(() => users.id),
   inceptionDate: date("inception_date"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
