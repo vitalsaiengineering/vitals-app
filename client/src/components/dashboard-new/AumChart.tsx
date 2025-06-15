@@ -46,7 +46,11 @@ const formatCurrency = (amount: number) => {
   return `$${(amount / 1000).toFixed(0)}K`;
 };
 
-export const AumChart = () => {
+interface AumChartProps {
+  showViewFullReport?: boolean;
+}
+
+export const AumChart = ({ showViewFullReport = true }: AumChartProps) => {
   const [aggregation, setAggregation] = useState<
     "monthly" | "quarterly" | "yearly"
   >("yearly");
@@ -222,48 +226,32 @@ export const AumChart = () => {
   }
 
   const handleViewFullReport = () => {
-    navigate("/reporting/active-clients-over-segments");
+    navigate("/reporting/book-development");
   };
 
   return (
     <div className="bg-white p-4 rounded-lg border">
       <div className="flex flex-col mb-2">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Book Development By Segment</h2>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handleViewFullReport}
-              className="text-sm text-blue-600 hover:underline cursor-pointer"
-            >
-              View Full Report
-            </button>
-          </div>
+          {showViewFullReport && (
+            <>
+              <h2 className="text-lg font-semibold">Book Development By Segment</h2>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handleViewFullReport}
+                className="text-sm text-blue-600 hover:underline cursor-pointer"
+              >
+                View Full Report
+              </button>
+            </div>
+          </>
+        )}
         </div>
         <div className="flex justify-between items-center mt-1">
-          {shouldShowMockData ? (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span>Showing sample data -</span>
-              <button
-                onClick={() => navigate("/settings?tab=integrations")}
-                className="text-blue-600 hover:text-blue-800 underline font-medium"
-              >
-                Connect to Orion
-              </button>
-              <span>and sync your data to see real AUM trends by segment</span>
-            </div>
-          ) : (
+
             <p className="text-sm text-gray-500">
               Hover over data points to see detailed values by segment
             </p>
-          )}
-          {shouldShowMockData && (
-            <div
-              className="text-sm"
-              style={{ color: "oklch(0.4244 0.1809 265.64)" }}
-            >
-              <span className="font-medium">Sample Data</span>
-            </div>
-          )}
         </div>
       </div>
 
