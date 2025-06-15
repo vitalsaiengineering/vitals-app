@@ -84,7 +84,7 @@ const WEALTHBOX_CLIENT_SECRET =
   process.env.WEALTHBOX_CLIENT_SECRET || "mock_client_secret";
 const WEALTHBOX_REDIRECT_URI =
   process.env.WEALTHBOX_REDIRECT_URI ||
-  "http://localhost:5001/api/wealthbox/callback";
+  "http://app.advisorvitals.com/api/wealthbox/callback";
 const WEALTHBOX_AUTH_URL = "https://api.wealthbox.com/oauth/authorize";
 const WEALTHBOX_TOKEN_URL = "https://api.wealthbox.com/oauth/token";
 
@@ -1124,7 +1124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Exchange authorization code for access token
-      const tokenUrl = `https://stagingapi.orionadvisor.com/api/v1/Security/Token?grant_type=authorization_code&code=${code}&client_id=2112&redirect_uri=http://localhost:5001/settings&response_type=code&client_secret=4dc339e2-7ab1-41cb-8d7f-104262ab4ed4`;
+      const tokenUrl = `https://stagingapi.orionadvisor.com/api/v1/Security/Token?grant_type=authorization_code&code=${code}&client_id=2112&redirect_uri=http://app.advisorvitals.com/settings&response_type=code&client_secret=4dc339e2-7ab1-41cb-8d7f-104262ab4ed4`;
 
       const tokenResponse = await fetch(tokenUrl, {
         method: "POST",

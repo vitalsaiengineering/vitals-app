@@ -22,7 +22,7 @@ export const INTEGRATIONS: Record<string, IntegrationConfig> = {
     name: "Orion",
     oauthUrl: "https://stagingapi.orionadvisor.com/api/oauth",
     clientId: "2112",
-    redirectUri: "http://localhost:5001/settings",
+    redirectUri: "http://app.advisorvitals.com/settings",
     scope: ""
   }
 };

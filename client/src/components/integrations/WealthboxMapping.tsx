@@ -13,9 +13,13 @@ import { fieldHasOptions } from '@/services/wealthbox-api';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
 
-const WealthboxMapping: React.FC = () => {
+interface WealthboxMappingProps {
+  accessToken: string;
+}
+
+const WealthboxMapping: React.FC<WealthboxMappingProps> = ({ accessToken }) => {
   const { toast } = useToast();
-  const [wealthboxToken, setWealthboxToken] = useState<string>('');
+  const [wealthboxToken, setWealthboxToken] = useState<string>(accessToken);
   const [tokenLoading, setTokenLoading] = useState(true);
   const [tokenError, setTokenError] = useState(false);
 
