@@ -232,7 +232,7 @@ export default function Settings() {
       if (data.success) {
         toast({
           title: "Data imported successfully",
-          description: `Imported ${data.contacts.imported} contacts and ${data.activities.imported} activities.`,
+          description: `Imported ${data.contacts.imported} contacts successfully.`,
         });
       } else {
         toast({
@@ -739,7 +739,6 @@ export default function Settings() {
         window.history.replaceState({}, document.title, window.location.pathname);
         return;
       }
-
       if (code) {
         try {
           // Determine which integration based on state parameter
@@ -750,14 +749,25 @@ export default function Settings() {
             const tokenResponse = await exchangeOrionOAuthCode(code);
             
             if (tokenResponse.success) {
-              toast({
-                title: "Successfully Connected",
-                description: "Your Orion account has been connected successfully.",
-              });
+              // Call setupOrionConnection with the access token
+              const setupResponse = await setupOrionConnection(tokenResponse.access_token);
+              
+              if (setupResponse.success) {
+                toast({
+                  title: "Successfully Connected",
+                  description: "Your Orion account has been connected successfully.",
+                });
 
-              // Trigger Orion data sync automatically
-              setIsConnectingOrion(true);
-              orionSyncMutation.mutate(tokenResponse.access_token);
+                // Trigger Orion data sync automatically
+                setIsConnectingOrion(true);
+                orionSyncMutation.mutate();
+              } else {
+                toast({
+                  title: "Connection Failed",
+                  description: setupResponse.message || "Failed to complete Orion OAuth connection.",
+                  variant: "destructive",
+                });
+              }
             } else {
               toast({
                 title: "Connection Failed",

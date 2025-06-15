@@ -215,7 +215,7 @@ const DataMappingSection: React.FC<DataMappingSectionProps> = ({
       if (data.success) {
         toast({
           title: "Data imported successfully",
-          description: `Imported ${data.contacts?.imported || 0} contacts and ${data.activities?.imported || 0} activities.`,
+          description: `Imported ${data.contacts?.imported || 0} contacts successfully.`,
         });
       } else {
         toast({
