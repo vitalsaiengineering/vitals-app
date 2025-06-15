@@ -7,6 +7,7 @@ import { ClientsAgeChart } from "./ClientsChart";
 import { ClientSegmentation } from "./ClientSegmentation";
 import { AskVitals } from "./AskVitals";
 import axios from "axios";
+import { useMockData } from "@/contexts/MockDataContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -27,9 +28,7 @@ export const Dashboard = () => {
     averageAge: 0,
   });
   const [loading, setLoading] = useState(true);
-
-  // Check if we should use mock data
-  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false";
+  const { useMock } = useMockData();
 
   useEffect(() => {
     const fetchMetrics = async () => {
