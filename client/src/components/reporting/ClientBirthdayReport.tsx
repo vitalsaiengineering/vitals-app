@@ -31,6 +31,7 @@ import {
   type GetClientBirthdayReportParams,
   type BirthdayReportFilters as ReportFilterOptions,
 } from "@/lib/clientData";
+import { useMockData } from "@/contexts/MockDataContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -95,7 +96,8 @@ const TENURE_OPTIONS = [
   { value: "10+ years", label: "10+ years" },
 ];
 
-export default function ClientBirthdayReport() {
+const ClientBirthdayReport = () => {
+  const { useMock } = useMockData();
   const [reportData, setReportData] = useState<BirthdayClient[]>([]);
   const [filterOptions, setFilterOptions] = useState<ReportFilterOptions>({
     grades: [],
@@ -110,9 +112,6 @@ export default function ClientBirthdayReport() {
   const [selectedMonth, setSelectedMonth] = useState("Any month");
   const [selectedTenure, setSelectedTenure] = useState("Any tenure");
   const [selectedAdvisor, setSelectedAdvisor] = useState("All Advisors");
-
-  // Check if we should use mock data
-  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false";
 
   const fetchReportData = async (params?: GetClientBirthdayReportParams) => {
     setIsLoading(true);
@@ -408,4 +407,6 @@ export default function ClientBirthdayReport() {
       </Card>
     </div>
   );
-}
+};
+
+export default ClientBirthdayReport;

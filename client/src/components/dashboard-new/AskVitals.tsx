@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import axios from "axios";
+import { useMockData } from "@/contexts/MockDataContext";
 
 // Import mock data
 import { getAllClients } from "@/utils/clientDataUtils.js";
@@ -15,6 +16,7 @@ interface Message {
 }
 
 export const AskVitals = () => {
+  const { useMock } = useMockData();
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -25,9 +27,6 @@ export const AskVitals = () => {
     },
   ]);
   const [loading, setLoading] = useState(false);
-
-  // Check if we should use mock data
-  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false";
 
   // Function to get the highest grossing client from mock data
   const getHighestGrossingClient = () => {

@@ -36,6 +36,7 @@ import {
 import { FilterBar } from "@/components/dashboard/filter-bar";
 import { AiQuery } from "@/components/dashboard/ai-query";
 import mockData from "../data/mockData.js";
+import { useMockData } from "@/contexts/MockDataContext";
 
 // List of mock advisors (for demo purposes)
 const ADVISORS = [
@@ -58,7 +59,7 @@ export default function Dashboard() {
     wealthboxUserId: null,
   });
 
-  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false"; // Default to true for development
+  const { useMock } = useMockData();
 
   // Fetch current user for filter bar
   const { data: currentUser } = useQuery<any>({

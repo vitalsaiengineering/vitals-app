@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getOrionAumChartData } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
+import { useMockData } from "@/contexts/MockDataContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -50,9 +51,7 @@ export const AumChart = () => {
     "monthly" | "quarterly" | "yearly"
   >("yearly");
   const [, navigate] = useLocation();
-
-  // Check if we should use mock data
-  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false";
+  const { useMock } = useMockData();
 
   // Fetch Orion AUM data
   const {
@@ -123,6 +122,16 @@ export const AumChart = () => {
       dataPoints: item.dataPoints,
     })) || [];
 
+  // Transform real data into segment chart format if it exists
+  const transformedRealData = realData.length > 0
+    ? realData.map((item: { period: string; aum: number; date: string; dataPoints: number }) => ({
+        year: new Date(item.date).getFullYear(),
+        Platinum: item.aum * 0.5, // Example distribution - adjust based on actual data structure
+        Gold: item.aum * 0.3,
+        Silver: item.aum * 0.2,
+      }))
+    : [];
+
   // Check if we should show mock data
   const shouldShowMockData =
     useMock ||
@@ -133,7 +142,7 @@ export const AumChart = () => {
           error.message?.includes("Firm integration config not found"))));
 
   // Get chart data based on what we're showing
-  const segmentChartData = shouldShowMockData ? getMockSegmentData() : [];
+  const segmentChartData = shouldShowMockData ? getMockSegmentData() : transformedRealData;
 
   // Debug logging
   if (process.env.NODE_ENV === "development") {

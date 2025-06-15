@@ -32,6 +32,7 @@ import {
   type SegmentClient,
   type GetClientSegmentationDashboardParams,
 } from "@/lib/clientData";
+import { useMockData } from "@/contexts/MockDataContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -68,8 +69,7 @@ export default function ClientSegmentationDashboard() {
   const [selectedAdvisor, setSelectedAdvisor] = useState("firm_overview");
   const [selectedSegment, setSelectedSegment] = useState("Platinum");
 
-  // Check if we should use mock data
-  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false";
+  const { useMock } = useMockData();
 
   const fetchDashboardData = async (
     params?: GetClientSegmentationDashboardParams
