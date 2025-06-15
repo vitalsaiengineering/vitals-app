@@ -9,6 +9,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Search, Users, Database, Mail, Phone, Calendar } from "lucide-react";
+import { useMockData } from "@/contexts/MockDataContext";
 
 // Import mock data
 import {
@@ -32,12 +33,10 @@ interface Client {
 }
 
 const Clients = () => {
+  const { useMock } = useMockData();
   const [searchTerm, setSearchTerm] = useState("");
   const [clientData, setClientData] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Check if we should use mock data
-  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false";
 
   useEffect(() => {
     const loadClients = async () => {

@@ -23,6 +23,7 @@ import {
   Geography,
   ZoomableGroup,
 } from "react-simple-maps";
+import { useMockData } from "@/contexts/MockDataContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -71,7 +72,8 @@ const getMapFillColor = (
   return colors.default;
 };
 
-export default function ClientDistributionByStateReport() {
+const ClientDistributionByStateReport = () => {
+  const { useMock } = useMockData();
   const [reportData, setReportData] =
     useState<ClientDistributionReportData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -82,8 +84,6 @@ export default function ClientDistributionByStateReport() {
   const [searchTerm, setSearchTerm] = useState("");
   const [hoveredStateName, setHoveredStateName] = useState<string | null>(null);
 
-  // Check if we should use mock data
-  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false";
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
@@ -446,4 +446,6 @@ export default function ClientDistributionByStateReport() {
       </Card>
     </div>
   );
-}
+};
+
+export default ClientDistributionByStateReport;

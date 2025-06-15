@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { useMockData } from "@/contexts/MockDataContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -43,9 +44,7 @@ interface AgeBracket {
 export const ClientsAgeChart = () => {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [, navigate] = useLocation();
-
-  // Check if we should use mock data
-  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false";
+  const { useMock } = useMockData();
 
   useEffect(() => {
     const loadData = () => {

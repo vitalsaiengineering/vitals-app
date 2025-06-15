@@ -1265,7 +1265,7 @@ export default function Settings() {
           </TabsTrigger>
           <TabsTrigger value="data-mapping" className="flex items-center gap-2">
             <Network size={18} />
-            <span>Data Mapping</span>
+            <span>Integrations & Data Mapping</span>
           </TabsTrigger>
           {/* <TabsTrigger value="integrations" className="flex items-center gap-2">
             <Plug size={18} />

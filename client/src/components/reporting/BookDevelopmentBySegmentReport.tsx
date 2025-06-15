@@ -40,6 +40,7 @@ import {
   type BookDevelopmentClient,
   type BookDevelopmentSegmentData,
 } from "@/lib/clientData";
+import { useMockData } from "@/contexts/MockDataContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -231,8 +232,7 @@ export default function BookDevelopmentBySegmentReport() {
     direction: "ascending" | "descending";
   }>({ key: null, direction: "ascending" });
 
-  // Check if we should use mock data
-  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false";
+  const { useMock } = useMockData();
 
   useEffect(() => {
     const fetchData = async () => {

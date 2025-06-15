@@ -46,6 +46,9 @@ import {
 // Import mock data
 import mockData from "@/data/mockData.js";
 
+// Import the useMockData context
+import { useMockData } from "@/contexts/MockDataContext";
+
 // ... (Existing interfaces like AgeDemographicsData might be slightly different from the one in clientData.ts, ensure consistency or use the imported one)
 // For this example, I'll assume the AgeDemographicsData interface defined in this file is the one we want to use for structuring the fetched data.
 // If clientData.ts exports a more accurate/complete one, prefer that.
@@ -192,13 +195,9 @@ export default function AgeDemographicsReport({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Check if we should use mock data
-  console.log(
-    "import.meta.env.VITE_USE_MOCK_DATA",
-    import.meta.env.VITE_USE_MOCK_DATA
-  );
-  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false";
-  console.log("useMock", useMock);
+  // Import the useMockData context
+  const { useMock } = useMockData();
+
   // Fetch data on component mount
   useEffect(() => {
     const fetchData = async () => {

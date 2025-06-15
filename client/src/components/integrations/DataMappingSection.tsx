@@ -460,7 +460,7 @@ const DataMappingSection: React.FC<DataMappingSectionProps> = ({
       <div className="animate-fade-in">
         <PageHeader 
           title="Integration Settings"
-          description="Configure data mapping between your firm's data and integration partners"
+          description="Connect to integration partners and configure data mapping from your firm's data"
         />
 
         <div className="max-w-3xl mx-auto grid gap-6 md:grid-cols-1">
