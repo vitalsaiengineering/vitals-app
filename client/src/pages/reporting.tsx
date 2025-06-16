@@ -158,7 +158,7 @@ const initialMockReports: Report[] = [
 ];
 
 export default function Reporting() {
-  const [activeView, setActiveView] = useState<"card" | "table">("card");
+  const [activeView, setActiveView] = useState<"card" | "table">("table");
   const [searchTerm, setSearchTerm] = useState("");
   const [reports, setReports] = useState<Report[]>(initialMockReports);
   const { toast } = useToast();
