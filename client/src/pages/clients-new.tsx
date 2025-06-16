@@ -94,7 +94,7 @@ const Clients = () => {
               title: client.title,
               firstName: client.firstName,
               lastName: client.lastName,
-              }));
+            }));
             setClientData(transformedClients);
           }
         }
@@ -266,7 +266,7 @@ const Clients = () => {
                   key={client.id}
                   className="cursor-pointer hover:bg-muted/50"
                 >
-                  <TableCell className="font-medium">{client.title} {client.firstName} {client.lastName}</TableCell>
+                  <TableCell className="font-medium">{client.name} {client.title} {client.firstName} {client.lastName}</TableCell>
                   <TableCell>
                     <div className="space-y-1">
                       <div className="flex items-center text-sm text-muted-foreground">
