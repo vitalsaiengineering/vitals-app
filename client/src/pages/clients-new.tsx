@@ -19,6 +19,9 @@ import {
 } from "@/utils/clientDataUtils.js";
 
 interface Client {
+  title: any;
+  firstName: any;
+  lastName: any;
   id: number;
   name: string;
   email: string;
@@ -59,6 +62,9 @@ const Clients = () => {
             tenure: calculateTenure(client.joinDate),
             joinDate: client.joinDate,
             state: client.state,
+            title: client.title,
+            firstName: client.firstName,
+            lastName: client.lastName,
           }));
 
           setClientData(transformedClients);
@@ -85,7 +91,10 @@ const Clients = () => {
               tenure: calculateTenure(client.joinDate),
               joinDate: client.joinDate,
               state: client.state,
-            }));
+              title: client.title,
+              firstName: client.firstName,
+              lastName: client.lastName,
+              }));
             setClientData(transformedClients);
           }
         }
@@ -103,11 +112,14 @@ const Clients = () => {
   // Filter clients based on search term
   const filteredClients = clientData.filter(
     (client) =>
-      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.advisor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.segment.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.state.toLowerCase().includes(searchTerm.toLowerCase())
+      client?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client?.advisor?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client?.segment?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client?.state?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client?.lastName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Format currency for AUM
@@ -136,6 +148,7 @@ const Clients = () => {
 
   // Format phone number
   const formatPhoneNumber = (phone: string) => {
+    if (!phone) return "";
     const cleaned = phone.replace(/\D/g, "");
     const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
     if (match) {
@@ -253,16 +266,16 @@ const Clients = () => {
                   key={client.id}
                   className="cursor-pointer hover:bg-muted/50"
                 >
-                  <TableCell className="font-medium">{client.name}</TableCell>
+                  <TableCell className="font-medium">{client.title} {client.firstName} {client.lastName}</TableCell>
                   <TableCell>
                     <div className="space-y-1">
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Mail className="h-3 w-3 mr-1" />
-                        {client.email}
+                        {client.email || "N/A"}
                       </div>
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Phone className="h-3 w-3 mr-1" />
-                        {formatPhoneNumber(client.phone)}
+                        {formatPhoneNumber(client.phone) || "N/A"}
                       </div>
                     </div>
                   </TableCell>
@@ -273,23 +286,23 @@ const Clients = () => {
                         client.segment
                       )}`}
                     >
-                      {client.segment}
+                      {client.segment || "N/A"}
                     </span>
                   </TableCell>
                   <TableCell className="font-medium">
-                    {formatCurrency(client.aum)}
+                    {formatCurrency(client.aum) || "N/A"}
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">
-                      <div className="text-sm">Age: {client.age}</div>
+                      <div className="text-sm">Age: {client.age || "N/A"}</div>
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Calendar className="h-3 w-3 mr-1" />
-                        {client.tenure} year{client.tenure !== 1 ? "s" : ""}{" "}
-                        with firm
+                        {client.tenure} year{client.tenure !== 1 ? "s" : ""}{" "} 
+                        with firm {client.joinDate || "N/A"}
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{client.state}</TableCell>
+                  <TableCell>{client.state || "N/A"}</TableCell>
                 </TableRow>
               ))
             ) : (
