@@ -28,7 +28,7 @@ const VitalsMapping: React.FC = () => {
         {
           sourceField: 'advHourlyRate',
           sourceLabel: 'What is your firms ADV hourly rate?',
-          targetField: 'hourly_rate',
+          targetField: '',
           targetOptions: [],
           inputType: 'currency',
           customInput: true,
@@ -36,7 +36,7 @@ const VitalsMapping: React.FC = () => {
         {
           sourceField: 'employeeCount',
           sourceLabel: 'How many employees do you have?',
-          targetField: 'employee_count',
+          targetField: '',
           targetOptions: [],
           inputType: 'number',
           customInput: true,
@@ -370,6 +370,7 @@ const VitalsMapping: React.FC = () => {
         />
 
         {/* Segmentation Card with matching header style */}
+        <div className="max-w-5xl mx-auto px-4">
         <Card className="bg-white shadow-sm border border-slate-200 rounded-2xl overflow-visible mb-6">
           <CardHeader style={{ backgroundColor: '#001027' }} className="text-white px-8 py-6 rounded-t-2xl">
             <CardTitle className="text-xl font-semibold">Segmentation</CardTitle>
@@ -601,6 +602,7 @@ const VitalsMapping: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+        </div>
 
         {/* Time Estimates Card */}
         <FieldMappingCard
@@ -617,7 +619,7 @@ const VitalsMapping: React.FC = () => {
           targetSystem="Vitals"
         />
         
-        <div className="flex justify-end mt-6">
+        <div className="max-w-5xl mx-auto px-4 mt-6">
           <Button onClick={handleSave} className="px-6">
             <SaveIcon className="w-4 h-4 mr-2" />
             Save Settings

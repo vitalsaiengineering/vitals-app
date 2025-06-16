@@ -25,27 +25,29 @@ const FieldMappingCard: React.FC<FieldMappingCardProps> = ({
   onSearch,
 }) => {
   return (
-    <Card className="mb-6">
-          <CardHeader style={{ backgroundColor: '#001027' }} className="text-white px-8 py-6 rounded-t-2xl">
+    <div className="max-w-5xl mx-auto px-4">
+      <Card className="mb-6">
+        <CardHeader style={{ backgroundColor: '#001027' }} className="text-white px-8 py-6 rounded-t-2xl">
           <CardTitle>{title}</CardTitle>
-        {description && <CardDescription>{description}</CardDescription>}
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="border-t border-border">
-          {mappings.map((mapping) => (
-            <FieldMappingRow
-              key={mapping.sourceField}
-              mapping={mapping}
-              onMappingChange={onMappingChange}
-              onInputChange={onInputChange}
-              sourceSystem={sourceSystem}
-              targetSystem={targetSystem}
-              onSearch={onSearch}
-            />
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+          {description && <CardDescription>{description}</CardDescription>}
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="border-t border-border">
+            {mappings.map((mapping) => (
+              <FieldMappingRow
+                key={mapping.sourceField}
+                mapping={mapping}
+                onMappingChange={onMappingChange}
+                onInputChange={onInputChange}
+                sourceSystem={sourceSystem}
+                targetSystem={targetSystem}
+                onSearch={onSearch}
+              />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

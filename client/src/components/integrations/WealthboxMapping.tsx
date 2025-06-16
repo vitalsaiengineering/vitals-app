@@ -96,8 +96,13 @@ useEffect(() => {
               Which field indicates an Active Client of the firm?
             </>
           ),
-          targetField: '',
-          targetOptions: [],
+          targetField: 'status_active',
+          targetOptions: [
+            { label: 'Contact Type: Active Client', value: 'status_active' },
+            { label: 'Client Status: Active', value: 'client_status' },
+            { label: 'Active Flag: Yes', value: 'active_flag' },
+            { label: 'Current Client: True', value: 'current_client' },
+          ],
         },
         {
           sourceField: 'prospectiveClient',
@@ -108,8 +113,13 @@ useEffect(() => {
               Which field indicates a Prospective Client of the firm?
             </>
           ),
-          targetField: '',
-          targetOptions: [],
+          targetField: 'status_prospect',
+          targetOptions: [
+            { label: 'Contact Type: Prospect', value: 'status_prospect' },
+            { label: 'Prospect Flag: Yes', value: 'prospect_flag' },
+            { label: 'Lead Status: Qualified', value: 'lead_status' },
+            { label: 'Potential Client: True', value: 'potential_client' },
+          ],
         },
         {
           sourceField: 'lostClient',
@@ -120,8 +130,13 @@ useEffect(() => {
               Which field indicates a Lost Client of the firm?
             </>
           ),
-          targetField: '',
-          targetOptions: [],
+          targetField: 'status_lost',
+          targetOptions: [
+            { label: 'Contact Type: Former Client', value: 'status_lost' },
+            { label: 'Former Client: True', value: 'former_client' },
+            { label: 'Status: Terminated', value: 'terminated' },
+            { label: 'Inactive Status: Lost', value: 'inactive_status' },
+          ],
         },
         {
           sourceField: 'deceasedClient',
@@ -132,8 +147,13 @@ useEffect(() => {
               Which field indicates a Deceased Client of the firm?
             </>
           ),
-          targetField: '',
-          targetOptions: [],
+          targetField: 'status_deceased',
+          targetOptions: [
+            { label: 'Contact Type: Deceased', value: 'status_deceased' },
+            { label: 'Deceased Flag: Yes', value: 'deceased_flag' },
+            { label: 'Death Date: Present', value: 'death_date' },
+            { label: 'Deceased Status: True', value: 'deceased_status' },
+          ],
         },
         {
           sourceField: 'leadAdvisor',
@@ -144,8 +164,13 @@ useEffect(() => {
               Which field indicates the Lead Advisor for a client?
             </>
           ),
-          targetField: '',
-          targetOptions: [],
+          targetField: 'primary_advisor',
+          targetOptions: [
+            { label: 'Primary Advisor: Name', value: 'primary_advisor' },
+            { label: 'Lead Advisor: Assigned', value: 'lead_advisor' },
+            { label: 'Financial Advisor: Primary', value: 'financial_advisor' },
+            { label: 'Relationship Manager: Lead', value: 'relationship_manager' },
+          ],
         },
         {
           sourceField: 'inceptionDate',
@@ -156,8 +181,14 @@ useEffect(() => {
               Which field indicates the Inception Date for your clients?
             </>
           ),
-          targetField: '',
-          targetOptions: [],
+          targetField: 'client_inception_date',
+          targetOptions: [
+            { label: 'Start Date: Client', value: 'client_inception_date' },
+            { label: 'Onboarding Date: Initial', value: 'onboarding_date' },
+            { label: 'Relationship Start: Date', value: 'relationship_start' },
+            { label: 'Account Open Date: First', value: 'account_open_date' },
+            { label: 'Client Since: Date', value: 'client_since' },
+          ],
         },
         {
           sourceField: 'referralSource',
@@ -168,8 +199,14 @@ useEffect(() => {
               Which field indicates the Referral Source for your clients?
             </>
           ),
-          targetField: '',
-          targetOptions: [],
+          targetField: 'referral_source',
+          targetOptions: [
+            { label: 'Referral Source: Primary', value: 'referral_source' },
+            { label: 'Lead Source: Original', value: 'lead_source' },
+            { label: 'How Did You Hear: Field', value: 'how_did_you_hear' },
+            { label: 'Marketing Source: Channel', value: 'marketing_source' },
+            { label: 'Client Source: Referrer', value: 'client_source' },
+          ],
         },
       ],
     },
@@ -218,7 +255,7 @@ useEffect(() => {
         }
       });
       
-      if (response.data.success && response.data.mappings) {
+      if (response.data.success && response.data.mappings && response.data.mappings.length > 0) {
         // Create a mapping of sourceField -> targetField for quick lookup
         const savedMappings = response.data.mappings.reduce((acc: Record<string, string>, mapping: { sourceField: string; targetField: string }) => {
           acc[mapping.sourceField] = mapping.targetField;
@@ -262,6 +299,7 @@ useEffect(() => {
     if (!isLoading && !hasError && wealthboxToken) {
       const allOptions = getOptions('all');
       
+      if(allOptions.length > 0) {
       // Update main sections
       const updatedSections = sections.map(section => ({
         ...section,
@@ -282,9 +320,10 @@ useEffect(() => {
       
       setSections(updatedSections);
       setSegmentationSections(updatedSegmentationSections);
-      
+
       // Load saved mappings after field options are ready
       loadSavedMappings();
+    } 
     }
   }, [isLoading, hasError, wealthboxToken, getOptions, loadSavedMappings]);
   
@@ -528,12 +567,14 @@ useEffect(() => {
         ) : (
           <>
             {/* Info banner about field types */}
+            <div className="max-w-5xl mx-auto px-4">  
             <Alert className="mb-6">
               <Info className="h-4 w-4" />
               <AlertDescription>
                 Fields with dropdown options can be expanded to select specific values. Field types and available options are shown below each selection.
               </AlertDescription>
             </Alert>
+            </div>
 
             {sections.map((section, index) => (
               <FieldMappingCard
@@ -555,8 +596,8 @@ useEffect(() => {
             
             {renderDefinitionsSection()} */}
             
-            <div className="flex justify-end mt-6">
-              <Button onClick={handleSave} className="px-6">
+            <div className="max-w-5xl mx-auto px-4 mt-6">
+            <Button onClick={handleSave} className="px-6">
                 <SaveIcon className="w-4 h-4 mr-2" />
                 Save Mappings
               </Button>
