@@ -1005,7 +1005,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const redirectUri = process.env.NODE_ENV === "development" ? "http://moved-repeatedly-mongrel.ngrok-free.app/settings" : "https://app.advisorvitals.com/settings";
+      const redirectUri = process.env.NODE_ENV === "development" ? "https://moved-repeatedly-mongrel.ngrok-free.app/settings" : "https://app.advisorvitals.com/settings";
 
       // Exchange authorization code for access token using query parameters
       const tokenUrl = new URL("https://app.crmworkspace.com/oauth/token");
@@ -1125,7 +1125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "Authorization code is required",
         });
       }
-      const redirectUri = process.env.NODE_ENV === "development" ? "http://moved-repeatedly-mongrel.ngrok-free.app/settings" : "https://app.advisorvitals.com/settings";
+      const redirectUri = process.env.NODE_ENV === "development" ? "http://localhost:5001/settings" : "https://app.advisorvitals.com/settings";
       // Exchange authorization code for access token
       const tokenUrl = `https://stagingapi.orionadvisor.com/api/v1/Security/Token?grant_type=authorization_code&code=${code}&client_id=2112&redirect_uri=${redirectUri}&response_type=code&client_secret=4dc339e2-7ab1-41cb-8d7f-104262ab4ed4`;
 
