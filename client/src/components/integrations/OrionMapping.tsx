@@ -112,7 +112,7 @@ const OrionMapping: React.FC = () => {
           />
         ))}
         
-        <div className="flex justify-end mt-6">
+        <div className="max-w-5xl mx-auto px-4 mt-6">
           <Button onClick={handleSave} className="px-6">
             <SaveIcon className="w-4 h-4 mr-2" />
             Save Mappings
