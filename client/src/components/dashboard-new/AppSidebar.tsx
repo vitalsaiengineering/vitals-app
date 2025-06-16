@@ -37,6 +37,9 @@ import axios from "axios";
 import { ReportSearchDialog } from "./ReportSearchDialog";
 import { CommandPalette } from "./CommandPalette";
 import { FirmRegistrationModal } from "./FirmRegistrationModal";
+import { logout } from "@/lib/api";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 // Types
 type NavItem = {
@@ -168,6 +171,8 @@ export const AppSidebar = () => {
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
   const [commandDialogOpen, setCommandDialogOpen] = useState(false);
   const [firmRegistrationOpen, setFirmRegistrationOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Filter navigation items based on search query
   const filteredNavItems = navItems.filter(item => 
@@ -341,9 +346,23 @@ export const AppSidebar = () => {
   };
 
   // Sign out handler
+  const logoutMutation = useMutation({
+    mutationFn: logout,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/me'] });
+      window.location.href = '/login';
+    },
+    onError: () => {
+      toast({
+        title: "Logout failed",
+        description: "There was a problem logging out. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const handleSignOut = () => {
-    console.log('User signed out');
-    // Add actual sign out logic here when authentication is implemented
+    logoutMutation.mutate();
   };
 
   // Format role names to be more user-friendly
@@ -428,9 +447,9 @@ export const AppSidebar = () => {
                 Invite Your Team
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer" onClick={handleSignOut}>
+              <DropdownMenuItem className="cursor-pointer" onClick={handleSignOut} disabled={logoutMutation.isPending}>
                 <LogOut className="h-4 w-4 mr-2" />
-                Sign out
+                {logoutMutation.isPending ? "Logging out..." : "Sign out"}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
