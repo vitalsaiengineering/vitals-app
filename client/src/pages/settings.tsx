@@ -785,9 +785,11 @@ export default function Settings() {
               
               toast({
                 title: "Authentication Successful",
-                description: "Thank you for authenticating your Wealthbox account.",
+                description: "Your Wealthbox account has been connected successfully. Please map your Wealthbox data to Vitals AI.",
               });
 
+              window.history.pushState({}, "", "/settings?tab=data-mapping&mapping=wealthbox");
+              window.dispatchEvent(new Event('popstate'));
               // Trigger data import automatically
               setIsImporting(true);
               importMutation.mutate(tokenResponse.access_token);

@@ -315,9 +315,11 @@ const DataMappingSection: React.FC<DataMappingSectionProps> = ({
             if (tokenResponse.success) {
               toast({
                 title: "Successfully Connected",
-                description: "Your Wealthbox account has been connected successfully.",
+                description: "Your Wealthbox account has been connected successfully. Please map your Wealthbox data to Vitals AI.",
               });
-
+              // Redirect to data mapping page with Wealthbox selected
+              window.history.pushState({}, "", "/settings?tab=data-mapping&mapping=wealthbox");
+              window.dispatchEvent(new Event('popstate'));
               // Trigger data import automatically
               setIsImporting(true);
               importMutation.mutate();
