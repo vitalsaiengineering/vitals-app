@@ -23,7 +23,7 @@ const WealthboxMapping: React.FC<WealthboxMappingProps> = ({ accessToken }) => {
   const [tokenLoading, setTokenLoading] = useState(true);
   const [tokenError, setTokenError] = useState(false);
 
-  const { isLoading, hasError, getOptions, searchOptions } = useWealthboxFields(wealthboxToken);
+  const { isLoading, hasError, getOptions, searchOptions } = useWealthboxFields();
 
   // Fetch the Wealthbox token when the component mounts
 useEffect(() => {

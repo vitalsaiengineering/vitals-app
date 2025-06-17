@@ -143,7 +143,7 @@ export const Dashboard = () => {
               <select className="pl-3 pr-8 py-1.5 rounded border appearance-none focus:outline-none focus:ring-1 focus:ring-vitals-lightBlue text-sm">
                 <option>All Advisors</option>
                 <option>Jack Sample</option>
-                <option>Jane Doe</option>
+                <option>Chris Sample</option>
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                 <svg

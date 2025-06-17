@@ -227,6 +227,8 @@ export default function Users() {
 
   // Map role to display format
   const formatRole = (role: any) => {
+    if (!role) return "Unknown";
+    
     switch (role) {
       case "global_admin":
         return "Admin";
@@ -443,27 +445,26 @@ export default function Users() {
                       <TableCell className="font-medium py-4">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src={user.avatarUrl} alt={user.fullName} />
+                            <AvatarImage src={user.avatarUrl} alt={`${user.firstName || ''} ${user.lastName || ''}`} />
                             <AvatarFallback>{user.firstName && user.lastName ? getInitials(`${user.firstName} ${user.lastName}`) : ""}</AvatarFallback>
                           </Avatar>
-                          <span>{user.firstName} {user.lastName}</span>
+                          <span>{user.firstName || ''} {user.lastName || ''}</span>
                         </div>
                       </TableCell>
                       <TableCell>{user.firstName || '—'}</TableCell>
-                      <TableCell>{user.email}</TableCell>
+                      <TableCell>{user.email || '—'}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={`${getRoleColor(user.role.name)} px-2 py-1 text-xs font-medium`}>
-                          {formatRole(user.role.name)}
-                          
+                        <Badge variant="outline" className={`${getRoleColor(user.role?.name || '')} px-2 py-1 text-xs font-medium`}>
+                          {formatRole(user.role?.name || '')}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={`${getStatusColor(user.status)} px-2 py-1 text-xs font-medium`}>
-                          {user.status}
+                        <Badge variant="outline" className={`${getStatusColor(user.status || '')} px-2 py-1 text-xs font-medium`}>
+                          {user.status || 'Unknown'}
                         </Badge>
                       </TableCell>
-                      <TableCell>{formatLastLogin(user.lastLogin)}</TableCell>
-                      <TableCell>{formatDate(user.createdAt)}</TableCell>
+                      <TableCell>{formatLastLogin(user.lastLogin || '')}</TableCell>
+                      <TableCell>{formatDate(user.createdAt || '')}</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -475,7 +476,6 @@ export default function Users() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => {
                               setSelectedUser(user); 
-                              
                             }}>
                               <Edit className="mr-2 h-4 w-4" />
                               Edit User
@@ -486,7 +486,7 @@ export default function Users() {
                             </DropdownMenuItem>
                             <DropdownMenuItem className="text-red-600">
                               <Ban className="mr-2 h-4 w-4" />
-                              {user.active ? "Deactivate User" : "Activate User"}
+                              {user.status === 'active' ? "Deactivate User" : "Activate User"}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
