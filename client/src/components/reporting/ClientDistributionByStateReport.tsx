@@ -16,12 +16,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, DollarSign, Search, Building } from "lucide-react";
+import { Users, DollarSign, Search, Building, ChevronUp, ChevronDown } from "lucide-react";
 import {
   ComposableMap,
   Geographies,
   Geography,
-  ZoomableGroup,
 } from "react-simple-maps";
 import { useMockData } from "@/contexts/MockDataContext";
 
@@ -31,6 +30,11 @@ import mockData from "@/data/mockData.js";
 const GEO_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 
 type MapViewType = "clientDensity" | "totalAssets";
+
+type SortConfig = {
+  key: string | null;
+  direction: 'asc' | 'desc';
+};
 
 const getSegmentClass = (segment: string) => {
   const s = segment.toLowerCase();
@@ -83,6 +87,8 @@ const ClientDistributionByStateReport = () => {
   const [mapViewType, setMapViewType] = useState<MapViewType>("clientDensity");
   const [searchTerm, setSearchTerm] = useState("");
   const [hoveredStateName, setHoveredStateName] = useState<string | null>(null);
+  const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'aum', direction: 'desc' });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -142,15 +148,45 @@ const ClientDistributionByStateReport = () => {
 
   const clientsInSelectedState = useMemo(() => {
     if (clientsToDisplayPreSearch.length === 0) return [];
-    if (!searchTerm) return clientsToDisplayPreSearch;
+    
+    let filteredClients = clientsToDisplayPreSearch;
+    
+    // Apply search filter
+    if (searchTerm) {
+      filteredClients = clientsToDisplayPreSearch.filter(
+        (client) =>
+          client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          client.segment.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          client.aum.toString().includes(searchTerm)
+      );
+    }
 
-    return clientsToDisplayPreSearch.filter(
-      (client) =>
-        client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.segment.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        client.aum.toString().includes(searchTerm)
-    );
-  }, [clientsToDisplayPreSearch, searchTerm]);
+    // Apply sorting
+    if (sortConfig.key) {
+      filteredClients = [...filteredClients].sort((a, b) => {
+        const aValue = a[sortConfig.key as keyof typeof a];
+        const bValue = b[sortConfig.key as keyof typeof b];
+        
+        if (sortConfig.key === 'aum') {
+          // Numeric sorting for AUM
+          return sortConfig.direction === 'asc' 
+            ? (aValue as number) - (bValue as number)
+            : (bValue as number) - (aValue as number);
+        } else {
+          // String sorting for other fields
+          const aString = String(aValue).toLowerCase();
+          const bString = String(bValue).toLowerCase();
+          if (sortConfig.direction === 'asc') {
+            return aString < bString ? -1 : aString > bString ? 1 : 0;
+          } else {
+            return bString < aString ? -1 : bString > aString ? 1 : 0;
+          }
+        }
+      });
+    }
+
+    return filteredClients;
+  }, [clientsToDisplayPreSearch, searchTerm, sortConfig]);
 
   const handleStateSelectFromMap = (geoName: string, geoId: string) => {
     // geoName is already uppercased from map logic
@@ -173,9 +209,30 @@ const ClientDistributionByStateReport = () => {
     setSearchTerm("");
   };
 
+  const handleSort = (key: string) => {
+    setSortConfig(prevConfig => ({
+      key,
+      direction: prevConfig.key === key && prevConfig.direction === 'desc' ? 'asc' : 'desc'
+    }));
+  };
+
+  const getHoveredStateData = () => {
+    if (!hoveredStateName || !reportData) return null;
+    
+    const stateData = reportData.stateMetrics.find(
+      (s) => s.stateName.toUpperCase() === hoveredStateName.toUpperCase()
+    );
+    
+    return {
+      stateName: hoveredStateName,
+      clientCount: stateData?.clientCount || 0,
+      totalAum: stateData?.totalAum || 0
+    };
+  };
+
   const tableTitle = selectedStateMetric
-    ? `${selectedStateMetric.stateName} CLIENTS` // Displaying state name in uppercase as per image
-    : "ALL CLIENTS";
+    ? `${selectedStateMetric.stateName} Clients` // Displaying state name in uppercase as per image
+    : "All Clients";
 
   const summaryClientCount = selectedStateMetric
     ? selectedStateMetric.clientCount // Will be 0 for synthetic states
@@ -253,113 +310,156 @@ const ClientDistributionByStateReport = () => {
         </Card>
       </div>
 
-      {/* Map Card */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <CardTitle>Client Distribution Map</CardTitle>
-            <div className="flex space-x-2">
-              <Button
-                variant={
-                  mapViewType === "clientDensity" ? "default" : "outline"
-                }
-                size="sm"
-                onClick={() => setMapViewType("clientDensity")}
-              >
-                <Users className="mr-2 h-4 w-4" /> Client Density
-              </Button>
-              <Button
-                variant={mapViewType === "totalAssets" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setMapViewType("totalAssets")}
-              >
-                <DollarSign className="mr-2 h-4 w-4" /> Total Assets
-              </Button>
+      {/* Main Content Grid - Map and Client List */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* Map Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <CardTitle>Client Distribution Map</CardTitle>
+              <div className="flex space-x-2">
+                <Button
+                  variant={
+                    mapViewType === "clientDensity" ? "default" : "outline"
+                  }
+                  size="sm"
+                  onClick={() => setMapViewType("clientDensity")}
+                >
+                  <Users className="mr-2 h-4 w-4" /> Client Density
+                </Button>
+                <Button
+                  variant={mapViewType === "totalAssets" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setMapViewType("totalAssets")}
+                >
+                  <DollarSign className="mr-2 h-4 w-4" /> Total Assets
+                </Button>
+              </div>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent className="aspect-[16/7]">
-          <ComposableMap projection="geoAlbersUsa" className="w-full h-full">
-            <ZoomableGroup center={[0, 0]} zoom={1}>
+          </CardHeader>
+          <CardContent className="aspect-[16/10]">
+            <ComposableMap projection="geoAlbersUsa" className="w-full h-full">
               <Geographies geography={GEO_URL}>
-                {({ geographies }) =>
-                  geographies.map((geo) => {
-                    const geoDisplayName = geo.properties.name; // Original case for potential display needs
-                    const geoMatchName = geoDisplayName.toUpperCase(); // For matching
-                    const geoId = geo.id; // FIPS code
+                  {({ geographies }) =>
+                    geographies.map((geo) => {
+                      const geoDisplayName = geo.properties.name; // Original case for potential display needs
+                      const geoMatchName = geoDisplayName.toUpperCase(); // For matching
+                      const geoId = geo.id; // FIPS code
 
-                    const currentStateData = reportData.stateMetrics.find(
-                      (s) => s.stateName.toUpperCase() === geoMatchName
-                    );
+                      const currentStateData = reportData.stateMetrics.find(
+                        (s) => s.stateName.toUpperCase() === geoMatchName
+                      );
 
-                    let fillValue: number | undefined;
-                    if (currentStateData) {
-                      fillValue =
-                        mapViewType === "clientDensity"
-                          ? currentStateData.clientCount
-                          : currentStateData.totalAum;
-                    }
+                      let fillValue: number | undefined;
+                      if (currentStateData) {
+                        fillValue =
+                          mapViewType === "clientDensity"
+                            ? currentStateData.clientCount
+                            : currentStateData.totalAum;
+                      }
 
-                    const fillColor = getMapFillColor(
-                      fillValue ?? -1,
-                      mapViewType,
-                      {}
-                    );
+                      const fillColor = getMapFillColor(
+                        fillValue ?? -1,
+                        mapViewType,
+                        {}
+                      );
 
-                    const isSelected =
-                      selectedStateMetric?.stateName.toUpperCase() ===
-                      geoMatchName;
-                    const isHovered =
-                      hoveredStateName?.toUpperCase() === geoMatchName;
+                      const isSelected =
+                        selectedStateMetric?.stateName.toUpperCase() ===
+                        geoMatchName;
+                      const isHovered =
+                        hoveredStateName?.toUpperCase() === geoMatchName;
 
-                    return (
-                      <Geography
-                        key={geo.rsmKey}
-                        geography={geo}
-                        onClick={() =>
-                          handleStateSelectFromMap(geoMatchName, geoId)
-                        }
-                        onMouseEnter={() => setHoveredStateName(geoMatchName)}
-                        onMouseLeave={() => setHoveredStateName(null)}
-                        style={{
-                          default: {
-                            fill: fillColor,
-                            stroke: isSelected
-                              ? "hsl(210, 100%, 30%)"
-                              : "hsl(210, 10%, 70%)",
-                            strokeWidth: isSelected ? 1.5 : 0.75,
-                            outline: "none",
-                            transition:
-                              "fill 0.2s ease-in-out, stroke 0.2s ease-in-out",
-                          },
-                          hover: {
-                            fill: fillColor,
-                            stroke: "hsl(210, 100%, 40%)",
-                            strokeWidth: 1.5,
-                            outline: "none",
-                            cursor: "pointer",
-                            filter: "brightness(1.1)",
-                          },
-                          pressed: {
-                            fill: fillColor,
-                            stroke: "hsl(210, 100%, 20%)",
-                            strokeWidth: 1.75,
-                            outline: "none",
-                            filter: "brightness(0.9)",
-                          },
-                        }}
-                      />
-                    );
-                  })
-                }
-              </Geographies>
-            </ZoomableGroup>
-          </ComposableMap>
-        </CardContent>
-      </Card>
+                      return (
+                        <Geography
+                          key={geo.rsmKey}
+                          geography={geo}
+                          onClick={() =>
+                            handleStateSelectFromMap(geoMatchName, geoId)
+                          }
+                          onMouseEnter={(event) => {
+                            setHoveredStateName(geoMatchName);
+                            setMousePosition({ x: event.clientX, y: event.clientY });
+                          }}
+                          onMouseMove={(event) => {
+                            setMousePosition({ x: event.clientX, y: event.clientY });
+                          }}
+                          onMouseLeave={() => {
+                            setHoveredStateName(null);
+                            setMousePosition(null);
+                          }}
+                          style={{
+                            default: {
+                              fill: fillColor,
+                              stroke: isSelected
+                                ? "hsl(210, 100%, 30%)"
+                                : "hsl(210, 10%, 70%)",
+                              strokeWidth: isSelected ? 1.5 : 0.75,
+                              outline: "none",
+                              transition:
+                                "fill 0.2s ease-in-out, stroke 0.2s ease-in-out",
+                            },
+                            hover: {
+                              fill: fillColor,
+                              stroke: "hsl(210, 100%, 40%)",
+                              strokeWidth: 1.5,
+                              outline: "none",
+                              cursor: "pointer",
+                              filter: "brightness(1.1)",
+                            },
+                            pressed: {
+                              fill: fillColor,
+                              stroke: "hsl(210, 100%, 20%)",
+                              strokeWidth: 1.75,
+                              outline: "none",
+                              filter: "brightness(0.9)",
+                            },
+                          }}
+                        />
+                      );
+                    })
+                  }
+                </Geographies>
+            </ComposableMap>
+            
+            {/* State Hover Tooltip */}
+            {hoveredStateName && mousePosition && (() => {
+              const stateData = getHoveredStateData();
+              return stateData ? (
+                <div
+                  className="fixed z-50 pointer-events-none bg-background border border-border rounded-lg shadow-lg p-3 max-w-xs"
+                  style={{
+                    left: mousePosition.x + 10,
+                    top: mousePosition.y - 10,
+                    transform: mousePosition.x > window.innerWidth - 200 ? 'translateX(-100%)' : undefined
+                  }}
+                >
+                  <div className="font-semibold text-sm mb-1">{stateData.stateName}</div>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <Users className="h-3 w-3" />
+                      <span>{stateData.clientCount} clients</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="h-3 w-3" />
+                      <span>
+                        {stateData.totalAum.toLocaleString("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : null;
+            })()}
+          </CardContent>
+        </Card>
 
-      {/* Client List Table Card - Always rendered, content changes */}
-      <Card>
+        {/* Client List Table Card - Always rendered, content changes */}
+        <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <CardTitle>{tableTitle}</CardTitle>
@@ -397,7 +497,19 @@ const ClientDistributionByStateReport = () => {
                 <TableRow>
                   <TableHead>Client Name</TableHead>
                   <TableHead>Segment</TableHead>
-                  <TableHead className="text-right">AUM</TableHead>
+                  <TableHead 
+                    className="text-right cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('aum')}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      AUM
+                      {sortConfig.key === 'aum' && (
+                        sortConfig.direction === 'desc' ? 
+                          <ChevronDown className="h-4 w-4" /> : 
+                          <ChevronUp className="h-4 w-4" />
+                      )}
+                    </div>
+                  </TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -444,6 +556,7 @@ const ClientDistributionByStateReport = () => {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

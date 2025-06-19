@@ -23,7 +23,8 @@ import {
   DollarSign,
   Users,
   ExternalLink,
-} from "lucide-react"; // Updated imports
+  Star,
+} from "lucide-react"; // Added Star icon for milestones
 import {
   getClientBirthdayReportData,
   type ClientBirthdayReportData,
@@ -70,6 +71,46 @@ const GRADE_COLORS: Record<
 
 const getGradeBadgeClasses = (grade: string) => {
   return GRADE_COLORS[grade] || GRADE_COLORS.Default;
+};
+
+// Define milestone ages
+const MILESTONE_AGES = [20, 30, 40, 50, 60, 70, 80, 90, 100];
+
+/**
+ * Check if an age is a milestone age
+ * @param age - The age to check
+ * @returns boolean indicating if the age is a milestone
+ */
+const isMilestoneAge = (age: number): boolean => {
+  return MILESTONE_AGES.includes(age);
+};
+
+/**
+ * Sort clients by their next upcoming birthday
+ * @param clients - Array of birthday clients
+ * @returns Sorted array with upcoming birthdays first
+ */
+const sortByUpcomingBirthday = (clients: BirthdayClient[]): BirthdayClient[] => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+  
+  return clients.sort((a, b) => {
+    // Parse the date of birth to get month and day
+    const dateA = new Date(a.dateOfBirth);
+    const dateB = new Date(b.dateOfBirth);
+    
+    // Create this year's birthday dates
+    const thisYearBirthdayA = new Date(today.getFullYear(), dateA.getMonth(), dateA.getDate());
+    const thisYearBirthdayB = new Date(today.getFullYear(), dateB.getMonth(), dateB.getDate());
+    
+    // If birthday has passed this year, use next year's date
+    const upcomingBirthdayA = thisYearBirthdayA >= today ? thisYearBirthdayA : 
+      new Date(today.getFullYear() + 1, dateA.getMonth(), dateA.getDate());
+    const upcomingBirthdayB = thisYearBirthdayB >= today ? thisYearBirthdayB : 
+      new Date(today.getFullYear() + 1, dateB.getMonth(), dateB.getDate());
+    
+    return upcomingBirthdayA.getTime() - upcomingBirthdayB.getTime();
+  });
 };
 
 const MONTH_OPTIONS = [
@@ -308,7 +349,7 @@ const ClientBirthdayReport = () => {
                     <TableHead>Grade</TableHead>
                     <TableHead>Date of Birth</TableHead>
                     <TableHead>Next Birthday</TableHead>
-                    <TableHead className="text-center">Turning</TableHead>
+                    <TableHead className="text-center">Turning Age</TableHead>
                     <TableHead className="text-right">AUM</TableHead>
                     <TableHead>Client Tenure</TableHead>
                     <TableHead>Advisor</TableHead>
@@ -316,22 +357,7 @@ const ClientBirthdayReport = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {reportData
-                    .sort((a, b) => {
-                      const dateA = new Date(a.nextBirthdayDisplay);
-                      const dateB = new Date(b.nextBirthdayDisplay);
-                      const today = new Date();
-                      
-                      // Adjust dates to current year for comparison
-                      dateA.setFullYear(today.getFullYear());
-                      dateB.setFullYear(today.getFullYear());
-                      
-                      // If the date has passed this year, move it to next year
-                      if (dateA < today) dateA.setFullYear(today.getFullYear() + 1);
-                      if (dateB < today) dateB.setFullYear(today.getFullYear() + 1);
-                      
-                      return dateA.getTime() - dateB.getTime();
-                    })
+                  {sortByUpcomingBirthday(reportData)
                     .map((client) => {
                     const gradeClasses = getGradeBadgeClasses(client.grade);
                     return (
@@ -362,10 +388,27 @@ const ClientBirthdayReport = () => {
                           </div>
                         </TableCell>
                         <TableCell>{client.nextBirthdayDisplay}</TableCell>
-                        <TableCell className="text-center text-blue-600 font-medium">
-                          {client.turningAge}
-                        </TableCell>{" "}
-                        {/* Turning age blue */}
+                        <TableCell className="text-center">
+                          <div className="flex items-center justify-center">
+                            {isMilestoneAge(client.turningAge) && (
+                              <Star className="mr-1.5 h-4 w-4 text-yellow-500" />
+                            )}
+                            <span 
+                              className={`font-medium ${
+                                isMilestoneAge(client.turningAge) 
+                                  ? 'text-yellow-600 font-bold' 
+                                  : 'text-blue-600'
+                              }`}
+                            >
+                              {client.turningAge}
+                            </span>
+                            {isMilestoneAge(client.turningAge) && (
+                              <span className="ml-1.5 text-xs text-yellow-600 font-semibold">
+                                MILESTONE
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end">
                             <DollarSign className={iconClasses} />

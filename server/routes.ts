@@ -786,12 +786,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   app.get(
-    "/api/analytics/client-referral-rate",
-    requireAuth,
-    getClientReferralRateHandler
-  );
+  "/api/analytics/client-referral-rate",
+  requireAuth,
+  getClientReferralRateHandler
+);
 
-  app.get(
+app.get(
     "/api/analytics/advisory-firm-dashboard",
     requireAuth,
     getAdvisoryFirmDashboardHandler
@@ -1062,13 +1062,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Store the tokens in advisor_auth_tokens table
       const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
-
+      
       // Check if the user already has a token for WealthBox
       const existingToken = await storage.getAdvisorAuthTokenByUserId(
         user.id,
         user.organizationId
       );
-
+      
       if (existingToken) {
         // Update existing token
         await storage.updateAdvisorAuthToken(existingToken.id, {
@@ -1156,7 +1156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Store the tokens in advisor_auth_tokens table
       const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
-
+      
       // Check if the user already has a token for Orion (integration type 2)
       const existingTokens = await storage.getAdvisorAuthTokensByAdvisorId(
         user.id
@@ -1164,7 +1164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingOrionToken = existingTokens.find(
         (token) => token.integrationType === 2
       );
-
+      
       if (existingOrionToken) {
         // Update existing token
         await storage.updateAdvisorAuthToken(existingOrionToken.id, {
