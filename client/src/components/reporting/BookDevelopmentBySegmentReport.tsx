@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ArrowUpDown, Search } from "lucide-react";
+import { ArrowUpDown, Search, TrendingUp, TrendingDown } from "lucide-react";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -46,6 +46,7 @@ import mockData from "@/data/mockData.js";
 
 type ChartView = "clientCount" | "assetsUnderManagement";
 type SegmentName = "Platinum" | "Gold" | "Silver";
+type SegmentSelection = SegmentName | "All Segments";
 
 // Updated colors to match the design's blue theme more closely
 const SEGMENT_COLORS = {
@@ -71,7 +72,7 @@ const SEGMENT_COLORS = {
 
 const ITEMS_PER_PAGE = 10;
 
-// Custom Tooltip Content Component - Redesigned to match screenshot
+// Custom Tooltip Content Component - Redesigned to match Lovable code exactly
 const CustomTooltipContent = ({
   active,
   payload,
@@ -148,60 +149,71 @@ const CustomTooltipContent = ({
       view === "assetsUnderManagement"
         ? `$${(val / 1000000).toFixed(1)}M`
         : val.toLocaleString();
-    const formatYoYDisplay = (yoyVal: number | null | typeof Infinity) => {
-      if (yoyVal === null)
+
+    const formatGrowthRate = (value: number) => {
+      return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
+    };
+
+    // Helper function for creating growth rate indicator
+    const GrowthIndicator = ({ value }: { value: number | null | typeof Infinity }) => {
+      if (value === null || value === 0) return null;
+      
+      if (value === Infinity) {
         return (
-          <span className="ml-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-            (-%)
+          <span className="text-green-600 flex items-center justify-end whitespace-nowrap text-[11px]">
+            +New
+            <TrendingUp className="inline ml-0.5 w-3 h-3" />
           </span>
         );
-      if (yoyVal === Infinity)
-        return (
-          <span className="ml-1.5 text-[11px] text-green-500">(New) ▲</span>
-        );
-      const sign = yoyVal >= 0 ? "+" : "";
-      const arrow = yoyVal >= 0 ? "▲" : "▼";
-      const colorClass = yoyVal >= 0 ? "text-green-500" : "text-red-500";
+      }
+      
       return (
-        <span className={`ml-1.5 text-[11px] ${colorClass}`}>
-          ({sign}
-          {yoyVal.toFixed(1)}%) {arrow}
+        <span className={`${value > 0 ? 'text-green-600' : 'text-red-600'} flex items-center justify-end whitespace-nowrap text-[11px]`}>
+          {formatGrowthRate(value)}
+          {value > 0 ? 
+            <TrendingUp className="inline ml-0.5 w-3 h-3" /> : 
+            <TrendingDown className="inline ml-0.5 w-3 h-3" />
+          }
         </span>
       );
     };
 
+    const isFirstYear = originalSeriesData.length > 0 && 
+      originalSeriesData[0].dataClientCount.length > 0 && 
+      year === Math.min(...originalSeriesData[0].dataClientCount.map(d => d.year));
+
     return (
-      <div className="bg-card p-3.5 rounded-md shadow-lg border border-slate-200 dark:border-slate-700 text-card-foreground text-[12px] min-w-[260px]">
-        <p className="font-semibold mb-2.5 text-sm text-center text-slate-700 dark:text-slate-200">
-          {year}
-        </p>
-        {items.map((item) => (
-          <div
-            key={item.name}
-            className="flex items-center justify-between my-[5px] py-0.5"
-          >
-            <span className="flex items-center">
-              <span
-                className="w-2 h-2 rounded-full mr-2"
-                style={{ backgroundColor: item.color }}
-              ></span>
-              <span className="text-slate-600 dark:text-slate-300">
-                {item.name}:
-              </span>
-            </span>
-            <span className="ml-2 font-medium text-slate-700 dark:text-slate-200 text-right">
-              {formatDisplayValue(item.value)}
-              {formatYoYDisplay(item.yoy)}
-            </span>
+      <div className="bg-white shadow-lg rounded-lg border border-gray-200 p-3 min-w-[240px]">
+        <div className="font-medium text-sm mb-3 pb-1 border-b border-gray-200">{year}</div>
+        
+        <div className="space-y-2.5 text-xs">
+          {items.map((item) => (
+            <div key={item.name} className="grid grid-cols-[100px_1fr_1fr] gap-x-2 items-center">
+              <div className="flex items-center gap-1.5">
+                <div 
+                  className="w-2.5 h-2.5 rounded-full shrink-0" 
+                  style={{ backgroundColor: item.color }} 
+                />
+                <span className="whitespace-nowrap">{item.name}</span>
+              </div>
+              <div className="text-right flex justify-end items-center">
+                <span className="font-medium tabular-nums">{formatDisplayValue(item.value)}</span>
+              </div>
+              <div className="text-right">
+                {!isFirstYear && <GrowthIndicator value={item.yoy} />}
+              </div>
+            </div>
+          ))}
+          
+          <div className="border-t border-gray-200 pt-2 mt-1 grid grid-cols-[100px_1fr_1fr] gap-x-2 items-center">
+            <span className="font-medium whitespace-nowrap">Total</span>
+            <div className="text-right flex justify-end items-center">
+              <span className="font-medium tabular-nums">{formatDisplayValue(totalValue)}</span>
+            </div>
+            <div className="text-right">
+              {!isFirstYear && <GrowthIndicator value={totalYoY} />}
+            </div>
           </div>
-        ))}
-        <hr className="my-2 border-slate-200/60 dark:border-slate-700/50" />
-        <div className="flex items-center justify-between font-semibold pt-1">
-          <span className="text-slate-600 dark:text-slate-300">Total:</span>
-          <span className="ml-2 text-slate-700 dark:text-slate-200 text-right">
-            {formatDisplayValue(totalValue)}
-            {formatYoYDisplay(totalYoY)}
-          </span>
         </div>
       </div>
     );
@@ -215,13 +227,11 @@ export default function BookDevelopmentBySegmentReport() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [chartView, setChartView] = useState<ChartView>(
-    "assetsUnderManagement"
-  );
+  const [chartView, setChartView] = useState<ChartView>("clientCount");
   const [selectedSegments, setSelectedSegments] = useState<SegmentName[]>([
     "Platinum",
-    "Gold",
-    "Silver",
+    "Gold", 
+    "Silver"
   ]);
   const [filterSearchTerm, setFilterSearchTerm] = useState("");
 
@@ -247,9 +257,7 @@ export default function BookDevelopmentBySegmentReport() {
             throw new Error("Invalid mock data: missing allSegmentsData");
           }
           setReportData(mockReportData);
-          const allSegmentNames =
-            mockReportData.allSegmentsData?.map((s) => s.name) || [];
-          setSelectedSegments(allSegmentNames);
+          // Keep default segment selection
         } else {
           // Try to fetch from API, fallback to mock data on error
           try {
@@ -258,9 +266,7 @@ export default function BookDevelopmentBySegmentReport() {
               throw new Error("Invalid API response: missing allSegmentsData");
             }
             setReportData(data);
-            const allSegmentNames =
-              data.allSegmentsData?.map((s) => s.name) || [];
-            setSelectedSegments(allSegmentNames);
+            // Keep default segment selection
           } catch (apiError) {
             console.warn(
               "API fetch failed, falling back to mock data:",
@@ -272,9 +278,7 @@ export default function BookDevelopmentBySegmentReport() {
               throw new Error("Fallback failed: invalid mock data structure");
             }
             setReportData(mockReportData);
-            const allSegmentNames =
-              mockReportData.allSegmentsData?.map((s) => s.name) || [];
-            setSelectedSegments(allSegmentNames);
+            // Keep default segment selection
           }
         }
       } catch (err) {
@@ -291,24 +295,24 @@ export default function BookDevelopmentBySegmentReport() {
   }, [useMock]);
 
   const handleSegmentToggle = (segmentName: SegmentName) => {
-    setSelectedSegments((prev) =>
-      prev.includes(segmentName)
-        ? prev.filter((s) => s !== segmentName)
-        : [...prev, segmentName]
-    );
+    if (selectedSegments.length === 1 && selectedSegments.includes(segmentName)) {
+      // If clicking the currently selected single segment, show all segments
+      setSelectedSegments(["Platinum", "Gold", "Silver"]);
+    } else {
+      // Otherwise, show only this segment
+      setSelectedSegments([segmentName]);
+    }
     setCurrentPage(1);
   };
 
   const handleClearSegmentFilters = () => {
-    setSelectedSegments(reportData?.allSegmentsData?.map((s) => s.name) || []);
+    setSelectedSegments(["Platinum", "Gold", "Silver"]);
     setCurrentPage(1);
   };
 
   const handleTableSegmentChange = (value: string) => {
     if (value === "All Segments") {
-      setSelectedSegments(
-        reportData?.allSegmentsData?.map((s) => s.name) || []
-      );
+      setSelectedSegments(["Platinum", "Gold", "Silver"]);
     } else {
       setSelectedSegments([value as SegmentName]);
     }
@@ -319,14 +323,13 @@ export default function BookDevelopmentBySegmentReport() {
     if (!reportData || !reportData.allSegmentsData) return [];
 
     let clientsToShow: BookDevelopmentClient[] = [];
-    if (
-      selectedSegments.length === reportData.allSegmentsData.length ||
-      selectedSegments.length === 0
-    ) {
+    if (selectedSegments.length === 3) {
+      // All segments selected
       clientsToShow = reportData.allSegmentsData.flatMap(
         (s) => s.clients || []
       );
     } else {
+      // Specific segment selected
       clientsToShow = reportData.allSegmentsData
         .filter((s) => selectedSegments.includes(s.name))
         .flatMap((s) => s.clients || []);
@@ -382,6 +385,7 @@ export default function BookDevelopmentBySegmentReport() {
   const activeChartSeries = useMemo(() => {
     if (!reportData) return [];
     const order: SegmentName[] = ["Platinum", "Gold", "Silver"];
+    
     return reportData.allSegmentsData
       .filter((segment) => selectedSegments.includes(segment.name))
       .sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name))
@@ -431,23 +435,66 @@ export default function BookDevelopmentBySegmentReport() {
     return value.toLocaleString();
   };
 
+  // Calculate period totals
+  const periodTotals = useMemo(() => {
+    if (!reportData || !activeChartSeries.length) return null;
+    
+    const latestYear = Math.max(...rechartsFormattedData.map(d => d.year));
+    const earliestYear = Math.min(...rechartsFormattedData.map(d => d.year));
+    
+    const latestData = rechartsFormattedData.find(d => d.year === latestYear);
+    const earliestData = rechartsFormattedData.find(d => d.year === earliestYear);
+    
+    if (!latestData || !earliestData) return null;
+    
+    let currentTotal = 0;
+    let previousTotal = 0;
+    
+    activeChartSeries.forEach(series => {
+      currentTotal += latestData[series.name] || 0;
+      previousTotal += earliestData[series.name] || 0;
+    });
+    
+    const growthRate = previousTotal !== 0 
+      ? ((currentTotal - previousTotal) / previousTotal) * 100 
+      : currentTotal > 0 ? Infinity : 0;
+    
+    return {
+      current: currentTotal,
+      previous: previousTotal,
+      growthRate,
+      period: `${earliestYear}-${latestYear}`,
+      latestYear
+    };
+  }, [rechartsFormattedData, activeChartSeries]);
+
+  // Check if we're in single segment mode (show clear filter button)
+  const isFiltered = selectedSegments.length === 1;
+
   if (isLoading)
     return <div className="p-6 text-center">Loading report data...</div>;
   if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
   if (!reportData)
     return <div className="p-6 text-center">No data available.</div>;
 
-  const tableSegmentDropdownValue =
-    selectedSegments.length === reportData.allSegmentsData.length ||
-    selectedSegments.length === 0
-      ? "All Segments"
-      : selectedSegments.length === 1
-      ? selectedSegments[0]
-      : "Multiple";
-
   const getSegmentBadgeClasses = (segmentName: SegmentName) => {
     const config = SEGMENT_COLORS[segmentName];
     return `${config?.badgeBg} ${config?.badgeText} ${config?.badgeBorder}`;
+  };
+
+  const formatPeriodValue = (value: number) => {
+    if (chartView === "assetsUnderManagement") {
+      if (Math.abs(value) >= 1000000000) return `$${(value / 1000000000).toFixed(1)}B`;
+      if (Math.abs(value) >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+      if (Math.abs(value) >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+      return `$${value.toFixed(0)}`;
+    }
+    return value.toLocaleString();
+  };
+
+  const formatGrowthRate = (rate: number | typeof Infinity) => {
+    if (rate === Infinity) return "New";
+    return `${rate >= 0 ? '+' : ''}${rate.toFixed(1)}%`;
   };
 
   return (
@@ -460,13 +507,17 @@ export default function BookDevelopmentBySegmentReport() {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 flex justify-end">
-            <div className="flex items-center space-x-2">
+
+
+          {/* Chart Container with Toggle in Top Right */}
+          <div className="relative">
+            {/* Chart View Toggle - Top Right */}
+            <div className="absolute top-2 right-4 z-10 flex items-center space-x-2 bg-background/80 backdrop-blur-sm rounded-full px-3 py-1.5 border border-border">
               <Label
                 htmlFor="chart-toggle-switch"
-                className={`text-sm ${
+                className={`text-xs ${
                   chartView === "clientCount"
-                    ? "font-semibold text-primary"
+                    ? "font-medium text-foreground"
                     : "text-muted-foreground"
                 }`}
               >
@@ -480,114 +531,104 @@ export default function BookDevelopmentBySegmentReport() {
                     checked ? "assetsUnderManagement" : "clientCount"
                   )
                 }
+                className="scale-75"
               />
               <Label
                 htmlFor="chart-toggle-switch"
-                className={`text-sm ${
+                className={`text-xs ${
                   chartView === "assetsUnderManagement"
-                    ? "font-semibold text-primary"
+                    ? "font-medium text-foreground"
                     : "text-muted-foreground"
                 }`}
               >
                 Assets Under Management
               </Label>
             </div>
-          </div>
 
-          <div className="h-[400px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={rechartsFormattedData}
-                margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.15} />
-                <XAxis
-                  dataKey="year"
-                  tick={{ fontSize: 12 }}
-                  axisLine={{ strokeOpacity: 0.3 }}
-                  tickLine={{ strokeOpacity: 0.3 }}
-                />
-                <YAxis
-                  tickFormatter={yAxisTickFormatter}
-                  tick={{ fontSize: 12 }}
-                  width={80}
-                  axisLine={{ strokeOpacity: 0.3 }}
-                  tickLine={{ strokeOpacity: 0.3 }}
-                  domain={["auto", "auto"]}
-                />
-                <Tooltip
-                  content={
-                    <CustomTooltipContent
-                      view={chartView}
-                      originalSeriesData={activeChartSeries}
-                    />
-                  }
-                  cursor={{
-                    stroke: "hsl(var(--muted-foreground))",
-                    strokeWidth: 1,
-                    strokeDasharray: "3 3",
-                  }}
-                  animationDuration={150}
-                />
-                {activeChartSeries.map((series) => (
-                  <Area
-                    key={series.name}
-                    type="monotone"
-                    dataKey={series.name}
-                    stackId="1"
-                    stroke={series.color}
-                    fill={series.fillColor || series.color}
-                    fillOpacity={0.85}
-                    strokeWidth={2}
-                    activeDot={{ r: 4, fill: series.color, strokeWidth: 0 }}
-                    dot={false}
+            {/* Chart */}
+            <div className="h-[400px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={rechartsFormattedData}
+                  margin={{ top: 40, right: 20, left: 10, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.15} />
+                  <XAxis
+                    dataKey="year"
+                    tick={{ fontSize: 12 }}
+                    axisLine={{ strokeOpacity: 0.3 }}
+                    tickLine={{ strokeOpacity: 0.3 }}
                   />
-                ))}
-              </AreaChart>
-            </ResponsiveContainer>
+                  <YAxis
+                    tickFormatter={yAxisTickFormatter}
+                    tick={{ fontSize: 12 }}
+                    width={80}
+                    axisLine={{ strokeOpacity: 0.3 }}
+                    tickLine={{ strokeOpacity: 0.3 }}
+                    domain={["auto", "auto"]}
+                  />
+                  <Tooltip
+                    content={
+                      <CustomTooltipContent
+                        view={chartView}
+                        originalSeriesData={activeChartSeries}
+                      />
+                    }
+                    cursor={{
+                      stroke: "hsl(var(--muted-foreground))",
+                      strokeWidth: 1,
+                      strokeDasharray: "3 3",
+                    }}
+                    animationDuration={150}
+                  />
+                  {activeChartSeries.map((series) => (
+                    <Area
+                      key={series.name}
+                      type="monotone"
+                      dataKey={series.name}
+                      stackId="1"
+                      stroke={series.color}
+                      fill={series.fillColor || series.color}
+                      fillOpacity={0.85}
+                      strokeWidth={2}
+                      activeDot={{ r: 4, fill: series.color, strokeWidth: 0 }}
+                      dot={false}
+                    />
+                  ))}
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-2">
+          {/* Segment Legend Below Chart */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
             {reportData.allSegmentsData.map((segment) => (
-              <Button
+              <button
                 key={segment.name}
-                variant={
-                  selectedSegments.includes(segment.name)
-                    ? "default"
-                    : "outline"
-                }
                 onClick={() => handleSegmentToggle(segment.name)}
-                size="sm"
-                className="rounded-full px-3"
-                style={
-                  selectedSegments.includes(segment.name)
-                    ? {
-                        backgroundColor: segment.color,
-                        color: "hsl(var(--primary-foreground))",
-                        borderColor: segment.color,
-                      }
-                    : { borderColor: segment.color, color: segment.color }
-                }
+                className={`flex items-center space-x-2 text-sm transition-opacity ${
+                  selectedSegments.includes(segment.name) 
+                    ? 'opacity-100' 
+                    : 'opacity-50 hover:opacity-75'
+                }`}
               >
                 <span
-                  className="w-2 h-2 rounded-full mr-2"
-                  style={{
-                    backgroundColor: selectedSegments.includes(segment.name)
-                      ? "hsl(var(--primary-foreground))"
-                      : segment.color,
-                  }}
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: segment.color }}
                 ></span>
-                {segment.name}
-              </Button>
+                <span className="text-foreground">{segment.name}</span>
+              </button>
             ))}
-            <Button
-              variant="ghost"
-              onClick={handleClearSegmentFilters}
-              size="sm"
-              className="rounded-full px-3 text-muted-foreground hover:text-primary"
-            >
-              Clear filter
-            </Button>
+            {isFiltered && (
+              <Button
+                variant="ghost"
+                onClick={handleClearSegmentFilters}
+                size="sm"
+                className="text-muted-foreground hover:text-foreground ml-2"
+              >
+                Clear filter
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -598,9 +639,9 @@ export default function BookDevelopmentBySegmentReport() {
             <div>
               <CardTitle>Clients as of 2025</CardTitle>
               <p className="text-sm text-muted-foreground">
-                {tableSegmentDropdownValue === "All Segments"
+                {selectedSegments.length === 3
                   ? "All segments"
-                  : `Filtered by ${selectedSegments.join(", ")} segment(s)`}
+                  : `Filtered by ${selectedSegments.join(", ")} segments`}
               </p>
             </div>
             <div className="flex items-center gap-2 w-full md:w-auto">
@@ -617,7 +658,7 @@ export default function BookDevelopmentBySegmentReport() {
                 />
               </div>
               <Select
-                value={tableSegmentDropdownValue}
+                value={selectedSegments.length === 3 ? "All Segments" : selectedSegments[0]}
                 onValueChange={handleTableSegmentChange}
               >
                 <SelectTrigger className="w-full md:w-[180px]">
@@ -748,3 +789,4 @@ export default function BookDevelopmentBySegmentReport() {
     </div>
   );
 }
+

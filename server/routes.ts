@@ -786,12 +786,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   app.get(
-    "/api/analytics/client-referral-rate",
-    requireAuth,
-    getClientReferralRateHandler
-  );
+  "/api/analytics/client-referral-rate",
+  requireAuth,
+  getClientReferralRateHandler
+);
 
-  app.get(
+app.get(
     "/api/analytics/advisory-firm-dashboard",
     requireAuth,
     getAdvisoryFirmDashboardHandler
@@ -1059,13 +1059,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Store the tokens in advisor_auth_tokens table
       const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
-
+      
       // Check if the user already has a token for WealthBox
       const existingToken = await storage.getAdvisorAuthTokenByUserId(
         user.id,
         user.organizationId
       );
-
+      
       if (existingToken) {
         // Update existing token
         await storage.updateAdvisorAuthToken(existingToken.id, {
@@ -1125,7 +1125,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Exchange authorization code for access token
       const tokenUrl = `https://stagingapi.orionadvisor.com/api/v1/Security/Token?grant_type=authorization_code&code=${code}&client_id=2112&redirect_uri=http://localhost:5001/settings&response_type=code&client_secret=4dc339e2-7ab1-41cb-8d7f-104262ab4ed4`;
-
+      
       const tokenResponse = await fetch(tokenUrl, {
         method: "POST",
       });
@@ -1153,7 +1153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Store the tokens in advisor_auth_tokens table
       const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
-
+      
       // Check if the user already has a token for Orion (integration type 2)
       const existingTokens = await storage.getAdvisorAuthTokensByAdvisorId(
         user.id
@@ -1161,7 +1161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const existingOrionToken = existingTokens.find(
         (token) => token.integrationType === 2
       );
-
+      
       if (existingOrionToken) {
         // Update existing token
         await storage.updateAdvisorAuthToken(existingOrionToken.id, {

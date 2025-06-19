@@ -40,19 +40,27 @@ async function getAgeDemographicsReportData(
 ): Promise<AgeDemographicsData> {
   // Fetch real clients from the database
   const clients = await storage.getClientsByOrganization(organizationId);
-
+  
+  // Debug logging
+  console.log(`[DEBUG] getAgeDemographicsReportData - organizationId: ${organizationId}`);
+  console.log(`[DEBUG] Total clients fetched from DB: ${clients.length}`);
+  console.log(`[DEBUG] advisorIds filter:`, advisorIds);
+  
   // If advisorIds are specified, filter clients by those advisors
   let filteredClients = clients;
   if (advisorIds && advisorIds.length > 0) {
     filteredClients = clients.filter((client) =>
       advisorIds.includes(client.primaryAdvisorId || 0)
     );
+    console.log(`[DEBUG] Clients after advisor filtering: ${filteredClients.length}`);
   }
+  
+  console.log(`[DEBUG] Final filtered clients count: ${filteredClients.length}`);
 
-  // Group clients by age brackets
-  const clientsByAgeGroups = _.groupBy(filteredClients, (client) => {
-    const age = client.age;
-    if (!age) return "Unknown";
+    // Group clients by age brackets (exclude clients without age data from brackets)
+  const clientsWithValidAge = filteredClients.filter((client) => client.age && client.age > 0);
+  const clientsByAgeGroups = _.groupBy(clientsWithValidAge, (client) => {
+    const age = client.age!; // Safe to use ! since we filtered for valid age above
     if (age < 20) return "<20";
     else if (age >= 20 && age <= 40) return "21-40";
     else if (age > 40 && age <= 60) return "41-60";
@@ -61,11 +69,11 @@ async function getAgeDemographicsReportData(
   });
 
   const ageBrackets = ["<20", "21-40", "41-60", "61-80", ">80"];
-
-  // Calculate total clients (excluding Unknown age)
-  let totalClients = 0;
+  
+  // Calculate total clients with valid age data for bracket analysis
+  let totalClientsWithAge = 0;
   ageBrackets.forEach((bracket) => {
-    totalClients += clientsByAgeGroups[bracket]?.length || 0;
+    totalClientsWithAge += clientsByAgeGroups[bracket]?.length || 0;
   });
 
   // Helper function to determine segment based on AUM
@@ -88,7 +96,7 @@ async function getAgeDemographicsReportData(
     const bracketClients = clientsByAgeGroups[bracket] || [];
     const clientCount = bracketClients.length;
     const clientPercentage =
-      totalClients > 0 ? (clientCount / totalClients) * 100 : 0;
+      totalClientsWithAge > 0 ? (clientCount / totalClientsWithAge) * 100 : 0;
 
     // Calculate AUM by segment for this bracket
     const segments = ["Platinum", "Gold", "Silver"];
@@ -150,11 +158,11 @@ async function getAgeDemographicsReportData(
         )
       : 0;
 
-  // Format client details
+  // Format client details - include ALL clients, frontend will show "N/A" for missing age
   const clientDetails: ClientReportDetail[] = filteredClients.map((client) => ({
     id: String(client.id),
     name: `${client.firstName || ""} ${client.lastName || ""}`.trim(),
-    age: client.age || 0,
+    age: client.age || 0, // Frontend will display "N/A" for age 0 or missing age
     segment: determineSegment(client.aum || "0"),
     joinDate: client.startDate
       ? client.startDate.toISOString().split("T")[0]
@@ -164,7 +172,7 @@ async function getAgeDemographicsReportData(
 
   return {
     overall: {
-      totalClients: totalClients,
+      totalClients: filteredClients.length, // Total includes all clients, even those without age
       totalAUM: Math.round(totalAUM),
       averageClientAge,
     },
@@ -179,17 +187,25 @@ export async function getAgeDemographicsReportHandler(
 ) {
   const user = req.user as any; // Assuming requireAuth middleware populates req.user
   const advisorIdQuery = req.query.advisorId as string | undefined;
-  const advisorId = advisorIdQuery ? parseInt(advisorIdQuery, 10) : user?.id;
   const organizationId = user?.organizationId;
 
-  try {
-    // In a real application, you would fetch and process data based on advisorId
-    // For example, using functions from storage or other services.
-    // const reportData = await storage.getProcessedAgeDemographics(advisorId);
+  // Debug logging
+  console.log(`[DEBUG] Handler - user:`, { id: user?.id, organizationId: user?.organizationId, role: user?.role });
+  console.log(`[DEBUG] Handler - advisorIdQuery:`, advisorIdQuery);
 
-    // For now, returning mock data:
-    const reportData = await getAgeDemographicsReportData(organizationId);
-    // You might want to adjust the mock data if advisorId is present, or filter it.
+  try {
+    let reportData;
+    
+    if (advisorIdQuery) {
+      // If specific advisor is requested, filter by that advisor
+      const advisorId = parseInt(advisorIdQuery, 10);
+      console.log(`[DEBUG] Handler - filtering by advisorId: ${advisorId}`);
+      reportData = await getAgeDemographicsReportData(organizationId, [advisorId]);
+    } else {
+      // If no specific advisor requested, show all clients in the organization
+      console.log(`[DEBUG] Handler - showing all clients for organizationId: ${organizationId}`);
+      reportData = await getAgeDemographicsReportData(organizationId);
+    }
 
     res.json(reportData);
   } catch (error) {

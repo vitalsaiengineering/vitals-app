@@ -314,6 +314,7 @@ export default function AgeDemographicsReport({
               return true;
           }
         })
+        .sort((a, b) => a.age - b.age) // Sort youngest to oldest
         .map((client) => ({
           ...client,
           aumDisplay: client.aum

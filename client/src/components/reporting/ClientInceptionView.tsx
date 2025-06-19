@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -16,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TrendingUp, Users } from "lucide-react";
+import { TrendingUp, Users, Search } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -47,7 +48,10 @@ const getGradeBadgeClasses = (grade: string) => {
   return GRADE_COLORS[grade] || GRADE_COLORS.Default;
 };
 
-// Custom tooltip for chart
+/**
+ * Custom tooltip component for bar chart
+ * Displays year, total clients, and breakdown by segment with percentages
+ */
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const total = payload.reduce(
@@ -71,12 +75,24 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+/**
+ * Interface for ClientInceptionView component props
+ */
 interface ClientInceptionViewProps {
   globalSearch: string;
+  setGlobalSearch: (search: string) => void;
 }
 
+/**
+ * ClientInceptionView Component
+ * 
+ * Displays client inception data with exact layout matching reference image
+ * Features KPI card, chart with right-side legend, centered filter buttons,
+ * search bar, and data table using original data sources
+ */
 export default function ClientInceptionView({
   globalSearch,
+  setGlobalSearch,
 }: ClientInceptionViewProps) {
   const [inceptionData, setInceptionData] =
     useState<ClientInceptionData | null>(null);
@@ -91,17 +107,18 @@ export default function ClientInceptionView({
   // Check if we should use mock data
   const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false";
 
+  /**
+   * Fetches client inception data from API or mock data
+   */
   const fetchInceptionData = async (params?: GetClientInceptionParams) => {
     setIsLoading(true);
     setError(null);
     try {
       if (useMock) {
-        // Use mock data
         const mockInceptionData =
           mockData.ClientInceptionData as ClientInceptionData;
         setInceptionData(mockInceptionData);
       } else {
-        // Try to fetch from API, fallback to mock data on error
         try {
           const data = await getClientInceptionData(params);
           setInceptionData(data);
@@ -126,7 +143,7 @@ export default function ClientInceptionView({
   };
 
   useEffect(() => {
-    fetchInceptionData(); // Initial fetch
+    fetchInceptionData();
   }, [useMock]);
 
   // Effect to re-fetch data when filters change
@@ -144,32 +161,61 @@ export default function ClientInceptionView({
     return () => clearTimeout(timer);
   }, [globalSearch, selectedYear, selectedSegmentFilter]);
 
+  /**
+   * Handles bar chart click events for year selection
+   */
+  const handleBarClick = (data: any) => {
+    if (data && data.year) {
+      setSelectedYear(data.year);
+    }
+  };
+
+  /**
+   * Filters chart data based on selected segment
+   */
+  const getFilteredChartData = () => {
+    if (!inceptionData?.chartData) return [];
+    
+    if (selectedSegmentFilter === "All Segments") {
+      return inceptionData.chartData;
+    }
+
+    return inceptionData.chartData.map(item => ({
+      ...item,
+      [selectedSegmentFilter]: item[selectedSegmentFilter as keyof typeof item] || 0,
+      ...(selectedSegmentFilter !== "Platinum" && { Platinum: 0 }),
+      ...(selectedSegmentFilter !== "Gold" && { Gold: 0 }),
+      ...(selectedSegmentFilter !== "Silver" && { Silver: 0 }),
+    }));
+  };
+
   if (error) {
     return <div className="p-6 text-red-500 text-center">Error: {error}</div>;
   }
 
   const segmentButtons = ["All Segments", "Platinum", "Gold", "Silver"];
+  const filteredChartData = getFilteredChartData();
 
   return (
     <div className="space-y-6">
-      {/* KPI Card */}
-      <Card>
+      {/* KPI Card - exact match to reference */}
+      <Card className="border shadow-sm">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center space-x-2">
+            <div className="flex-1">
+              <div className="flex items-center space-x-2 mb-4">
                 <Users className="h-5 w-5 text-blue-600" />
-                <h3 className="text-lg font-medium">
+                <h3 className="text-lg font-medium text-foreground">
                   Clients by Inception Date by Segmentation
                 </h3>
               </div>
-              <div className="mt-4">
-                <p className="text-3xl font-bold">
+              <div className="space-y-2">
+                <p className="text-4xl font-bold text-foreground">
                   {inceptionData?.kpi.ytdNewClients || 0}
                 </p>
                 <p className="text-sm text-muted-foreground">YTD New Clients</p>
-                <div className="flex items-center mt-1">
-                  <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
+                <div className="flex items-center space-x-1">
+                  <TrendingUp className="h-4 w-4 text-green-600" />
                   <span className="text-sm text-green-600 font-medium">
                     +{inceptionData?.kpi.percentageChangeVsPreviousYear || 0}%
                     vs previous year
@@ -177,13 +223,15 @@ export default function ClientInceptionView({
                 </div>
               </div>
             </div>
-            <div className="w-48">
+            
+            {/* Year selector */}
+            <div className="w-32">
               <Select
                 value={String(selectedYear)}
                 onValueChange={(value) => setSelectedYear(parseInt(value))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select year" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {inceptionData?.availableYears.map((year) => (
@@ -198,18 +246,19 @@ export default function ClientInceptionView({
         </CardContent>
       </Card>
 
-      {/* Chart and Legend */}
-      <Card>
-        <CardHeader>
-          <CardTitle>New Clients by Segment ({selectedYear})</CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* Chart and Legend Card - exact layout match */}
+      <Card className="border shadow-sm">
+        <CardContent className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Chart */}
+            {/* Chart - 3/4 width */}
             <div className="lg:col-span-3">
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={inceptionData?.chartData || []}>
+                  <BarChart 
+                    data={filteredChartData} 
+                    onClick={handleBarClick}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="year" />
                     <YAxis />
@@ -218,53 +267,83 @@ export default function ClientInceptionView({
                       dataKey="Platinum"
                       stackId="a"
                       fill="hsl(222, 47%, 44%)"
+                      onClick={handleBarClick}
+                      style={{ cursor: 'pointer' }}
                     />
-                    <Bar dataKey="Gold" stackId="a" fill="hsl(216, 65%, 58%)" />
+                    <Bar 
+                      dataKey="Gold" 
+                      stackId="a" 
+                      fill="hsl(216, 65%, 58%)"
+                      onClick={handleBarClick}
+                      style={{ cursor: 'pointer' }}
+                    />
                     <Bar
                       dataKey="Silver"
                       stackId="a"
                       fill="hsl(210, 55%, 78%)"
+                      onClick={handleBarClick}
+                      style={{ cursor: 'pointer' }}
                     />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            {/* Legend */}
+            {/* Legend - 1/4 width - exact match to reference */}
             <div className="lg:col-span-1">
-              <div className="space-y-4">
-                {inceptionData?.chartLegend.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <div
-                        className="w-3 h-3 rounded"
-                        style={{
-                          backgroundColor:
-                            item.segment === "Platinum"
-                              ? "hsl(222, 47%, 44%)"
-                              : item.segment === "Gold"
-                              ? "hsl(216, 65%, 58%)"
-                              : item.segment === "Silver"
-                              ? "hsl(210, 55%, 78%)"
-                              : "#6b7280",
-                        }}
-                      />
-                      <span className="text-sm font-medium">
-                        {item.segment}
-                      </span>
-                    </div>
-                    <span className="text-sm font-semibold">{item.count}</span>
+              <div className="bg-white border rounded-lg p-4 h-full">
+                <h4 className="text-sm font-medium mb-4">New Clients by Segment ({selectedYear})</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">Segment</span>
+                    <span className="text-sm font-medium">Clients</span>
                   </div>
-                ))}
+                  
+                  {inceptionData?.chartLegend
+                    .filter(item => 
+                      (selectedSegmentFilter === "All Segments" || 
+                      item.segment === selectedSegmentFilter) && item.segment !== "Total"
+                    )
+                    .map((item, index) => (
+                    <div key={index} className="flex justify-between items-center">
+                      <div className="flex items-center space-x-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{
+                            backgroundColor:
+                              item.segment === "Platinum"
+                                ? "hsl(222, 47%, 44%)"
+                                : item.segment === "Gold"
+                                ? "hsl(216, 65%, 58%)"
+                                : item.segment === "Silver"
+                                ? "hsl(210, 55%, 78%)"
+                                : "#6b7280",
+                          }}
+                        />
+                        <span className="text-sm">{item.segment}</span>
+                      </div>
+                      <span className="text-sm font-semibold">{item.count}</span>
+                    </div>
+                  ))}
+                  
+                  <div className="border-t pt-2 flex justify-between items-center">
+                    <span className="text-sm font-medium">Total</span>
+                    <span className="text-sm font-bold">
+                      {inceptionData?.chartLegend
+                        .filter(item => 
+                          selectedSegmentFilter === "All Segments" || 
+                          item.segment === selectedSegmentFilter
+                        )
+                        .reduce((sum, item) => sum + item.count, 0) || 0}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Segment Filter Buttons */}
-          <div className="flex space-x-2 mt-6">
+          {/* Segment filter buttons - centered below chart */}
+          <div className="flex space-x-2 mt-6 justify-center">
             {segmentButtons.map((segment) => (
               <Button
                 key={segment}
@@ -273,6 +352,7 @@ export default function ClientInceptionView({
                 }
                 size="sm"
                 onClick={() => setSelectedSegmentFilter(segment)}
+                className="px-4"
               >
                 {segment}
               </Button>
@@ -281,18 +361,31 @@ export default function ClientInceptionView({
         </CardContent>
       </Card>
 
-      {/* Client Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            Client Inception Year
-            <span className="text-sm font-normal text-muted-foreground ml-2">
-              {inceptionData
-                ? `${inceptionData.totalTableRecords} records`
-                : "Loading..."}{" "}
-              • {selectedSegmentFilter} - {selectedYear}
-            </span>
-          </CardTitle>
+      {/* Search bar - positioned between chart and table */}
+      <div className="max-w-md">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search contacts..."
+            className="pl-10"
+            value={globalSearch}
+            onChange={(e) => setGlobalSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Client Table - exact match to reference */}
+      <Card className="border shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-lg">Client Inception Year</CardTitle>
+            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+              <span>
+                {inceptionData ? `${inceptionData.totalTableRecords} records` : "0 records"}
+              </span>
+              <span>{selectedSegmentFilter} • {selectedYear}</span>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading && (
@@ -345,14 +438,14 @@ export default function ClientInceptionView({
                               "en-US",
                               {
                                 year: "numeric",
-                                month: "short",
-                                day: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
                               }
                             )}
                           </TableCell>
                           <TableCell className="text-right">
                             <Button size="sm" variant="default">
-                              View Client
+                              View Contact
                             </Button>
                           </TableCell>
                         </TableRow>
