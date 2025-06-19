@@ -17,6 +17,7 @@ import Organizations from "@/pages/admin/organizations";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { MockDataProvider } from "@/contexts/MockDataContext";
 // REMOVE: import { useNavigate } from "react-router-dom";
 
 // setupGlobalErrorHandler();
@@ -170,10 +171,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Router component from wouter does not need to be explicitly rendered here if Switch is used directly */}
-      {/* However, if you had a <Router> component from wouter wrapping <Switch>, that would be fine */}
-      <Router /> 
-      <Toaster />
+      <MockDataProvider>
+        <Router /> 
+        <Toaster />
+      </MockDataProvider>
     </QueryClientProvider>
   );
 }

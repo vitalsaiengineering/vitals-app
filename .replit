@@ -1,5 +1,5 @@
 modules = ["nodejs-20", "bash", "web", "postgresql-16"]
-run = "npm run dev"
+run = "npm run starter"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
@@ -7,7 +7,7 @@ channel = "stable-24_05"
 
 [deployment]
 deploymentTarget = "cloudrun"
-run = ["sh", "-c", "npm run dev"]
+run = ["sh", "-c", "npm run starter"]
 
 [[ports]]
 localPort = 4000
@@ -41,7 +41,7 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev"
+args = "npm run starter"
 waitForPort = 5000
 
 [[workflows.workflow]]
@@ -55,4 +55,4 @@ args = "npm install"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm run dev"
+args = "npm run starter"

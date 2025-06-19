@@ -250,7 +250,7 @@ async function fetchAllContacts(
     allContacts = [...allContacts, ...data.contacts];
 
     // Check if there are more pages
-    hasMore = data.meta.total_pages === page;
+    hasMore = data.meta.total_pages !== page;
     page++;
   }
 

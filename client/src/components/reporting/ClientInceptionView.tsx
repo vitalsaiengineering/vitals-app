@@ -33,6 +33,7 @@ import {
   type ClientInceptionData,
   type GetClientInceptionParams,
 } from "@/lib/clientData";
+import { useMockData } from "@/contexts/MockDataContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -105,7 +106,7 @@ export default function ClientInceptionView({
     useState("All Segments");
 
   // Check if we should use mock data
-  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false";
+  const { useMock } = useMockData();
 
   /**
    * Fetches client inception data from API or mock data

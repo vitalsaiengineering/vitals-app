@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useRoute, Link, useLocation } from 'wouter'; // Import wouter hooks and Link
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -11,6 +11,24 @@ import ClientDashboard from '@/components/reporting/ClientDashboard';
 import ReferralAnalyticsReport from '@/components/reporting/ReferralAnalyticsReport';
 import ClientReferralRate from '@/components/reporting/ClientReferralRate';
 import AdvisoryFirmDashboard from '@/components/reporting/AdvisoryFirmDashboard'; // Import the new report
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator
+} from "@/components/ui/command";
+import { Star } from 'lucide-react';
+
 // Define a registry for report components
 const reportRegistry: { [key: string]: { component: React.FC<any>, title: string } } = {
   'age-demographics': { component: AgeDemographicsReport, title: 'Client Age Demographics' },
@@ -28,13 +46,9 @@ const reportRegistry: { [key: string]: { component: React.FC<any>, title: string
 };
 
 export default function ReportViewPage() {
-  // For wouter, params are typically accessed via the Route component's children function
-  // or by matching a route pattern with useRoute.
-  // If this component is rendered directly by a <Route path="/reporting/:reportId">,
-  // the `params` object will be passed to its children if it's a function.
-  // Alternatively, use useRoute to get the params.
   const [match, params] = useRoute("/reporting/:reportId");
   const [, navigate] = useLocation(); // For navigation
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const reportId = params?.reportId; // Access reportId from params
 
@@ -71,15 +85,55 @@ export default function ReportViewPage() {
   }
 
   const ReportComponent = reportDetails.component;
+  
+  const handleReportChange = (newReportId: string) => {
+    navigate(`/reporting/${newReportId}`);
+    setDialogOpen(false);
+  };
 
   return (
     <div className="p-6 space-y-6">
-      {/* Use wouter's Link or navigate */}
-      <Link href="/reporting">
-        <Button variant="outline" className="mb-4">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Reports
-        </Button>
-      </Link>
+      <div className="flex justify-between items-center">
+        <Link href="/reporting">
+          <Button variant="outline" className="mb-4">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Reports
+          </Button>
+        </Link>
+        
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="bg-white">
+              Change Report: <span className="font-medium ml-2">{reportDetails.title}</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
+            <DialogHeader>
+              <DialogTitle>Select Report</DialogTitle>
+            </DialogHeader>
+            <Command className="rounded-lg border shadow-md">
+              <CommandInput placeholder="Search reports..." />
+              <CommandList className="max-h-[400px]">
+                <CommandEmpty>No reports found.</CommandEmpty>
+                <CommandGroup heading="All Reports">
+                  {Object.entries(reportRegistry).map(([id, report]) => (
+                    <CommandItem
+                      key={id}
+                      value={report.title}
+                      onSelect={() => handleReportChange(id)}
+                      className="flex items-center justify-between cursor-pointer"
+                    >
+                      <span className={reportId === id ? "font-medium" : ""}>
+                        {report.title}
+                      </span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </DialogContent>
+        </Dialog>
+      </div>
+      
       <ReportComponent reportId={reportId} />
     </div>
   );

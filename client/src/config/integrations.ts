@@ -15,14 +15,14 @@ export const INTEGRATIONS: Record<string, IntegrationConfig> = {
     name: "Wealthbox",
     oauthUrl: "https://app.crmworkspace.com/oauth/authorize",
     clientId: "MbnIzrEtWejPZ96qHXFwxbkU1R9euNqfrSeynciUgL0",
-    redirectUri: "https://app.advisorvitals.com/settings",
+    redirectUri: process.env.NODE_ENV === "development" ? "https://moved-repeatedly-mongrel.ngrok-free.app/settings" : "https://app.advisorvitals.com/settings",
     scope: "login+data"
   },
   orion: {
     name: "Orion",
     oauthUrl: "https://stagingapi.orionadvisor.com/api/oauth",
     clientId: "2112",
-    redirectUri: "http://localhost:5001/settings",
+    redirectUri: process.env.NODE_ENV === "development" ? "http://localhost:5001/settings" : "https://app.advisorvitals.com/settings",
     scope: ""
   }
 };

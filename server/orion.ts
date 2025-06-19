@@ -470,18 +470,18 @@ export async function setupOrionConnectionHandler(req: Request, res: Response) {
 
     console.log("Setting up Orion connection for user:", user.id);
 
-    // Get Orion token
-    const tokenResult = await getOrionToken();
+    // Get access token from request body
+    const { accessToken } = req.body;
     
-    if (!tokenResult.success || !tokenResult.accessToken) {
-      return res.status(500).json({ 
+    if (!accessToken) {
+      return res.status(400).json({ 
         success: false, 
-        message: tokenResult.error || "Failed to get Orion token" 
+        message: "Access token is required" 
       });
     }
 
     // Test the connection
-    const isConnected = await testOrionConnection(tokenResult.accessToken);
+    const isConnected = await testOrionConnection(accessToken);
     
     if (!isConnected) {
       return res.status(500).json({ 
@@ -492,17 +492,14 @@ export async function setupOrionConnectionHandler(req: Request, res: Response) {
 
     // Get Orion integration type
     const integrationType = await storage.getIntegrationTypeByName("orion");
-    
     if (!integrationType) {
-      return res.status(500).json({ 
-        success: false, 
-        message: "Orion integration type not found" 
+      return res.status(500).json({
+        success: false,
+        message: "Orion integration type not found",
       });
     }
 
-    // Get or create firm integration config for Orion
-    // Note: The existing method getFirmIntegrationConfigByFirmId gets the first config for the firm
-    // We need to check if it's for Orion specifically
+    // Get or create firm integration config
     let firmIntegration = await storage.getFirmIntegrationConfigByFirmId(
       user.organizationId
     );
@@ -512,47 +509,24 @@ export async function setupOrionConnectionHandler(req: Request, res: Response) {
       firmIntegration = await storage.createFirmIntegrationConfig({
         firmId: user.organizationId,
         integrationTypeId: integrationType.id,
-        credentials: {
-          client_id: ORION_CLIENT_ID,
-          client_secret: ORION_CLIENT_SECRET,
-        },
+        credentials: {},
         settings: { sync_frequency: "daily" },
         status: "active",
       });
-    } else {
-      // Update existing firm integration
-      firmIntegration = await storage.updateFirmIntegrationConfig(
-        firmIntegration.id,
-        {
-          ...firmIntegration,
-          credentials: {
-            client_id: ORION_CLIENT_ID,
-            client_secret: ORION_CLIENT_SECRET,
-          },
-          settings: { sync_frequency: "daily" },
-          status: "active",
-          updatedAt: new Date(),
-        }
-      );
     }
 
-    // Get or create advisor auth token for Orion
-    // We need to modify the existing method to work with Orion
-    let advisorAuthToken;
-
-    if (!advisorAuthToken) {
-      advisorAuthToken = await storage.createAdvisorAuthToken({
-        advisorId: user.id,
-        firmIntegrationConfigId: firmIntegration.id,
-        accessToken: tokenResult.accessToken, // Using refresh token as access token for Orion
-        refreshToken: tokenResult.refreshToken,
-        tokenType: "Session",
-        expiresAt: null, // Orion tokens don't seem to have expiry in the example
-        scope: null,
-        additionalData: {},
-        integrationType: integrationType.id,
-      });
-    }
+    // Create advisor auth token for Orion
+    const advisorAuthToken = await storage.createAdvisorAuthToken({
+      advisorId: user.id,
+      firmIntegrationConfigId: firmIntegration.id,
+      accessToken: accessToken,
+      refreshToken: null,
+      tokenType: "Session",
+      expiresAt: null, // Orion tokens don't seem to have expiry in the example
+      scope: null,
+      additionalData: {},
+      integrationType: integrationType.id,
+    });
 
     // Queue initial data sync asynchronously
     const { queueInitialOrionSync } = await import("./orion-sync-service");
@@ -562,15 +536,9 @@ export async function setupOrionConnectionHandler(req: Request, res: Response) {
       firmIntegration.id
     );
 
-    if (syncResult.success) {
-      console.log(`Queued initial Orion sync with job ID: ${syncResult.jobId}`);
-    } else {
-      console.error(`Failed to queue initial Orion sync: ${syncResult.error}`);
-    }
-
-    return res.json({ 
-      success: true, 
-      message: "Orion connection established successfully. Initial data sync has been queued.",
+    return res.json({
+      success: true,
+      message: "Orion connection setup successful",
       data: {
         firmIntegration,
         advisorAuthToken: {
@@ -581,8 +549,8 @@ export async function setupOrionConnectionHandler(req: Request, res: Response) {
         syncJob: syncResult.success ? {
           jobId: syncResult.jobId,
           status: 'queued'
-        } : null
-      }
+        } : null,
+      },
     });
 
   } catch (error: any) {

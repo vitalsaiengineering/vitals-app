@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -32,6 +32,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { logout } from "@/lib/api";
 
 interface ProfileField {
   id: string;
@@ -45,6 +46,26 @@ export default function Profile() {
   const [editingField, setEditingField] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const logoutMutation = useMutation({
+    mutationFn: logout,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/me'] });
+      window.location.href = '/login';
+    },
+    onError: () => {
+      toast({
+        title: "Logout failed",
+        description: "There was a problem logging out. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
   // Fetch current user data
   const { data: user, isLoading: isLoadingUser } = useQuery<any>({
@@ -199,11 +220,21 @@ export default function Profile() {
 
   return (
     <div className="container p-8 space-y-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Profile</h1>
-        <p className="mt-1 text-md text-gray-500">
-          Manage your personal information and preferences
-        </p>
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Profile</h1>
+          <p className="mt-1 text-md text-gray-500">
+            Manage your personal information and preferences
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          onClick={handleLogout}
+          disabled={logoutMutation.isPending}
+        >
+          {logoutMutation.isPending ? "Logging out..." : "Logout"}
+        </Button>
       </div>
 
       <div className="grid gap-8 md:grid-cols-3">

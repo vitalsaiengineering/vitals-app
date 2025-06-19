@@ -204,11 +204,19 @@ export const getWealthboxToken = async () => {
 };
 
 // Orion Integration
-export const setupOrionConnection = async (clientId: string, clientSecret: string) => {
-  const response = await apiRequest("POST", "/api/orion/setup-connection", {
-    clientId,
-    clientSecret,
+export const setupOrionConnection = async (accessToken: string) => {
+  const response = await fetch("/api/orion/setup-connection", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ accessToken }),
   });
+
+  if (!response.ok) {
+    throw new Error("Failed to setup Orion connection");
+  }
+
   return response.json();
 };
 

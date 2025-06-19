@@ -34,12 +34,14 @@ import {
   NameType,
   ValueType,
 } from "recharts/types/component/DefaultTooltipContent";
+import { AumChart } from "@/components/dashboard-new/AumChart";
 import {
   getBookDevelopmentReportData,
   type BookDevelopmentReportData,
   type BookDevelopmentClient,
   type BookDevelopmentSegmentData,
 } from "@/lib/clientData";
+import { useMockData } from "@/contexts/MockDataContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -221,6 +223,14 @@ const CustomTooltipContent = ({
   return null;
 };
 
+// Add this interface at the top with other interfaces
+interface SegmentChartData {
+  year: number;
+  Platinum: number;
+  Gold: number;
+  Silver: number;
+}
+
 export default function BookDevelopmentBySegmentReport() {
   const [reportData, setReportData] =
     useState<BookDevelopmentReportData | null>(null);
@@ -241,8 +251,7 @@ export default function BookDevelopmentBySegmentReport() {
     direction: "ascending" | "descending";
   }>({ key: null, direction: "ascending" });
 
-  // Check if we should use mock data
-  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false";
+  const { useMock } = useMockData();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -403,25 +412,79 @@ export default function BookDevelopmentBySegmentReport() {
       }));
   }, [reportData, selectedSegments, chartView]);
 
-  const rechartsFormattedData = useMemo(() => {
-    if (!reportData || activeChartSeries.length === 0) return [];
-    const allYears = new Set<number>();
-    activeChartSeries.forEach((series) => {
-      series.data.forEach((dp) => allYears.add(dp.year));
-    });
-    const sortedYears = Array.from(allYears).sort((a, b) => a - b);
+  // Add this function to match AumChart's data transformation
+  const getMockSegmentData = (): SegmentChartData[] => {
+    try {
+      const segmentReport = mockData.BookDevelopmentBySegmentReport;
+      const years = [2019, 2020, 2021, 2022, 2023, 2024, 2025];
 
-    return sortedYears.map((year) => {
-      const yearData: { year: number; [segmentName: string]: number } = {
-        year,
-      };
-      activeChartSeries.forEach((series) => {
-        const point = series.data.find((dp) => dp.year === year);
-        yearData[series.name] = point ? point.value : 0;
+      return years.map((year) => {
+        const dataPoint: SegmentChartData = {
+          year,
+          Platinum: 0,
+          Gold: 0,
+          Silver: 0,
+        };
+
+        segmentReport.allSegmentsData.forEach((segment: any) => {
+          const yearData = segment.dataAUM.find(
+            (data: any) => data.year === year
+          );
+          if (yearData) {
+            dataPoint[segment.name as keyof Omit<SegmentChartData, "year">] =
+              yearData.value;
+          }
+        });
+
+        return dataPoint;
       });
-      return yearData;
+    } catch (error) {
+      console.error("Error loading mock segment data:", error);
+      // Fallback data
+      return [
+        { year: 2019, Platinum: 40000000, Gold: 25000000, Silver: 12000000 },
+        { year: 2020, Platinum: 43000000, Gold: 27000000, Silver: 13000000 },
+        { year: 2021, Platinum: 46000000, Gold: 29000000, Silver: 14000000 },
+        { year: 2022, Platinum: 50000000, Gold: 31000000, Silver: 15000000 },
+        { year: 2023, Platinum: 54000000, Gold: 33000000, Silver: 16000000 },
+        { year: 2024, Platinum: 58000000, Gold: 36000000, Silver: 17000000 },
+        { year: 2025, Platinum: 63000000, Gold: 39000000, Silver: 18000000 },
+      ];
+    }
+  };
+
+  // Update the rechartsFormattedData to exactly match AumChart's transformation
+  const rechartsFormattedData = useMemo(() => {
+    if (!reportData) return [];
+    
+    if (useMock) {
+      return getMockSegmentData();
+    }
+
+    // For real data, transform it to match the same format as AumChart
+    const years = [2019, 2020, 2021, 2022, 2023, 2024, 2025];
+    
+    return years.map((year) => {
+      const dataPoint: SegmentChartData = {
+        year,
+        Platinum: 0,
+        Gold: 0,
+        Silver: 0,
+      };
+
+      reportData.allSegmentsData.forEach((segment) => {
+        const yearData = segment.dataAUM.find(
+          (data) => data.year === year
+        );
+        if (yearData) {
+          dataPoint[segment.name as keyof Omit<SegmentChartData, "year">] =
+            yearData.value;
+        }
+      });
+
+      return dataPoint;
     });
-  }, [reportData, activeChartSeries]);
+  }, [reportData, useMock]);
 
   const yAxisTickFormatter = (value: number) => {
     if (chartView === "assetsUnderManagement") {

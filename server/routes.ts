@@ -84,7 +84,7 @@ const WEALTHBOX_CLIENT_SECRET =
   process.env.WEALTHBOX_CLIENT_SECRET || "mock_client_secret";
 const WEALTHBOX_REDIRECT_URI =
   process.env.WEALTHBOX_REDIRECT_URI ||
-  "http://localhost:5001/api/wealthbox/callback";
+  "http://app.advisorvitals.com/api/wealthbox/callback";
 const WEALTHBOX_AUTH_URL = "https://api.wealthbox.com/oauth/authorize";
 const WEALTHBOX_TOKEN_URL = "https://api.wealthbox.com/oauth/token";
 
@@ -1005,6 +1005,8 @@ app.get(
         });
       }
 
+      const redirectUri = process.env.NODE_ENV === "development" ? "https://moved-repeatedly-mongrel.ngrok-free.app/settings" : "https://app.advisorvitals.com/settings";
+
       // Exchange authorization code for access token using query parameters
       const tokenUrl = new URL("https://app.crmworkspace.com/oauth/token");
       tokenUrl.searchParams.append(
@@ -1017,9 +1019,10 @@ app.get(
       );
       tokenUrl.searchParams.append("code", code);
       tokenUrl.searchParams.append("grant_type", "authorization_code");
+
       tokenUrl.searchParams.append(
         "redirect_uri",
-        "https://app.advisorvitals.com/settings"
+        redirectUri
       );
 
       const tokenResponse = await fetch(tokenUrl.toString(), {
@@ -1122,10 +1125,10 @@ app.get(
           message: "Authorization code is required",
         });
       }
-
+      const redirectUri = process.env.NODE_ENV === "development" ? "http://localhost:5001/settings" : "https://app.advisorvitals.com/settings";
       // Exchange authorization code for access token
-      const tokenUrl = `https://stagingapi.orionadvisor.com/api/v1/Security/Token?grant_type=authorization_code&code=${code}&client_id=2112&redirect_uri=http://localhost:5001/settings&response_type=code&client_secret=4dc339e2-7ab1-41cb-8d7f-104262ab4ed4`;
-      
+      const tokenUrl = `https://stagingapi.orionadvisor.com/api/v1/Security/Token?grant_type=authorization_code&code=${code}&client_id=2112&redirect_uri=${redirectUri}&response_type=code&client_secret=4dc339e2-7ab1-41cb-8d7f-104262ab4ed4`;
+
       const tokenResponse = await fetch(tokenUrl, {
         method: "POST",
       });

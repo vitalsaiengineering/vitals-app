@@ -133,7 +133,7 @@ export default function Integrations() {
       if (data.success) {
         toast({
           title: "Data imported successfully",
-          description: `Imported ${data.contacts.imported} contacts and ${data.activities.imported} activities.`,
+          description: `Imported ${data.contacts.imported} contacts successfully.`,
         });
       } else {
         toast({

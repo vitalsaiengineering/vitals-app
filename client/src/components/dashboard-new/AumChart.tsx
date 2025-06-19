@@ -13,6 +13,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getOrionAumChartData } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
+import { useMockData } from "@/contexts/MockDataContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -45,14 +46,16 @@ const formatCurrency = (amount: number) => {
   return `$${(amount / 1000).toFixed(0)}K`;
 };
 
-export const AumChart = () => {
+interface AumChartProps {
+  showViewFullReport?: boolean;
+}
+
+export const AumChart = ({ showViewFullReport = true }: AumChartProps) => {
   const [aggregation, setAggregation] = useState<
     "monthly" | "quarterly" | "yearly"
   >("yearly");
   const [, navigate] = useLocation();
-
-  // Check if we should use mock data
-  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false";
+  const { useMock } = useMockData();
 
   // Fetch Orion AUM data
   const {
@@ -123,6 +126,16 @@ export const AumChart = () => {
       dataPoints: item.dataPoints,
     })) || [];
 
+  // Transform real data into segment chart format if it exists
+  const transformedRealData = realData.length > 0
+    ? realData.map((item: { period: string; aum: number; date: string; dataPoints: number }) => ({
+        year: new Date(item.date).getFullYear(),
+        Platinum: item.aum * 0.5, // Example distribution - adjust based on actual data structure
+        Gold: item.aum * 0.3,
+        Silver: item.aum * 0.2,
+      }))
+    : [];
+
   // Check if we should show mock data
   const shouldShowMockData =
     useMock ||
@@ -133,7 +146,7 @@ export const AumChart = () => {
           error.message?.includes("Firm integration config not found"))));
 
   // Get chart data based on what we're showing
-  const segmentChartData = shouldShowMockData ? getMockSegmentData() : [];
+  const segmentChartData = shouldShowMockData ? getMockSegmentData() : transformedRealData;
 
   // Debug logging
   if (process.env.NODE_ENV === "development") {
@@ -213,48 +226,32 @@ export const AumChart = () => {
   }
 
   const handleViewFullReport = () => {
-    navigate("/reporting/active-clients-over-segments");
+    navigate("/reporting/book-development");
   };
 
   return (
     <div className="bg-white p-4 rounded-lg border">
       <div className="flex flex-col mb-2">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Book Development By Segment</h2>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handleViewFullReport}
-              className="text-sm text-blue-600 hover:underline cursor-pointer"
-            >
-              View Full Report
-            </button>
-          </div>
+          {showViewFullReport && (
+            <>
+              <h2 className="text-lg font-semibold">Book Development By Segment</h2>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handleViewFullReport}
+                className="text-sm text-blue-600 hover:underline cursor-pointer"
+              >
+                View Full Report
+              </button>
+            </div>
+          </>
+        )}
         </div>
         <div className="flex justify-between items-center mt-1">
-          {shouldShowMockData ? (
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span>Showing sample data -</span>
-              <button
-                onClick={() => navigate("/settings?tab=integrations")}
-                className="text-blue-600 hover:text-blue-800 underline font-medium"
-              >
-                Connect to Orion
-              </button>
-              <span>and sync your data to see real AUM trends by segment</span>
-            </div>
-          ) : (
+
             <p className="text-sm text-gray-500">
               Hover over data points to see detailed values by segment
             </p>
-          )}
-          {shouldShowMockData && (
-            <div
-              className="text-sm"
-              style={{ color: "oklch(0.4244 0.1809 265.64)" }}
-            >
-              <span className="font-medium">Sample Data</span>
-            </div>
-          )}
         </div>
       </div>
 

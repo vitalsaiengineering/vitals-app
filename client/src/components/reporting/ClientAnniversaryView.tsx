@@ -26,6 +26,7 @@ import {
   type AnniversaryClient,
   type GetClientAnniversaryParams,
 } from "@/lib/clientData";
+import { useMockData } from "@/contexts/MockDataContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -97,8 +98,7 @@ export default function ClientAnniversaryView({
   const [selectedAdvisor, setSelectedAdvisor] = useState("all");
   const [showUpcomingMilestones, setShowUpcomingMilestones] = useState(false);
 
-  // Check if we should use mock data
-  const useMock = import.meta.env.VITE_USE_MOCK_DATA !== "false";
+  const { useMock } = useMockData();
 
   /**
    * Fetches client anniversary data from API or mock data
