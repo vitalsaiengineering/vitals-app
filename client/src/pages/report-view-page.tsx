@@ -31,15 +31,15 @@ import { Star } from 'lucide-react';
 
 // Define a registry for report components
 const reportRegistry: { [key: string]: { component: React.FC<any>, title: string } } = {
-  'age-demographics': { component: AgeDemographicsReport, title: 'Client Age Demographics' },
-  'client-distribution-by-state': { component: ClientDistributionByStateReport, title: 'Client Distribution by State' },
-  'birthday-report': { component: ClientBirthdayReport, title: 'Client Birthday Report' },
-  'client-segmentation-dashboard': { component: ClientSegmentationDashboard, title: 'Client Segmentation Dashboard' },
-  'client-dashboard': { component: ClientDashboard, title: 'Client Dashboard' },
-  'book-development': { component: BookDevelopmentBySegmentReport, title: 'Book Development by Segment' },
-  'referral-analytics': { component: ReferralAnalyticsReport, title: 'Referral Analytics' },
-  'client-referral-rate': { component: ClientReferralRate, title: 'Client Referral Rate ' },
   'advisory-firm-dashboard': { component: AdvisoryFirmDashboard, title: 'Advisory Firm Dashboard' },
+  'age-demographics': { component: AgeDemographicsReport, title: 'Age Demographics' },
+  'birthday-report': { component: ClientBirthdayReport, title: 'Birthday Report' },
+  'book-development': { component: BookDevelopmentBySegmentReport, title: 'Book Development' },
+  'client-dashboard': { component: ClientDashboard, title: 'Client Dashboard' },
+  'client-distribution-by-state': { component: ClientDistributionByStateReport, title: 'Client Distribution by State' },
+  'client-referral-rate': { component: ClientReferralRate, title: 'Client Referral Rate' },
+  'client-segmentation-dashboard': { component: ClientSegmentationDashboard, title: 'Client Segmentation Dashboard' },
+  'referral-analytics': { component: ReferralAnalyticsReport, title: 'Referral Analytics' },
   // Add other reports here as they are created
   // 'clients-aum-overtime': { component: ClientsAUMOverTimeReport, title: 'Clients & AUM Over Time' },
   // 'net-new-assets': { component: NetNewAssetsReport, title: 'Net New Assets' },
