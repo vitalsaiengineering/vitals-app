@@ -18,6 +18,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { MockDataProvider } from "@/contexts/MockDataContext";
+import { AdvisorProvider } from "@/contexts/AdvisorContext";
 // REMOVE: import { useNavigate } from "react-router-dom";
 
 // setupGlobalErrorHandler();
@@ -172,8 +173,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <MockDataProvider>
-        <Router /> 
-        <Toaster />
+        <AdvisorProvider>
+          <Router /> 
+          <Toaster />
+        </AdvisorProvider>
       </MockDataProvider>
     </QueryClientProvider>
   );

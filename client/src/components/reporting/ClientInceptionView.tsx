@@ -32,8 +32,10 @@ import {
   getClientInceptionData,
   type ClientInceptionData,
   type GetClientInceptionParams,
+  type InceptionClientDetail,
 } from "@/lib/clientData";
 import { useMockData } from "@/contexts/MockDataContext";
+import { useAdvisor } from "@/contexts/AdvisorContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -84,13 +86,15 @@ interface ClientInceptionViewProps {
   setGlobalSearch: (search: string) => void;
 }
 
-/**
- * ClientInceptionView Component
- * 
- * Displays client inception data with exact layout matching reference image
- * Features KPI card, chart with right-side legend, centered filter buttons,
- * search bar, and data table using original data sources
- */
+// Extended interfaces for advisor filtering
+interface ExtendedInceptionClientDetail extends InceptionClientDetail {
+  advisor?: string;
+}
+
+interface ExtendedGetClientInceptionParams extends GetClientInceptionParams {
+  advisorId?: string;
+}
+
 export default function ClientInceptionView({
   globalSearch,
   setGlobalSearch,
@@ -105,23 +109,50 @@ export default function ClientInceptionView({
   const [selectedSegmentFilter, setSelectedSegmentFilter] =
     useState("All Segments");
 
+  // Get the selected advisor from context
+  const { selectedAdvisor } = useAdvisor();
+
   // Check if we should use mock data
   const { useMock } = useMockData();
 
-  /**
-   * Fetches client inception data from API or mock data
-   */
-  const fetchInceptionData = async (params?: GetClientInceptionParams) => {
+  const fetchInceptionData = async (params?: ExtendedGetClientInceptionParams) => {
     setIsLoading(true);
     setError(null);
     try {
       if (useMock) {
         const mockInceptionData =
           mockData.ClientInceptionData as ClientInceptionData;
-        setInceptionData(mockInceptionData);
+        
+        // If an advisor is selected, filter the data
+        if (selectedAdvisor !== 'All Advisors') {
+          // Filter table clients by advisor - using a simple approach to avoid type issues
+          // We're assuming the mock data has an advisor property or can be accessed with bracket notation
+          const filteredClients = mockInceptionData.tableClients.filter(
+            (client) => {
+              // Using any to bypass type checking for the mock data
+              const clientAny = client as any;
+              return clientAny.advisor === selectedAdvisor;
+            }
+          );
+          
+          // Update the data with filtered clients
+          setInceptionData({
+            ...mockInceptionData,
+            tableClients: filteredClients,
+            totalTableRecords: filteredClients.length
+          });
+        } else {
+          setInceptionData(mockInceptionData);
+        }
       } else {
         try {
-          const data = await getClientInceptionData(params);
+          // Add advisor parameter if an advisor is selected
+          const apiParams: Record<string, any> = { ...params };
+          if (selectedAdvisor !== 'All Advisors') {
+            apiParams.advisorId = selectedAdvisor;
+          }
+          
+          const data = await getClientInceptionData(apiParams);
           setInceptionData(data);
         } catch (apiError) {
           console.warn(
@@ -149,7 +180,7 @@ export default function ClientInceptionView({
 
   // Effect to re-fetch data when filters change
   useEffect(() => {
-    const params: GetClientInceptionParams = {};
+    const params: ExtendedGetClientInceptionParams = {};
     if (globalSearch.trim()) params.search = globalSearch.trim();
     params.year = selectedYear;
     if (selectedSegmentFilter !== "All Segments")
@@ -160,7 +191,7 @@ export default function ClientInceptionView({
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [globalSearch, selectedYear, selectedSegmentFilter]);
+  }, [globalSearch, selectedYear, selectedSegmentFilter, selectedAdvisor]); // Added selectedAdvisor dependency
 
   /**
    * Handles bar chart click events for year selection
@@ -206,8 +237,10 @@ export default function ClientInceptionView({
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-4">
                 <Users className="h-5 w-5 text-blue-600" />
-                <h3 className="text-lg font-medium text-foreground">
-                  Clients by Inception Date by Segmentation
+                <h3 className="text-lg font-medium">
+                  {selectedAdvisor !== "All Advisors" 
+                    ? `${selectedAdvisor}'s Clients by Inception Date` 
+                    : "Clients by Inception Date by Segmentation"}
                 </h3>
               </div>
               <div className="space-y-2">
@@ -247,8 +280,15 @@ export default function ClientInceptionView({
         </CardContent>
       </Card>
 
-      {/* Chart and Legend Card - exact layout match */}
+      {/* Chart and Legend */}
       <Card className="border shadow-sm">
+        <CardHeader>
+          <CardTitle>
+            {selectedAdvisor !== "All Advisors" 
+              ? `${selectedAdvisor}'s New Clients by Segment (${selectedYear})` 
+              : `New Clients by Segment (${selectedYear})`}
+          </CardTitle>
+        </CardHeader>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Chart - 3/4 width */}

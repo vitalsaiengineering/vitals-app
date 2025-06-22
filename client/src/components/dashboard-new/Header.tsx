@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Link, useLocation } from "wouter";
 import axios from "axios";
+import { useAdvisor } from "@/contexts/AdvisorContext";
 
 interface UserProfile {
   id: number;
@@ -26,6 +27,7 @@ export const Header = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [, navigate] = useLocation();
+  const { selectedAdvisor, setSelectedAdvisor, advisorList } = useAdvisor();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -92,22 +94,47 @@ export const Header = () => {
     }
   };
 
+  const handleAdvisorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedAdvisor(e.target.value);
+  };
+
   return (
     <header className="bg-white border-b h-16 px-6 flex items-center justify-between">
-      <div className="flex-1 flex items-center">
+      {/* <div className="flex-1 flex items-center">
         <div className="relative mr-4 w-64">
           <Input placeholder="Search..." className="pl-9 h-9" />
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
         </div>
-      </div>
+      </div> */}
 
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="relative">
+<div className="flex-1 flex items-center justify-end">
+  <div className="relative">
+            <select 
+              className="pl-3 pr-8 py-1.5 rounded border appearance-none focus:outline-none focus:ring-1 focus:ring-vitals-lightBlue text-sm"
+              value={selectedAdvisor}
+              onChange={handleAdvisorChange}
+            >
+              {advisorList.map(advisor => (
+                <option key={advisor} value={advisor}>{advisor}</option>
+              ))}
+            </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                <svg
+                  className="fill-current h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M7 10l5 5 5-5H7z" />
+                </svg>
+              </div>
+            </div>
+            </div>
+        {/* <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           <span className="absolute top-1 right-1 h-2 w-2 bg-red-600 rounded-full"></span>
-        </Button>
+        </Button> */}
 
-        <DropdownMenu>
+        {/* <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
@@ -135,8 +162,7 @@ export const Header = () => {
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={handleLogout}>Log out</DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+        </DropdownMenu> */}
     </header>
   );
 };

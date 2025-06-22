@@ -27,6 +27,7 @@ import {
   type GetClientAnniversaryParams,
 } from "@/lib/clientData";
 import { useMockData } from "@/contexts/MockDataContext";
+import { useAdvisor } from "@/contexts/AdvisorContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -95,8 +96,11 @@ export default function ClientAnniversaryView({
   // Filter states
   const [selectedSegment, setSelectedSegment] = useState("All Segments");
   const [selectedTenure, setSelectedTenure] = useState("Any Tenure");
-  const [selectedAdvisor, setSelectedAdvisor] = useState("all");
+  const [selectedAdvisorFilter, setSelectedAdvisorFilter] = useState("all");
   const [showUpcomingMilestones, setShowUpcomingMilestones] = useState(false);
+
+  // Get the selected advisor from context
+  const { selectedAdvisor } = useAdvisor();
 
   const { useMock } = useMockData();
 
@@ -110,10 +114,35 @@ export default function ClientAnniversaryView({
       if (useMock) {
         const mockAnniversaryData =
           mockData.ClientAnniversaryData as ClientAnniversaryData;
-        setAnniversaryData(mockAnniversaryData);
+        
+        // If an advisor is selected from the global context, filter the data
+        if (selectedAdvisor !== 'All Advisors') {
+          // Filter clients by the selected advisor
+          const filteredClients = mockAnniversaryData.clients.filter(
+            (client) => {
+              // Using advisorName field which should match the selectedAdvisor
+              return client.advisorName === selectedAdvisor;
+            }
+          );
+          
+          // Update the data with filtered clients
+          setAnniversaryData({
+            ...mockAnniversaryData,
+            clients: filteredClients,
+            totalRecords: filteredClients.length
+          });
+        } else {
+          setAnniversaryData(mockAnniversaryData);
+        }
       } else {
         try {
-          const data = await getClientAnniversaryData(params);
+          // Add advisor parameter if an advisor is selected from the global context
+          const apiParams: Record<string, any> = { ...params };
+          if (selectedAdvisor !== 'All Advisors') {
+            apiParams.advisorId = selectedAdvisor;
+          }
+          
+          const data = await getClientAnniversaryData(apiParams);
           setAnniversaryData(data);
         } catch (apiError) {
           console.warn(
@@ -145,7 +174,7 @@ export default function ClientAnniversaryView({
     if (globalSearch.trim()) params.search = globalSearch.trim();
     if (selectedSegment !== "All Segments") params.segment = selectedSegment;
     if (selectedTenure !== "Any Tenure") params.tenure = selectedTenure;
-    if (selectedAdvisor !== "all") params.advisorId = selectedAdvisor;
+    if (selectedAdvisorFilter !== "all") params.advisorId = selectedAdvisorFilter;
     params.upcomingMilestonesOnly = showUpcomingMilestones;
 
     const timer = setTimeout(() => {
@@ -157,8 +186,9 @@ export default function ClientAnniversaryView({
     globalSearch,
     selectedSegment,
     selectedTenure,
-    selectedAdvisor,
+    selectedAdvisorFilter,
     showUpcomingMilestones,
+    selectedAdvisor // Add selectedAdvisor from context as dependency
   ]);
 
   /**
@@ -198,7 +228,11 @@ export default function ClientAnniversaryView({
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle className="text-lg">Client Anniversary Dates</CardTitle>
+                <CardTitle className="text-xl">
+                  {selectedAdvisor !== "All Advisors" 
+                    ? `${selectedAdvisor}'s Client Anniversary Dates` 
+                    : "Client Anniversary Dates"}
+                </CardTitle>              
               <p className="text-sm text-muted-foreground mt-1">
                 {filteredClients.length} records
                 {showUpcomingMilestones && " • Milestone anniversaries (5+ year increments)"}
@@ -247,7 +281,7 @@ export default function ClientAnniversaryView({
               </SelectContent>
             </Select>
 
-            <Select value={selectedAdvisor} onValueChange={setSelectedAdvisor}>
+            {/* <Select value={selectedAdvisor} onValueChange={setSelectedAdvisor}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Advisor" />
               </SelectTrigger>
@@ -258,7 +292,7 @@ export default function ClientAnniversaryView({
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+            </Select> */}
           </div>
         </div>
 

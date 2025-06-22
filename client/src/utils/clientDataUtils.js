@@ -192,7 +192,8 @@ export const generateClientDistributionByStateReport = () => {
       id: client.id,
       name: client.name,
       segment: client.segment,
-      aum: client.aum
+      aum: client.aum,
+      advisor: client.advisor
     }));
   });
 
@@ -354,6 +355,7 @@ export const generateBookDevelopmentBySegmentReport = () => {
         segment: segmentName,
         yearsWithFirm: tenure,
         yearsWithFirmText: `${tenure} year${tenure !== 1 ? 's' : ''}`,
+        advisor: "Thomas Chen",
         sinceDateText: `Since ${new Date(client.joinDate).getFullYear()}`,
         aum: client.aum
       };
@@ -418,7 +420,8 @@ export const generateClientSegmentationDashboard = () => {
         name: client.name,
         age: client.age,
         yearsWithFirm: tenure,
-        assets: client.aum // Note: component expects 'assets' property
+        assets: client.aum, // Note: component expects 'assets' property
+        advisor: client.advisor
       };
     });
   };

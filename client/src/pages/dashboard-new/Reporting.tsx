@@ -1,6 +1,4 @@
-
 import React, { useState, useEffect } from "react";
-import { DashboardLayout } from "@/components/dashboard/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -359,7 +357,7 @@ const Reporting = () => {
     return (
       <div className="flex items-center gap-1">
         <Badge 
-          variant={integration.status === "connected" ? "success" : "outline"}
+          variant={integration.status === "connected" ? "outline" : "outline"}
           className="text-xs"
         >
           {integration.status === "connected" ? "Connected" : "Not connected"}
@@ -522,211 +520,231 @@ const Reporting = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-[calc(100vh-10rem)]">
-          <p>Loading reports...</p>
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center h-[calc(100vh-10rem)]">
+        <p>Loading reports...</p>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="flex flex-col gap-4 h-[calc(100vh-10rem)]">
-        <div className="flex justify-between items-center">
-          <div>
-            {reportType && (
-              <Button variant="outline" className="bg-white" onClick={closeReport}>
-                ← Back to Reports
-              </Button>
-            )}
+    <div className="p-8 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">Reports</h1>
+        <div className="flex items-center space-x-2">
+          <div className="border rounded-md p-1 flex items-center">
+            <Toggle
+              aria-label="Card view"
+              pressed={viewMode === "card"}
+              onPressedChange={() => viewMode !== "card" && toggleViewMode()}
+              className={`px-3 py-1.5 ${viewMode === "card" ? 'bg-primary text-primary-foreground' : 'bg-background text-primary'}`}
+            >
+              <LayoutGrid className="h-4 w-4 mr-2" />
+              Card View
+            </Toggle>
+            <Toggle
+              aria-label="Table view"
+              pressed={viewMode === "table"}
+              onPressedChange={() => viewMode !== "table" && toggleViewMode()}
+              className={`px-3 py-1.5 ${viewMode === "table" ? 'bg-primary text-primary-foreground' : 'bg-background text-primary'}`}
+            >
+              <List className="h-4 w-4 mr-2" />
+              Table View
+            </Toggle>
           </div>
+        </div>
+      </div>
+      
+      <div className="flex justify-between items-center">
+        <div>
           {reportType && (
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="bg-white">
-                  Change Report: <span className="font-medium ml-2">{currentReport?.name}</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
-                <DialogHeader>
-                  <DialogTitle>Select Report</DialogTitle>
-                </DialogHeader>
-                <Command className="rounded-lg border shadow-md">
-                  <CommandInput placeholder="Search reports..." />
-                  <CommandList className="max-h-[400px]">
-                    <CommandEmpty>No reports found.</CommandEmpty>
-                    
-                    {favoriteReports.length > 0 && (
-                      <>
-                        <CommandGroup heading="Favorites">
-                          {favoriteReports.map((report) => (
-                            <CommandItem
-                              key={report.id}
-                              value={report.name}
-                              onSelect={() => {
-                                setReportType(report.id);
-                                setOpen(false);
-                              }}
-                              className="flex items-center justify-between cursor-pointer"
-                            >
-                              <span className={reportType === report.id ? "font-medium" : ""}>
-                                {report.name}
-                              </span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleFavorite(report.id);
-                                }}
-                                className="h-8 w-8"
-                              >
-                                <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                              </Button>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                        <CommandSeparator />
-                      </>
-                    )}
-                    
-                    <CommandGroup heading="All Reports">
-                      {reports.filter(report => !report.favorited).map((report) => (
-                        <CommandItem
-                          key={report.id}
-                          value={report.name}
-                          onSelect={() => {
-                            setReportType(report.id);
-                            setOpen(false);
-                          }}
-                          className="flex items-center justify-between cursor-pointer"
-                        >
-                          <span className={reportType === report.id ? "font-medium" : ""}>
-                            {report.name}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleFavorite(report.id);
-                            }}
-                            className="h-8 w-8"
-                          >
-                            <Star className={`h-4 w-4 ${report.favorited ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400'}`} />
-                          </Button>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </DialogContent>
-            </Dialog>
+            <Button variant="outline" className="bg-white" onClick={closeReport}>
+              ← Back to Reports
+            </Button>
           )}
         </div>
+        {reportType && (
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="bg-white">
+                Change Report: <span className="font-medium ml-2">{currentReport?.name}</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
+              <DialogHeader>
+                <DialogTitle>Select Report</DialogTitle>
+              </DialogHeader>
+              <Command className="rounded-lg border shadow-md">
+                <CommandInput placeholder="Search reports..." />
+                <CommandList className="max-h-[400px]">
+                  <CommandEmpty>No reports found.</CommandEmpty>
+                  
+                  {favoriteReports.length > 0 && (
+                    <>
+                      <CommandGroup heading="Favorites">
+                        {favoriteReports.map((report) => (
+                          <CommandItem
+                            key={report.id}
+                            value={report.name}
+                            onSelect={() => {
+                              setReportType(report.id);
+                              setOpen(false);
+                            }}
+                            className="flex items-center justify-between cursor-pointer"
+                          >
+                            <span className={reportType === report.id ? "font-medium" : ""}>
+                              {report.name}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFavorite(report.id);
+                              }}
+                              className="h-8 w-8"
+                            >
+                              <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                            </Button>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                      <CommandSeparator />
+                    </>
+                  )}
+                  
+                  <CommandGroup heading="All Reports">
+                    {reports.filter(report => !report.favorited).map((report) => (
+                      <CommandItem
+                        key={report.id}
+                        value={report.name}
+                        onSelect={() => {
+                          setReportType(report.id);
+                          setOpen(false);
+                        }}
+                        className="flex items-center justify-between cursor-pointer"
+                      >
+                        <span className={reportType === report.id ? "font-medium" : ""}>
+                          {report.name}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(report.id);
+                          }}
+                          className="h-8 w-8"
+                        >
+                          <Star className={`h-4 w-4 ${report.favorited ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400'}`} />
+                        </Button>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
 
-        <Card className="flex-1">
-          <CardContent className={`${reportType ? "p-0" : "p-6"} h-full`}>
-            {reportType && currentReport?.url ? (
-              <iframe 
-                src={currentReport.url} 
-                className="w-full h-full border-none"
-                title={currentReport.name}
-                loading="lazy"
-                key={currentReport.id}
-              />
-            ) : reportType ? (
-              <div className="flex items-center justify-center h-full">
-                <div className="text-center">
-                  <h2 className="text-2xl text-gray-400">{currentReport?.name}</h2>
-                  <p className="text-gray-500 mt-2">{currentReport?.description}</p>
-                  <p className="text-gray-500 mt-4">Report content not available</p>
+      <Card className="flex-1">
+        <CardContent className={`${reportType ? "p-0" : "p-6"} h-full`}>
+          {reportType && currentReport?.url ? (
+            <iframe 
+              src={currentReport.url} 
+              className="w-full h-full border-none"
+              title={currentReport.name}
+              loading="lazy"
+              key={currentReport.id}
+            />
+          ) : reportType ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <h2 className="text-2xl text-gray-400">{currentReport?.name}</h2>
+                <p className="text-gray-500 mt-2">{currentReport?.description}</p>
+                <p className="text-gray-500 mt-4">Report content not available</p>
+              </div>
+            </div>
+          ) : (
+            // Landing page with reports list
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold">Available Reports</h2>
+                <div className="flex items-center gap-4">
+                  <div className="border rounded-md p-1 flex items-center">
+                    <Toggle
+                      aria-label="Card view"
+                      pressed={viewMode === "card"}
+                      onPressedChange={() => viewMode !== "card" && toggleViewMode()}
+                      className={`px-3 py-1.5 ${viewMode === "card" ? 'bg-primary text-primary-foreground' : 'bg-background text-primary'}`}
+                    >
+                      <LayoutGrid className="h-4 w-4 mr-2" />
+                      Card View
+                    </Toggle>
+                    <Toggle
+                      aria-label="Table view"
+                      pressed={viewMode === "table"}
+                      onPressedChange={() => viewMode !== "table" && toggleViewMode()}
+                      className={`px-3 py-1.5 ${viewMode === "table" ? 'bg-primary text-primary-foreground' : 'bg-background text-primary'}`}
+                    >
+                      <List className="h-4 w-4 mr-2" />
+                      Table View
+                    </Toggle>
+                  </div>
                 </div>
               </div>
-            ) : (
-              // Landing page with reports list
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-semibold">Available Reports</h2>
-                  <div className="flex items-center gap-4">
-                    <div className="border rounded-md p-1 flex items-center">
-                      <Toggle
-                        aria-label="Card view"
-                        pressed={viewMode === "card"}
-                        onPressedChange={() => viewMode !== "card" && toggleViewMode()}
-                        variant="contrast"
-                        className={`px-3 py-1.5 ${viewMode === "card" ? 'bg-primary text-primary-foreground' : 'bg-background text-primary'}`}
-                      >
-                        <LayoutGrid className="h-4 w-4 mr-2" />
-                        Card View
-                      </Toggle>
-                      <Toggle
-                        aria-label="Table view"
-                        pressed={viewMode === "table"}
-                        onPressedChange={() => viewMode !== "table" && toggleViewMode()}
-                        variant="contrast"
-                        className={`px-3 py-1.5 ${viewMode === "table" ? 'bg-primary text-primary-foreground' : 'bg-background text-primary'}`}
-                      >
-                        <List className="h-4 w-4 mr-2" />
-                        Table View
-                      </Toggle>
-                    </div>
-                  </div>
-                </div>
-                
-                <p className="text-gray-500 mb-6">
-                  Select a report to view detailed analytics. Star your favorite reports for quick access.
-                </p>
-                
-                {/* Search box - now placed at the top level before any reports */}
-                <div className="relative w-full max-w-md mb-6">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search reports..."
-                    className="pl-9 w-full"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                
-                {favoriteReports.length > 0 && (
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Favorites</h3>
-                    {filteredFavoriteReports.length > 0 ? (
-                      viewMode === "card" ? 
-                        renderReportCards(filteredFavoriteReports) : 
-                        renderReportTable(filteredFavoriteReports)
-                    ) : (
-                      searchQuery !== "" && (
-                        <div className="py-4 text-center text-muted-foreground">
-                          No favorite reports found matching "{searchQuery}"
-                        </div>
-                      )
-                    )}
-                  </div>
-                )}
-                
+              
+              <p className="text-gray-500 mb-6">
+                Select a report to view detailed analytics. Star your favorite reports for quick access.
+              </p>
+              
+              {/* Search box - now placed at the top level before any reports */}
+              <div className="relative w-full max-w-md mb-6">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search reports..."
+                  className="pl-9 w-full"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              
+              {favoriteReports.length > 0 && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium">All Reports</h3>
-                  
-                  {filteredNonFavoriteReports.length > 0 ? (
+                  <h3 className="text-lg font-medium">Favorites</h3>
+                  {filteredFavoriteReports.length > 0 ? (
                     viewMode === "card" ? 
-                      renderReportCards(filteredNonFavoriteReports) : 
-                      renderReportTable(filteredNonFavoriteReports)
+                      renderReportCards(filteredFavoriteReports) : 
+                      renderReportTable(filteredFavoriteReports)
                   ) : (
-                    <div className="py-8 text-center text-muted-foreground">
-                      No reports found matching "{searchQuery}"
-                    </div>
+                    searchQuery !== "" && (
+                      <div className="py-4 text-center text-muted-foreground">
+                        No favorite reports found matching "{searchQuery}"
+                      </div>
+                    )
                   )}
                 </div>
+              )}
+              
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">All Reports</h3>
+                
+                {filteredNonFavoriteReports.length > 0 ? (
+                  viewMode === "card" ? 
+                    renderReportCards(filteredNonFavoriteReports) : 
+                    renderReportTable(filteredNonFavoriteReports)
+                ) : (
+                  <div className="py-8 text-center text-muted-foreground">
+                    No reports found matching "{searchQuery}"
+                  </div>
+                )}
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </DashboardLayout>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

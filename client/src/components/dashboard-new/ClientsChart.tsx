@@ -11,6 +11,7 @@ import {
   Legend,
 } from "recharts";
 import { useMockData } from "@/contexts/MockDataContext";
+import { filterClientsByAdvisor } from "@/lib/clientData";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -41,7 +42,11 @@ interface AgeBracket {
   detailedBreakdown: SegmentBreakdown[];
 }
 
-export const ClientsAgeChart = () => {
+interface ClientsAgeChartProps {
+  selectedAdvisor?: string;
+}
+
+export const ClientsAgeChart: React.FC<ClientsAgeChartProps> = ({ selectedAdvisor = "All Advisors" }) => {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [, navigate] = useLocation();
   const { useMock } = useMockData();
@@ -53,9 +58,41 @@ export const ClientsAgeChart = () => {
           // Use centralized mock data from AgeDemographics report
           const ageDemographicsData = mockData.AgeDemographicsReport;
 
+          // Get all age brackets
+          let ageBrackets = ageDemographicsData.byAgeBracket;
+          
+          // If a specific advisor is selected, filter the data
+          if (selectedAdvisor !== "All Advisors") {
+            // This is a simplified approach - in a real implementation, you would filter
+            // the actual client data and recalculate the age brackets
+            // Here we'll simulate by reducing the counts by a factor
+            
+            // Get all clients and filter by advisor
+            const allClients = mockData.clients || [];
+            const advisorClients = allClients.filter((client: any) => client.advisor === selectedAdvisor);
+            
+            // Calculate the ratio of this advisor's clients to all clients
+            const ratio = advisorClients.length / allClients.length || 0.25;
+            
+            // Apply this ratio to the age bracket data
+            ageBrackets = ageBrackets.map((bracket: AgeBracket) => {
+              // Create a new object to avoid mutating the original
+              return {
+                ...bracket,
+                clientCount: Math.round(bracket.clientCount * ratio),
+                aum: bracket.aum * ratio,
+                detailedBreakdown: bracket.detailedBreakdown.map(segment => ({
+                  ...segment,
+                  clients: Math.round(segment.clients * ratio),
+                  aum: segment.aum * ratio
+                }))
+              };
+            });
+          }
+
           // Transform the data to match chart format
           const transformedData: ChartDataPoint[] =
-            ageDemographicsData.byAgeBracket.map((bracket: AgeBracket) => {
+            ageBrackets.map((bracket: AgeBracket) => {
               // Extract segment counts from detailed breakdown
               const platinum =
                 bracket.detailedBreakdown.find(
@@ -141,6 +178,21 @@ export const ClientsAgeChart = () => {
               basicAum: 0.3,
             },
           ];
+          
+          // If a specific advisor is selected, adjust the data
+          if (selectedAdvisor !== "All Advisors") {
+            // Simple approach - reduce counts by a factor
+            const ratio = 0.25; // Assume each advisor has about 25% of clients
+            fallbackData.forEach(item => {
+              item.premium = Math.round(item.premium * ratio);
+              item.standard = Math.round(item.standard * ratio);
+              item.basic = Math.round(item.basic * ratio);
+              if (item.premiumAum) item.premiumAum *= ratio;
+              if (item.standardAum) item.standardAum *= ratio;
+              if (item.basicAum) item.basicAum *= ratio;
+            });
+          }
+          
           setChartData(fallbackData);
         }
       } catch (error) {
@@ -153,12 +205,24 @@ export const ClientsAgeChart = () => {
           { name: "61-80", premium: 4, standard: 3, basic: 3 },
           { name: ">80", premium: 2, standard: 1, basic: 1 },
         ];
+        
+        // If a specific advisor is selected, adjust the data
+        if (selectedAdvisor !== "All Advisors") {
+          // Simple approach - reduce counts by a factor
+          const ratio = 0.25; // Assume each advisor has about 25% of clients
+          fallbackData.forEach(item => {
+            item.premium = Math.round(item.premium * ratio);
+            item.standard = Math.round(item.standard * ratio);
+            item.basic = Math.round(item.basic * ratio);
+          });
+        }
+        
         setChartData(fallbackData);
       }
     };
 
     loadData();
-  }, [useMock]);
+  }, [useMock, selectedAdvisor]); // Re-run when selectedAdvisor changes
 
   const handleViewFullReport = () => {
     navigate("/reporting/age-demographics");
@@ -170,7 +234,9 @@ export const ClientsAgeChart = () => {
         <div>
           <h2 className="text-lg font-semibold">Age Demographics</h2>
           <p className="text-sm text-gray-500">
-            Distribution across age groups
+            {selectedAdvisor !== "All Advisors" 
+              ? `${selectedAdvisor}'s client distribution across age groups`
+              : "Distribution across age groups"}
           </p>
         </div>
         <button

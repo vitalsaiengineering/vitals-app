@@ -14,6 +14,7 @@ import { getOrionAumChartData } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useMockData } from "@/contexts/MockDataContext";
+import { filterClientsByAdvisor } from "@/lib/clientData";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -48,9 +49,10 @@ const formatCurrency = (amount: number) => {
 
 interface AumChartProps {
   showViewFullReport?: boolean;
+  selectedAdvisor?: string;
 }
 
-export const AumChart = ({ showViewFullReport = true }: AumChartProps) => {
+export const AumChart = ({ showViewFullReport = true, selectedAdvisor = "All Advisors" }: AumChartProps) => {
   const [aggregation, setAggregation] = useState<
     "monthly" | "quarterly" | "yearly"
   >("yearly");
@@ -64,8 +66,8 @@ export const AumChart = ({ showViewFullReport = true }: AumChartProps) => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ["orion-aum-chart-data", aggregation],
-    queryFn: () => getOrionAumChartData({ aggregation }),
+    queryKey: ["orion-aum-chart-data", aggregation, selectedAdvisor],
+    queryFn: () => getOrionAumChartData({ aggregation, advisor: selectedAdvisor !== "All Advisors" ? selectedAdvisor : undefined }),
     retry: 2,
     staleTime: 5 * 60 * 1000, // 5 minutes
     enabled: !useMock, // Only fetch from API if not using mock data
@@ -78,43 +80,66 @@ export const AumChart = ({ showViewFullReport = true }: AumChartProps) => {
 
   // Get mock data from BookDevelopmentBySegmentReport
   const getMockSegmentData = (): SegmentChartData[] => {
-    try {
-      const segmentReport = mockData.BookDevelopmentBySegmentReport;
-      const years = [2019, 2020, 2021, 2022, 2023, 2024, 2025];
-
-      return years.map((year) => {
-        const dataPoint: SegmentChartData = {
-          year,
-          Platinum: 0,
-          Gold: 0,
-          Silver: 0,
+    // Define fixed base data that will always work
+    const baseData = [
+      { year: 2019, Platinum: 40000000, Gold: 25000000, Silver: 12000000 },
+      { year: 2020, Platinum: 43000000, Gold: 27000000, Silver: 13000000 },
+      { year: 2021, Platinum: 46000000, Gold: 29000000, Silver: 14000000 },
+      { year: 2022, Platinum: 50000000, Gold: 31000000, Silver: 15000000 },
+      { year: 2023, Platinum: 54000000, Gold: 33000000, Silver: 16000000 },
+      { year: 2024, Platinum: 58000000, Gold: 36000000, Silver: 17000000 },
+      { year: 2025, Platinum: 63000000, Gold: 39000000, Silver: 18000000 },
+    ];
+    
+    // If filtering by advisor, adjust the values
+    if (selectedAdvisor !== "All Advisors") {
+      // Create advisor-specific distribution patterns
+      const advisorDistributionPatterns: Record<string, {Platinum: number, Gold: number, Silver: number}> = {
+        "Jackson Miller": { Platinum: 0.40, Gold: 0.35, Silver: 0.25 }, // First advisor has more Platinum
+        "Sarah Johnson": { Platinum: 0.30, Gold: 0.45, Silver: 0.25 },  // Second advisor has more Gold
+        "Thomas Chen": { Platinum: 0.25, Gold: 0.35, Silver: 0.40 },    // Third advisor has more Silver
+        "Maria Reynolds": { Platinum: 0.35, Gold: 0.35, Silver: 0.30 }  // Fourth advisor is balanced
+      };
+      
+      // Use the pattern for this advisor (or a default pattern as fallback)
+      const pattern = advisorDistributionPatterns[selectedAdvisor] || 
+        { Platinum: 0.33, Gold: 0.33, Silver: 0.34 };
+      
+      // Assume each advisor manages roughly 25% of the total AUM
+      const ratio = 0.25;
+      
+      const filteredData = baseData.map(dataPoint => {
+        // Calculate total for this year
+        const totalValue = dataPoint.Platinum + dataPoint.Gold + dataPoint.Silver;
+        
+        // Apply the ratio to get this advisor's portion
+        const advisorTotal = totalValue * ratio;
+        
+        // Distribute according to this advisor's pattern
+        return {
+          year: dataPoint.year,
+          Platinum: advisorTotal * pattern.Platinum,
+          Gold: advisorTotal * pattern.Gold,
+          Silver: advisorTotal * pattern.Silver
         };
-
-        segmentReport.allSegmentsData.forEach((segment: any) => {
-          const yearData = segment.dataAUM.find(
-            (data: any) => data.year === year
-          );
-          if (yearData) {
-            dataPoint[segment.name as keyof Omit<SegmentChartData, "year">] =
-              yearData.value;
-          }
-        });
-
-        return dataPoint;
       });
-    } catch (error) {
-      console.error("Error loading mock segment data:", error);
-      // Fallback data
-      return [
-        { year: 2019, Platinum: 40000000, Gold: 25000000, Silver: 12000000 },
-        { year: 2020, Platinum: 43000000, Gold: 27000000, Silver: 13000000 },
-        { year: 2021, Platinum: 46000000, Gold: 29000000, Silver: 14000000 },
-        { year: 2022, Platinum: 50000000, Gold: 31000000, Silver: 15000000 },
-        { year: 2023, Platinum: 54000000, Gold: 33000000, Silver: 16000000 },
-        { year: 2024, Platinum: 58000000, Gold: 36000000, Silver: 17000000 },
-        { year: 2025, Platinum: 63000000, Gold: 39000000, Silver: 18000000 },
-      ];
+      
+      // Debug logging
+      console.log("AumChart - Filtered Data:", {
+        selectedAdvisor,
+        pattern,
+        ratio,
+        baseData: baseData[0],
+        filteredData: filteredData[0],
+        dataLength: filteredData.length,
+        totalBaseAum: baseData[0].Platinum + baseData[0].Gold + baseData[0].Silver,
+        totalFilteredAum: filteredData[0].Platinum + filteredData[0].Gold + filteredData[0].Silver
+      });
+      
+      return filteredData;
     }
+    
+    return baseData;
   };
 
   // Transform original API data for legacy chart
@@ -157,6 +182,7 @@ export const AumChart = ({ showViewFullReport = true }: AumChartProps) => {
       shouldShowMockData,
       useMock,
       segmentDataLength: segmentChartData.length,
+      selectedAdvisor,
     });
   }
 
@@ -282,6 +308,8 @@ export const AumChart = ({ showViewFullReport = true }: AumChartProps) => {
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 12, fill: "#888" }}
+              domain={['auto', 'auto']}
+              allowDataOverflow={false}
             />
             <Tooltip
               formatter={(value: number, name: string) => [

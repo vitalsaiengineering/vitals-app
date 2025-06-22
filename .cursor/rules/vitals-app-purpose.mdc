@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Goal: Build the most robust advisor intelligence platform providing EXCEPTIONAL data integrity around their CRM, portfolio reporting, and financial platforms. Our mission is simple yet bold: to transform the way advisors understand and manage the health of their businesses. We’re here to cut through the noise, deliver actionable intelligence, and elevate the practice of wealth management into a new era of precision and possibility.
+App Structure:
+- All the Front end code lives in the client folder
+- All backend code lives in the server folder
