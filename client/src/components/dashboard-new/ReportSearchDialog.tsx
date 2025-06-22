@@ -81,7 +81,6 @@ export function ReportSearchDialog({
                 key={report.id}
                 className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 cursor-pointer"
               >
-                <span>{report.name}</span>
                 <button 
                   onClick={() => !isFavorited && onAddFavorite(report)}
                   className={cn(
@@ -92,6 +91,8 @@ export function ReportSearchDialog({
                 >
                   <Star className="h-5 w-5" fill={isFavorited ? "#005EE1" : "transparent"} />
                 </button>
+                <span>{report.name}</span>
+                
               </div>
             );
           })}

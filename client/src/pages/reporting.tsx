@@ -79,7 +79,7 @@ const initialMockReports: Report[] = [
   },
   {
     id: "6",
-    name: "Client Distribution by State",
+    name: "Geographic Footprint",
     routePath: "client-distribution-by-state",
     description: "View your client base and book of business by geography.",
     integrations: ["Data Sources"],
