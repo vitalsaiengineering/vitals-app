@@ -144,7 +144,7 @@ const CustomTooltipContent = ({
     const formatDisplayValue = (val: number) =>
       view === "assetsUnderManagement"
         ? `$${(val / 1000000).toFixed(1)}M`
-        : val.toLocaleString();
+        : Math.round(val).toLocaleString();
 
     const formatGrowthRate = (value: number) => {
       return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
@@ -585,15 +585,7 @@ export default function BookDevelopmentBySegmentReport() {
       let baseData;
       
       if (chartView === "assetsUnderManagement") {
-        baseData = [
-          { year: 2019, Platinum: 40000000, Gold: 25000000, Silver: 12000000 },
-          { year: 2020, Platinum: 43000000, Gold: 27000000, Silver: 13000000 },
-          { year: 2021, Platinum: 46000000, Gold: 29000000, Silver: 14000000 },
-          { year: 2022, Platinum: 50000000, Gold: 31000000, Silver: 15000000 },
-          { year: 2023, Platinum: 54000000, Gold: 33000000, Silver: 16000000 },
-          { year: 2024, Platinum: 58000000, Gold: 36000000, Silver: 17000000 },
-          { year: 2025, Platinum: 63000000, Gold: 39000000, Silver: 18000000 },
-        ];
+        return getMockSegmentData();
       } else {
         // Client count data
         baseData = [
@@ -640,18 +632,6 @@ export default function BookDevelopmentBySegmentReport() {
           };
         });
 
-        // Debug logging
-        if (process.env.NODE_ENV === "development") {
-          console.log("BookDevelopmentBySegmentReport - Filtered Data:", {
-            selectedAdvisor,
-            chartView,
-            pattern,
-            ratio,
-            baseData: baseData[0],
-            filteredData: filteredData[0],
-            dataLength: filteredData.length
-          });
-        }
         
         return filteredData;
       }
@@ -696,39 +676,6 @@ export default function BookDevelopmentBySegmentReport() {
     }
     return value.toLocaleString();
   };
-
-  // Calculate period totals
-  const periodTotals = useMemo(() => {
-    if (!reportData || !activeChartSeries.length) return null;
-    
-    const latestYear = Math.max(...rechartsFormattedData.map(d => d.year));
-    const earliestYear = Math.min(...rechartsFormattedData.map(d => d.year));
-    
-    const latestData = rechartsFormattedData.find(d => d.year === latestYear);
-    const earliestData = rechartsFormattedData.find(d => d.year === earliestYear);
-    
-    if (!latestData || !earliestData) return null;
-    
-    let currentTotal = 0;
-    let previousTotal = 0;
-    
-    activeChartSeries.forEach(series => {
-      currentTotal += latestData[series.name] || 0;
-      previousTotal += earliestData[series.name] || 0;
-    });
-    
-    const growthRate = previousTotal !== 0 
-      ? ((currentTotal - previousTotal) / previousTotal) * 100 
-      : currentTotal > 0 ? Infinity : 0;
-    
-    return {
-      current: currentTotal,
-      previous: previousTotal,
-      growthRate,
-      period: `${earliestYear}-${latestYear}`,
-      latestYear
-    };
-  }, [rechartsFormattedData, activeChartSeries]);
 
   // Check if we're in single segment mode (show clear filter button)
   const isFiltered = selectedSegments.length === 1;
@@ -816,9 +763,9 @@ export default function BookDevelopmentBySegmentReport() {
               </Label>
             </div>
 
-          {chartView === "assetsUnderManagement" ? (
-            <AumChart showViewFullReport={false} selectedAdvisor={selectedAdvisor} />
-          ) : (
+              {/* {chartView === "assetsUnderManagement" ? (
+                <AumChart showViewFullReport={false} selectedAdvisor={selectedAdvisor} />
+              ) : ( */}
             <div className="h-[400px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
@@ -873,7 +820,7 @@ export default function BookDevelopmentBySegmentReport() {
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-          )}
+          {/* )} */}
         </div>
 
           {/* Segment Legend Below Chart */}

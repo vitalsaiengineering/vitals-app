@@ -105,7 +105,6 @@ export default function ClientAnniversaryView({
   // Filter states
   const [selectedSegment, setSelectedSegment] = useState("All Segments");
   const [selectedTenure, setSelectedTenure] = useState("Any Tenure");
-  const [selectedAdvisorFilter, setSelectedAdvisorFilter] = useState("all");
   const [showUpcomingMilestones, setShowUpcomingMilestones] = useState(false);
 
   // Get the selected advisor from context
@@ -193,7 +192,6 @@ export default function ClientAnniversaryView({
         globalSearch,
         selectedSegment,
         selectedTenure,
-        selectedAdvisorFilter,
         showUpcomingMilestones,
       });
     }
@@ -232,24 +230,19 @@ export default function ClientAnniversaryView({
       });
     }
 
-    // Apply advisor filter (from the filter dropdown, not the header)
-    if (selectedAdvisorFilter !== "all") {
-      filtered = filtered.filter(client => 
-        client.advisorName === selectedAdvisorFilter || 
-        client.id === selectedAdvisorFilter
-      );
-    }
+    // Note: Advisor filtering is now handled at data fetch time using selectedAdvisor context
 
     // Apply upcoming milestones filter
     if (showUpcomingMilestones) {
-      filtered = filtered.filter(client => client.daysUntilNextAnniversary <= 90); // Next 90 days
+      filtered = filtered.filter(client => isMilestoneAnniversary(client.yearsWithFirm));
     }
 
     // Debug logging for results
     if (process.env.NODE_ENV === "development") {
       console.log("ClientAnniversaryView - Filter results:", {
         filteredCount: filtered.length,
-        sampleTenures: filtered.slice(0, 5).map(c => ({ name: c.clientName, tenure: c.yearsWithFirm }))
+        sampleTenures: filtered.slice(0, 5).map(c => ({ name: c.clientName, tenure: c.yearsWithFirm, segment: c.segment })),
+        selectedFilters: { selectedSegment, selectedTenure, showUpcomingMilestones }
       });
     }
 
@@ -268,26 +261,15 @@ export default function ClientAnniversaryView({
     globalSearch,
     selectedSegment,
     selectedTenure,
-    selectedAdvisorFilter,
     showUpcomingMilestones,
   ]);
-
-  /**
-   * Filters clients to show only those with upcoming milestone anniversaries
-   */
-  const getFilteredClients = (clients: AnniversaryClient[]) => {
-    if (!showUpcomingMilestones) {
-      return clients;
-    }
-    
-    return clients.filter(client => isMilestoneAnniversary(client.yearsWithFirm));
-  };
 
   if (error) {
     return <div className="p-6 text-red-500 text-center">Error: {error}</div>;
   }
 
-  const filteredClients = allAnniversaryData ? getFilteredClients(allAnniversaryData) : [];
+  // Use the properly filtered data from client-side filtering
+  const filteredClients = filteredAnniversaryData;
 
   return (
     <div className="space-y-6">
@@ -315,7 +297,7 @@ export default function ClientAnniversaryView({
                     : "Client Anniversary Dates"}
                 </CardTitle>              
               <p className="text-sm text-muted-foreground mt-1">
-                {filteredClients.length} records
+                {filteredAnniversaryData.length} records
                 {showUpcomingMilestones && " • Milestone anniversaries (5+ year increments)"}
               </p>
             </div>

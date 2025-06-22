@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Search, Users, Database, Mail, Phone, Calendar } from "lucide-react";
 import { useMockData } from "@/contexts/MockDataContext";
+import { useAdvisor } from "@/contexts/AdvisorContext";
 
 // Import mock data
 import {
@@ -37,8 +38,10 @@ interface Client {
 
 const Clients = () => {
   const { useMock } = useMockData();
+  const { selectedAdvisor } = useAdvisor();
   const [searchTerm, setSearchTerm] = useState("");
-  const [clientData, setClientData] = useState<Client[]>([]);
+  const [allClientData, setAllClientData] = useState<Client[]>([]); // Store all data
+  const [clientData, setClientData] = useState<Client[]>([]); // Store filtered data
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,7 +53,7 @@ const Clients = () => {
           const mockClients = getAllClients();
 
           // Transform mock data to match our client interface
-          const transformedClients: Client[] = mockClients.map((client) => ({
+          const transformedClients: Client[] = mockClients.map((client: any) => ({
             id: client.id,
             name: client.name,
             email: client.email,
@@ -67,7 +70,7 @@ const Clients = () => {
             lastName: client.lastName,
           }));
 
-          setClientData(transformedClients);
+          setAllClientData(transformedClients);
         } else {
           // In a real app, this would be an API call
           // For now, fall back to mock data if API is not available
@@ -75,11 +78,11 @@ const Clients = () => {
             // Simulate API call
             const response = await fetch("/api/clients");
             const apiData = await response.json();
-            setClientData(apiData);
+            setAllClientData(apiData);
           } catch (apiError) {
             console.warn("API not available, falling back to mock data");
             const mockClients = getAllClients();
-            const transformedClients: Client[] = mockClients.map((client) => ({
+            const transformedClients: Client[] = mockClients.map((client: any) => ({
               id: client.id,
               name: client.name,
               email: client.email,
@@ -95,12 +98,12 @@ const Clients = () => {
               firstName: client.firstName,
               lastName: client.lastName,
             }));
-            setClientData(transformedClients);
+            setAllClientData(transformedClients);
           }
         }
       } catch (error) {
         console.error("Error loading clients:", error);
-        setClientData([]);
+        setAllClientData([]);
       } finally {
         setLoading(false);
       }
@@ -108,6 +111,27 @@ const Clients = () => {
 
     loadClients();
   }, [useMock]);
+
+  // Filter clients by advisor and apply to clientData
+  useEffect(() => {
+    let filtered = [...allClientData];
+    
+    // Apply advisor filter
+    if (selectedAdvisor !== 'All Advisors') {
+      filtered = filtered.filter(client => client.advisor === selectedAdvisor);
+      
+      // Debug logging
+      if (process.env.NODE_ENV === "development") {
+        console.log("Clients page - Filtered by advisor:", {
+          selectedAdvisor,
+          beforeFilter: allClientData.length,
+          afterFilter: filtered.length
+        });
+      }
+    }
+    
+    setClientData(filtered);
+  }, [allClientData, selectedAdvisor]);
 
   // Filter clients based on search term
   const filteredClients = clientData.filter(
@@ -173,12 +197,23 @@ const Clients = () => {
   return (
     <div className="p-8 space-y-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Clients</h1>
+        <div>
+          <h1 className="text-3xl font-bold">
+            {selectedAdvisor !== "All Advisors" 
+              ? `${selectedAdvisor}'s Clients` 
+              : "Clients"}
+          </h1>
+          {selectedAdvisor !== "All Advisors" && (
+            <p className="text-muted-foreground mt-1">
+              Showing clients for {selectedAdvisor}
+            </p>
+          )}
+        </div>
         <div className="flex items-center space-x-4">
           <div className="flex items-center">
             <Users className="mr-2 text-muted-foreground" size={20} />
             <span className="text-muted-foreground">
-              {clientData.length} total clients
+              {clientData.length} {selectedAdvisor !== "All Advisors" ? "advisor" : "total"} clients
             </span>
           </div>
           {useMock && (
