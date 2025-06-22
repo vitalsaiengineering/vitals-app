@@ -204,6 +204,7 @@ export default function ClientSegmentationDashboard() {
   }, [selectedReportAdvisor, selectedSegment]);
 
   const handleSegmentClick = (segmentName: string) => {
+    console.log("Segment clicked:", segmentName);
     setSelectedSegment(segmentName);
   };
 
@@ -213,9 +214,28 @@ export default function ClientSegmentationDashboard() {
       return [];
     }
 
-    // API returns clients for the current segment directly
-    return dashboardData.tableData.clients;
-  }, [dashboardData]);
+    // Filter clients by the selected segment
+    const filtered = dashboardData.tableData.clients.filter((client: SegmentClient) => {
+      // Determine client segment based on assets (same logic as in the donut chart calculation)
+      let clientSegment = 'Silver'; // default
+      if (client.assets >= 1000000) clientSegment = 'Platinum';
+      else if (client.assets >= 500000) clientSegment = 'Gold';
+      
+      return clientSegment === selectedSegment;
+    });
+
+    // Debug logging
+    if (process.env.NODE_ENV === "development") {
+      console.log("ClientSegmentationDashboard - Segment filtering:", {
+        selectedSegment,
+        totalClients: dashboardData.tableData.clients.length,
+        filteredClients: filtered.length,
+        sampleAssets: filtered.slice(0, 3).map(c => ({ name: c.name, assets: c.assets }))
+      });
+    }
+
+    return filtered;
+  }, [dashboardData, selectedSegment]);
 
   if (isLoading && !dashboardData) {
     return <div className="p-6 text-center">Loading dashboard...</div>;
@@ -247,7 +267,7 @@ export default function ClientSegmentationDashboard() {
               </p>
             </div>
             <div className="w-64">
-              <Select
+              {/* <Select
                 value={selectedReportAdvisor}
                 onValueChange={setSelectedReportAdvisor}
                 disabled={selectedAdvisor !== 'All Advisors'} // Disable if an advisor is selected from header
@@ -262,7 +282,7 @@ export default function ClientSegmentationDashboard() {
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
+              </Select> */}
             </div>
           </div>
         </CardHeader>
