@@ -87,8 +87,17 @@ export default function ClientAnniversaryView({
   globalSearch,
   setGlobalSearch,
 }: ClientAnniversaryViewProps) {
-  const [anniversaryData, setAnniversaryData] =
-    useState<ClientAnniversaryData | null>(null);
+  const [allAnniversaryData, setAllAnniversaryData] = useState<AnniversaryClient[]>([]); // Store all data
+  const [filteredAnniversaryData, setFilteredAnniversaryData] = useState<AnniversaryClient[]>([]); // Store filtered data
+  const [filterOptions, setFilterOptions] = useState<{
+    segments: string[];
+    tenures: string[];
+    advisors: { id: string; name: string }[];
+  }>({
+    segments: [],
+    tenures: [],
+    advisors: [],
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
@@ -116,34 +125,33 @@ export default function ClientAnniversaryView({
           mockData.ClientAnniversaryData as ClientAnniversaryData;
         
         // If an advisor is selected from the global context, filter the data
+        let clients = mockAnniversaryData.clients;
         if (selectedAdvisor !== 'All Advisors') {
           // Filter clients by the selected advisor
-          const filteredClients = mockAnniversaryData.clients.filter(
+          clients = clients.filter(
             (client) => {
               // Using advisorName field which should match the selectedAdvisor
               return client.advisorName === selectedAdvisor;
             }
           );
-          
-          // Update the data with filtered clients
-          setAnniversaryData({
-            ...mockAnniversaryData,
-            clients: filteredClients,
-            totalRecords: filteredClients.length
-          });
-        } else {
-          setAnniversaryData(mockAnniversaryData);
         }
+        
+        setAllAnniversaryData(clients);
+        setFilterOptions(mockAnniversaryData.filterOptions);
       } else {
         try {
-          // Add advisor parameter if an advisor is selected from the global context
-          const apiParams: Record<string, any> = { ...params };
+          const data = await getClientAnniversaryData();
+          
+          // If an advisor is selected from the global context, filter the data
+          let clients = data.clients;
           if (selectedAdvisor !== 'All Advisors') {
-            apiParams.advisorId = selectedAdvisor;
+            clients = clients.filter(
+              (client) => client.advisorName === selectedAdvisor
+            );
           }
           
-          const data = await getClientAnniversaryData(apiParams);
-          setAnniversaryData(data);
+          setAllAnniversaryData(clients);
+          setFilterOptions(data.filterOptions);
         } catch (apiError) {
           console.warn(
             "API fetch failed, falling back to mock data:",
@@ -151,7 +159,17 @@ export default function ClientAnniversaryView({
           );
           const mockAnniversaryData =
             mockData.ClientAnniversaryData as ClientAnniversaryData;
-          setAnniversaryData(mockAnniversaryData);
+          
+          // If an advisor is selected from the global context, filter the data
+          let clients = mockAnniversaryData.clients;
+          if (selectedAdvisor !== 'All Advisors') {
+            clients = clients.filter(
+              (client) => client.advisorName === selectedAdvisor
+            );
+          }
+          
+          setAllAnniversaryData(clients);
+          setFilterOptions(mockAnniversaryData.filterOptions);
         }
       }
     } catch (err) {
@@ -164,31 +182,94 @@ export default function ClientAnniversaryView({
     }
   };
 
+  // Client-side filtering function
+  const applyFilters = () => {
+    let filtered = [...allAnniversaryData];
+
+    // Debug logging
+    if (process.env.NODE_ENV === "development") {
+      console.log("ClientAnniversaryView - Applying filters:", {
+        totalClients: allAnniversaryData.length,
+        globalSearch,
+        selectedSegment,
+        selectedTenure,
+        selectedAdvisorFilter,
+        showUpcomingMilestones,
+      });
+    }
+
+    // Apply global search filter
+    if (globalSearch.trim()) {
+      const searchLower = globalSearch.toLowerCase();
+      filtered = filtered.filter(client =>
+        client.clientName.toLowerCase().includes(searchLower) ||
+        client.advisorName.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply segment filter
+    if (selectedSegment !== "All Segments") {
+      filtered = filtered.filter(client => client.segment === selectedSegment);
+    }
+
+    // Apply tenure filter
+    if (selectedTenure !== "Any Tenure") {
+      filtered = filtered.filter(client => {
+        // Implement tenure filtering logic based on the actual tenure options
+        const years = client.yearsWithFirm;
+        switch (selectedTenure) {
+          case "1-2 years":
+            return years >= 1 && years <= 2;
+          case "3-5 years":
+            return years >= 3 && years <= 5;
+          case "6-10 years":
+            return years >= 6 && years <= 10;
+          case "10+ years":
+            return years > 10;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply advisor filter (from the filter dropdown, not the header)
+    if (selectedAdvisorFilter !== "all") {
+      filtered = filtered.filter(client => 
+        client.advisorName === selectedAdvisorFilter || 
+        client.id === selectedAdvisorFilter
+      );
+    }
+
+    // Apply upcoming milestones filter
+    if (showUpcomingMilestones) {
+      filtered = filtered.filter(client => client.daysUntilNextAnniversary <= 90); // Next 90 days
+    }
+
+    // Debug logging for results
+    if (process.env.NODE_ENV === "development") {
+      console.log("ClientAnniversaryView - Filter results:", {
+        filteredCount: filtered.length,
+        sampleTenures: filtered.slice(0, 5).map(c => ({ name: c.clientName, tenure: c.yearsWithFirm }))
+      });
+    }
+
+    setFilteredAnniversaryData(filtered);
+  };
+
   useEffect(() => {
-    fetchAnniversaryData();
-  }, [useMock]);
+    fetchAnniversaryData(); // Initial fetch
+  }, [useMock, selectedAdvisor]);
 
-  // Effect to re-fetch data when filters change
+  // Apply filters whenever filter criteria or data changes
   useEffect(() => {
-    const params: GetClientAnniversaryParams = {};
-    if (globalSearch.trim()) params.search = globalSearch.trim();
-    if (selectedSegment !== "All Segments") params.segment = selectedSegment;
-    if (selectedTenure !== "Any Tenure") params.tenure = selectedTenure;
-    if (selectedAdvisorFilter !== "all") params.advisorId = selectedAdvisorFilter;
-    params.upcomingMilestonesOnly = showUpcomingMilestones;
-
-    const timer = setTimeout(() => {
-      fetchAnniversaryData(params);
-    }, 300);
-
-    return () => clearTimeout(timer);
+    applyFilters();
   }, [
+    allAnniversaryData,
     globalSearch,
     selectedSegment,
     selectedTenure,
     selectedAdvisorFilter,
     showUpcomingMilestones,
-    selectedAdvisor // Add selectedAdvisor from context as dependency
   ]);
 
   /**
@@ -206,7 +287,7 @@ export default function ClientAnniversaryView({
     return <div className="p-6 text-red-500 text-center">Error: {error}</div>;
   }
 
-  const filteredClients = anniversaryData ? getFilteredClients(anniversaryData.clients) : [];
+  const filteredClients = allAnniversaryData ? getFilteredClients(allAnniversaryData) : [];
 
   return (
     <div className="space-y-6">
@@ -260,7 +341,7 @@ export default function ClientAnniversaryView({
                 <SelectValue placeholder="Segment" />
               </SelectTrigger>
               <SelectContent>
-                {anniversaryData?.filterOptions.segments.map((segment) => (
+                {filterOptions?.segments.map((segment) => (
                   <SelectItem key={segment} value={segment}>
                     {segment}
                   </SelectItem>
@@ -273,7 +354,7 @@ export default function ClientAnniversaryView({
                 <SelectValue placeholder="Tenure" />
               </SelectTrigger>
               <SelectContent>
-                {anniversaryData?.filterOptions.tenures.map((tenure) => (
+                {filterOptions?.tenures.map((tenure) => (
                   <SelectItem key={tenure} value={tenure}>
                     {tenure}
                   </SelectItem>

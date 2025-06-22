@@ -386,10 +386,21 @@ export default function BookDevelopmentBySegmentReport() {
     }
     
     // Finally filter by selected segments
-    if (selectedSegments.length > 0 && selectedSegments.length < (reportData.allSegmentsData?.length || 0)) {
+    if (selectedSegments.length > 0) {
       filtered = filtered.filter((client) =>
         selectedSegments.includes(client.segment as SegmentName)
       );
+    }
+    
+    // Debug logging for segment filtering
+    if (process.env.NODE_ENV === "development") {
+      console.log("BookDevelopmentBySegmentReport - Segment filtering:", {
+        selectedSegments,
+        totalClients: allClients.length,
+        afterAdvisorFilter: selectedAdvisor !== 'All Advisors' ? filtered.length : allClients.length,
+        afterSegmentFilter: filtered.length,
+        clientSegments: filtered.map(c => c.segment)
+      });
     }
     
     return filtered;
@@ -418,14 +429,12 @@ export default function BookDevelopmentBySegmentReport() {
 
   // Calculate total pages
   const handleSegmentToggle = (segmentName: SegmentName) => {
-    if (selectedSegments.length === 1 && selectedSegments.includes(segmentName)) {
-      // If clicking the currently selected single segment, show all segments
-      setSelectedSegments(["Platinum", "Gold", "Silver"]);
-    } else {
-      // Otherwise, show only this segment
-      setSelectedSegments([segmentName]);
-    }
-    setCurrentPage(1);
+    setSelectedSegments((prev) =>
+      prev.includes(segmentName)
+        ? prev.filter((s) => s !== segmentName)
+        : [...prev, segmentName]
+    );
+    setCurrentPage(1); // Reset to first page when filter changes
   };
 
   const handleClearSegmentFilters = () => {
@@ -439,6 +448,7 @@ export default function BookDevelopmentBySegmentReport() {
     } else {
       setSelectedSegments([value as SegmentName]);
     }
+    setCurrentPage(1); // Reset to first page when filter changes
   };
 
   const filteredAndSortedClients = useMemo(() => {
@@ -722,6 +732,10 @@ export default function BookDevelopmentBySegmentReport() {
 
   // Check if we're in single segment mode (show clear filter button)
   const isFiltered = selectedSegments.length === 1;
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedSegments, filterSearchTerm, selectedAdvisor]);
 
   if (isLoading)
     return <div className="p-6 text-center">Loading report data...</div>;
