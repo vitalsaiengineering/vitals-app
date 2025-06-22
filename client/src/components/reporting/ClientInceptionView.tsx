@@ -99,8 +99,8 @@ export default function ClientInceptionView({
   globalSearch,
   setGlobalSearch,
 }: ClientInceptionViewProps) {
-  const [inceptionData, setInceptionData] =
-    useState<ClientInceptionData | null>(null);
+  const [allInceptionData, setAllInceptionData] = useState<ClientInceptionData | null>(null); // Store all data
+  const [filteredTableClients, setFilteredTableClients] = useState<InceptionClientDetail[]>([]); // Store filtered table data
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -115,7 +115,7 @@ export default function ClientInceptionView({
   // Check if we should use mock data
   const { useMock } = useMockData();
 
-  const fetchInceptionData = async (params?: ExtendedGetClientInceptionParams) => {
+  const fetchInceptionData = async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -123,37 +123,12 @@ export default function ClientInceptionView({
         const mockInceptionData =
           mockData.ClientInceptionData as ClientInceptionData;
         
-        // If an advisor is selected, filter the data
-        if (selectedAdvisor !== 'All Advisors') {
-          // Filter table clients by advisor - using a simple approach to avoid type issues
-          // We're assuming the mock data has an advisor property or can be accessed with bracket notation
-          const filteredClients = mockInceptionData.tableClients.filter(
-            (client) => {
-              // Using any to bypass type checking for the mock data
-              const clientAny = client as any;
-              return clientAny.advisor === selectedAdvisor;
-            }
-          );
-          
-          // Update the data with filtered clients
-          setInceptionData({
-            ...mockInceptionData,
-            tableClients: filteredClients,
-            totalTableRecords: filteredClients.length
-          });
-        } else {
-          setInceptionData(mockInceptionData);
-        }
+        // Store all data for client-side filtering
+        setAllInceptionData(mockInceptionData);
       } else {
         try {
-          // Add advisor parameter if an advisor is selected
-          const apiParams: Record<string, any> = { ...params };
-          if (selectedAdvisor !== 'All Advisors') {
-            apiParams.advisorId = selectedAdvisor;
-          }
-          
-          const data = await getClientInceptionData(apiParams);
-          setInceptionData(data);
+          const data = await getClientInceptionData();
+          setAllInceptionData(data);
         } catch (apiError) {
           console.warn(
             "API fetch failed, falling back to mock data:",
@@ -161,7 +136,7 @@ export default function ClientInceptionView({
           );
           const mockInceptionData =
             mockData.ClientInceptionData as ClientInceptionData;
-          setInceptionData(mockInceptionData);
+          setAllInceptionData(mockInceptionData);
         }
       }
     } catch (err) {
@@ -174,24 +149,63 @@ export default function ClientInceptionView({
     }
   };
 
+  // Client-side filtering function
+  const applyFilters = () => {
+    if (!allInceptionData) {
+      setFilteredTableClients([]);
+      return;
+    }
+
+    let filtered = [...allInceptionData.tableClients];
+
+    // Apply advisor filter (from header context)
+    if (selectedAdvisor !== 'All Advisors') {
+      filtered = filtered.filter((client) => {
+        // Using any to bypass type checking for the mock data
+        const clientAny = client as any;
+        return clientAny.advisor === selectedAdvisor;
+      });
+    }
+
+    // Apply global search filter
+    if (globalSearch.trim()) {
+      const searchLower = globalSearch.toLowerCase();
+      filtered = filtered.filter(client =>
+        client.name.toLowerCase().includes(searchLower) ||
+        client.segment.toLowerCase().includes(searchLower) ||
+        client.email.toLowerCase().includes(searchLower) ||
+        (client as any).advisor?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply segment filter
+    if (selectedSegmentFilter !== "All Segments") {
+      filtered = filtered.filter(client => client.segment === selectedSegmentFilter);
+    }
+
+    // Apply year filter (filter by inception year)
+    filtered = filtered.filter(client => {
+      const inceptionYear = new Date(client.inceptionDate).getFullYear();
+      return inceptionYear === selectedYear;
+    });
+
+    setFilteredTableClients(filtered);
+  };
+
   useEffect(() => {
     fetchInceptionData();
   }, [useMock]);
 
-  // Effect to re-fetch data when filters change
+  // Apply filters whenever filter criteria or data changes
   useEffect(() => {
-    const params: ExtendedGetClientInceptionParams = {};
-    if (globalSearch.trim()) params.search = globalSearch.trim();
-    params.year = selectedYear;
-    if (selectedSegmentFilter !== "All Segments")
-      params.segmentFilter = selectedSegmentFilter;
-
-    const timer = setTimeout(() => {
-      fetchInceptionData(params);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [globalSearch, selectedYear, selectedSegmentFilter, selectedAdvisor]); // Added selectedAdvisor dependency
+    applyFilters();
+  }, [
+    allInceptionData,
+    globalSearch,
+    selectedYear,
+    selectedSegmentFilter,
+    selectedAdvisor,
+  ]);
 
   /**
    * Handles bar chart click events for year selection
@@ -206,13 +220,13 @@ export default function ClientInceptionView({
    * Filters chart data based on selected segment
    */
   const getFilteredChartData = () => {
-    if (!inceptionData?.chartData) return [];
+    if (!allInceptionData?.chartData) return [];
     
     if (selectedSegmentFilter === "All Segments") {
-      return inceptionData.chartData;
+      return allInceptionData.chartData;
     }
 
-    return inceptionData.chartData.map(item => ({
+    return allInceptionData.chartData.map(item => ({
       ...item,
       [selectedSegmentFilter]: item[selectedSegmentFilter as keyof typeof item] || 0,
       ...(selectedSegmentFilter !== "Platinum" && { Platinum: 0 }),
@@ -245,13 +259,13 @@ export default function ClientInceptionView({
               </div>
               <div className="space-y-2">
                 <p className="text-4xl font-bold text-foreground">
-                  {inceptionData?.kpi.ytdNewClients || 0}
+                  {allInceptionData?.kpi.ytdNewClients || 0}
                 </p>
                 <p className="text-sm text-muted-foreground">YTD New Clients</p>
                 <div className="flex items-center space-x-1">
                   <TrendingUp className="h-4 w-4 text-green-600" />
                   <span className="text-sm text-green-600 font-medium">
-                    +{inceptionData?.kpi.percentageChangeVsPreviousYear || 0}%
+                    +{allInceptionData?.kpi.percentageChangeVsPreviousYear || 0}%
                     vs previous year
                   </span>
                 </div>
@@ -262,13 +276,13 @@ export default function ClientInceptionView({
             <div className="w-32">
               <Select
                 value={String(selectedYear)}
-                onValueChange={(value) => setSelectedYear(parseInt(value))}
+                onValueChange={(value) => setSelectedYear(Number(value))}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {inceptionData?.availableYears.map((year) => (
+                  {allInceptionData?.availableYears.map((year: number) => (
                     <SelectItem key={year} value={String(year)}>
                       {year}
                     </SelectItem>
@@ -283,11 +297,7 @@ export default function ClientInceptionView({
       {/* Chart and Legend */}
       <Card className="border shadow-sm">
         <CardHeader>
-          <CardTitle>
-            {selectedAdvisor !== "All Advisors" 
-              ? `${selectedAdvisor}'s New Clients by Segment (${selectedYear})` 
-              : `New Clients by Segment (${selectedYear})`}
-          </CardTitle>
+          <CardTitle className="text-xl">Client Inception by Year</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -304,6 +314,7 @@ export default function ClientInceptionView({
                     <XAxis dataKey="year" />
                     <YAxis />
                     <Tooltip content={<CustomTooltip />} />
+                    <Legend />
                     <Bar
                       dataKey="Platinum"
                       stackId="a"
@@ -340,7 +351,7 @@ export default function ClientInceptionView({
                     <span className="text-sm font-medium">Clients</span>
                   </div>
                   
-                  {inceptionData?.chartLegend
+                  {allInceptionData?.chartLegend
                     .filter(item => 
                       (selectedSegmentFilter === "All Segments" || 
                       item.segment === selectedSegmentFilter) && item.segment !== "Total"
@@ -370,7 +381,7 @@ export default function ClientInceptionView({
                   <div className="border-t pt-2 flex justify-between items-center">
                     <span className="text-sm font-medium">Total</span>
                     <span className="text-sm font-bold">
-                      {inceptionData?.chartLegend
+                      {allInceptionData?.chartLegend
                         .filter(item => 
                           selectedSegmentFilter === "All Segments" || 
                           item.segment === selectedSegmentFilter
@@ -422,7 +433,7 @@ export default function ClientInceptionView({
             <CardTitle className="text-lg">Client Inception Year</CardTitle>
             <div className="flex items-center space-x-4 text-sm text-muted-foreground">
               <span>
-                {inceptionData ? `${inceptionData.totalTableRecords} records` : "0 records"}
+                {allInceptionData ? `${allInceptionData.totalTableRecords} records` : "0 records"}
               </span>
               <span>{selectedSegmentFilter} • {selectedYear}</span>
             </div>
@@ -431,47 +442,40 @@ export default function ClientInceptionView({
         <CardContent>
           {isLoading && (
             <div className="p-4 text-center text-muted-foreground">
-              Loading client data...
+              Loading inception data...
             </div>
           )}
-          {!isLoading &&
-            inceptionData &&
-            inceptionData.tableClients.length === 0 && (
-              <div className="text-center text-muted-foreground py-10">
-                No clients match the current filters.
-              </div>
-            )}
-          {!isLoading &&
-            inceptionData &&
-            inceptionData.tableClients.length > 0 && (
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Segment</TableHead>
-                      <TableHead>Inception Date</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {inceptionData.tableClients.map((client) => {
-                      const gradeClasses = getGradeBadgeClasses(client.segment);
+          {!isLoading && filteredTableClients.length === 0 && (
+            <div className="text-center text-muted-foreground py-10">
+              No clients match the current filters.
+            </div>
+          )}
+          {!isLoading && filteredTableClients.length > 0 && (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Segment</TableHead>
+                    <TableHead>Inception Date</TableHead>
+                    <TableHead>Advisor</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredTableClients.map((client) => {
+                    const gradeClasses = getGradeBadgeClasses(client.segment);
 
-                      return (
-                        <TableRow key={client.id}>
-                          <TableCell className="font-medium">
-                            {client.name}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {client.email}
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={`px-2.5 py-1 text-xs font-semibold rounded-md ${gradeClasses.badgeBg} ${gradeClasses.badgeText}`}
-                            >
-                              {client.segment}
+                    return (
+                      <TableRow key={client.id}>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                              <Users className="w-4 h-4 text-gray-500" />
+                            </div>
+                            <span className="font-medium">
+                              {client.name}
                             </span>
                           </TableCell>
                           <TableCell>
