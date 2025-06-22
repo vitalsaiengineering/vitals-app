@@ -477,29 +477,45 @@ export default function ClientInceptionView({
                             <span className="font-medium">
                               {client.name}
                             </span>
-                          </TableCell>
-                          <TableCell>
-                            {new Date(client.inceptionDate).toLocaleDateString(
-                              "en-US",
-                              {
-                                year: "numeric",
-                                month: "2-digit",
-                                day: "2-digit",
-                              }
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button size="sm" variant="default">
-                              View Contact
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {client.email}
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`px-2 py-1 text-xs font-medium rounded-full ${gradeClasses.badgeBg} ${gradeClasses.badgeText}`}
+                          >
+                            {client.segment}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(client.inceptionDate).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            }
+                          )}
+                        </TableCell>
+                        <TableCell>{(client as any).advisor || 'N/A'}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 text-xs"
+                          >
+                            View Client
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
