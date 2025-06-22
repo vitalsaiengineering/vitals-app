@@ -313,8 +313,8 @@ const ClientDistributionByStateReport = () => {
       {/* Main Content Grid - Map and Client List */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Map Card */}
-        <Card>
-          <CardHeader>
+        <Card className="flex flex-col h-[calc(100vh-300px)]">
+          <CardHeader className="flex-shrink-0">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
               <CardTitle>Client Distribution Map</CardTitle>
               <div className="flex space-x-2">
@@ -337,7 +337,7 @@ const ClientDistributionByStateReport = () => {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="aspect-[16/10]">
+          <CardContent className="flex-1 flex items-center justify-center p-4">
             <ComposableMap projection="geoAlbersUsa" className="w-full h-full">
               <Geographies geography={GEO_URL}>
                   {({ geographies }) =>
@@ -459,8 +459,8 @@ const ClientDistributionByStateReport = () => {
         </Card>
 
         {/* Client List Table Card - Always rendered, content changes */}
-        <Card>
-        <CardHeader>
+        <Card className="flex flex-col h-[calc(100vh-300px)]">
+        <CardHeader className="flex-shrink-0">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
             <CardTitle>{tableTitle}</CardTitle>
             <div className="flex items-center space-x-4 text-sm text-muted-foreground">
@@ -490,30 +490,31 @@ const ClientDistributionByStateReport = () => {
             />
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client Name</TableHead>
-                  <TableHead>Segment</TableHead>
-                  <TableHead 
-                    className="text-right cursor-pointer hover:bg-muted/50 select-none"
-                    onClick={() => handleSort('aum')}
-                  >
-                    <div className="flex items-center justify-end gap-1">
-                      AUM
-                      {sortConfig.key === 'aum' && (
-                        sortConfig.direction === 'desc' ? 
-                          <ChevronDown className="h-4 w-4" /> : 
-                          <ChevronUp className="h-4 w-4" />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+        <CardContent className="flex-1 overflow-hidden p-0">
+          <div className="h-full overflow-auto">
+            <div className="rounded-md border m-6">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableRow>
+                    <TableHead>Client Name</TableHead>
+                    <TableHead>Segment</TableHead>
+                    <TableHead 
+                      className="text-right cursor-pointer hover:bg-muted/50 select-none"
+                      onClick={() => handleSort('aum')}
+                    >
+                      <div className="flex items-center justify-end gap-1">
+                        AUM
+                        {sortConfig.key === 'aum' && (
+                          sortConfig.direction === 'desc' ? 
+                            <ChevronDown className="h-4 w-4" /> : 
+                            <ChevronUp className="h-4 w-4" />
+                        )}
+                      </div>
+                    </TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                 {clientsInSelectedState.length > 0 ? (
                   clientsInSelectedState.map((client) => (
                     <TableRow key={client.id}>
@@ -522,7 +523,7 @@ const ClientDistributionByStateReport = () => {
                       </TableCell>
                       <TableCell>
                         <span
-                          className={`px-2 py-0.5 text-xs rounded-full border ${getSegmentClass(
+                          className={`px-2 py-0.5 text-xs rounded-full border whitespace-nowrap ${getSegmentClass(
                             client.segment
                           )}`}
                         >
@@ -553,6 +554,7 @@ const ClientDistributionByStateReport = () => {
                 )}
               </TableBody>
             </Table>
+            </div>
           </div>
         </CardContent>
       </Card>

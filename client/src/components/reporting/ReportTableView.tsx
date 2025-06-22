@@ -33,10 +33,10 @@ export function ReportTableView({ reports, onToggleFavorite, onViewReport }: Rep
           <TableRow key={report.id}>
             <TableCell className="font-medium">
               <div className="flex items-center">
-                <span>{report.name}</span>
-                <Button variant="ghost" size="icon" className="ml-2 h-7 w-7" onClick={() => onToggleFavorite(report.id)}>
+              <Button variant="ghost" size="icon" className="ml-2 h-7 w-7" onClick={() => onToggleFavorite(report.id)}>
                   <Star className={`h-4 w-4 ${report.isFavorite ? 'fill-yellow-400 text-yellow-500' : 'text-muted-foreground hover:text-yellow-500'}`} />
                 </Button>
+                <span>{report.name}</span>
               </div>
             </TableCell>
             <TableCell className="text-sm text-muted-foreground">{report.description}</TableCell>

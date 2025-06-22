@@ -188,7 +188,7 @@ export const AdvisoryFirmDashboard: React.FC<AdvisoryFirmDashboardProps> = ({
     <div className="space-y-6 p-6">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold text-gray-900">Advisory Firm Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Firm Activities Dashboard</h1>
         <p className="text-gray-600">Monitor staff activities and performance across all departments</p>
       </div>
 

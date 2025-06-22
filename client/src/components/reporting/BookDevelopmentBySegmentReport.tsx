@@ -575,7 +575,7 @@ export default function BookDevelopmentBySegmentReport() {
           {/* Chart Container with Toggle in Top Right */}
           <div className="relative">
             {/* Chart View Toggle - Top Right */}
-            <div className="absolute top-2 right-4 z-10 flex items-center space-x-2 bg-background/80 backdrop-blur-sm rounded-full px-3 py-1.5 border border-border">
+            <div className="absolute top-2 right-4 z-10 flex items-center space-x-2 bg-background/80 backdrop-blur-sm rounded-full px-3 py-1.5 ">
               <Label
                 htmlFor="chart-toggle-switch"
                 className={`text-xs ${

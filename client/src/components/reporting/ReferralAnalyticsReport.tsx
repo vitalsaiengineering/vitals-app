@@ -13,8 +13,14 @@ import {
   type ReferralAnalyticsData,
   type ReferralSource,
   type ReferralClient,
-  type GetReferralAnalyticsParams
+  type GetReferralAnalyticsParams,
+  ClientDistributionReportData
 } from '@/lib/clientData';
+import { useMockData } from "@/contexts/MockDataContext";
+
+// Import mock data
+import mockData from "@/data/mockData.js";
+
 
 // Colors for the pie chart
 const COLORS = [
@@ -64,6 +70,7 @@ interface ReferralAnalyticsReportProps {
 }
 
 export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralAnalyticsReportProps) {
+  const { useMock } = useMockData();
   const [analyticsData, setAnalyticsData] = useState<ReferralAnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +79,46 @@ export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralA
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedReferralSource, setSelectedReferralSource] = useState<ReferralSource | null>(null);
   const [viewMode, setViewMode] = useState<'numbers' | 'keynote'>('numbers');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        if (useMock) {
+          // Use mock data
+          console.log('Using mock data');
+          console.log(mockData.ReferralAnalytics);
+          const mockReportData =
+            mockData.ReferralAnalytics as ReferralAnalyticsData;
+          setAnalyticsData(mockReportData);
+        } else {
+          // Try to fetch from API, fallback to mock data on error
+          try {
+            const data = await getReferralAnalyticsData();
+            setAnalyticsData(data);
+          } catch (apiError) {
+            console.warn(
+              "API fetch failed, falling back to mock data:",
+              apiError
+            );
+            const mockReportData =
+              mockData.ReferralAnalytics as ReferralAnalyticsData;
+            setAnalyticsData(mockReportData);
+          }
+        }
+        // Initially, selectedStateMetric is null, showing "All Clients"
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch report data"
+        );
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [useMock]);
 
   const fetchAnalyticsData = async (params?: GetReferralAnalyticsParams) => {
     setIsLoading(true);
@@ -291,7 +338,8 @@ export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralA
                     <div className="grid grid-cols-12 gap-4 text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-200 pb-3">
                       <div className="col-span-4">Name</div>
                       <div className="col-span-3">Segment</div>
-                      <div className="col-span-5 text-right">AUM</div>
+                      <div className="col-span-3">Primary Advisor</div>
+                      <div className="col-span-2 text-right">AUM</div>
                     </div>
                     
                     {/* Client List - with flex-1 to fill remaining space */}
@@ -310,7 +358,10 @@ export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralA
                                 {client.segment}
                               </Badge>
                             </div>
-                            <div className="col-span-5 text-right">
+                            <div className="col-span-3">
+                              <div className="font-medium text-sm text-gray-900">{client.primaryAdvisor}</div>
+                            </div>
+                            <div className="col-span-2 text-right">
                               <div className="font-semibold text-green-600 text-sm">
                                 {formatCurrency(client.aum)}
                               </div>
@@ -331,7 +382,10 @@ export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralA
                                 {client.segment}
                               </Badge>
                             </div>
-                            <div className="col-span-5 text-right">
+                            <div className="col-span-3">
+                              <div className="font-medium text-sm text-gray-900">{client.primaryAdvisor}</div>
+                            </div>
+                            <div className="col-span-2 text-right">
                               <div className="font-semibold text-green-600 text-sm">
                                 {formatCurrency(client.aum)}
                               </div>

@@ -236,12 +236,12 @@ export default function ClientSegmentationDashboard() {
       {/* Main Content: Chart and Table */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Client Segmentation Chart */}
-        <Card>
-          <CardHeader>
+        <Card className="flex flex-col h-[calc(100vh-350px)]">
+          <CardHeader className="flex-shrink-0">
             <CardTitle>Client Segmentation</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-80">
+          <CardContent className="flex-1 flex items-center justify-center">
+            <div className="h-80 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -281,36 +281,37 @@ export default function ClientSegmentationDashboard() {
         </Card>
 
         {/* Client Table */}
-        <Card>
-          <CardHeader>
+        <Card className="flex flex-col h-[calc(100vh-350px)]">
+          <CardHeader className="flex-shrink-0">
             <CardTitle>
               {dashboardData?.tableData?.segmentName || selectedSegment} Clients ({currentSegmentClients.length})
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            {isLoading && (
-              <div className="p-4 text-center text-muted-foreground">
-                Updating results...
-              </div>
-            )}
-            {!isLoading && currentSegmentClients.length === 0 && (
-              <div className="text-center text-muted-foreground py-10">
-                No clients found for this segment.
-              </div>
-            )}
-            {!isLoading && currentSegmentClients.length > 0 && (
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Age</TableHead>
-                      <TableHead>Years with Firm</TableHead>
-                      <TableHead className="text-right">Assets</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+          <CardContent className="flex-1 overflow-hidden p-0">
+            <div className="h-full overflow-auto">
+              {isLoading && (
+                <div className="p-4 text-center text-muted-foreground">
+                  Updating results...
+                </div>
+              )}
+              {!isLoading && currentSegmentClients.length === 0 && (
+                <div className="text-center text-muted-foreground py-10 px-6">
+                  No clients found for this segment.
+                </div>
+              )}
+              {!isLoading && currentSegmentClients.length > 0 && (
+                <div className="rounded-md border m-6">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-background z-10">
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Age</TableHead>
+                        <TableHead>Years with Firm</TableHead>
+                        <TableHead className="text-right">Assets</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                     {currentSegmentClients.map((client) => (
                       <TableRow key={client.id}>
                         <TableCell className="font-medium">
@@ -337,8 +338,9 @@ export default function ClientSegmentationDashboard() {
                     ))}
                   </TableBody>
                 </Table>
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
