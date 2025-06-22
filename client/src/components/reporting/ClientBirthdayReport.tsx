@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { formatDate } from "@/utils/dateFormatter";
 import {
   Table,
   TableBody,
@@ -455,17 +456,10 @@ const ClientBirthdayReport = () => {
                         <TableCell>
                           <div className="flex items-center">
                             <CalendarDays className={iconClasses} />
-                            {new Date(client.dateOfBirth).toLocaleDateString(
-                              "en-US",
-                              {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              }
-                            )}
+                            {formatDate(client.dateOfBirth)}
                           </div>
                         </TableCell>
-                        <TableCell>{client.nextBirthdayDisplay}</TableCell>
+                        <TableCell>{formatDate(client.nextBirthdayDisplay)}</TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center">
                             {isMilestoneAge(client.turningAge) && (

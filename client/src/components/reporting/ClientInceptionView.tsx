@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { formatDate } from "@/utils/dateFormatter";
 import {
   Table,
   TableBody,
@@ -490,14 +491,7 @@ export default function ClientInceptionView({
                           </span>
                         </TableCell>
                         <TableCell>
-                          {new Date(client.inceptionDate).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            }
-                          )}
+                          {formatDate(client.inceptionDate)}
                         </TableCell>
                         <TableCell>{(client as any).advisor || 'N/A'}</TableCell>
                         <TableCell className="text-right">

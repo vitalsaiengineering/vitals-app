@@ -12,22 +12,188 @@ import { useWealthboxFields } from '@/hooks/use-wealthbox-fields';
 import { fieldHasOptions } from '@/services/wealthbox-api';
 import axios from 'axios';
 import { useQuery } from '@tanstack/react-query';
+import { useMockData } from '@/contexts/MockDataContext';
+
+// Mock data for Wealthbox fields
+const mockWealthboxFields: FieldOption[] = [
+  { label: 'Contact Type', value: 'contact_type', fieldType: 'select', documentType: 'contact' },
+  { label: 'Client Status', value: 'client_status', fieldType: 'select', documentType: 'contact' },
+  { label: 'Active Flag', value: 'active_flag', fieldType: 'boolean', documentType: 'contact' },
+  { label: 'Current Client', value: 'current_client', fieldType: 'boolean', documentType: 'contact' },
+  { label: 'Prospect Flag', value: 'prospect_flag', fieldType: 'boolean', documentType: 'contact' },
+  { label: 'Lead Status', value: 'lead_status', fieldType: 'select', documentType: 'contact' },
+  { label: 'Potential Client', value: 'potential_client', fieldType: 'boolean', documentType: 'contact' },
+  { label: 'Former Client', value: 'former_client', fieldType: 'boolean', documentType: 'contact' },
+  { label: 'Terminated Status', value: 'terminated', fieldType: 'select', documentType: 'contact' },
+  { label: 'Inactive Status', value: 'inactive_status', fieldType: 'select', documentType: 'contact' },
+  { label: 'Deceased Flag', value: 'deceased_flag', fieldType: 'boolean', documentType: 'contact' },
+  { label: 'Death Date', value: 'death_date', fieldType: 'date', documentType: 'contact' },
+  { label: 'Deceased Status', value: 'deceased_status', fieldType: 'boolean', documentType: 'contact' },
+  { label: 'Primary Advisor', value: 'primary_advisor', fieldType: 'text', documentType: 'contact' },
+  { label: 'Lead Advisor', value: 'lead_advisor', fieldType: 'text', documentType: 'contact' },
+  { label: 'Financial Advisor', value: 'financial_advisor', fieldType: 'text', documentType: 'contact' },
+  { label: 'Relationship Manager', value: 'relationship_manager', fieldType: 'text', documentType: 'contact' },
+  { label: 'Client Start Date', value: 'client_start_date', fieldType: 'date', documentType: 'contact' },
+  { label: 'Onboarding Date', value: 'onboarding_date', fieldType: 'date', documentType: 'contact' },
+  { label: 'Relationship Start Date', value: 'relationship_start_date', fieldType: 'date', documentType: 'contact' },
+  { label: 'Account Open Date', value: 'account_open_date', fieldType: 'date', documentType: 'contact' },
+  { label: 'Client Since Date', value: 'client_since_date', fieldType: 'date', documentType: 'contact' },
+  { label: 'Referral Source', value: 'referral_source', fieldType: 'text', documentType: 'contact' },
+  { label: 'Lead Source', value: 'lead_source', fieldType: 'select', documentType: 'contact' },
+  { label: 'How Did You Hear', value: 'how_did_you_hear', fieldType: 'text', documentType: 'contact' },
+  { label: 'Marketing Source', value: 'marketing_source', fieldType: 'select', documentType: 'contact' },
+  { label: 'Client Source', value: 'client_source', fieldType: 'text', documentType: 'contact' },
+  { label: 'Tier Level', value: 'tier_level', fieldType: 'select', documentType: 'contact' },
+  { label: 'Client Segment', value: 'client_segment', fieldType: 'select', documentType: 'contact' },
+  { label: 'Investment Profile', value: 'investment_profile', fieldType: 'select', documentType: 'contact' },
+  { label: 'Risk Tolerance', value: 'risk_tolerance', fieldType: 'select', documentType: 'contact' },
+];
+
+// Mock sections with empty mappings (no pre-selected values)
+const mockWealthboxSections: MappingSection[] = [
+  {
+    title: 'Client Status & Relationships',
+    description: 'Map client status and relationship fields',
+    mappings: [
+      {
+        sourceField: 'activeClient',
+        sourceLabel: (
+          <>
+            <strong>Active Clients</strong>
+            <br />
+            Which field indicates an Active Client of the firm?
+          </>
+        ),
+        targetField: '',
+        targetOptions: mockWealthboxFields,
+      },
+      {
+        sourceField: 'prospectiveClient',
+        sourceLabel: (
+          <>
+            <strong>Prospects</strong>
+            <br />
+            Which field indicates a Prospective Client of the firm?
+          </>
+        ),
+        targetField: '',
+        targetOptions: mockWealthboxFields,
+      },
+      {
+        sourceField: 'lostClient',
+        sourceLabel: (
+          <>
+            <strong>Past Clients</strong>
+            <br />
+            Which field indicates a Lost Client of the firm?
+          </>
+        ),
+        targetField: '',
+        targetOptions: mockWealthboxFields,
+      },
+      {
+        sourceField: 'deceasedClient',
+        sourceLabel: (
+          <>
+            <strong>Deceased Clients</strong>
+            <br />
+            Which field indicates a Deceased Client of the firm?
+          </>
+        ),
+        targetField: '',
+        targetOptions: mockWealthboxFields,
+      },
+      {
+        sourceField: 'leadAdvisor',
+        sourceLabel: (
+          <>
+            <strong>Primary Advisor</strong>
+            <br />
+            Which field indicates the Lead Advisor for a client?
+          </>
+        ),
+        targetField: '',
+        targetOptions: mockWealthboxFields,
+      },
+      {
+        sourceField: 'inceptionDate',
+        sourceLabel: (
+          <>
+            <strong>Client Inception</strong>
+            <br />
+            Which field indicates the Inception Date for your clients?
+          </>
+        ),
+        targetField: '',
+        targetOptions: mockWealthboxFields,
+      },
+      {
+        sourceField: 'referralSource',
+        sourceLabel: (
+          <>
+            <strong>Referral Source</strong>
+            <br />
+            Which field indicates the Referral Source for your clients?
+          </>
+        ),
+        targetField: '',
+        targetOptions: mockWealthboxFields,
+      },
+    ],
+  },
+];
+
+// Mock segmentation sections
+const mockSegmentationSections: MappingSection[] = [
+  {
+    title: 'Client Segmentation Definitions',
+    description: 'Define your client tiers and map them to segmentation attributes',
+    mappings: [
+      {
+        sourceField: 'topTier',
+        sourceLabel: 'What indicates a top tier client?',
+        targetField: '',
+        targetOptions: mockWealthboxFields,
+      },
+      {
+        sourceField: 'secondTier',
+        sourceLabel: 'What indicates a second tier client?',
+        targetField: '',
+        targetOptions: mockWealthboxFields,
+      },
+      {
+        sourceField: 'thirdTier',
+        sourceLabel: 'What indicates a third tier client?',
+        targetField: '',
+        targetOptions: mockWealthboxFields,
+      },
+    ],
+  },
+];
 
 interface WealthboxMappingProps {
-  accessToken: string;
+  accessToken?: string;
 }
 
-const WealthboxMapping: React.FC<WealthboxMappingProps> = ({ accessToken }) => {
+const WealthboxMapping: React.FC<WealthboxMappingProps> = ({ accessToken = '' }) => {
   const { toast } = useToast();
+  const { useMock } = useMockData();
   const [wealthboxToken, setWealthboxToken] = useState<string>(accessToken);
   const [tokenLoading, setTokenLoading] = useState(true);
   const [tokenError, setTokenError] = useState(false);
 
   const { isLoading, hasError, getOptions, searchOptions } = useWealthboxFields();
 
-  // Fetch the Wealthbox token when the component mounts
+  // Fetch the Wealthbox token when the component mounts (only if not using mock data)
 useEffect(() => {
   const fetchWealthboxToken = async () => {
+    if (useMock) {
+      // Skip token fetching for mock data
+      setTokenLoading(false);
+      setTokenError(false);
+      return;
+    }
+    
     try {
       setTokenLoading(true);
       setTokenError(false);
@@ -48,19 +214,32 @@ useEffect(() => {
   };
   
   fetchWealthboxToken();
-}, []);
+}, [useMock]);
   
   
   // Callback to search for field options as user types
   const handleFieldSearch = useCallback(
     async (searchTerm: string): Promise<FieldOption[]> => {
+      if (useMock) {
+        // Filter mock fields based on search term
+        return mockWealthboxFields.filter(field => 
+          field.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          field.value.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
       return searchOptions(searchTerm);
     },
-    [searchOptions]
+    [searchOptions, useMock]
   );
 
   // Helper function to get field info for display
   const getFieldInfo = useCallback((fieldValue: string): { field: FieldOption | null; isNested: boolean; parentField?: FieldOption } => {
+    if (useMock) {
+      // Use mock data for field info
+      const field = mockWealthboxFields.find(option => option.value === fieldValue);
+      return { field: field || null, isNested: false };
+    }
+    
     const allOptions = getOptions('all');
     
     // First check if it's a direct field
@@ -80,9 +259,10 @@ useEffect(() => {
     }
     
     return { field: null, isNested: false };
-  }, [getOptions]);
+  }, [getOptions, useMock]);
   
-  const [sections, setSections] = useState<MappingSection[]>([
+  const [sections, setSections] = useState<MappingSection[]>(
+    useMock ? mockWealthboxSections : [
     {
       title: 'Client Status & Relationships',
       description: 'Map client status and relationship fields',
@@ -213,7 +393,8 @@ useEffect(() => {
   ]);
 
   // Add client segmentation section
-  const [segmentationSections, setSegmentationSections] = useState<MappingSection[]>([
+  const [segmentationSections, setSegmentationSections] = useState<MappingSection[]>(
+    useMock ? mockSegmentationSections : [
     {
       title: 'Client Segmentation Definitions',
       description: 'Define your client tiers and map them to segmentation attributes',
@@ -296,7 +477,11 @@ useEffect(() => {
 
   // Update sections with field options once they're loaded
   useEffect(() => {
-    if (!isLoading && !hasError && wealthboxToken) {
+    if (useMock) {
+      // For mock data, sections are already initialized with mock fields
+      // Just load saved mappings
+      loadSavedMappings();
+    } else if (!isLoading && !hasError && wealthboxToken) {
       const allOptions = getOptions('all');
       
       if(allOptions.length > 0) {
@@ -325,7 +510,7 @@ useEffect(() => {
       loadSavedMappings();
     } 
     }
-  }, [isLoading, hasError, wealthboxToken, getOptions, loadSavedMappings]);
+  }, [isLoading, hasError, wealthboxToken, getOptions, loadSavedMappings, useMock]);
   
   const [tierCount, setTierCount] = useState(3);
 
@@ -358,7 +543,7 @@ useEffect(() => {
     const newSections = [...segmentationSections];
     
     // Get current field options
-    const allOptions = getOptions('all');
+    const allOptions = useMock ? mockWealthboxFields : getOptions('all');
     
     newSections[0].mappings.push({
       sourceField: `tier${newTierCount}`,
@@ -417,6 +602,12 @@ useEffect(() => {
           title: "Mapping saved",
           description: "Your Wealthbox field mapping has been saved successfully.",
         });
+
+        // Redirect back to settings page with data-mapping tab
+        setTimeout(() => {
+          window.history.pushState({}, "", "/settings?tab=data-mapping");
+          window.dispatchEvent(new Event('popstate'));
+        }, 1000); // Small delay to let user see the success toast
       } else {
         throw new Error(response.data.message || 'Failed to save mappings');
       }
@@ -483,7 +674,6 @@ useEffect(() => {
                   }
                   sourceSystem="Firm"
                   targetSystem="Segmentation Engine"
-                  onSearch={handleFieldSearch}
                 />
                 <FieldInfoDisplay fieldValue={mapping.targetField} />
               </div>
@@ -493,7 +683,7 @@ useEffect(() => {
                 variant="outline" 
                 onClick={handleAddTier} 
                 className="w-full"
-                disabled={isLoading || hasError || tokenError}
+                disabled={useMock ? false : (isLoading || hasError || tokenError)}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add More Tiers
@@ -505,7 +695,7 @@ useEffect(() => {
     );
   };
 
-  if (tokenError) {
+  if (tokenError && !useMock) {
     return (
       <div className="animate-fade-in">
         <PageHeader 
@@ -552,12 +742,12 @@ useEffect(() => {
       />
 
       <div className="mapping-container">
-        {(isLoading || tokenLoading) ? (
+        {(useMock ? false : (isLoading || tokenLoading)) ? (
           <div className="text-center p-8">
             <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
             <p>Loading Wealthbox field options...</p>
           </div>
-        ) : hasError ? (
+        ) : (useMock ? false : hasError) ? (
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
@@ -567,14 +757,14 @@ useEffect(() => {
         ) : (
           <>
             {/* Info banner about field types */}
-            <div className="max-w-5xl mx-auto px-4">  
+            {/* <div className="max-w-5xl mx-auto px-4">  
             <Alert className="mb-6">
               <Info className="h-4 w-4" />
               <AlertDescription>
                 Fields with dropdown options can be expanded to select specific values. Field types and available options are shown below each selection.
               </AlertDescription>
             </Alert>
-            </div>
+            </div> */}
 
             {sections.map((section, index) => (
               <FieldMappingCard
@@ -587,7 +777,6 @@ useEffect(() => {
                 }
                 sourceSystem="Vitals"
                 targetSystem="Wealthbox"
-                onSearch={handleFieldSearch}
               />
             ))}
             

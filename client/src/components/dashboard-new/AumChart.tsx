@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -78,21 +78,102 @@ export const AumChart = ({ showViewFullReport = true, selectedAdvisor = "All Adv
     return formatCurrency(value);
   };
 
-  // Get mock data from BookDevelopmentBySegmentReport
+  // Get mock data from BookDevelopmentBySegmentReport - exact implementation
   const getMockSegmentData = (): SegmentChartData[] => {
-    // Define fixed base data that will always work
-    const baseData = [
-      { year: 2019, Platinum: 40000000, Gold: 25000000, Silver: 12000000 },
-      { year: 2020, Platinum: 43000000, Gold: 27000000, Silver: 13000000 },
-      { year: 2021, Platinum: 46000000, Gold: 29000000, Silver: 14000000 },
-      { year: 2022, Platinum: 50000000, Gold: 31000000, Silver: 15000000 },
-      { year: 2023, Platinum: 54000000, Gold: 33000000, Silver: 16000000 },
-      { year: 2024, Platinum: 58000000, Gold: 36000000, Silver: 17000000 },
-      { year: 2025, Platinum: 63000000, Gold: 39000000, Silver: 18000000 },
-    ];
+    try {
+      const segmentReport = mockData.BookDevelopmentBySegmentReport;
+      const years = [2019, 2020, 2021, 2022, 2023, 2024, 2025];
+
+      return years.map((year) => {
+        const dataPoint: SegmentChartData = {
+          year,
+          Platinum: 0,
+          Gold: 0,
+          Silver: 0,
+        };
+
+        segmentReport.allSegmentsData.forEach((segment: any) => {
+          const yearData = segment.dataAUM.find(
+            (data: any) => data.year === year
+          );
+          if (yearData) {
+            dataPoint[segment.name as keyof Omit<SegmentChartData, "year">] =
+              yearData.value;
+          }
+        });
+
+        return dataPoint;
+      });
+    } catch (error) {
+      console.error("Error loading mock segment data:", error);
+      // Fallback data
+      return [
+        { year: 2019, Platinum: 40000000, Gold: 25000000, Silver: 12000000 },
+        { year: 2020, Platinum: 43000000, Gold: 27000000, Silver: 13000000 },
+        { year: 2021, Platinum: 46000000, Gold: 29000000, Silver: 14000000 },
+        { year: 2022, Platinum: 50000000, Gold: 31000000, Silver: 15000000 },
+        { year: 2023, Platinum: 54000000, Gold: 33000000, Silver: 16000000 },
+        { year: 2024, Platinum: 58000000, Gold: 36000000, Silver: 17000000 },
+        { year: 2025, Platinum: 63000000, Gold: 39000000, Silver: 18000000 },
+      ];
+    }
+  };
+
+  // Transform original API data for legacy chart
+  const realData =
+    aumResponse?.data?.map((item: ChartDataPoint) => ({
+      period: item.period,
+      aum: item.aum,
+      date: item.date,
+      dataPoints: item.dataPoints,
+    })) || [];
+
+  // Transform real data into segment chart format using the same logic as BookDevelopmentBySegmentReport
+  const transformedRealData = useMemo(() => {
+    if (realData.length === 0) return [];
     
-    // If filtering by advisor, adjust the values
-    if (selectedAdvisor !== "All Advisors") {
+    // For real data, we need to transform it to match the same format as mock data
+    const years = [2019, 2020, 2021, 2022, 2023, 2024, 2025];
+    
+    return years.map((year) => {
+      const dataPoint: SegmentChartData = {
+        year,
+        Platinum: 0,
+        Gold: 0,
+        Silver: 0,
+      };
+
+             // Find data for this year from the API response
+       const yearData = realData.find((item: { period: string; aum: number; date: string; dataPoints: number }) => new Date(item.date).getFullYear() === year);
+      
+      if (yearData) {
+        // Distribute the total AUM across segments based on typical patterns
+        // This should ideally come from the API with actual segment breakdown
+        const totalAum = yearData.aum;
+        dataPoint.Platinum = totalAum * 0.5; // 50% Platinum
+        dataPoint.Gold = totalAum * 0.3;     // 30% Gold  
+        dataPoint.Silver = totalAum * 0.2;   // 20% Silver
+      }
+
+      return dataPoint;
+    });
+  }, [realData]);
+
+  // Check if we should show mock data - matches BookDevelopmentBySegmentReport logic
+  const shouldShowMockData =
+    useMock ||
+    (transformedRealData.length === 0 &&
+      !isLoading &&
+      (!error ||
+        (error &&
+          error.message?.includes("Firm integration config not found"))));
+
+  // Process chart data with advisor filtering - matches BookDevelopmentBySegmentReport logic
+  const segmentChartData = useMemo(() => {
+    let baseData = shouldShowMockData ? getMockSegmentData() : transformedRealData;
+
+    // Apply advisor filtering if needed
+    if (selectedAdvisor !== "All Advisors" && shouldShowMockData) {
       // Create advisor-specific distribution patterns
       const advisorDistributionPatterns: Record<string, {Platinum: number, Gold: number, Silver: number}> = {
         "Jackson Miller": { Platinum: 0.40, Gold: 0.35, Silver: 0.25 }, // First advisor has more Platinum
@@ -108,7 +189,7 @@ export const AumChart = ({ showViewFullReport = true, selectedAdvisor = "All Adv
       // Assume each advisor manages roughly 25% of the total AUM
       const ratio = 0.25;
       
-      const filteredData = baseData.map(dataPoint => {
+      baseData = baseData.map(dataPoint => {
         // Calculate total for this year
         const totalValue = dataPoint.Platinum + dataPoint.Gold + dataPoint.Silver;
         
@@ -123,68 +204,10 @@ export const AumChart = ({ showViewFullReport = true, selectedAdvisor = "All Adv
           Silver: advisorTotal * pattern.Silver
         };
       });
-      
-      // Debug logging
-      console.log("AumChart - Filtered Data:", {
-        selectedAdvisor,
-        pattern,
-        ratio,
-        baseData: baseData[0],
-        filteredData: filteredData[0],
-        dataLength: filteredData.length,
-        totalBaseAum: baseData[0].Platinum + baseData[0].Gold + baseData[0].Silver,
-        totalFilteredAum: filteredData[0].Platinum + filteredData[0].Gold + filteredData[0].Silver
-      });
-      
-      return filteredData;
     }
-    
+
     return baseData;
-  };
-
-  // Transform original API data for legacy chart
-  const realData =
-    aumResponse?.data?.map((item: ChartDataPoint) => ({
-      period: item.period,
-      aum: item.aum,
-      date: item.date,
-      dataPoints: item.dataPoints,
-    })) || [];
-
-  // Transform real data into segment chart format if it exists
-  const transformedRealData = realData.length > 0
-    ? realData.map((item: { period: string; aum: number; date: string; dataPoints: number }) => ({
-        year: new Date(item.date).getFullYear(),
-        Platinum: item.aum * 0.5, // Example distribution - adjust based on actual data structure
-        Gold: item.aum * 0.3,
-        Silver: item.aum * 0.2,
-      }))
-    : [];
-
-  // Check if we should show mock data
-  const shouldShowMockData =
-    useMock ||
-    (realData.length === 0 &&
-      !isLoading &&
-      (!error ||
-        (error &&
-          error.message?.includes("Firm integration config not found"))));
-
-  // Get chart data based on what we're showing
-  const segmentChartData = shouldShowMockData ? getMockSegmentData() : transformedRealData;
-
-  // Debug logging
-  if (process.env.NODE_ENV === "development") {
-    console.log("AumChart Debug:", {
-      realDataLength: realData.length,
-      isLoading,
-      error: error?.message,
-      shouldShowMockData,
-      useMock,
-      segmentDataLength: segmentChartData.length,
-      selectedAdvisor,
-    });
-  }
+  }, [shouldShowMockData, transformedRealData, selectedAdvisor]);
 
   // Loading state
   if (isLoading && !useMock) {
@@ -294,34 +317,37 @@ export const AumChart = ({ showViewFullReport = true, selectedAdvisor = "All Adv
           >
             <CartesianGrid
               strokeDasharray="3 3"
+              strokeOpacity={0.15}
               vertical={false}
-              stroke="#f5f5f5"
             />
             <XAxis
               dataKey="year"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 12, fill: "#888" }}
+              tick={{ fontSize: 12 }}
+              axisLine={{ strokeOpacity: 0.3 }}
+              tickLine={{ strokeOpacity: 0.3 }}
             />
             <YAxis
               tickFormatter={tickFormatter}
-              axisLine={false}
-              tickLine={false}
-              tick={{ fontSize: 12, fill: "#888" }}
+              tick={{ fontSize: 12 }}
+              width={80}
+              axisLine={{ strokeOpacity: 0.3 }}
+              tickLine={{ strokeOpacity: 0.3 }}
               domain={['auto', 'auto']}
               allowDataOverflow={false}
             />
             <Tooltip
               formatter={(value: number, name: string) => [
                 formatCurrency(value),
-                `${name} Segment AUM`,
+                `${name} Segment`,
               ]}
-              labelStyle={{ color: "#555" }}
+              labelFormatter={(label) => `${label}`}
+              labelStyle={{ color: "#555", fontWeight: "medium" }}
               contentStyle={{
                 backgroundColor: "white",
                 border: "1px solid #ddd",
-                borderRadius: "4px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                borderRadius: "8px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                padding: "12px",
               }}
             />
             <Legend />
@@ -334,6 +360,7 @@ export const AumChart = ({ showViewFullReport = true, selectedAdvisor = "All Adv
               fill="hsl(210, 55%, 78%)"
               fillOpacity={0.85}
               name="Silver"
+              strokeWidth={2}
             />
             <Area
               type="monotone"
@@ -343,6 +370,7 @@ export const AumChart = ({ showViewFullReport = true, selectedAdvisor = "All Adv
               fill="hsl(216, 65%, 58%)"
               fillOpacity={0.85}
               name="Gold"
+              strokeWidth={2}
             />
             <Area
               type="monotone"
@@ -352,6 +380,7 @@ export const AumChart = ({ showViewFullReport = true, selectedAdvisor = "All Adv
               fill="hsl(222, 47%, 44%)"
               fillOpacity={0.85}
               name="Platinum"
+              strokeWidth={2}
             />
           </AreaChart>
         </ResponsiveContainer>

@@ -72,7 +72,7 @@ const Login = () => {
 
       <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
         <div className="fixed top-6 left-6">
-          <Link to="/">
+          <Link to="/login">
             <VitalsLogo variant="extra-large" showText={false} />
           </Link>
         </div>

@@ -18,6 +18,8 @@ import {
   calculateAge,
   calculateTenure,
 } from "@/utils/clientDataUtils.js";
+import { Button } from "@/components/ui/button";
+import { formatDate } from "@/utils/dateFormatter";
 
 interface Client {
   title: any;
@@ -133,18 +135,20 @@ const Clients = () => {
     setClientData(filtered);
   }, [allClientData, selectedAdvisor]);
 
-  // Filter clients based on search term
-  const filteredClients = clientData.filter(
-    (client) =>
-      client?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client?.advisor?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client?.segment?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client?.state?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client?.lastName?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter clients based on search term and sort by AUM (highest to lowest)
+  const filteredClients = clientData
+    .filter(
+      (client) =>
+        client?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client?.advisor?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client?.segment?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client?.state?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        client?.lastName?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => b.aum - a.aum); // Sort by AUM descending (highest to lowest)
 
   // Format currency for AUM
   const formatCurrency = (amount: number) => {
@@ -216,11 +220,11 @@ const Clients = () => {
               {clientData.length} {selectedAdvisor !== "All Advisors" ? "advisor" : "total"} clients
             </span>
           </div>
-          {useMock && (
+          {/* {useMock && (
             <div className="text-sm bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-200">
               Sample Data
             </div>
-          )}
+          )} */}
         </div>
       </div>
 
@@ -292,6 +296,7 @@ const Clients = () => {
               <TableHead>Assets Under Management</TableHead>
               <TableHead>Client Details</TableHead>
               <TableHead>Location</TableHead>
+              <TableHead>View Contact</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -333,11 +338,16 @@ const Clients = () => {
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Calendar className="h-3 w-3 mr-1" />
                         {client.tenure} year{client.tenure !== 1 ? "s" : ""}{" "} 
-                        with firm {client.joinDate || "N/A"}
+                        with firm {formatDate(client.joinDate) || "N/A"}
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>{client.state || "N/A"}</TableCell>
+                  <TableCell>
+                    <Button variant="default" size="sm">
+                      View Contact
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
