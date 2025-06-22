@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Users } from 'lucide-react';
 import ClientAnniversaryView from './ClientAnniversaryView';
 import ClientInceptionView from './ClientInceptionView';
+import { useAdvisor } from '@/contexts/AdvisorContext';
 
 /**
  * ClientDashboard Component
@@ -13,6 +14,8 @@ import ClientInceptionView from './ClientInceptionView';
  */
 export default function ClientDashboard() {
   const [globalSearch, setGlobalSearch] = useState('');
+  const { selectedAdvisor } = useAdvisor();
+
   const [activeTab, setActiveTab] = useState('clients');
 
   return (
@@ -21,7 +24,9 @@ export default function ClientDashboard() {
         {/* Header with toggle buttons - exact match to reference image */}
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Client Dashboard</h1>
+            <h1 className="text-3xl font-bold text-foreground">{selectedAdvisor !== "All Advisors" 
+                  ? `${selectedAdvisor}'s Client Dashboard` 
+                  : "Client Dashboard"}</h1>
             <p className="text-muted-foreground mt-1">
               Track client acquisition and segmentation metrics
             </p>

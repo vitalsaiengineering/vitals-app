@@ -33,6 +33,7 @@ import {
   type GetClientSegmentationDashboardParams,
 } from "@/lib/clientData";
 import { useMockData } from "@/contexts/MockDataContext";
+import { useAdvisor } from "@/contexts/AdvisorContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -66,10 +67,11 @@ export default function ClientSegmentationDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   // Filter states
-  const [selectedAdvisor, setSelectedAdvisor] = useState("firm_overview");
+  const [selectedReportAdvisor, setSelectedReportAdvisor] = useState("firm_overview");
   const [selectedSegment, setSelectedSegment] = useState("Platinum");
 
   const { useMock } = useMockData();
+  const { selectedAdvisor } = useAdvisor();
 
   const fetchDashboardData = async (
     params?: GetClientSegmentationDashboardParams
@@ -81,10 +83,91 @@ export default function ClientSegmentationDashboard() {
         // Use mock data
         const mockDashboardData =
           mockData.ClientSegmentationDashboard as ClientSegmentationDashboardData;
-        setDashboardData(mockDashboardData);
+        
+        // If an advisor is selected from the header, filter the data
+        if (selectedAdvisor !== 'All Advisors') {
+          // Filter clients by the selected advisor
+          const allClients = mockDashboardData.tableData.clients;
+          const filteredClients = allClients.filter((client: any) => client.advisor === selectedAdvisor);
+          
+          // Recalculate KPIs based on filtered clients
+          const totalClients = filteredClients.length;
+          const totalAUM = filteredClients.reduce((sum: number, client: any) => sum + client.assets, 0);
+          const averageAUM = totalClients > 0 ? totalAUM / totalClients : 0;
+          
+          // Recalculate donut chart data by segment
+          const segmentCounts: { [key: string]: number } = {};
+          filteredClients.forEach((client: any) => {
+            // Determine segment based on assets (you may need to adjust this logic based on your segmentation rules)
+            let segment = 'Silver'; // default
+            if (client.assets >= 1000000) segment = 'Platinum';
+            else if (client.assets >= 500000) segment = 'Gold';
+            
+            segmentCounts[segment] = (segmentCounts[segment] || 0) + 1;
+          });
+          
+          // Create new donut chart data
+          const newDonutChartData = mockDashboardData.donutChartData.map(segment => {
+            const count = segmentCounts[segment.name] || 0;
+            const percentage = totalClients > 0 ? Math.round((count / totalClients) * 100) : 0;
+            return {
+              ...segment,
+              count,
+              percentage
+            };
+          }).filter(segment => segment.count > 0); // Only show segments with clients
+          
+          // Find the advisor option to update the selected report advisor
+          const advisorOption = mockDashboardData.advisorOptions.find(
+            advisor => advisor.name === selectedAdvisor
+          );
+          
+          if (advisorOption) {
+            setSelectedReportAdvisor(advisorOption.id);
+          }
+          
+          // Create filtered dashboard data
+          const filteredData: ClientSegmentationDashboardData = {
+            ...mockDashboardData,
+            kpis: {
+              clientCount: {
+                value: totalClients,
+                label: 'Total Clients'
+              },
+              totalAUM: {
+                value: `$${totalAUM.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                label: 'Total AUM'
+              },
+              averageClientAUM: {
+                value: `$${averageAUM.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                label: 'Average Client AUM'
+              },
+              currentSegmentFocus: mockDashboardData.kpis.currentSegmentFocus
+            },
+            donutChartData: newDonutChartData,
+            tableData: {
+              ...mockDashboardData.tableData,
+              clients: filteredClients
+            },
+            currentAdvisorOrFirmView: selectedAdvisor
+          };
+          
+          setDashboardData(filteredData);
+        } else {
+          // Use the original data if no advisor is selected from header
+          setDashboardData(mockDashboardData);
+        }
       } else {
         // Try to fetch from API, fallback to mock data on error
         try {
+          // If an advisor is selected from the header, add it to the API params
+          if (selectedAdvisor !== 'All Advisors') {
+            // We need to map the advisor name to an ID for the API
+            // This is a simplified approach - in a real app, you would have a proper mapping
+            params = params || {};
+            params.advisorId = selectedAdvisor; // In a real app, you'd map name to ID
+          }
+          
           const data = await getClientSegmentationDashboardData(params);
           setDashboardData(data);
         } catch (apiError) {
@@ -109,16 +192,16 @@ export default function ClientSegmentationDashboard() {
 
   useEffect(() => {
     fetchDashboardData(); // Initial fetch
-  }, [useMock]);
+  }, [useMock, selectedAdvisor]); // Re-fetch when selectedAdvisor changes
 
   // Effect to re-fetch data when filters change
   useEffect(() => {
     const params: GetClientSegmentationDashboardParams = {};
-    if (selectedAdvisor !== "firm_overview") params.advisorId = selectedAdvisor;
+    if (selectedReportAdvisor !== "firm_overview") params.advisorId = selectedReportAdvisor;
     if (selectedSegment !== "Platinum") params.segment = selectedSegment;
 
     fetchDashboardData(params);
-  }, [selectedAdvisor, selectedSegment]);
+  }, [selectedReportAdvisor, selectedSegment]);
 
   const handleSegmentClick = (segmentName: string) => {
     setSelectedSegment(segmentName);
@@ -154,23 +237,26 @@ export default function ClientSegmentationDashboard() {
           <div className="flex justify-between items-start">
             <div>
               <CardTitle className="text-2xl">
-                Client Segmentation Dashboard
+                {selectedAdvisor !== "All Advisors" 
+                  ? `${selectedAdvisor}'s Client Segmentation Dashboard` 
+                  : "Client Segmentation Dashboard"}
               </CardTitle>
               <p className="text-muted-foreground mt-2">
                 View and analyze your client base by segment and advisor
-                assignment.
+                assignment{selectedAdvisor !== "All Advisors" && ` for ${selectedAdvisor}`}.
               </p>
             </div>
             <div className="w-64">
               <Select
-                value={selectedAdvisor}
-                onValueChange={setSelectedAdvisor}
+                value={selectedReportAdvisor}
+                onValueChange={setSelectedReportAdvisor}
+                disabled={selectedAdvisor !== 'All Advisors'} // Disable if an advisor is selected from header
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select view" />
                 </SelectTrigger>
                 <SelectContent>
-                  {dashboardData.advisorOptions.map((advisor) => (
+                  {dashboardData?.advisorOptions.map((advisor) => (
                     <SelectItem key={advisor.id} value={advisor.id}>
                       {advisor.name}
                     </SelectItem>

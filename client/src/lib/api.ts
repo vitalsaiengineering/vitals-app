@@ -249,14 +249,28 @@ export const getOrionAumChartData = async (params?: {
   aggregation?: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
   startDate?: string;
   endDate?: string;
+  advisor?: string;
 }) => {
+  // Build query parameters
   const queryParams = new URLSearchParams();
-  if (params?.aggregation) queryParams.append('aggregation', params.aggregation);
-  if (params?.startDate) queryParams.append('startDate', params.startDate);
-  if (params?.endDate) queryParams.append('endDate', params.endDate);
+  if (params?.aggregation) queryParams.set('aggregation', params.aggregation);
+  if (params?.startDate) queryParams.set('startDate', params.startDate);
+  if (params?.endDate) queryParams.set('endDate', params.endDate);
+  if (params?.advisor && params.advisor !== "All Advisors") queryParams.set('advisor', params.advisor);
   
-  const url = `/api/orion/aum-chart-data${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
-  const response = await apiRequest("GET", url);
+  const queryString = queryParams.toString();
+  const url = `/api/orion/aum-chart-data${queryString ? `?${queryString}` : ''}`;
+  
+  console.log(`Fetching AUM chart data with params:`, params);
+  
+  const response = await fetch(url, {
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch AUM chart data: ${await response.text()}`);
+  }
+  
   return response.json();
 };
 

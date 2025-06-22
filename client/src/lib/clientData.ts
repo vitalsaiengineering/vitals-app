@@ -325,6 +325,7 @@ export interface BookDevelopmentClient {
   yearsWithFirmText: string;
   sinceDateText: string;
   aum: number;
+  advisor: string;
 }
 
 export interface YearlySegmentDataPoint {
@@ -1537,3 +1538,11 @@ export async function getClientReferralRateData(params?: GetClientReferralRatePa
   }
 }
 // --- END: Added for Client Referral Rate ---
+
+export function filterClientsByAdvisor<T extends { advisor?: string }>(clients: T[], selectedAdvisor: string): T[] {
+  if (!selectedAdvisor || selectedAdvisor === 'All Advisors') {
+    return clients;
+  }
+  
+  return clients.filter(client => client.advisor === selectedAdvisor);
+}

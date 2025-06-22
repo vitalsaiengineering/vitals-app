@@ -1,6 +1,4 @@
-
 import React, { useState } from "react";
-import { DashboardLayout } from "@/components/dashboard/Layout";
 import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { Search, Users, Database } from "lucide-react";
@@ -99,73 +97,71 @@ const Clients = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="p-8 space-y-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Clients</h1>
-          <div className="flex items-center">
-            <Users className="mr-2 text-muted-foreground" size={20} />
-            <span className="text-muted-foreground">{clientData.length} total clients</span>
-          </div>
-        </div>
-        
-        {/* Search Bar */}
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input 
-            type="search" 
-            placeholder="Search clients or advisors..." 
-            className="pl-8 w-full"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        {/* Client Table */}
-        <div className="rounded-md border shadow-sm">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Client Name</TableHead>
-                <TableHead>Advisor</TableHead>
-                <TableHead>Assets Under Management</TableHead>
-                <TableHead>Integrations</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredClients.length > 0 ? (
-                filteredClients.map((client) => (
-                  <TableRow key={client.id} className="cursor-pointer hover:bg-muted/50">
-                    <TableCell className="font-medium">{client.name}</TableCell>
-                    <TableCell>{client.advisor}</TableCell>
-                    <TableCell>{formatCurrency(client.aum)}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {client.integrations.map((integration, idx) => (
-                          <span 
-                            key={idx} 
-                            className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full flex items-center"
-                          >
-                            <Database className="h-3 w-3 mr-1" />
-                            {integration}
-                          </span>
-                        ))}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
-                    No clients found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+    <div className="p-8 space-y-6">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Clients</h1>
+        <div className="flex items-center">
+          <Users className="mr-2 text-muted-foreground" size={20} />
+          <span className="text-muted-foreground">{clientData.length} total clients</span>
         </div>
       </div>
-    </DashboardLayout>
+      
+      {/* Search Bar */}
+      <div className="relative w-full md:w-96">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input 
+          type="search" 
+          placeholder="Search clients or advisors..." 
+          className="pl-8 w-full"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      {/* Client Table */}
+      <div className="rounded-md border shadow-sm">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Client Name</TableHead>
+              <TableHead>Advisor</TableHead>
+              <TableHead>Assets Under Management</TableHead>
+              <TableHead>Integrations</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredClients.length > 0 ? (
+              filteredClients.map((client) => (
+                <TableRow key={client.id} className="cursor-pointer hover:bg-muted/50">
+                  <TableCell className="font-medium">{client.name}</TableCell>
+                  <TableCell>{client.advisor}</TableCell>
+                  <TableCell>{formatCurrency(client.aum)}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {client.integrations.map((integration, idx) => (
+                        <span 
+                          key={idx} 
+                          className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full flex items-center"
+                        >
+                          <Database className="h-3 w-3 mr-1" />
+                          {integration}
+                        </span>
+                      ))}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center">
+                  No clients found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 };
 

@@ -4,6 +4,7 @@ import {
   type ClientDistributionReportData,
   type ClientInStateDetail,
   type StateMetric,
+  filterClientsByAdvisor,
 } from "@/lib/clientData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import {
   Geography,
 } from "react-simple-maps";
 import { useMockData } from "@/contexts/MockDataContext";
+import { useAdvisor } from "@/contexts/AdvisorContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -78,6 +80,7 @@ const getMapFillColor = (
 
 const ClientDistributionByStateReport = () => {
   const { useMock } = useMockData();
+  const { selectedAdvisor } = useAdvisor();
   const [reportData, setReportData] =
     useState<ClientDistributionReportData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -97,8 +100,88 @@ const ClientDistributionByStateReport = () => {
       try {
         if (useMock) {
           // Use mock data
-          const mockReportData =
+          let mockReportData =
             mockData.ClientDistributionByState as ClientDistributionReportData;
+          
+          // If an advisor is selected, filter the data
+          if (selectedAdvisor !== 'All Advisors') {
+            // Create a new filtered report data structure
+            const filteredClientsByState: Record<string, ClientInStateDetail[]> = {};
+            
+            // Filter client details by state and advisor
+            Object.entries(mockReportData.clientDetailsByState).forEach(([stateCode, clients]) => {
+              // Filter clients that belong to the selected advisor
+              const filteredClients = clients.filter((client: any) => client.advisor === selectedAdvisor);
+              if (filteredClients.length > 0) {
+                filteredClientsByState[stateCode] = filteredClients;
+              }
+            });
+            
+            // Recalculate state metrics based on filtered clients
+            const filteredStateMetrics: StateMetric[] = [];
+            Object.entries(filteredClientsByState).forEach(([stateCode, clients]) => {
+              const totalAum = clients.reduce((sum, client) => sum + client.aum, 0);
+              // Find the state name from the original state metrics
+              const originalStateMetric = mockReportData.stateMetrics.find(
+                metric => metric.stateCode === stateCode
+              );
+              const stateName = originalStateMetric?.stateName || '';
+              
+              filteredStateMetrics.push({
+                stateCode,
+                stateName,
+                clientCount: clients.length,
+                totalAum
+              });
+            });
+            
+            // Find top state by clients and AUM
+            let topStateByClients = { 
+              stateName: '', 
+              value: 0, 
+              metricLabel: 'clients' as const
+            };
+            
+            let topStateByAUM = { 
+              stateName: '', 
+              value: 0, 
+              metricLabel: 'AUM' as const
+            };
+            
+            if (filteredStateMetrics.length > 0) {
+              const topClientState = filteredStateMetrics.reduce(
+                (max, state) => (state.clientCount > max.clientCount ? state : max),
+                filteredStateMetrics[0]
+              );
+              
+              const topAumState = filteredStateMetrics.reduce(
+                (max, state) => (state.totalAum > max.totalAum ? state : max),
+                filteredStateMetrics[0]
+              );
+              
+              topStateByClients = {
+                stateName: topClientState.stateName,
+                value: topClientState.clientCount,
+                metricLabel: 'clients' as const
+              };
+              
+              topStateByAUM = {
+                stateName: topAumState.stateName,
+                value: topAumState.totalAum,
+                metricLabel: 'AUM' as const
+              };
+            }
+            
+            // Create the filtered report data
+            mockReportData = {
+              ...mockReportData,
+              clientDetailsByState: filteredClientsByState,
+              stateMetrics: filteredStateMetrics,
+              topStateByClients,
+              topStateByAUM
+            };
+          }
+          
           setReportData(mockReportData);
         } else {
           // Try to fetch from API, fallback to mock data on error
@@ -126,7 +209,7 @@ const ClientDistributionByStateReport = () => {
       }
     };
     fetchData();
-  }, [useMock]);
+  }, [useMock, selectedAdvisor]);
 
   const allClientsFromReport = useMemo(() => {
     if (!reportData) return [];
@@ -231,8 +314,8 @@ const ClientDistributionByStateReport = () => {
   };
 
   const tableTitle = selectedStateMetric
-    ? `${selectedStateMetric.stateName} Clients` // Displaying state name in uppercase as per image
-    : "All Clients";
+    ? `${selectedStateMetric.stateName} CLIENTS${selectedAdvisor !== "All Advisors" ? ` - ${selectedAdvisor.toUpperCase()}` : ""}` // Displaying state name in uppercase as per image
+    : selectedAdvisor !== "All Advisors" ? `${selectedAdvisor.toUpperCase()}'S CLIENTS` : "ALL CLIENTS";
 
   const summaryClientCount = selectedStateMetric
     ? selectedStateMetric.clientCount // Will be 0 for synthetic states
@@ -304,38 +387,43 @@ const ClientDistributionByStateReport = () => {
               {reportData.topStateByAUM.stateName}
             </div>
             <p className="text-xs text-muted-foreground">
-              {reportData.topStateByAUM.value}
+              {typeof reportData.topStateByAUM.value === 'number' 
+                ? `$${reportData.topStateByAUM.value.toLocaleString()}`
+                : reportData.topStateByAUM.value}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Content Grid - Map and Client List */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* Map Card */}
-        <Card className="flex flex-col h-[calc(100vh-300px)]">
-          <CardHeader className="flex-shrink-0">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-              <CardTitle>Client Distribution Map</CardTitle>
-              <div className="flex space-x-2">
-                <Button
-                  variant={
-                    mapViewType === "clientDensity" ? "default" : "outline"
-                  }
-                  size="sm"
-                  onClick={() => setMapViewType("clientDensity")}
-                >
-                  <Users className="mr-2 h-4 w-4" /> Client Density
-                </Button>
-                <Button
-                  variant={mapViewType === "totalAssets" ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setMapViewType("totalAssets")}
-                >
-                  <DollarSign className="mr-2 h-4 w-4" /> Total Assets
-                </Button>
-              </div>
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      {/* Map Card */}
+      <Card className="flex flex-col h-[calc(100vh-300px)]">
+      <CardHeader className="flex-shrink-0">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+      <CardTitle>
+              {selectedAdvisor !== "All Advisors" 
+                ? `${selectedAdvisor}'s Client Distribution Map` 
+                : "Client Distribution Map"}
+            </CardTitle>
+            <div className="flex space-x-2">
+              <Button
+                variant={
+                  mapViewType === "clientDensity" ? "default" : "outline"
+                }
+                size="sm"
+                onClick={() => setMapViewType("clientDensity")}
+              >
+                <Users className="mr-2 h-4 w-4" /> Client Density
+              </Button>
+              <Button
+                variant={mapViewType === "totalAssets" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setMapViewType("totalAssets")}
+              >
+                <DollarSign className="mr-2 h-4 w-4" /> Total Assets
+              </Button>
             </div>
+          </div>
           </CardHeader>
           <CardContent className="flex-1 flex items-center justify-center p-4">
             <ComposableMap projection="geoAlbersUsa" className="w-full h-full">

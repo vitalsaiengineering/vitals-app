@@ -41,6 +41,7 @@ import * as RechartsPrimitive from "recharts";
 import {
   getAgeDemographicsReportData,
   AgeDemographicsData,
+  filterClientsByAdvisor,
 } from "@/lib/clientData";
 
 // Import mock data
@@ -48,10 +49,26 @@ import mockData from "@/data/mockData.js";
 
 // Import the useMockData context
 import { useMockData } from "@/contexts/MockDataContext";
+import { useAdvisor } from "@/contexts/AdvisorContext";
 
 // ... (Existing interfaces like AgeDemographicsData might be slightly different from the one in clientData.ts, ensure consistency or use the imported one)
 // For this example, I'll assume the AgeDemographicsData interface defined in this file is the one we want to use for structuring the fetched data.
 // If clientData.ts exports a more accurate/complete one, prefer that.
+
+// Define types for chart config and client data
+type ChartConfigKey = 'silver' | 'gold' | 'platinum' | 'totalClients' | 'totalAum';
+
+// Extended client type that includes all the properties we need
+interface ClientDetail {
+  id: string;
+  name: string;
+  age: number;
+  segment: string;
+  aum: number;
+  advisor?: string;
+  joinDate: string;
+  [key: string]: any; // Allow for additional properties
+}
 
 // ... (SEGMENT_COLORS_HSL and chartConfig remain the same) ...
 const SEGMENT_COLORS_HSL: { [key: string]: string } = {
@@ -61,13 +78,14 @@ const SEGMENT_COLORS_HSL: { [key: string]: string } = {
   DEFAULT: "hsl(var(--chart-4))",
 };
 
-const chartConfig = {
+// Add type assertion to chartConfig
+const chartConfig: { [key: string]: { label: string; color: string } } = {
   silver: { label: "Silver", color: SEGMENT_COLORS_HSL.SILVER },
   gold: { label: "Gold", color: SEGMENT_COLORS_HSL.GOLD },
   platinum: { label: "Platinum", color: SEGMENT_COLORS_HSL.PLATINUM },
   totalClients: { label: "Total Clients", color: SEGMENT_COLORS_HSL.DEFAULT },
   totalAum: { label: "Total AUM", color: SEGMENT_COLORS_HSL.DEFAULT },
-} satisfies ChartConfig;
+};
 
 // Custom Tooltip Component - Updated to use reportData from state
 const CustomChartTooltip = ({
@@ -197,6 +215,8 @@ export default function AgeDemographicsReport({
 
   // Import the useMockData context
   const { useMock } = useMockData();
+  // Import the advisor context
+  const { selectedAdvisor } = useAdvisor();
 
   // Fetch data on component mount
   useEffect(() => {
@@ -208,7 +228,77 @@ export default function AgeDemographicsReport({
           // Use mock data
           const mockReportData =
             mockData.AgeDemographicsReport as AgeDemographicsData;
-          setReportData(mockReportData);
+          
+          // If an advisor is selected, filter the data
+          if (selectedAdvisor !== 'All Advisors') {
+            // Filter the mock data by advisor and cast to ClientDetail[]
+            const filteredClients = filterClientsByAdvisor(mockData.AgeDemographicsReport.clientDetails, selectedAdvisor) as ClientDetail[];
+            
+            // Recalculate the age demographics based on filtered clients
+            const totalClients = filteredClients.length;
+            const totalAUM = filteredClients.reduce((sum, client) => sum + (client.aum || 0), 0);
+            const averageClientAge = totalClients > 0 
+              ? filteredClients.reduce((sum, client) => sum + (client.age || 0), 0) / totalClients 
+              : 0;
+            
+            // Recalculate byAgeBracket data
+            const recalculatedAgeBrackets = mockReportData.byAgeBracket.map(bracket => {
+              // Filter clients that belong to this age bracket
+              const bracketClients = filteredClients.filter(client => {
+                const age = client.age;
+                switch (bracket.bracket) {
+                  case "<20": return age < 20;
+                  case "21-40": return age >= 21 && age <= 40;
+                  case "41-60": return age >= 41 && age <= 60;
+                  case "61-80": return age >= 61 && age <= 80;
+                  case ">80": return age > 80;
+                  default: return false;
+                }
+              });
+              
+              // Calculate new metrics for this bracket
+              const clientCount = bracketClients.length;
+              const clientPercentage = totalClients > 0 ? (clientCount / totalClients) * 100 : 0;
+              const aum = bracketClients.reduce((sum, client) => sum + (client.aum || 0), 0);
+              const aumPercentage = totalAUM > 0 ? (aum / totalAUM) * 100 : 0;
+              
+              // Recalculate detailed breakdown by segment
+              const detailedBreakdown = ['Platinum', 'Gold', 'Silver'].map(segment => {
+                const segmentClients = bracketClients.filter(client => 
+                  client.segment.toLowerCase() === segment.toLowerCase()
+                );
+                return {
+                  segment,
+                  clients: segmentClients.length,
+                  aum: segmentClients.reduce((sum, client) => sum + (client.aum || 0), 0)
+                };
+              }).filter(item => item.clients > 0);
+              
+              return {
+                ...bracket,
+                clientCount,
+                clientPercentage,
+                aum,
+                aumPercentage,
+                detailedBreakdown
+              };
+            });
+            
+            // Create the filtered report data
+            const filteredReportData = {
+              byAgeBracket: recalculatedAgeBrackets,
+              clientDetails: filteredClients,
+              overall: {
+                totalClients,
+                totalAUM,
+                averageClientAge
+              }
+            };
+            
+            setReportData(filteredReportData as AgeDemographicsData);
+          } else {
+            setReportData(mockReportData);
+          }
         } else {
           // Try to fetch from API, fallback to mock data on error
           try {
@@ -235,7 +325,7 @@ export default function AgeDemographicsReport({
       }
     };
     fetchData();
-  }, [reportId, useMock]); // Re-fetch if reportId or useMock changes
+  }, [reportId, useMock, selectedAdvisor]); // Re-fetch if reportId, useMock, or selectedAdvisor changes
 
   // Define the desired stacking order (bottom to top)
   const desiredSegmentOrder = ["platinum", "gold", "silver"];

@@ -45,6 +45,8 @@ const reportRegistry: { [key: string]: { component: React.FC<any>, title: string
   // 'net-new-assets': { component: NetNewAssetsReport, title: 'Net New Assets' },
 };
 
+
+
 export default function ReportViewPage() {
   const [match, params] = useRoute("/reporting/:reportId");
   const [, navigate] = useLocation(); // For navigation

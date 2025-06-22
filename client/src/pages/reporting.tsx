@@ -127,7 +127,7 @@ const initialMockReports: Report[] = [
     status: "Coming Soon",
     isFavorite: false,
   }
-];
+].sort((a, b) => a.name.localeCompare(b.name));
 
 export default function Reporting() {
   const [activeView, setActiveView] = useState<"card" | "table">("table");

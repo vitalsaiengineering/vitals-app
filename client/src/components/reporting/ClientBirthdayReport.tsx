@@ -31,8 +31,10 @@ import {
   type BirthdayClient,
   type GetClientBirthdayReportParams,
   type BirthdayReportFilters as ReportFilterOptions,
+  filterClientsByAdvisor,
 } from "@/lib/clientData";
 import { useMockData } from "@/contexts/MockDataContext";
+import { useAdvisor } from "@/contexts/AdvisorContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -139,6 +141,7 @@ const TENURE_OPTIONS = [
 
 const ClientBirthdayReport = () => {
   const { useMock } = useMockData();
+  const { selectedAdvisor } = useAdvisor();
   const [reportData, setReportData] = useState<BirthdayClient[]>([]);
   const [filterOptions, setFilterOptions] = useState<ReportFilterOptions>({
     grades: [],
@@ -152,7 +155,7 @@ const ClientBirthdayReport = () => {
   const [selectedGrade, setSelectedGrade] = useState("All Grades");
   const [selectedMonth, setSelectedMonth] = useState("Any month");
   const [selectedTenure, setSelectedTenure] = useState("Any tenure");
-  const [selectedAdvisor, setSelectedAdvisor] = useState("All Advisors");
+  const [selectedReportAdvisor, setSelectedReportAdvisor] = useState("All Advisors");
 
   const fetchReportData = async (params?: GetClientBirthdayReportParams) => {
     setIsLoading(true);
@@ -162,13 +165,37 @@ const ClientBirthdayReport = () => {
         // Use mock data
         const mockBirthdayData =
           mockData.ClientBirthdayReport as ClientBirthdayReportData;
-        setReportData(mockBirthdayData.clients);
+        
+        // If an advisor is selected from the header, filter the data
+        if (selectedAdvisor !== 'All Advisors') {
+          // Filter clients by the selected advisor from header
+          const filteredClients = mockBirthdayData.clients.filter(
+            client => client.advisorName === selectedAdvisor
+          );
+          setReportData(filteredClients);
+        } else {
+          // Use all clients if no advisor selected from header
+          setReportData(mockBirthdayData.clients);
+        }
+        
         setFilterOptions(mockBirthdayData.filters);
       } else {
         // Try to fetch from API, fallback to mock data on error
         try {
           const data = await getClientBirthdayReportData(params);
-          setReportData(data.clients);
+          
+          // If an advisor is selected from the header, filter the data
+          if (selectedAdvisor !== 'All Advisors') {
+            // Filter clients by the selected advisor from header
+            const filteredClients = data.clients.filter(
+              client => client.advisorName === selectedAdvisor
+            );
+            setReportData(filteredClients);
+          } else {
+            // Use all clients if no advisor selected from header
+            setReportData(data.clients);
+          }
+          
           setFilterOptions(data.filters);
         } catch (apiError) {
           console.warn(
@@ -177,7 +204,19 @@ const ClientBirthdayReport = () => {
           );
           const mockBirthdayData =
             mockData.ClientBirthdayReport as ClientBirthdayReportData;
-          setReportData(mockBirthdayData.clients);
+          
+          // If an advisor is selected from the header, filter the data
+          if (selectedAdvisor !== 'All Advisors') {
+            // Filter clients by the selected advisor from header
+            const filteredClients = mockBirthdayData.clients.filter(
+              client => client.advisorName === selectedAdvisor
+            );
+            setReportData(filteredClients);
+          } else {
+            // Use all clients if no advisor selected from header
+            setReportData(mockBirthdayData.clients);
+          }
+          
           setFilterOptions(mockBirthdayData.filters);
         }
       }
@@ -195,7 +234,7 @@ const ClientBirthdayReport = () => {
 
   useEffect(() => {
     fetchReportData(); // Initial fetch
-  }, [useMock]);
+  }, [useMock, selectedAdvisor]); // Re-fetch when selectedAdvisor changes
 
   // Effect to re-fetch data when filters change
   useEffect(() => {
@@ -204,7 +243,7 @@ const ClientBirthdayReport = () => {
     if (selectedGrade !== "All Grades") params.grade = selectedGrade;
     if (selectedMonth !== "Any month") params.month = selectedMonth;
     if (selectedTenure !== "Any tenure") params.tenure = selectedTenure;
-    if (selectedAdvisor !== "All Advisors") params.advisor = selectedAdvisor;
+    if (selectedReportAdvisor !== "All Advisors") params.advisor = selectedReportAdvisor;
 
     // Debounce search input
     const timer = setTimeout(() => {
@@ -217,7 +256,7 @@ const ClientBirthdayReport = () => {
     selectedGrade,
     selectedMonth,
     selectedTenure,
-    selectedAdvisor,
+    selectedReportAdvisor,
   ]);
 
   const handleResetFilters = () => {
@@ -225,7 +264,7 @@ const ClientBirthdayReport = () => {
     setSelectedGrade("All Grades");
     setSelectedMonth("Any month");
     setSelectedTenure("Any tenure");
-    setSelectedAdvisor("All Advisors");
+    setSelectedReportAdvisor("All Advisors");
   };
 
   if (isLoading && reportData.length === 0 && !error) {
@@ -302,7 +341,7 @@ const ClientBirthdayReport = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={selectedAdvisor} onValueChange={setSelectedAdvisor}>
+            <Select value={selectedReportAdvisor} onValueChange={setSelectedReportAdvisor}>
               <SelectTrigger>
                 <SelectValue placeholder="All Advisors" />
               </SelectTrigger>
