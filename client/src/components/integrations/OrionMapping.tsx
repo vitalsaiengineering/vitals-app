@@ -83,6 +83,12 @@ const OrionMapping: React.FC = () => {
       title: "Mapping saved",
       description: "Your Orion Advisor Services field mapping has been saved successfully.",
     });
+
+    // Redirect back to settings page with data-mapping tab
+    setTimeout(() => {
+      window.history.pushState({}, "", "/settings?tab=data-mapping");
+      window.dispatchEvent(new Event('popstate'));
+    }, 1000); // Small delay to let user see the success toast
   };
 
   return (

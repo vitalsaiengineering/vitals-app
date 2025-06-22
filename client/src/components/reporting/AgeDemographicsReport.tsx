@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { formatDate } from "@/utils/dateFormatter";
 import {
   Table,
   TableBody,
@@ -664,7 +665,7 @@ export default function AgeDemographicsReport({
                             {client.segment}
                           </span>
                         </TableCell>
-                        <TableCell>{client.joinDate}</TableCell>
+                        <TableCell>{formatDate(client.joinDate)}</TableCell>
                         {isAumView && (
                           <TableCell className="text-right">
                             {client.aumDisplay}

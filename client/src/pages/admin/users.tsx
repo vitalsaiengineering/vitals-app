@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { formatDistanceToNow } from "date-fns";
+import { User } from "@shared/schema";
 
 import {
   Card,
@@ -63,11 +64,10 @@ import EditUserDialog from "@/components/ui/edit-user-dialog";
 
 // Schema for the user form
 const userSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
   email: z.string().email("Invalid email address"),
-  fullName: z.string().min(1, "Full name is required"),
-  role: z.enum(["global_admin", "firm_admin", "advisor"], {
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  role: z.enum(["global_admin", "multi_network_admin", "network_admin", "firm_admin", "advisor"], {
     required_error: "Role is required",
   }),
   organizationId: z.coerce.number().optional(),
@@ -80,11 +80,20 @@ export default function Users() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   // Add this to your Users() functional component
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   
+  // Fetch current user
+  const { data: currentUser } = useQuery<User>({
+    queryKey: ['/api/me'],
+  });
+
   // Fetch users
-  const { data: users, isLoading: isLoadingUsers } = useQuery({
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery<(User & { 
+    role?: { name: string };
+    avatarUrl?: string;
+    lastLogin?: string;
+  })[]>({
     queryKey: ['/api/users'],
   });
 
@@ -116,7 +125,7 @@ export default function Users() {
 
   // Update user mutation
   const updateUserMutation = useMutation({
-    mutationFn: (params) => {
+    mutationFn: (params: [number, any]) => {
       const [id, userData] = params;
       return updateUser(id, userData);
     },
@@ -143,20 +152,35 @@ export default function Users() {
   const form = useForm<UserValues>({
     resolver: zodResolver(userSchema),
     defaultValues: {
-      username: "",
-      password: "",
       email: "",
-      fullName: "",
+      firstName: "",
+      lastName: "",
       role: "advisor",
     },
   });
 
   function onSubmit(data: UserValues) {
-    createUserMutation.mutate(data);
+    // Map role names to role IDs
+    const roleMapping = {
+      global_admin: 1,
+      multi_network_admin: 2,
+      network_admin: 3,
+      firm_admin: 4,
+      advisor: 5,
+    };
+
+    const userData = {
+      ...data,
+      roleId: roleMapping[data.role],
+      // Use current user's organization ID
+      organizationId: currentUser?.organizationId || 1,
+    };
+
+    createUserMutation.mutate(userData);
   }
 
   // Function to handle user update
-  const handleUpdateUser = (id, userData) => {
+  const handleUpdateUser = (id: number, userData: any) => {
     console.log("Updating user:", id, userData);
     updateUserMutation.mutate([id, userData]);
   };
@@ -180,13 +204,17 @@ export default function Users() {
   const getRoleColor = (role: string) => {
     switch (role) {
       case "global_admin":
-        return "bg-blue-700 text-white border-blue-800";
+        return "bg-purple-700 text-white border-purple-800";
+      case "multi_network_admin":
+        return "bg-indigo-600 text-white border-indigo-700";
+      case "network_admin":
+        return "bg-blue-600 text-white border-blue-700";
       case "firm_admin":
         return "bg-blue-500 text-white border-blue-600";
       case "advisor":
         return "bg-blue-300 text-blue-900 border-blue-400";
       default:
-        return "bg-blue-300 text-blue-900 border-blue-400";
+        return "bg-gray-300 text-gray-900 border-gray-400";
     }
   };
 
@@ -231,9 +259,13 @@ export default function Users() {
     
     switch (role) {
       case "global_admin":
-        return "Admin";
+        return "Global Admin";
+      case "multi_network_admin":
+        return "Multi Network Admin";
+      case "network_admin":
+        return "Network Admin";
       case "firm_admin":
-        return "Admin";
+        return "Firm Admin";
       case "advisor":
         return "Advisor";
       default:
@@ -283,122 +315,81 @@ export default function Users() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 {/* Form content remains the same */}
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="First name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Last name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 <div className="grid grid-cols-1 gap-4">
                   <FormField
                     control={form.control}
-                    name="fullName"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Full Name</FormLabel>
+                        <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder="Full name" {...field} />
+                          <Input placeholder="Email address" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Username" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
 
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Email address" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                </div>
 
+                <div className="grid grid-cols-1 gap-4">
                   <FormField
                     control={form.control}
-                    name="password"
+                    name="role"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input type="password" placeholder="Password" {...field} />
-                        </FormControl>
+                        <FormLabel>Role</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a role" />
+                            </SelectTrigger>
+                          </FormControl>
+                                                      <SelectContent>
+                              <SelectItem value="global_admin">Global Admin</SelectItem>
+                              <SelectItem value="multi_network_admin">Multi Network Admin</SelectItem>
+                              <SelectItem value="network_admin">Network Admin</SelectItem>
+                              <SelectItem value="firm_admin">Firm Admin</SelectItem>
+                              <SelectItem value="advisor">Advisor</SelectItem>
+                            </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="role"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Role</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a role" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="global_admin">Global Admin</SelectItem>
-                              <SelectItem value="firm_admin">Client Admin</SelectItem>
-                              <SelectItem value="advisor">Financial Advisor</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {organizations && (
-                      <FormField
-                        control={form.control}
-                        name="organizationId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Organization</FormLabel>
-                            <Select
-                              onValueChange={(value) => field.onChange(parseInt(value, 10))}
-                              value={field.value?.toString()}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select an organization" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {organizations.map((org) => (
-                                  <SelectItem key={org.id} value={org.id.toString()}>
-                                    {org.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
-                  </div>
                 </div>
 
                 <DialogFooter>
@@ -464,7 +455,7 @@ export default function Users() {
                         </Badge>
                       </TableCell>
                       <TableCell>{formatLastLogin(user.lastLogin || '')}</TableCell>
-                      <TableCell>{formatDate(user.createdAt || '')}</TableCell>
+                      <TableCell>{formatDate(user.createdAt?.toString() || '')}</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

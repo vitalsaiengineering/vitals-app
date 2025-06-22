@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { fetchClientDemographicsData } from '@/lib/clientData';
+import { formatDate } from '@/utils/dateFormatter';
 // Import Recharts components
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
@@ -127,7 +128,7 @@ const TablePlaceholder = ({ clients, groupName }) => (
                                     {client.segment}
                                 </span>
                             </td>
-                            <td className="py-2 px-1">{client.joinDate}</td>
+                            <td className="py-2 px-1">{formatDate(client.joinDate)}</td>
                         </tr>
                     ))}
                     {clients.length > 5 && (

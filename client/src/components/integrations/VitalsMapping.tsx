@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { MappingSection } from '@/types/mapping';
 import { SaveIcon, Plus, Trash2, Search } from 'lucide-react';
@@ -15,6 +17,7 @@ interface SegmentThreshold {
   crmField: string;
   minAUM: string;
   maxAUM: string;
+  isHighestTier?: boolean;
 }
 
 const VitalsMapping: React.FC = () => {
@@ -133,6 +136,7 @@ const VitalsMapping: React.FC = () => {
     crmField: '',
     minAUM: '',
     maxAUM: '',
+    isHighestTier: false,
   });
 
   // Combined CRM field options from both Orion and Wealthbox
@@ -233,10 +237,16 @@ const VitalsMapping: React.FC = () => {
   };
 
   const handleSaveSegment = () => {
-    if (newSegment.name && newSegment.crmField && newSegment.minAUM && newSegment.maxAUM) {
+    const isValidSegment = newSegment.name && 
+                          newSegment.crmField && 
+                          newSegment.minAUM && 
+                          (newSegment.isHighestTier || newSegment.maxAUM);
+    
+    if (isValidSegment) {
       const segment = {
         ...newSegment,
         id: Date.now().toString(),
+        maxAUM: newSegment.isHighestTier ? 'No limit' : newSegment.maxAUM,
       };
       setSegments([...segments, segment]);
       setShowAddForm(false);
@@ -246,6 +256,7 @@ const VitalsMapping: React.FC = () => {
         crmField: '',
         minAUM: '',
         maxAUM: '',
+        isHighestTier: false,
       });
     }
   };
@@ -258,6 +269,7 @@ const VitalsMapping: React.FC = () => {
       crmField: '',
       minAUM: '',
       maxAUM: '',
+      isHighestTier: false,
     });
   };
 
@@ -278,11 +290,11 @@ const VitalsMapping: React.FC = () => {
     ));
   };
 
-  const handleNewSegmentChange = (field: keyof SegmentThreshold, value: string) => {
+  const handleNewSegmentChange = (field: keyof SegmentThreshold, value: string | boolean) => {
     let formattedValue = value;
     
     // Format currency fields
-    if (field === 'minAUM' || field === 'maxAUM') {
+    if ((field === 'minAUM' || field === 'maxAUM') && typeof value === 'string') {
       formattedValue = formatCurrencyInput(value);
     }
     
@@ -332,6 +344,12 @@ const VitalsMapping: React.FC = () => {
       title: "Mapping saved",
       description: "Your Vitals field mapping has been saved successfully.",
     });
+
+    // Redirect back to settings page with data-mapping tab
+    setTimeout(() => {
+      window.history.pushState({}, "", "/settings?tab=data-mapping");
+      window.dispatchEvent(new Event('popstate'));
+    }, 1000); // Small delay to let user see the success toast
   };
 
   // Get selected option label for display
@@ -453,91 +471,117 @@ const VitalsMapping: React.FC = () => {
 
             {/* Add Segment Form */}
             {showAddForm && (
-              <div className="grid grid-cols-12 gap-4 items-end p-4 border rounded-lg bg-gray-50">
-                <div className="col-span-3">
-                  <label className="text-sm font-medium mb-1 block">Segment Name</label>
-                  <Input
-                    value={newSegment.name}
-                    onChange={(e) => handleNewSegmentChange('name', e.target.value)}
-                    placeholder="e.g., Premium Tier"
-                  />
-                </div>
-                <div className="col-span-3">
-                  <label className="text-sm font-medium mb-1 block">Search CRM Segment Field</label>
-                  <div className={`relative transition-all duration-200 ${isSearchFocused ? 'w-full' : 'w-full'}`}>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        type="text"
-                        value={isSearchFocused ? searchTerm : displayValue}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        onFocus={() => {
-                          setIsSearchFocused(true);
-                          setSearchTerm('');
-                        }}
-                        onBlur={() => {
-                          setTimeout(() => setIsSearchFocused(false), 200);
-                        }}
-                        className={`pl-10 transition-all duration-200 ${
-                          isSearchFocused 
-                            ? 'w-full min-w-[400px] shadow-md ring-2 ring-blue-500/20' 
-                            : 'w-full'
-                        }`}
-                        placeholder="Search Orion and Wealthbox fields..."
-                      />
-                    </div>
-                    
-                    {isSearchFocused && (
-                      <div className="absolute z-[9999] mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto min-w-[400px] left-0 right-0">
-                        {filteredSegmentOptions.length > 0 ? (
-                          filteredSegmentOptions.map((option) => (
-                            <div
-                              key={option.value}
-                              className="p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
-                              onClick={() => handleSelectSegmentOption(option)}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <span className="text-sm font-medium">{option.label}</span>
-                                </div>
-                                <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded ml-2">
-                                  ({option.source})
+              <div className="p-4 border rounded-lg bg-gray-50 space-y-4">
+                <div className="grid grid-cols-12 gap-4 items-end">
+                  <div className="col-span-3">
+                    <label className="text-sm font-medium mb-1 block">Segment Name</label>
+                    <Input
+                      value={newSegment.name}
+                      onChange={(e) => handleNewSegmentChange('name', e.target.value)}
+                      placeholder="e.g., Premium Tier"
+                    />
+                  </div>
+                  <div className="col-span-3">
+                    <label className="text-sm font-medium mb-1 block">Search CRM Segment Field</label>
+                    <div className={`relative transition-all duration-200 ${isSearchFocused ? 'w-full' : 'w-full'}`}>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="text"
+                          value={isSearchFocused ? searchTerm : displayValue}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          onFocus={() => {
+                            setIsSearchFocused(true);
+                            setSearchTerm('');
+                          }}
+                          onBlur={() => {
+                            setTimeout(() => setIsSearchFocused(false), 200);
+                          }}
+                          className={`pl-10 transition-all duration-200 ${
+                            isSearchFocused 
+                              ? 'w-full min-w-[400px] shadow-md ring-2 ring-blue-500/20' 
+                              : 'w-full'
+                          }`}
+                          placeholder="Search Orion and Wealthbox fields..."
+                        />
+                      </div>
+                      
+                      {isSearchFocused && (
+                        <div className="absolute z-[9999] mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto min-w-[400px] left-0 right-0">
+                          {filteredSegmentOptions.length > 0 ? (
+                            filteredSegmentOptions.map((option) => (
+                              <div
+                                key={option.value}
+                                className="p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0"
+                                onClick={() => handleSelectSegmentOption(option)}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <span className="text-sm font-medium">{option.label}</span>
+                                  </div>
+                                  <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded ml-2">
+                                    ({option.source})
+                                  </div>
                                 </div>
                               </div>
+                            ))
+                          ) : (
+                            <div className="p-3 text-sm text-gray-500 text-center">
+                              No fields found matching "{searchTerm}"
                             </div>
-                          ))
-                        ) : (
-                          <div className="p-3 text-sm text-gray-500 text-center">
-                            No fields found matching "{searchTerm}"
-                          </div>
-                        )}
-                      </div>
-                    )}
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-sm font-medium mb-1 block">Minimum AUM</label>
+                    <Input
+                      value={newSegment.minAUM}
+                      onChange={(e) => handleNewSegmentChange('minAUM', e.target.value)}
+                      placeholder="e.g., $100,000"
+                    />
+                  </div>
+                  {!newSegment.isHighestTier && (
+                    <div className="col-span-2">
+                      <label className="text-sm font-medium mb-1 block">Maximum AUM</label>
+                      <Input
+                        value={newSegment.maxAUM}
+                        onChange={(e) => handleNewSegmentChange('maxAUM', e.target.value)}
+                        placeholder="e.g., $499,999"
+                      />
+                    </div>
+                  )}
+                  <div className={`${newSegment.isHighestTier ? 'col-span-4' : 'col-span-2'} flex gap-2`}>
+                    <Button onClick={handleSaveSegment} size="sm">
+                      Save
+                    </Button>
+                    <Button onClick={handleCancelAdd} variant="outline" size="sm">
+                      Cancel
+                    </Button>
                   </div>
                 </div>
-                <div className="col-span-2">
-                  <label className="text-sm font-medium mb-1 block">Minimum AUM</label>
-                  <Input
-                    value={newSegment.minAUM}
-                    onChange={(e) => handleNewSegmentChange('minAUM', e.target.value)}
-                    placeholder="e.g., $100,000"
+                
+                {/* Highest Tier Checkbox */}
+                <div className="flex items-center space-x-2 pt-2 border-t">
+                  <Checkbox
+                    id="highest-tier"
+                    checked={newSegment.isHighestTier}
+                    onCheckedChange={(checked) => 
+                      handleNewSegmentChange('isHighestTier', checked as boolean)
+                    }
                   />
-                </div>
-                <div className="col-span-2">
-                  <label className="text-sm font-medium mb-1 block">Maximum AUM</label>
-                  <Input
-                    value={newSegment.maxAUM}
-                    onChange={(e) => handleNewSegmentChange('maxAUM', e.target.value)}
-                    placeholder="e.g., $499,999"
-                  />
-                </div>
-                <div className="col-span-2 flex gap-2">
-                  <Button onClick={handleSaveSegment} size="sm">
-                    Save
-                  </Button>
-                  <Button onClick={handleCancelAdd} variant="outline" size="sm">
-                    Cancel
-                  </Button>
+                  <Label 
+                    htmlFor="highest-tier" 
+                    className="text-sm font-medium cursor-pointer"
+                  >
+                    This is the highest client segment (no maximum AUM limit)
+                  </Label>
+                  {newSegment.isHighestTier && (
+                    <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                      ∞ No limit
+                    </span>
+                  )}
                 </div>
               </div>
             )}
