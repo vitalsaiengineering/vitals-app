@@ -40,6 +40,7 @@ import { FirmRegistrationModal } from "./FirmRegistrationModal";
 import { logout } from "@/lib/api";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { getFavoriteReports, addFavoriteReport, removeFavoriteReport, saveFavoriteReports, FavoriteReport } from "../../lib/favorites";
 
 // Types
 type NavItem = {
@@ -68,19 +69,6 @@ const initialWorkspaces: Workspace[] = [
     id: '1',
     name: 'Vitals Capital',
     selected: true
-  }
-];
-
-const initialFavoriteItems: NavItem[] = [
-  {
-    name: 'Age Demographics',
-    path: '/reporting/age-demographics',
-    icon: LineChart
-  },
-  {
-    name: 'Book Development',
-    path: '/reporting/book-development',
-    icon: LineChart
   }
 ];
 
@@ -165,7 +153,7 @@ export const AppSidebar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [workspaces, setWorkspaces] = useState<Workspace[]>(initialWorkspaces);
   const [currentWorkspace, setCurrentWorkspace] = useState<Workspace>(workspaces.find(w => w.selected === true) || workspaces[0]);
-  const [favoriteItems, setFavoriteItems] = useState<NavItem[]>(initialFavoriteItems);
+  const [favoriteItems, setFavoriteItems] = useState<NavItem[]>([]);
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
   const [dropTarget, setDropTarget] = useState<number | null>(null);
   const [isReportDialogOpen, setIsReportDialogOpen] = useState(false);
@@ -182,6 +170,38 @@ export const AppSidebar = () => {
   const filteredFavoriteItems = favoriteItems.filter(item => 
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Initialize favorites from localStorage
+  useEffect(() => {
+    const loadFavorites = () => {
+      const favorites = getFavoriteReports();
+      const navItems: NavItem[] = favorites.map((fav: FavoriteReport) => ({
+        name: fav.name,
+        path: fav.path,
+        icon: fav.icon || LineChart
+      }));
+      setFavoriteItems(navItems);
+    };
+
+    loadFavorites();
+
+    // Listen for custom favorites changed events
+    const handleFavoritesChanged = (event: CustomEvent) => {
+      const favorites = event.detail as FavoriteReport[];
+      const navItems: NavItem[] = favorites.map((fav: FavoriteReport) => ({
+        name: fav.name,
+        path: fav.path,
+        icon: fav.icon || LineChart
+      }));
+      setFavoriteItems(navItems);
+    };
+
+    window.addEventListener('favoritesChanged', handleFavoritesChanged as EventListener);
+    
+    return () => {
+      window.removeEventListener('favoritesChanged', handleFavoritesChanged as EventListener);
+    };
+  }, []);
 
   // Fetch user data
   useEffect(() => {
@@ -280,18 +300,19 @@ export const AppSidebar = () => {
     setIsReportDialogOpen(true);
   };
 
-  const addFavoriteReport = (report: any) => {
-    const newFavorite: NavItem = {
+  const addFavoriteReportFromDialog = (report: any) => {
+    addFavoriteReport({
+      id: report.id,
       name: report.name,
-      path: report.path,
-      icon: LineChart
-    };
-    setFavoriteItems(prevItems => [...prevItems, newFavorite]);
+      path: report.path
+    });
     setIsReportDialogOpen(false);
   };
 
   const handleRemoveFavorite = (itemToRemove: NavItem) => {
-    setFavoriteItems(prevItems => prevItems.filter(item => item.name !== itemToRemove.name));
+    // Find the report ID from the path
+    const reportId = itemToRemove.path.split('/').pop() || '';
+    removeFavoriteReport(reportId);
   };
 
   // Search handling
@@ -333,7 +354,16 @@ export const AppSidebar = () => {
     
     // Insert it at the new position
     updatedItems.splice(index, 0, draggedItemContent);
-    setFavoriteItems(updatedItems);
+    
+    // Convert back to FavoriteReport format and save to centralized system
+    const reorderedFavorites: FavoriteReport[] = updatedItems.map(item => ({
+      id: item.path.split('/').pop() || '',
+      name: item.name,
+      path: item.path,
+      icon: item.icon
+    }));
+    
+    saveFavoriteReports(reorderedFavorites);
     
     // Reset drag states
     setDropTarget(null);
@@ -648,7 +678,7 @@ export const AppSidebar = () => {
         open={isReportDialogOpen} 
         onOpenChange={setIsReportDialogOpen} 
         favoriteReports={favoriteItems} 
-        onAddFavorite={addFavoriteReport} 
+        onAddFavorite={addFavoriteReportFromDialog} 
       />
       
       {/* Command Palette */}

@@ -1,16 +1,52 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Report } from '@/pages/reporting'; // Assuming Report type is exported from reporting.tsx
 import { Star, ExternalLink } from 'lucide-react';
+import { toggleFavoriteReport, isFavoriteReport } from '../../lib/favorites';
+import { toast } from '@/hooks/use-toast';
 
 interface ReportTableViewProps {
   reports: Report[];
-  onToggleFavorite: (reportId: string) => void;
+  onToggleFavorite?: (reportId: string) => void; // Made optional since we'll handle it internally
   onViewReport: (reportId: string) => void;
 }
 
 export function ReportTableView({ reports, onToggleFavorite, onViewReport }: ReportTableViewProps) {
+  const [favoritesChanged, setFavoritesChanged] = useState(0); // Force re-render trigger
+
+  // Listen for favorites changes to update the table dynamically
+  useEffect(() => {
+    const handleFavoritesChanged = () => {
+      setFavoritesChanged(prev => prev + 1); // Trigger re-render
+    };
+
+    window.addEventListener('favoritesChanged', handleFavoritesChanged);
+    return () => window.removeEventListener('favoritesChanged', handleFavoritesChanged);
+  }, []);
+
+  // Handle toggle favorite using centralized system
+  const handleToggleFavorite = (reportId: string) => {
+    const report = reports.find(r => r.id === reportId);
+    if (report) {
+      const wasAdded = toggleFavoriteReport({
+        id: report.id,
+        name: report.name,
+        path: `/reporting/${report.routePath || report.id}`
+      });
+      
+      toast({
+        title: wasAdded ? "Added to favorites" : "Removed from favorites",
+        description: `${report.name} has been ${wasAdded ? "added to" : "removed from"} your favorites.`
+      });
+
+      // Also call the parent's callback if provided (for backward compatibility)
+      if (onToggleFavorite) {
+        onToggleFavorite(reportId);
+      }
+    }
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -33,8 +69,8 @@ export function ReportTableView({ reports, onToggleFavorite, onViewReport }: Rep
           <TableRow key={report.id}>
             <TableCell className="font-medium">
               <div className="flex items-center">
-              <Button variant="ghost" size="icon" className="ml-2 h-7 w-7" onClick={() => onToggleFavorite(report.id)}>
-                  <Star className={`h-4 w-4 ${report.isFavorite ? 'fill-yellow-400 text-yellow-500' : 'text-muted-foreground hover:text-yellow-500'}`} />
+              <Button variant="ghost" size="icon" className="ml-2 h-7 w-7" onClick={() => handleToggleFavorite(report.id)}>
+                  <Star className={`h-4 w-4 ${isFavoriteReport(report.id) ? 'fill-yellow-400 text-yellow-500' : 'text-muted-foreground hover:text-yellow-500'}`} />
                 </Button>
                 <span>{report.name}</span>
               </div>
