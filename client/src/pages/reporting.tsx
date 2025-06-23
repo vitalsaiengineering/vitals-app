@@ -34,9 +34,12 @@ export interface Report {
   integrations?: string[]; // e.g., ["Wealthbox", "Orion"]
 }
 
+
+
+
 const initialMockReports: Report[] = [
   {
-    id: "1",
+    id: "advisory-firm-dashboard",
     name: "Advisory Firm Dashboard",
     routePath: "advisory-firm-dashboard",
     description: "Monitor staff activities and performance across all departments.",
@@ -44,7 +47,7 @@ const initialMockReports: Report[] = [
     isFavorite: false,
   },
   {
-    id: "2",
+    id: "age-demographics",
     name: "Age Demographics",
     routePath: "age-demographics",
     description:
@@ -53,7 +56,7 @@ const initialMockReports: Report[] = [
     isFavorite: false,
   },
   {
-    id: "3",
+    id: "birthday",
     name: "Birthday Report",
     routePath: "birthday-report",
     description: "Track upcoming client birthdays for timely engagement.",
@@ -61,7 +64,7 @@ const initialMockReports: Report[] = [
     isFavorite: false,
   },
   {
-    id: "4",
+    id: "clients-aum-overtime",
     name: "Book Development",
     routePath: "book-development",
     description:
@@ -70,7 +73,7 @@ const initialMockReports: Report[] = [
     isFavorite: false,
   },
   {
-    id: "5",
+    id: "client-dashboard",
     name: "Client Dashboard",
     routePath: "client-dashboard",
     description: "Track client acquisition and segmentation metrics.",
@@ -78,7 +81,7 @@ const initialMockReports: Report[] = [
     isFavorite: false,
   },
   {
-    id: "6",
+    id: "client-segmentation",
     name: "Geographic Footprint",
     routePath: "client-distribution-by-state",
     description: "View your client base and book of business by geography.",
@@ -86,7 +89,7 @@ const initialMockReports: Report[] = [
     isFavorite: false,
   },
   {
-    id: "7",
+    id: "client-referral-rate",
     name: "Client Referral Rate",
     routePath: "client-referral-rate",
     description: "Track client referral rates and identify top referrers.",
@@ -94,7 +97,7 @@ const initialMockReports: Report[] = [
     isFavorite: false,
   },
   {
-    id: "8",
+    id: "client-segmentation",
     name: "Client Segmentation Dashboard",
     routePath: "client-segmentation-dashboard",
     description: "Visualize client segmentation across different categories.",
@@ -102,7 +105,7 @@ const initialMockReports: Report[] = [
     isFavorite: false,
   },
   {
-    id: "9",
+    id: "referral",
     name: "Referral Analytics",
     routePath: "referral-analytics",
     description: "Analyze referral patterns and sources.",
@@ -110,7 +113,7 @@ const initialMockReports: Report[] = [
     isFavorite: false,
   },
   {
-    id: "10",
+    id: "net-new-assets",
     name: "Net New Assets",
     routePath: "net-new-assets",
     description: "Track growth of assets under management over time.",
@@ -119,7 +122,7 @@ const initialMockReports: Report[] = [
     isFavorite: false,
   },
   {
-    id: "11",
+    id: "revenue-vs-expense",
     name: "Revenue vs Client Expense",
     routePath: "revenue-vs-client-expense",
     description: "Compare client revenue against expenses over time.",

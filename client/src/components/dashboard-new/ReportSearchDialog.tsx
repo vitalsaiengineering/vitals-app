@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Search, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isFavoriteReport } from '../../lib/favorites';
 
 type Report = {
   id: string;
@@ -12,15 +13,16 @@ type Report = {
 
 // Sample reports data
 const availableReports: Report[] = [
-  { id: '1', name: 'Age Demographics', path: '/reporting/age-demographics' },
-  { id: '2', name: 'Birthday Report', path: '/reporting/birthday-report' },
-  { id: '3', name: 'Book Development', path: '/reporting/book-development' },
-  { id: '4', name: 'Client Inception Report', path: '/reporting/client-inception' },
-  { id: '5', name: 'Client Segmentation Report', path: '/reporting/client-segmentation' },
-  { id: '6', name: 'Geographic Footprint', path: '/reporting/geographic-footprint' },
-  { id: '7', name: 'Net New Assets', path: '/reporting/net-new-assets' },
-  { id: '8', name: 'Referral Analytics', path: '/reporting/referral-analytics' },
-  { id: '9', name: 'Valuation Insights', path: '/reporting/valuation-insights' },
+  { id: 'advisory-firm-dashboard', name: 'Advisory Firm Dashboard', path: '/reporting/advisory-firm-dashboard', description: 'Monitor staff activities and performance across all departments.', integrations: ['Data Sources'], isFavorite: false },
+  { id: 'age-demographics', name: 'Age Demographics', path: '/reporting/age-demographics' },
+  { id: 'birthday', name: 'Birthday Report', path: '/reporting/birthday' },
+  { id: 'clients-aum-overtime', name: 'Book Development', path: '/reporting/book-development' },
+  { id: 'client-segmentation', name: 'Client Segmentation Report', path: '/reporting/client-segmentation' },
+  { id: 'client-referral-rate', name: 'Client Referral Rate', path: '/reporting/client-referral-rate' },
+  { id: 'geographic-footprint', name: 'Geographic Footprint', path: '/reporting/geographic-footprint' },
+  { id: 'net-new-assets', name: 'Net New Assets', path: '/reporting/net-new-assets' },
+  { id: 'referral', name: 'Referral Analytics', path: '/reporting/referral-analytics' },
+  { id: 'revenue-vs-expense', name: 'Revenue vs Client Expense', path: '/reporting/revenue-vs-expense' },
 ];
 
 type ReportSearchDialogProps = {
@@ -37,15 +39,32 @@ export function ReportSearchDialog({
   onAddFavorite
 }: ReportSearchDialogProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [favoritesChanged, setFavoritesChanged] = useState(0); // Force re-render trigger
+
+  // Listen for favorites changes to update the dialog dynamically
+  useEffect(() => {
+    const handleFavoritesChanged = () => {
+      setFavoritesChanged(prev => prev + 1); // Trigger re-render
+    };
+
+    window.addEventListener('favoritesChanged', handleFavoritesChanged);
+    return () => window.removeEventListener('favoritesChanged', handleFavoritesChanged);
+  }, []);
   
   // Filter reports based on search query
   const filteredReports = availableReports.filter(
     report => report.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Check if a report is already favorited
-  const isReportFavorited = (reportName: string) => {
-    return favoriteReports.some(favReport => favReport.name === reportName);
+  // Check if a report is already favorited using centralized system
+  const isReportFavorited = (reportId: string) => {
+    return isFavoriteReport(reportId);
+  };
+
+  // Helper function to get report name by ID (for backward compatibility)
+  const getReportNameById = (id: string): string => {
+    const report = availableReports.find(r => r.id === id);
+    return report?.name || id;
   };
 
   return (
@@ -74,7 +93,7 @@ export function ReportSearchDialog({
           </div>
           
           {filteredReports.map((report) => {
-            const isFavorited = isReportFavorited(report.name);
+            const isFavorited = isReportFavorited(report.id);
             
             return (
               <div 

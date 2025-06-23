@@ -17,6 +17,7 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Input } from "@/components/ui/input";
 import { Toggle } from "@/components/ui/toggle";
 import { useLocation } from "react-router-dom";
+import { toggleFavoriteReport, isFavoriteReport } from "../../lib/favorites";
 
 type ReportType = "birthday" | "age-demographics" | "clients-aum-overtime" | "referral" | "client-inception" | "net-new-assets" | "client-segmentation" | "revenue-vs-expense" | "geographic-footprint";
 type IntegrationSource = "Wealthbox" | "Orion" | "Manual";
@@ -105,7 +106,7 @@ const Reporting = () => {
           ]
         },
         {
-          id: "client-inception" as ReportType,
+          id: "client-dashboard" as ReportType,
           name: "Client Inception Report",
           description: "Analyze when clients joined your practice",
           url: "https://preview--client-inception-and-segmentation.lovable.app/",
@@ -207,21 +208,12 @@ const Reporting = () => {
         }
       ].sort((a, b) => a.name.localeCompare(b.name)); // Sort reports alphabetically by name
 
-      const storedFavorites = localStorage.getItem("favoriteReports");
-      if (storedFavorites) {
-        const favoriteIds = JSON.parse(storedFavorites);
-        if (Array.isArray(favoriteIds)) {
-          const updatedReports = initialReports.map(report => ({
-            ...report,
-            favorited: favoriteIds.includes(report.id)
-          }));
-          setReports(updatedReports);
-        } else {
-          setReports(initialReports);
-        }
-      } else {
-        setReports(initialReports);
-      }
+      // Initialize reports with favorites from centralized system
+      const updatedReports = initialReports.map(report => ({
+        ...report,
+        favorited: isFavoriteReport(report.id)
+      }));
+      setReports(updatedReports);
       
       // Load view preference if available
       const storedViewMode = localStorage.getItem("reportsPageViewMode");
@@ -264,59 +256,35 @@ const Reporting = () => {
     }
   }, [location.search, reports, loading]);
 
-  // Listen for changes to favorites in localStorage
+  // Listen for changes to favorites
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "favoriteReports" && e.newValue) {
-        try {
-          const favoriteIds = JSON.parse(e.newValue);
-          if (Array.isArray(favoriteIds)) {
-            setReports(prevReports =>
-              prevReports.map(report => ({
-                ...report,
-                favorited: favoriteIds.includes(report.id)
-              }))
-            );
-          }
-        } catch (error) {
-          console.error("Error handling storage change:", error);
-        }
-      }
+    const handleFavoritesChanged = () => {
+      setReports(prevReports =>
+        prevReports.map(report => ({
+          ...report,
+          favorited: isFavoriteReport(report.id)
+        }))
+      );
     };
 
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+    window.addEventListener('favoritesChanged', handleFavoritesChanged);
+    return () => window.removeEventListener('favoritesChanged', handleFavoritesChanged);
   }, []);
 
-  // Save favorites to localStorage when they change
-  const saveFavoritesToStorage = (updatedReports: ReportItem[]) => {
-    try {
-      const favoriteIds = updatedReports
-        .filter(report => report.favorited)
-        .map(report => report.id);
-      localStorage.setItem("favoriteReports", JSON.stringify(favoriteIds));
-    } catch (error) {
-      console.error("Error saving favorites to localStorage:", error);
-    }
-  };
-
   const toggleFavorite = (id: ReportType) => {
-    setReports(prevReports => {
-      const updatedReports = prevReports.map(report => {
-        if (report.id === id) {
-          const newStatus = !report.favorited;
-          toast({
-            title: newStatus ? "Added to favorites" : "Removed from favorites",
-            description: `${report.name} has been ${newStatus ? "added to" : "removed from"} your favorites.`
-          });
-          return { ...report, favorited: newStatus };
-        }
-        return report;
+    const report = reports.find(r => r.id === id);
+    if (report) {
+      const wasAdded = toggleFavoriteReport({
+        id: report.id,
+        name: report.name,
+        path: `/reporting/${report.id}`
       });
       
-      saveFavoritesToStorage(updatedReports);
-      return updatedReports;
-    });
+      toast({
+        title: wasAdded ? "Added to favorites" : "Removed from favorites",
+        description: `${report.name} has been ${wasAdded ? "added to" : "removed from"} your favorites.`
+      });
+    }
   };
 
   const openReport = (id: ReportType) => {
