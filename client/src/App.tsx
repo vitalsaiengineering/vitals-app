@@ -34,8 +34,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       try {
         await axios.get('/api/me');
         setIsAuthenticated(true);
+        // Dispatch login event to update MockDataProvider
+        window.dispatchEvent(new CustomEvent('authLogin'));
       } catch (error) {
         setIsAuthenticated(false);
+        // Dispatch logout event to update MockDataProvider
+        window.dispatchEvent(new CustomEvent('authLogout'));
         navigate('/login');
       }
     };

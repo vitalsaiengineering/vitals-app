@@ -275,7 +275,7 @@ export const AumChart = ({ showViewFullReport = true, selectedAdvisor = "All Adv
   }
 
   const handleViewFullReport = () => {
-    navigate("/reporting/book-development");
+    navigate("/reporting/clients-aum-overtime");
   };
 
   return (

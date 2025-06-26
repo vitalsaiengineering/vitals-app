@@ -194,7 +194,7 @@ export const ClientSegmentation: React.FC<ClientSegmentationProps> = ({ selected
                 } clients (${
                   chartData.find((item) => item.name === name)?.percentage || 0
                 }%)`,
-                "Count",
+                name as string,
               ]}
               contentStyle={{
                 backgroundColor: "white",

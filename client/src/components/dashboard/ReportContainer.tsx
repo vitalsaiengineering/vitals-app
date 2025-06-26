@@ -23,7 +23,7 @@ export const ReportContainer = () => {
     { id: "birthday" as ReportType, name: "Birthday Report", favorited: false },
     { id: "clients-aum-overtime" as ReportType, name: "Book Development", favorited: false },
     { id: "category" as ReportType, name: "Sales by Category", favorited: false },
-    { id: "client-segmentation" as ReportType, name: "Client Segmentation Report", favorited: false },
+    { id: "client-segmentation" as ReportType, name: "Client Segmentation Dashboard", favorited: false },
     { id: "net-new-assets" as ReportType, name: "Net New Assets", favorited: false },
     { id: "revenue-vs-expense" as ReportType, name: "Revenue vs Client Expense", favorited: false }
   ].sort((a, b) => a.name.localeCompare(b.name))); // Sort alphabetically
@@ -79,6 +79,7 @@ export const ReportContainer = () => {
   }, []);
 
   const toggleFavorite = (id: ReportType) => {
+    debugger;
     setReportOptions(prevOptions => {
       const newOptions = prevOptions.map(option => {
         if (option.id === id) {

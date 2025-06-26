@@ -291,7 +291,7 @@ export const getMockAgeDemographicsReportData = async (
         { segment: "Platinum", joinDate: "2018-07-21", aum: 750000 },
         { segment: "Silver", joinDate: "2023-01-10", aum: 80000 },
         { segment: "Gold", joinDate: "2019-05-05", aum: 220000 },
-        { segment: "Platinum", joinDate: "2015-11-30", aum: 1200000 },
+        { segment: "Platinum", joinDate: "2019-11-30", aum: 1200000 },
         { segment: "Silver", joinDate: "2024-01-15", aum: 50000 },
         { segment: "Silver", joinDate: "2023-08-22", aum: 60000 },
       ];
@@ -442,7 +442,7 @@ export const getMockBookDevelopmentReportData = async (
     let prevVal: number | undefined = undefined;
     const data: YearlySegmentDataPoint[] = [];
 
-    for (let year = 2015; year <= 2025; year++) {
+    for (let year = 2019; year <= 2025; year++) {
       const point: YearlySegmentDataPoint = {
         year,
         value: Math.round(currentVal),
@@ -1869,7 +1869,7 @@ export const getMockClientAnniversaryData = async (
       id: "a9",
       clientName: "John Adams",
       segment: "Platinum",
-      originalStartDate: "2015-08-15",
+      originalStartDate: "2019-08-15",
       nextAnniversaryDate: "Aug 15, 2025",
       daysUntilNextAnniversary: 76,
       yearsWithFirm: 10,

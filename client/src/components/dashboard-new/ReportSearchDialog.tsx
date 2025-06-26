@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Search, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { isFavoriteReport } from '../../lib/favorites';
+import { isFavoriteReport, addFavoriteReport, removeFavoriteReport } from '../../lib/favorites';
 
 type Report = {
   id: string;
   name: string;
   path: string;
+  description?: string;
+  integrations?: string[];
   isFavorite?: boolean;
 };
 
@@ -16,8 +18,8 @@ const availableReports: Report[] = [
   { id: 'advisory-firm-dashboard', name: 'Advisory Firm Dashboard', path: '/reporting/advisory-firm-dashboard', description: 'Monitor staff activities and performance across all departments.', integrations: ['Data Sources'], isFavorite: false },
   { id: 'age-demographics', name: 'Age Demographics', path: '/reporting/age-demographics' },
   { id: 'birthday', name: 'Birthday Report', path: '/reporting/birthday' },
-  { id: 'clients-aum-overtime', name: 'Book Development', path: '/reporting/book-development' },
-  { id: 'client-segmentation', name: 'Client Segmentation Report', path: '/reporting/client-segmentation' },
+  { id: 'clients-aum-overtime', name: 'Book Development', path: '/reporting/clients-aum-overtime' },
+  { id: 'client-segmentation', name: 'Client Segmentation Dashboard', path: '/reporting/client-segmentation-dashboard' },
   { id: 'client-referral-rate', name: 'Client Referral Rate', path: '/reporting/client-referral-rate' },
   { id: 'geographic-footprint', name: 'Geographic Footprint', path: '/reporting/geographic-footprint' },
   { id: 'net-new-assets', name: 'Net New Assets', path: '/reporting/net-new-assets' },
@@ -30,13 +32,15 @@ type ReportSearchDialogProps = {
   onOpenChange: (open: boolean) => void;
   favoriteReports: Array<{ name: string; path: string }>;
   onAddFavorite: (report: Report) => void;
+  onFavoriteChange?: (reportId: string, isFavorite: boolean) => void;
 };
 
 export function ReportSearchDialog({ 
   open, 
   onOpenChange, 
   favoriteReports,
-  onAddFavorite
+  onAddFavorite,
+  onFavoriteChange
 }: ReportSearchDialogProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [favoritesChanged, setFavoritesChanged] = useState(0); // Force re-render trigger
@@ -65,6 +69,34 @@ export function ReportSearchDialog({
   const getReportNameById = (id: string): string => {
     const report = availableReports.find(r => r.id === id);
     return report?.name || id;
+  };
+
+  // Handle adding/removing favorites
+  const handleFavoriteToggle = (report: Report) => {
+    const isFavorited = isReportFavorited(report.id);
+    
+    if (isFavorited) {
+      // Remove from favorites
+      removeFavoriteReport(report.id);
+      onFavoriteChange?.(report.id, false);
+      // Dispatch event to notify reporting.tsx
+      window.dispatchEvent(new CustomEvent('reportFavoriteChanged', { 
+        detail: { reportId: report.id, isFavorite: false } 
+      }));
+    } else {
+      // Add to favorites
+      addFavoriteReport({
+        id: report.id,
+        name: report.name,
+        path: report.path
+      });
+      onAddFavorite(report);
+      onFavoriteChange?.(report.id, true);
+      // Dispatch event to notify reporting.tsx
+      window.dispatchEvent(new CustomEvent('reportFavoriteChanged', { 
+        detail: { reportId: report.id, isFavorite: true } 
+      }));
+    }
   };
 
   return (
@@ -101,12 +133,11 @@ export function ReportSearchDialog({
                 className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 cursor-pointer"
               >
                 <button 
-                  onClick={() => !isFavorited && onAddFavorite(report)}
+                  onClick={() => handleFavoriteToggle(report)}
                   className={cn(
                     "flex h-8 w-8 items-center justify-center rounded-md",
-                    isFavorited ? "text-gray-400 cursor-not-allowed" : "text-gray-500 hover:text-[#005EE1]"
+                    "text-gray-500 hover:text-[#005EE1]"
                   )}
-                  disabled={isFavorited}
                 >
                   <Star className="h-5 w-5" fill={isFavorited ? "#005EE1" : "transparent"} />
                 </button>

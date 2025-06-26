@@ -51,6 +51,9 @@ const Login = () => {
         description: "You have successfully logged in",
       });
 
+      // Dispatch login event to update MockDataProvider
+      window.dispatchEvent(new CustomEvent('authLogin'));
+      
       setLocation("/");
     } catch (error: any) {
       setIsLoading(false);

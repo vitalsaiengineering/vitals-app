@@ -1,19 +1,49 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Report } from '@/pages/reporting';
 import { Star, ExternalLink } from 'lucide-react';
+import { toggleFavoriteReport, isFavoriteReport } from '../../lib/favorites';
+import { toast } from '@/hooks/use-toast';
 
 interface ReportCardProps {
   report: Report;
-  onToggleFavorite: (reportId: string) => void;
+  onToggleFavorite?: (reportId: string) => void; // Made optional since we'll handle it internally
   onViewReport: (reportId: string) => void;
 }
 
 export function ReportCard({ report, onToggleFavorite, onViewReport }: ReportCardProps) {
+  const [favoritesChanged, setFavoritesChanged] = useState(0); // Force re-render trigger
+
+  // Listen for favorites changes to update the card dynamically
+  useEffect(() => {
+    const handleFavoritesChanged = () => {
+      setFavoritesChanged(prev => prev + 1); // Trigger re-render
+    };
+
+    window.addEventListener('favoritesChanged', handleFavoritesChanged);
+    return () => window.removeEventListener('favoritesChanged', handleFavoritesChanged);
+  }, []);
+
+  // Handle toggle favorite using centralized system
   const handleFavoriteClick = () => {
-    console.log(`ReportCard: Star clicked for ${report.id}. Calling onToggleFavorite.`);
-    onToggleFavorite(report.id);
+    console.log(`ReportCard: Star clicked for ${report.id}. Using centralized system.`);
+    
+    const wasAdded = toggleFavoriteReport({
+      id: report.id,
+      name: report.name,
+      path: `/reporting/${report.routePath || report.id}`
+    });
+    
+    toast({
+      title: wasAdded ? "Added to favorites" : "Removed from favorites",
+      description: `${report.name} has been ${wasAdded ? "added to" : "removed from"} your favorites.`
+    });
+
+    // Also call the parent's callback if provided (for backward compatibility)
+    if (onToggleFavorite) {
+      onToggleFavorite(report.id);
+    }
   };
 
   return (
@@ -22,7 +52,7 @@ export function ReportCard({ report, onToggleFavorite, onViewReport }: ReportCar
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg leading-tight">{report.name}</CardTitle>
           <Button variant="ghost" size="icon" className="-mt-1 -mr-1 h-8 w-8" onClick={handleFavoriteClick}>
-            <Star className={`h-5 w-5 ${report.isFavorite ? 'fill-yellow-400 text-yellow-500' : 'text-muted-foreground hover:text-yellow-500'}`} />
+            <Star className={`h-5 w-5 ${isFavoriteReport(report.id) ? 'fill-yellow-400 text-yellow-500' : 'text-muted-foreground hover:text-yellow-500'}`} />
           </Button>
         </div>
         <CardDescription className="text-sm h-16 pt-1 text-ellipsis overflow-hidden"> {/* Fixed height for description */}

@@ -36,6 +36,7 @@ interface Client {
   tenure: number;
   joinDate: string;
   state: string;
+  household?: string;
 }
 
 const Clients = () => {
@@ -70,6 +71,7 @@ const Clients = () => {
             title: client.title,
             firstName: client.firstName,
             lastName: client.lastName,
+            household: client.household,
           }));
 
           setAllClientData(transformedClients);
@@ -99,6 +101,7 @@ const Clients = () => {
               title: client.title,
               firstName: client.firstName,
               lastName: client.lastName,
+              household: client.household,
             }));
             setAllClientData(transformedClients);
           }
@@ -293,6 +296,7 @@ const Clients = () => {
               <TableHead>Contact Info</TableHead>
               <TableHead>Advisor</TableHead>
               <TableHead>Segment</TableHead>
+              <TableHead>Household</TableHead>
               <TableHead>Assets Under Management</TableHead>
               <TableHead>Client Details</TableHead>
               <TableHead>Location</TableHead>
@@ -329,6 +333,11 @@ const Clients = () => {
                       {client.segment || "N/A"}
                     </span>
                   </TableCell>
+                  <TableCell>
+                    <span className="text-sm text-neutral-600">
+                      {client.household || 'N/A'}
+                    </span>
+                  </TableCell>
                   <TableCell className="font-medium">
                     {formatCurrency(client.aum) || "N/A"}
                   </TableCell>
@@ -352,7 +361,7 @@ const Clients = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="h-24 text-center">
+                <TableCell colSpan={9} className="h-24 text-center">
                   {searchTerm
                     ? `No clients found matching "${searchTerm}".`
                     : "No clients found."}

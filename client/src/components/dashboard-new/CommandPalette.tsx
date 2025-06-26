@@ -53,7 +53,7 @@ const favoriteOptions: CommandOption[] = [
   },
   {
     name: 'Book Development',
-    path: '/reporting/book-development',
+    path: '/reporting/clients-aum-overtime',
     keywords: ['book', 'development', 'report', 'favorite'],
   },
 ];

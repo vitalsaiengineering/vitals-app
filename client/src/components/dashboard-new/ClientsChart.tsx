@@ -275,7 +275,14 @@ export const ClientsAgeChart: React.FC<ClientsAgeChartProps> = ({ selectedAdviso
               tick={{ fontSize: 12, fill: "#888" }}
             />
             <Tooltip
-              formatter={(value) => [`${value}`, "Clients"]}
+              formatter={(value, name) => {
+                const segmentNames: { [key: string]: string } = {
+                  'Basic': 'Silver',
+                  'Standard': 'Gold', 
+                  'Premium': 'Platinum'
+                };
+                return [`${value}`, segmentNames[name as string] || name];
+              }}
               labelStyle={{ color: "#555" }}
               contentStyle={{
                 backgroundColor: "white",
