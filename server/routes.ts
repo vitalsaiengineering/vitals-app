@@ -1005,7 +1005,7 @@ app.get(
         });
       }
 
-      const redirectUri = process.env.NODE_ENV === "development" ? "https://moved-repeatedly-mongrel.ngrok-free.app/settings" : "https://app.advisorvitals.com/settings";
+      const redirectUri = "https://app.advisorvitals.com/settings";
 
       // Exchange authorization code for access token using query parameters
       const tokenUrl = new URL("https://app.crmworkspace.com/oauth/token");
