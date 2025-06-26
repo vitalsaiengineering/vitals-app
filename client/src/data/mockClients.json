@@ -9,12 +9,13 @@
       "aum": 549598,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-07-18",
+      "joinDate": "2019-07-18",
       "state": "California",
       "stateCode": "CA",
       "city": "Fresno",
       "email": "charles.garcia@email.com",
-      "phone": "(555) 001-5697"
+      "phone": "(555) 001-5697",
+      "household": "Garcia & Mitchell Household"
     },
     {
       "id": "2",
@@ -30,7 +31,8 @@
       "stateCode": "CA",
       "city": "Sacramento",
       "email": "angela.wright@email.com",
-      "phone": "(555) 002-6300"
+      "phone": "(555) 002-6300",
+      "household": "Angela & Justin Wright Household"
     },
     {
       "id": "3",
@@ -41,12 +43,13 @@
       "aum": 1463771,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-10-08",
+      "joinDate": "2019-10-08",
       "state": "California",
       "stateCode": "CA",
       "city": "Moreno Valley",
       "email": "justin.wright@email.com",
-      "phone": "(555) 003-7998"
+      "phone": "(555) 003-7998",
+      "household": "Angela & Justin Wright Household"
     },
     {
       "id": "4",
@@ -57,12 +60,13 @@
       "aum": 62376,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-03-08",
+      "joinDate": "2019-03-08",
       "state": "California",
       "stateCode": "CA",
       "city": "Santa Ana",
       "email": "samantha.brown@email.com",
-      "phone": "(555) 004-2398"
+      "phone": "(555) 004-2398",
+      "household": "Samantha & Daniel Brown Household"
     },
     {
       "id": "5",
@@ -73,12 +77,13 @@
       "aum": 239637,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-03-02",
+      "joinDate": "2019-03-02",
       "state": "California",
       "stateCode": "CA",
       "city": "Sacramento",
       "email": "thomas.walsh@email.com",
-      "phone": "(555) 005-5817"
+      "phone": "(555) 005-5817",
+      "household": "Thomas & Andrew Walsh Household"
     },
     {
       "id": "6",
@@ -89,12 +94,13 @@
       "aum": 3069014,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-08-07",
+      "joinDate": "2019-08-07",
       "state": "California",
       "stateCode": "CA",
       "city": "Stockton",
       "email": "madison.young@email.com",
-      "phone": "(555) 006-0443"
+      "phone": "(555) 006-0443",
+      "household": "Madison & Nicole Young Household"
     },
     {
       "id": "7",
@@ -105,12 +111,13 @@
       "aum": 80951,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-05-25",
+      "joinDate": "2019-05-25",
       "state": "California",
       "stateCode": "CA",
       "city": "Fontana",
       "email": "james.kim@email.com",
-      "phone": "(555) 007-7916"
+      "phone": "(555) 007-7916",
+      "household": "Kim Family Household"
     },
     {
       "id": "8",
@@ -121,12 +128,13 @@
       "aum": 989976,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-02-10",
+      "joinDate": "2019-02-10",
       "state": "California",
       "stateCode": "CA",
       "city": "Los Angeles",
       "email": "robert.parker@email.com",
-      "phone": "(555) 008-0412"
+      "phone": "(555) 008-0412",
+      "household": "Parker & Roberts Household"
     },
     {
       "id": "9",
@@ -137,12 +145,13 @@
       "aum": 233553,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-09-11",
+      "joinDate": "2019-09-11",
       "state": "California",
       "stateCode": "CA",
       "city": "Oxnard",
       "email": "michelle.price@email.com",
-      "phone": "(555) 009-9692"
+      "phone": "(555) 009-9692",
+      "household": "Price & Ross Household"
     },
     {
       "id": "10",
@@ -153,12 +162,13 @@
       "aum": 441455,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-10-17",
+      "joinDate": "2019-10-17",
       "state": "California",
       "stateCode": "CA",
       "city": "San Francisco",
       "email": "victoria.wright@email.com",
-      "phone": "(555) 010-3601"
+      "phone": "(555) 010-3601",
+      "household": "Victoria & Megan Wright Household"
     },
     {
       "id": "11",
@@ -169,12 +179,13 @@
       "aum": 2118951,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-01-02",
+      "joinDate": "2019-01-02",
       "state": "California",
       "stateCode": "CA",
       "city": "Sacramento",
       "email": "scott.smith@email.com",
-      "phone": "(555) 011-0508"
+      "phone": "(555) 011-0508",
+      "household": "Scott & Marcus Smith Household"
     },
     {
       "id": "12",
@@ -185,12 +196,13 @@
       "aum": 315079,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-08-26",
+      "joinDate": "2019-08-26",
       "state": "California",
       "stateCode": "CA",
       "city": "Fontana",
       "email": "frank.roberts@email.com",
-      "phone": "(555) 012-5990"
+      "phone": "(555) 012-5990",
+      "household": "Parker & Roberts Household"
     },
     {
       "id": "13",
@@ -206,7 +218,8 @@
       "stateCode": "CA",
       "city": "Los Angeles",
       "email": "daniel.bell@email.com",
-      "phone": "(555) 013-8884"
+      "phone": "(555) 013-8884",
+      "household": "Daniel & James Bell Household"
     },
     {
       "id": "14",
@@ -217,12 +230,13 @@
       "aum": 454264,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-02-05",
+      "joinDate": "2019-02-05",
       "state": "California",
       "stateCode": "CA",
       "city": "Fremont",
       "email": "megan.wright@email.com",
-      "phone": "(555) 014-3436"
+      "phone": "(555) 014-3436",
+      "household": "Victoria & Megan Wright Household"
     },
     {
       "id": "15",
@@ -238,7 +252,8 @@
       "stateCode": "CA",
       "city": "Stockton",
       "email": "richard.martin@email.com",
-      "phone": "(555) 015-3682"
+      "phone": "(555) 015-3682",
+      "household": "Hayes, Chen & Martin Household"
     },
     {
       "id": "16",
@@ -249,12 +264,13 @@
       "aum": 1018552,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-03-12",
+      "joinDate": "2019-03-12",
       "state": "California",
       "stateCode": "CA",
       "city": "Sacramento",
       "email": "brian.martin@email.com",
-      "phone": "(555) 016-1529"
+      "phone": "(555) 016-1529",
+      "household": "Richard & Brian Martin Household"
     },
     {
       "id": "17",
@@ -265,12 +281,13 @@
       "aum": 1671671,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-09-23",
+      "joinDate": "2019-09-23",
       "state": "California",
       "stateCode": "CA",
       "city": "Santa Ana",
       "email": "charles.mitchell@email.com",
-      "phone": "(555) 017-7127"
+      "phone": "(555) 017-7127",
+      "household": "Garcia & Mitchell Household"
     },
     {
       "id": "18",
@@ -281,12 +298,13 @@
       "aum": 678507,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-07-08",
+      "joinDate": "2019-07-08",
       "state": "California",
       "stateCode": "CA",
       "city": "Anaheim",
       "email": "david.chen@email.com",
-      "phone": "(555) 018-7719"
+      "phone": "(555) 018-7719",
+      "household": "David & James Chen Household"
     },
     {
       "id": "19",
@@ -297,12 +315,13 @@
       "aum": 67359,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-10-12",
+      "joinDate": "2019-10-12",
       "state": "California",
       "stateCode": "CA",
       "city": "Modesto",
       "email": "chelsea.hayes@email.com",
-      "phone": "(555) 019-4925"
+      "phone": "(555) 019-4925",
+      "household": "Hayes, Chen & Martin Household"
     },
     {
       "id": "20",
@@ -313,12 +332,13 @@
       "aum": 1726668,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-10-14",
+      "joinDate": "2019-10-14",
       "state": "California",
       "stateCode": "CA",
       "city": "Glendale",
       "email": "kevin.allen@email.com",
-      "phone": "(555) 020-3469"
+      "phone": "(555) 020-3469",
+      "household": "Kevin & Scott Allen Household"
     },
     {
       "id": "21",
@@ -334,7 +354,8 @@
       "stateCode": "CA",
       "city": "Oxnard",
       "email": "sarah.kim@email.com",
-      "phone": "(555) 021-6945"
+      "phone": "(555) 021-6945",
+      "household": "Kim Family Household"
     },
     {
       "id": "22",
@@ -345,12 +366,13 @@
       "aum": 227098,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-05-11",
+      "joinDate": "2019-05-11",
       "state": "California",
       "stateCode": "CA",
       "city": "Fremont",
       "email": "joseph.price@email.com",
-      "phone": "(555) 022-5308"
+      "phone": "(555) 022-5308",
+      "household": "Price & Ross Household"
     },
     {
       "id": "23",
@@ -361,12 +383,13 @@
       "aum": 718307,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-07-27",
+      "joinDate": "2019-07-27",
       "state": "California",
       "stateCode": "CA",
       "city": "Sacramento",
       "email": "christopher.ramirez@email.com",
-      "phone": "(555) 023-8859"
+      "phone": "(555) 023-8859",
+      "household": "Christopher & Lauren Ramirez Household"
     },
     {
       "id": "24",
@@ -382,7 +405,8 @@
       "stateCode": "CA",
       "city": "Moreno Valley",
       "email": "angela.ross@email.com",
-      "phone": "(555) 024-0546"
+      "phone": "(555) 024-0546",
+      "household": "Price & Ross Household"
     },
     {
       "id": "25",
@@ -398,7 +422,8 @@
       "stateCode": "CA",
       "city": "Santa Ana",
       "email": "hannah.kim@email.com",
-      "phone": "(555) 025-8692"
+      "phone": "(555) 025-8692",
+      "household": "Kim Family Household"
     },
     {
       "id": "26",
@@ -409,12 +434,13 @@
       "aum": 555612,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-09-25",
+      "joinDate": "2019-09-25",
       "state": "California",
       "stateCode": "CA",
       "city": "San Diego",
       "email": "emily.baker@email.com",
-      "phone": "(555) 026-6648"
+      "phone": "(555) 026-6648",
+      "household": "Emily & Kimberly Baker Household"
     },
     {
       "id": "27",
@@ -430,7 +456,8 @@
       "stateCode": "CA",
       "city": "Stockton",
       "email": "christopher.harris@email.com",
-      "phone": "(555) 027-1716"
+      "phone": "(555) 027-1716",
+      "household": "Christopher & Marcus Harris Household"
     },
     {
       "id": "28",
@@ -446,7 +473,8 @@
       "stateCode": "CA",
       "city": "Fresno",
       "email": "madison.flores@email.com",
-      "phone": "(555) 028-8160"
+      "phone": "(555) 028-8160",
+      "household": "Madison & David Flores Household"
     },
     {
       "id": "29",
@@ -462,7 +490,8 @@
       "stateCode": "CA",
       "city": "San Diego",
       "email": "lisa.wilson@email.com",
-      "phone": "(555) 029-2511"
+      "phone": "(555) 029-2511",
+      "household": "Lisa & Jennifer Wilson Household"
     },
     {
       "id": "30",
@@ -473,12 +502,13 @@
       "aum": 833635,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-02-21",
+      "joinDate": "2019-02-21",
       "state": "California",
       "stateCode": "CA",
       "city": "San Diego",
       "email": "marcus.harris@email.com",
-      "phone": "(555) 030-1490"
+      "phone": "(555) 030-1490",
+      "household": "Christopher & Marcus Harris Household"
     },
     {
       "id": "31",
@@ -489,12 +519,13 @@
       "aum": 3533057,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-07-15",
+      "joinDate": "2019-07-15",
       "state": "California",
       "stateCode": "CA",
       "city": "Los Angeles",
       "email": "kenneth.jackson@email.com",
-      "phone": "(555) 031-4307"
+      "phone": "(555) 031-4307",
+      "household": "Kenneth & Lauren Jackson Household"
     },
     {
       "id": "32",
@@ -505,12 +536,13 @@
       "aum": 1416625,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-08-21",
+      "joinDate": "2019-08-21",
       "state": "California",
       "stateCode": "CA",
       "city": "Moreno Valley",
       "email": "megan.ross@email.com",
-      "phone": "(555) 032-2043"
+      "phone": "(555) 032-2043",
+      "household": "Angela & Megan Ross Household"
     },
     {
       "id": "33",
@@ -521,12 +553,13 @@
       "aum": 1986367,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-12-28",
+      "joinDate": "2019-12-28",
       "state": "California",
       "stateCode": "CA",
       "city": "Glendale",
       "email": "terry.wright@email.com",
-      "phone": "(555) 033-4934"
+      "phone": "(555) 033-4934",
+      "household": "Terry & Andrew Wright Household"
     },
     {
       "id": "34",
@@ -542,7 +575,8 @@
       "stateCode": "CA",
       "city": "San Francisco",
       "email": "michelle.mitchell@email.com",
-      "phone": "(555) 034-3134"
+      "phone": "(555) 034-3134",
+      "household": "Charles & Michelle Mitchell Household"
     },
     {
       "id": "35",
@@ -558,7 +592,8 @@
       "stateCode": "CA",
       "city": "Riverside",
       "email": "amanda.anderson@email.com",
-      "phone": "(555) 035-7703"
+      "phone": "(555) 035-7703",
+      "household": "Amanda & Catherine Anderson Household"
     },
     {
       "id": "36",
@@ -569,12 +604,13 @@
       "aum": 233781,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-10-19",
+      "joinDate": "2019-10-19",
       "state": "California",
       "stateCode": "CA",
       "city": "Anaheim",
       "email": "rebecca.evans@email.com",
-      "phone": "(555) 036-5627"
+      "phone": "(555) 036-5627",
+      "household": "Rebecca, Gloria & Andrew Evans Household"
     },
     {
       "id": "37",
@@ -585,12 +621,13 @@
       "aum": 440721,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-05-06",
+      "joinDate": "2019-05-06",
       "state": "California",
       "stateCode": "CA",
       "city": "Fremont",
       "email": "amanda.robinson@email.com",
-      "phone": "(555) 037-0671"
+      "phone": "(555) 037-0671",
+      "household": "Amanda & Michelle Robinson Household"
     },
     {
       "id": "38",
@@ -606,7 +643,8 @@
       "stateCode": "CA",
       "city": "San Francisco",
       "email": "danielle.williams@email.com",
-      "phone": "(555) 038-3787"
+      "phone": "(555) 038-3787",
+      "household": "Danielle & Ryan Williams Household"
     },
     {
       "id": "39",
@@ -617,12 +655,13 @@
       "aum": 341691,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-02-01",
+      "joinDate": "2019-02-01",
       "state": "California",
       "stateCode": "CA",
       "city": "Sacramento",
       "email": "william.phillips@email.com",
-      "phone": "(555) 039-3919"
+      "phone": "(555) 039-3919",
+      "household": "William & Lisa Phillips Household"
     },
     {
       "id": "40",
@@ -633,12 +672,13 @@
       "aum": 3427185,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-03-07",
+      "joinDate": "2019-03-07",
       "state": "California",
       "stateCode": "CA",
       "city": "Oxnard",
       "email": "james.bell@email.com",
-      "phone": "(555) 040-8226"
+      "phone": "(555) 040-8226",
+      "household": "Daniel & James Bell Household"
     },
     {
       "id": "41",
@@ -649,12 +689,13 @@
       "aum": 305721,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-05-05",
+      "joinDate": "2019-05-05",
       "state": "California",
       "stateCode": "CA",
       "city": "Long Beach",
       "email": "andrew.mitchell@email.com",
-      "phone": "(555) 041-2999"
+      "phone": "(555) 041-2999",
+      "household": "Andrew & Tyler Mitchell Household"
     },
     {
       "id": "42",
@@ -665,12 +706,13 @@
       "aum": 265890,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-05-26",
+      "joinDate": "2019-05-26",
       "state": "California",
       "stateCode": "CA",
       "city": "Riverside",
       "email": "madison.johnson@email.com",
-      "phone": "(555) 042-1037"
+      "phone": "(555) 042-1037",
+      "household": "Madison & David Johnson Household"
     },
     {
       "id": "43",
@@ -681,12 +723,13 @@
       "aum": 524815,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-02-21",
+      "joinDate": "2019-02-21",
       "state": "California",
       "stateCode": "CA",
       "city": "Fresno",
       "email": "michael.hill@email.com",
-      "phone": "(555) 043-7771"
+      "phone": "(555) 043-7771",
+      "household": "Michael & Amanda Hill Household"
     },
     {
       "id": "44",
@@ -702,7 +745,8 @@
       "stateCode": "CA",
       "city": "Anaheim",
       "email": "emily.garcia@email.com",
-      "phone": "(555) 044-1281"
+      "phone": "(555) 044-1281",
+      "household": "Charles & Emily Garcia Household"
     },
     {
       "id": "45",
@@ -713,12 +757,13 @@
       "aum": 290628,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-02-06",
+      "joinDate": "2019-02-06",
       "state": "California",
       "stateCode": "CA",
       "city": "Stockton",
       "email": "james.king@email.com",
-      "phone": "(555) 045-3382"
+      "phone": "(555) 045-3382",
+      "household": "James & Gregory King Household"
     },
     {
       "id": "46",
@@ -729,12 +774,13 @@
       "aum": 1355457,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-09-11",
+      "joinDate": "2019-09-11",
       "state": "California",
       "stateCode": "CA",
       "city": "Fresno",
       "email": "sarah.walker@email.com",
-      "phone": "(555) 046-5909"
+      "phone": "(555) 046-5909",
+      "household": "Sarah & Nicole Walker Household"
     },
     {
       "id": "47",
@@ -745,12 +791,13 @@
       "aum": 1507400,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-03-10",
+      "joinDate": "2019-03-10",
       "state": "California",
       "stateCode": "CA",
       "city": "Fremont",
       "email": "alexis.campbell@email.com",
-      "phone": "(555) 047-9210"
+      "phone": "(555) 047-9210",
+      "household": "Alexis & Marcus Campbell Household"
     },
     {
       "id": "48",
@@ -766,7 +813,8 @@
       "stateCode": "CA",
       "city": "Huntington Beach",
       "email": "lisa.kim@email.com",
-      "phone": "(555) 048-0197"
+      "phone": "(555) 048-0197",
+      "household": "Hannah & Lisa Kim Household"
     },
     {
       "id": "49",
@@ -782,7 +830,8 @@
       "stateCode": "CA",
       "city": "San Francisco",
       "email": "robert.foster@email.com",
-      "phone": "(555) 049-3484"
+      "phone": "(555) 049-3484",
+      "household": "Robert & Amanda Foster Household"
     },
     {
       "id": "50",
@@ -798,7 +847,8 @@
       "stateCode": "CA",
       "city": "Fontana",
       "email": "nicole.walker@email.com",
-      "phone": "(555) 050-2703"
+      "phone": "(555) 050-2703",
+      "household": "Sarah & Nicole Walker Household"
     },
     {
       "id": "51",
@@ -814,7 +864,8 @@
       "stateCode": "CA",
       "city": "Riverside",
       "email": "michelle.price@email.com",
-      "phone": "(555) 051-4106"
+      "phone": "(555) 051-4106",
+      "household": "Michelle & Gloria Price Household"
     },
     {
       "id": "52",
@@ -825,12 +876,13 @@
       "aum": 658002,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-09-26",
+      "joinDate": "2019-09-26",
       "state": "California",
       "stateCode": "CA",
       "city": "Oakland",
       "email": "gregory.king@email.com",
-      "phone": "(555) 052-0643"
+      "phone": "(555) 052-0643",
+      "household": "James & Gregory King Household"
     },
     {
       "id": "53",
@@ -841,12 +893,13 @@
       "aum": 723175,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-11-05",
+      "joinDate": "2019-11-05",
       "state": "California",
       "stateCode": "CA",
       "city": "Glendale",
       "email": "terry.taylor@email.com",
-      "phone": "(555) 053-0656"
+      "phone": "(555) 053-0656",
+      "household": "Terry & James Taylor Household"
     },
     {
       "id": "54",
@@ -857,12 +910,13 @@
       "aum": 921773,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-04-01",
+      "joinDate": "2019-04-01",
       "state": "California",
       "stateCode": "CA",
       "city": "Glendale",
       "email": "christopher.martinez@email.com",
-      "phone": "(555) 054-5328"
+      "phone": "(555) 054-5328",
+      "household": "Christopher & Frank Martinez Household"
     },
     {
       "id": "55",
@@ -873,12 +927,13 @@
       "aum": 922989,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-01-15",
+      "joinDate": "2019-01-15",
       "state": "California",
       "stateCode": "CA",
       "city": "Riverside",
       "email": "kenneth.adams@email.com",
-      "phone": "(555) 055-6560"
+      "phone": "(555) 055-6560",
+      "household": "Kenneth & Mark Adams Household"
     },
     {
       "id": "56",
@@ -889,12 +944,13 @@
       "aum": 327874,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-04-22",
+      "joinDate": "2019-04-22",
       "state": "California",
       "stateCode": "CA",
       "city": "Fontana",
       "email": "andrew.walsh@email.com",
-      "phone": "(555) 056-7822"
+      "phone": "(555) 056-7822",
+      "household": "Thomas & Andrew Walsh Household"
     },
     {
       "id": "57",
@@ -905,12 +961,13 @@
       "aum": 696087,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-02-17",
+      "joinDate": "2019-02-17",
       "state": "California",
       "stateCode": "CA",
       "city": "Los Angeles",
       "email": "stephanie.sanchez@email.com",
-      "phone": "(555) 057-0889"
+      "phone": "(555) 057-0889",
+      "household": "Stephanie & Kevin Sanchez Household"
     },
     {
       "id": "58",
@@ -921,12 +978,13 @@
       "aum": 3607867,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-04-22",
+      "joinDate": "2019-04-22",
       "state": "California",
       "stateCode": "CA",
       "city": "Fremont",
       "email": "james.chen@email.com",
-      "phone": "(555) 058-0619"
+      "phone": "(555) 058-0619",
+      "household": "David & James Chen Household"
     },
     {
       "id": "59",
@@ -937,12 +995,13 @@
       "aum": 207219,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-11-13",
+      "joinDate": "2019-11-13",
       "state": "California",
       "stateCode": "CA",
       "city": "San Diego",
       "email": "tyler.mitchell@email.com",
-      "phone": "(555) 059-5930"
+      "phone": "(555) 059-5930",
+      "household": "Andrew & Tyler Mitchell Household"
     },
     {
       "id": "60",
@@ -953,12 +1012,13 @@
       "aum": 526867,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-09-11",
+      "joinDate": "2019-09-11",
       "state": "California",
       "stateCode": "CA",
       "city": "Riverside",
       "email": "rachel.mitchell@email.com",
-      "phone": "(555) 060-2555"
+      "phone": "(555) 060-2555",
+      "household": "Rachel & Michael Mitchell Household"
     },
     {
       "id": "61",
@@ -969,12 +1029,13 @@
       "aum": 298034,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-08-02",
+      "joinDate": "2019-08-02",
       "state": "California",
       "stateCode": "CA",
       "city": "Oxnard",
       "email": "catherine.anderson@email.com",
-      "phone": "(555) 061-8834"
+      "phone": "(555) 061-8834",
+      "household": "Amanda & Catherine Anderson Household"
     },
     {
       "id": "62",
@@ -990,7 +1051,8 @@
       "stateCode": "CA",
       "city": "Anaheim",
       "email": "gloria.price@email.com",
-      "phone": "(555) 062-6815"
+      "phone": "(555) 062-6815",
+      "household": "Michelle & Gloria Price Household"
     },
     {
       "id": "63",
@@ -1001,12 +1063,13 @@
       "aum": 655760,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-07-01",
+      "joinDate": "2019-07-01",
       "state": "California",
       "stateCode": "CA",
       "city": "Huntington Beach",
       "email": "alexis.king@email.com",
-      "phone": "(555) 063-2438"
+      "phone": "(555) 063-2438",
+      "household": "Alexis & Emily King Household"
     },
     {
       "id": "64",
@@ -1017,12 +1080,13 @@
       "aum": 520250,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-01-02",
+      "joinDate": "2019-01-02",
       "state": "California",
       "stateCode": "CA",
       "city": "San Diego",
       "email": "rachel.green@email.com",
-      "phone": "(555) 064-1167"
+      "phone": "(555) 064-1167",
+      "household": "Rachel & Daniel Green Household"
     },
     {
       "id": "65",
@@ -1033,12 +1097,13 @@
       "aum": 122697,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-11-27",
+      "joinDate": "2019-11-27",
       "state": "California",
       "stateCode": "CA",
       "city": "San Diego",
       "email": "angela.walsh@email.com",
-      "phone": "(555) 065-6923"
+      "phone": "(555) 065-6923",
+      "household": "Angela & Emma Walsh Household"
     },
     {
       "id": "66",
@@ -1054,7 +1119,8 @@
       "stateCode": "CA",
       "city": "Fresno",
       "email": "ryan.williams@email.com",
-      "phone": "(555) 066-8059"
+      "phone": "(555) 066-8059",
+      "household": "Danielle & Ryan Williams Household"
     },
     {
       "id": "67",
@@ -1065,12 +1131,13 @@
       "aum": 3725142,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-05-28",
+      "joinDate": "2019-05-28",
       "state": "California",
       "stateCode": "CA",
       "city": "Fontana",
       "email": "emma.walsh@email.com",
-      "phone": "(555) 067-6341"
+      "phone": "(555) 067-6341",
+      "household": "Angela & Emma Walsh Household"
     },
     {
       "id": "68",
@@ -1086,7 +1153,8 @@
       "stateCode": "CA",
       "city": "Riverside",
       "email": "scott.allen@email.com",
-      "phone": "(555) 068-6871"
+      "phone": "(555) 068-6871",
+      "household": "Kevin & Scott Allen Household"
     },
     {
       "id": "69",
@@ -1102,7 +1170,8 @@
       "stateCode": "CA",
       "city": "Sacramento",
       "email": "kayla.allen@email.com",
-      "phone": "(555) 069-9604"
+      "phone": "(555) 069-9604",
+      "household": "Kayla & Catherine Allen Household"
     },
     {
       "id": "70",
@@ -1113,12 +1182,13 @@
       "aum": 942494,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-10-04",
+      "joinDate": "2019-10-04",
       "state": "California",
       "stateCode": "CA",
       "city": "Los Angeles",
       "email": "michael.mitchell@email.com",
-      "phone": "(555) 070-4698"
+      "phone": "(555) 070-4698",
+      "household": "Rachel & Michael Mitchell Household"
     },
     {
       "id": "71",
@@ -1129,12 +1199,13 @@
       "aum": 696245,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-07-26",
+      "joinDate": "2019-07-26",
       "state": "California",
       "stateCode": "CA",
       "city": "Stockton",
       "email": "emily.king@email.com",
-      "phone": "(555) 071-9798"
+      "phone": "(555) 071-9798",
+      "household": "Alexis & Emily King Household"
     },
     {
       "id": "72",
@@ -1145,12 +1216,13 @@
       "aum": 682328,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-03-20",
+      "joinDate": "2019-03-20",
       "state": "California",
       "stateCode": "CA",
       "city": "San Diego",
       "email": "michelle.walker@email.com",
-      "phone": "(555) 072-8464"
+      "phone": "(555) 072-8464",
+      "household": "Michelle & Jennifer Walker Household"
     },
     {
       "id": "73",
@@ -1166,7 +1238,8 @@
       "stateCode": "CA",
       "city": "San Francisco",
       "email": "emily.moore@email.com",
-      "phone": "(555) 073-7047"
+      "phone": "(555) 073-7047",
+      "household": "Emily & Ryan Moore Household"
     },
     {
       "id": "74",
@@ -1177,12 +1250,13 @@
       "aum": 139438,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-11-23",
+      "joinDate": "2019-11-23",
       "state": "California",
       "stateCode": "CA",
       "city": "Moreno Valley",
       "email": "raymond.thompson@email.com",
-      "phone": "(555) 074-3264"
+      "phone": "(555) 074-3264",
+      "household": "Raymond & Jonathan Thompson Household"
     },
     {
       "id": "75",
@@ -1193,12 +1267,13 @@
       "aum": 54285,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-02-12",
+      "joinDate": "2019-02-12",
       "state": "California",
       "stateCode": "CA",
       "city": "Glendale",
       "email": "madison.scott@email.com",
-      "phone": "(555) 075-4945"
+      "phone": "(555) 075-4945",
+      "household": "Madison & Matthew Scott Household"
     },
     {
       "id": "76",
@@ -1214,7 +1289,8 @@
       "stateCode": "CA",
       "city": "Stockton",
       "email": "david.johnson@email.com",
-      "phone": "(555) 076-8534"
+      "phone": "(555) 076-8534",
+      "household": "Madison & David Johnson Household"
     },
     {
       "id": "77",
@@ -1230,7 +1306,8 @@
       "stateCode": "CA",
       "city": "Modesto",
       "email": "benjamin.bell@email.com",
-      "phone": "(555) 077-5397"
+      "phone": "(555) 077-5397",
+      "household": "Benjamin & Richard Bell Household"
     },
     {
       "id": "78",
@@ -1241,12 +1318,13 @@
       "aum": 3362360,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-03-15",
+      "joinDate": "2019-03-15",
       "state": "California",
       "stateCode": "CA",
       "city": "Modesto",
       "email": "christopher.mitchell@email.com",
-      "phone": "(555) 078-9178"
+      "phone": "(555) 078-9178",
+      "household": "Christopher & David Mitchell Household"
     },
     {
       "id": "79",
@@ -1262,7 +1340,8 @@
       "stateCode": "NY",
       "city": "Syracuse",
       "email": "david.mitchell@email.com",
-      "phone": "(555) 079-8944"
+      "phone": "(555) 079-8944",
+      "household": "Christopher & David Mitchell Household"
     },
     {
       "id": "80",
@@ -1273,12 +1352,13 @@
       "aum": 2277733,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-06-22",
+      "joinDate": "2019-06-22",
       "state": "New York",
       "stateCode": "NY",
       "city": "Utica",
       "email": "frank.martinez@email.com",
-      "phone": "(555) 080-8978"
+      "phone": "(555) 080-8978",
+      "household": "Christopher & Frank Martinez Household"
     },
     {
       "id": "81",
@@ -1294,7 +1374,8 @@
       "stateCode": "NY",
       "city": "Albany",
       "email": "hannah.johnson@email.com",
-      "phone": "(555) 081-6952"
+      "phone": "(555) 081-6952",
+      "household": "Hannah & Joshua Johnson Household"
     },
     {
       "id": "82",
@@ -1305,12 +1386,13 @@
       "aum": 364396,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-12-27",
+      "joinDate": "2019-12-27",
       "state": "New York",
       "stateCode": "NY",
       "city": "Niagara Falls",
       "email": "catherine.parker@email.com",
-      "phone": "(555) 082-2772"
+      "phone": "(555) 082-2772",
+      "household": "Robert & Catherine Parker Household"
     },
     {
       "id": "83",
@@ -1321,12 +1403,13 @@
       "aum": 323771,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-03-13",
+      "joinDate": "2019-03-13",
       "state": "New York",
       "stateCode": "NY",
       "city": "Schenectady",
       "email": "christopher.king@email.com",
-      "phone": "(555) 083-5371"
+      "phone": "(555) 083-5371",
+      "household": "Christopher & Lauren King Household"
     },
     {
       "id": "84",
@@ -1342,7 +1425,8 @@
       "stateCode": "NY",
       "city": "Utica",
       "email": "andrew.wright@email.com",
-      "phone": "(555) 084-7072"
+      "phone": "(555) 084-7072",
+      "household": "Terry & Andrew Wright Household"
     },
     {
       "id": "85",
@@ -1358,7 +1442,8 @@
       "stateCode": "NY",
       "city": "Utica",
       "email": "matthew.scott@email.com",
-      "phone": "(555) 085-4018"
+      "phone": "(555) 085-4018",
+      "household": "Madison & Matthew Scott Household"
     },
     {
       "id": "86",
@@ -1369,12 +1454,13 @@
       "aum": 311034,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-06-16",
+      "joinDate": "2019-06-16",
       "state": "New York",
       "stateCode": "NY",
       "city": "New Rochelle",
       "email": "kimberly.baker@email.com",
-      "phone": "(555) 086-4849"
+      "phone": "(555) 086-4849",
+      "household": "Emily & Kimberly Baker Household"
     },
     {
       "id": "87",
@@ -1385,12 +1471,13 @@
       "aum": 450331,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-10-13",
+      "joinDate": "2019-10-13",
       "state": "New York",
       "stateCode": "NY",
       "city": "Staten Island",
       "email": "brittany.perez@email.com",
-      "phone": "(555) 087-6242"
+      "phone": "(555) 087-6242",
+      "household": "Brittany & Christopher Perez Household"
     },
     {
       "id": "88",
@@ -1401,12 +1488,13 @@
       "aum": 3194913,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-12-20",
+      "joinDate": "2019-12-20",
       "state": "New York",
       "stateCode": "NY",
       "city": "Albany",
       "email": "paul.turner@email.com",
-      "phone": "(555) 088-6701"
+      "phone": "(555) 088-6701",
+      "household": "Paul & Kayla Turner Household"
     },
     {
       "id": "89",
@@ -1417,12 +1505,13 @@
       "aum": 460678,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-11-24",
+      "joinDate": "2019-11-24",
       "state": "New York",
       "stateCode": "NY",
       "city": "Syracuse",
       "email": "lauren.jackson@email.com",
-      "phone": "(555) 089-3555"
+      "phone": "(555) 089-3555",
+      "household": "Kenneth & Lauren Jackson Household"
     },
     {
       "id": "90",
@@ -1438,7 +1527,8 @@
       "stateCode": "NY",
       "city": "Bronx",
       "email": "benjamin.hall@email.com",
-      "phone": "(555) 090-6697"
+      "phone": "(555) 090-6697",
+      "household": "Benjamin & Gloria Hall Household"
     },
     {
       "id": "91",
@@ -1454,7 +1544,8 @@
       "stateCode": "NY",
       "city": "Buffalo",
       "email": "kevin.roberts@email.com",
-      "phone": "(555) 091-5941"
+      "phone": "(555) 091-5941",
+      "household": "Frank & Kevin Roberts Household"
     },
     {
       "id": "92",
@@ -1465,12 +1556,13 @@
       "aum": 529628,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-05-15",
+      "joinDate": "2019-05-15",
       "state": "New York",
       "stateCode": "NY",
       "city": "Albany",
       "email": "steven.walsh@email.com",
-      "phone": "(555) 092-7107"
+      "phone": "(555) 092-7107",
+      "household": "Steven & Mark Walsh Household"
     },
     {
       "id": "93",
@@ -1481,12 +1573,13 @@
       "aum": 2921043,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-05-26",
+      "joinDate": "2019-05-26",
       "state": "New York",
       "stateCode": "NY",
       "city": "Troy",
       "email": "joshua.johnson@email.com",
-      "phone": "(555) 093-7448"
+      "phone": "(555) 093-7448",
+      "household": "Hannah & Joshua Johnson Household"
     },
     {
       "id": "94",
@@ -1502,7 +1595,8 @@
       "stateCode": "NY",
       "city": "Yonkers",
       "email": "marcus.smith@email.com",
-      "phone": "(555) 094-7660"
+      "phone": "(555) 094-7660",
+      "household": "Scott & Marcus Smith Household"
     },
     {
       "id": "95",
@@ -1518,7 +1612,8 @@
       "stateCode": "NY",
       "city": "Schenectady",
       "email": "ryan.moore@email.com",
-      "phone": "(555) 095-3784"
+      "phone": "(555) 095-3784",
+      "household": "Emily & Ryan Moore Household"
     },
     {
       "id": "96",
@@ -1534,7 +1629,8 @@
       "stateCode": "NY",
       "city": "New York",
       "email": "kevin.martin@email.com",
-      "phone": "(555) 096-7494"
+      "phone": "(555) 096-7494",
+      "household": "Kevin & Joseph Martin Household"
     },
     {
       "id": "97",
@@ -1545,12 +1641,13 @@
       "aum": 967526,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-03-13",
+      "joinDate": "2019-03-13",
       "state": "New York",
       "stateCode": "NY",
       "city": "Utica",
       "email": "christopher.carter@email.com",
-      "phone": "(555) 097-7644"
+      "phone": "(555) 097-7644",
+      "household": "Christopher & Jonathan Carter Household"
     },
     {
       "id": "98",
@@ -1566,7 +1663,8 @@
       "stateCode": "NY",
       "city": "New Rochelle",
       "email": "mark.adams@email.com",
-      "phone": "(555) 098-9401"
+      "phone": "(555) 098-9401",
+      "household": "Kenneth & Mark Adams Household"
     },
     {
       "id": "99",
@@ -1577,12 +1675,13 @@
       "aum": 531153,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-07-09",
+      "joinDate": "2019-07-09",
       "state": "New York",
       "stateCode": "NY",
       "city": "Buffalo",
       "email": "nicole.williams@email.com",
-      "phone": "(555) 099-1468"
+      "phone": "(555) 099-1468",
+      "household": "Nicole & Laura Williams Household"
     },
     {
       "id": "100",
@@ -1593,12 +1692,13 @@
       "aum": 501103,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-01-27",
+      "joinDate": "2019-01-27",
       "state": "New York",
       "stateCode": "NY",
       "city": "Queens",
       "email": "jonathan.thompson@email.com",
-      "phone": "(555) 100-5378"
+      "phone": "(555) 100-5378",
+      "household": "Raymond & Jonathan Thompson Household"
     },
     {
       "id": "101",
@@ -1609,12 +1709,13 @@
       "aum": 372265,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-07-27",
+      "joinDate": "2019-07-27",
       "state": "New York",
       "stateCode": "NY",
       "city": "Buffalo",
       "email": "michelle.robinson@email.com",
-      "phone": "(555) 101-2017"
+      "phone": "(555) 101-2017",
+      "household": "Amanda & Michelle Robinson Household"
     },
     {
       "id": "102",
@@ -1630,7 +1731,8 @@
       "stateCode": "NY",
       "city": "Queens",
       "email": "tyler.baker@email.com",
-      "phone": "(555) 102-2932"
+      "phone": "(555) 102-2932",
+      "household": "Tyler & Joshua Baker Household"
     },
     {
       "id": "103",
@@ -1641,12 +1743,13 @@
       "aum": 1161147,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-07-02",
+      "joinDate": "2019-07-02",
       "state": "New York",
       "stateCode": "NY",
       "city": "Queens",
       "email": "hannah.garcia@email.com",
-      "phone": "(555) 103-4965"
+      "phone": "(555) 103-4965",
+      "household": "Hannah & Charles Garcia Household"
     },
     {
       "id": "104",
@@ -1657,12 +1760,13 @@
       "aum": 1643363,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-02-14",
+      "joinDate": "2019-02-14",
       "state": "New York",
       "stateCode": "NY",
       "city": "New York",
       "email": "james.taylor@email.com",
-      "phone": "(555) 104-4476"
+      "phone": "(555) 104-4476",
+      "household": "Terry & James Taylor Household"
     },
     {
       "id": "105",
@@ -1678,7 +1782,8 @@
       "stateCode": "NY",
       "city": "Staten Island",
       "email": "kayla.turner@email.com",
-      "phone": "(555) 105-2024"
+      "phone": "(555) 105-2024",
+      "household": "Paul & Kayla Turner Household"
     },
     {
       "id": "106",
@@ -1694,7 +1799,8 @@
       "stateCode": "NY",
       "city": "Bronx",
       "email": "rebecca.davis@email.com",
-      "phone": "(555) 106-2287"
+      "phone": "(555) 106-2287",
+      "household": "Rebecca & Scott Davis Household"
     },
     {
       "id": "107",
@@ -1705,12 +1811,13 @@
       "aum": 1076351,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-07-03",
+      "joinDate": "2019-07-03",
       "state": "New York",
       "stateCode": "NY",
       "city": "Albany",
       "email": "lisa.phillips@email.com",
-      "phone": "(555) 107-7996"
+      "phone": "(555) 107-7996",
+      "household": "William & Lisa Phillips Household"
     },
     {
       "id": "108",
@@ -1721,12 +1828,13 @@
       "aum": 890228,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-07-25",
+      "joinDate": "2019-07-25",
       "state": "New York",
       "stateCode": "NY",
       "city": "Troy",
       "email": "samantha.lewis@email.com",
-      "phone": "(555) 108-0179"
+      "phone": "(555) 108-0179",
+      "household": "Samantha & Paul Lewis Household"
     },
     {
       "id": "109",
@@ -1737,12 +1845,13 @@
       "aum": 120411,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-05-21",
+      "joinDate": "2019-05-21",
       "state": "New York",
       "stateCode": "NY",
       "city": "New Rochelle",
       "email": "cynthia.chen@email.com",
-      "phone": "(555) 109-2130"
+      "phone": "(555) 109-2130",
+      "household": "Cynthia & Tyler Chen Household"
     },
     {
       "id": "110",
@@ -1758,7 +1867,8 @@
       "stateCode": "NY",
       "city": "Schenectady",
       "email": "amanda.hill@email.com",
-      "phone": "(555) 110-2147"
+      "phone": "(555) 110-2147",
+      "household": "Michael & Amanda Hill Household"
     },
     {
       "id": "111",
@@ -1769,12 +1879,13 @@
       "aum": 4731540,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-04-25",
+      "joinDate": "2019-04-25",
       "state": "New York",
       "stateCode": "NY",
       "city": "Buffalo",
       "email": "kevin.robinson@email.com",
-      "phone": "(555) 111-4779"
+      "phone": "(555) 111-4779",
+      "household": "Kevin & Hannah Robinson Household"
     },
     {
       "id": "112",
@@ -1785,12 +1896,13 @@
       "aum": 113262,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-03-25",
+      "joinDate": "2019-03-25",
       "state": "New York",
       "stateCode": "NY",
       "city": "Buffalo",
       "email": "mark.price@email.com",
-      "phone": "(555) 112-0669"
+      "phone": "(555) 112-0669",
+      "household": "Mark & Brian Price Household"
     },
     {
       "id": "113",
@@ -1806,7 +1918,8 @@
       "stateCode": "NY",
       "city": "Queens",
       "email": "marcus.smith@email.com",
-      "phone": "(555) 113-4777"
+      "phone": "(555) 113-4777",
+      "household": "Marcus & Raymond Smith Household"
     },
     {
       "id": "114",
@@ -1817,12 +1930,13 @@
       "aum": 50097,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-07-14",
+      "joinDate": "2019-07-14",
       "state": "New York",
       "stateCode": "NY",
       "city": "Buffalo",
       "email": "joshua.baker@email.com",
-      "phone": "(555) 114-4451"
+      "phone": "(555) 114-4451",
+      "household": "Tyler & Joshua Baker Household"
     },
     {
       "id": "115",
@@ -1833,12 +1947,13 @@
       "aum": 462541,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-05-02",
+      "joinDate": "2019-05-02",
       "state": "New York",
       "stateCode": "NY",
       "city": "Buffalo",
       "email": "ryan.scott@email.com",
-      "phone": "(555) 115-3613"
+      "phone": "(555) 115-3613",
+      "household": "Ryan & Amanda Scott Household"
     },
     {
       "id": "116",
@@ -1849,12 +1964,13 @@
       "aum": 1934056,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-08-02",
+      "joinDate": "2019-08-02",
       "state": "New York",
       "stateCode": "NY",
       "city": "Buffalo",
       "email": "amy.hill@email.com",
-      "phone": "(555) 116-8068"
+      "phone": "(555) 116-8068",
+      "household": "Amy & Benjamin Hill Household"
     },
     {
       "id": "117",
@@ -1870,7 +1986,8 @@
       "stateCode": "NY",
       "city": "New Rochelle",
       "email": "gloria.turner@email.com",
-      "phone": "(555) 117-5539"
+      "phone": "(555) 117-5539",
+      "household": "Gloria & Terry Turner Household"
     },
     {
       "id": "118",
@@ -1886,7 +2003,8 @@
       "stateCode": "NY",
       "city": "Syracuse",
       "email": "brian.rodriguez@email.com",
-      "phone": "(555) 118-3280"
+      "phone": "(555) 118-3280",
+      "household": "Brian & Joshua Rodriguez Household"
     },
     {
       "id": "119",
@@ -1897,12 +2015,13 @@
       "aum": 1748924,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-12-25",
+      "joinDate": "2019-12-25",
       "state": "New York",
       "stateCode": "NY",
       "city": "New York",
       "email": "catherine.allen@email.com",
-      "phone": "(555) 119-8323"
+      "phone": "(555) 119-8323",
+      "household": "Kayla & Catherine Allen Household"
     },
     {
       "id": "120",
@@ -1918,7 +2037,8 @@
       "stateCode": "NY",
       "city": "Niagara Falls",
       "email": "marcus.campbell@email.com",
-      "phone": "(555) 120-9669"
+      "phone": "(555) 120-9669",
+      "household": "Alexis & Marcus Campbell Household"
     },
     {
       "id": "121",
@@ -1934,7 +2054,8 @@
       "stateCode": "NY",
       "city": "Brooklyn",
       "email": "stephanie.campbell@email.com",
-      "phone": "(555) 121-4532"
+      "phone": "(555) 121-4532",
+      "household": "Stephanie & Gloria Campbell Household"
     },
     {
       "id": "122",
@@ -1950,7 +2071,8 @@
       "stateCode": "NY",
       "city": "Schenectady",
       "email": "frank.allen@email.com",
-      "phone": "(555) 122-4959"
+      "phone": "(555) 122-4959",
+      "household": "Frank & Kenneth Allen Household"
     },
     {
       "id": "123",
@@ -1961,12 +2083,13 @@
       "aum": 334588,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-02-02",
+      "joinDate": "2019-02-02",
       "state": "New York",
       "stateCode": "NY",
       "city": "Troy",
       "email": "alexander.coleman@email.com",
-      "phone": "(555) 123-0537"
+      "phone": "(555) 123-0537",
+      "household": "Alexander & Jessica Coleman Household"
     },
     {
       "id": "124",
@@ -1977,12 +2100,13 @@
       "aum": 229851,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-06-15",
+      "joinDate": "2019-06-15",
       "state": "New York",
       "stateCode": "NY",
       "city": "Queens",
       "email": "laura.mitchell@email.com",
-      "phone": "(555) 124-7117"
+      "phone": "(555) 124-7117",
+      "household": "Laura & Nicole Mitchell Household"
     },
     {
       "id": "125",
@@ -1993,12 +2117,13 @@
       "aum": 2499508,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-07-05",
+      "joinDate": "2019-07-05",
       "state": "New York",
       "stateCode": "NY",
       "city": "Yonkers",
       "email": "jessica.coleman@email.com",
-      "phone": "(555) 125-1871"
+      "phone": "(555) 125-1871",
+      "household": "Alexander & Jessica Coleman Household"
     },
     {
       "id": "126",
@@ -2009,12 +2134,13 @@
       "aum": 5729023,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-07-02",
+      "joinDate": "2019-07-02",
       "state": "New York",
       "stateCode": "NY",
       "city": "Staten Island",
       "email": "kevin.hayes@email.com",
-      "phone": "(555) 126-4697"
+      "phone": "(555) 126-4697",
+      "household": "Chelsea & Kevin Hayes Household"
     },
     {
       "id": "127",
@@ -2030,7 +2156,8 @@
       "stateCode": "NY",
       "city": "Albany",
       "email": "joshua.wright@email.com",
-      "phone": "(555) 127-5756"
+      "phone": "(555) 127-5756",
+      "household": "Joshua & Jonathan Wright Household"
     },
     {
       "id": "128",
@@ -2041,12 +2168,13 @@
       "aum": 1376271,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-02-26",
+      "joinDate": "2019-02-26",
       "state": "New York",
       "stateCode": "NY",
       "city": "Schenectady",
       "email": "joseph.martin@email.com",
-      "phone": "(555) 128-7807"
+      "phone": "(555) 128-7807",
+      "household": "Kevin & Joseph Martin Household"
     },
     {
       "id": "129",
@@ -2062,7 +2190,8 @@
       "stateCode": "NY",
       "city": "Albany",
       "email": "james.baker@email.com",
-      "phone": "(555) 129-6872"
+      "phone": "(555) 129-6872",
+      "household": "James & Emma Baker Household"
     },
     {
       "id": "130",
@@ -2078,7 +2207,8 @@
       "stateCode": "NY",
       "city": "Buffalo",
       "email": "amanda.foster@email.com",
-      "phone": "(555) 130-3463"
+      "phone": "(555) 130-3463",
+      "household": "Robert & Amanda Foster Household"
     },
     {
       "id": "131",
@@ -2089,12 +2219,13 @@
       "aum": 513441,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-03-16",
+      "joinDate": "2019-03-16",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Plano",
       "email": "joshua.rodriguez@email.com",
-      "phone": "(555) 131-8334"
+      "phone": "(555) 131-8334",
+      "household": "Brian & Joshua Rodriguez Household"
     },
     {
       "id": "132",
@@ -2105,12 +2236,13 @@
       "aum": 202952,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-10-04",
+      "joinDate": "2019-10-04",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Lubbock",
       "email": "richard.harris@email.com",
-      "phone": "(555) 132-6307"
+      "phone": "(555) 132-6307",
+      "household": "Richard & Hannah Harris Household"
     },
     {
       "id": "133",
@@ -2121,12 +2253,13 @@
       "aum": 1287940,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-07-16",
+      "joinDate": "2019-07-16",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Fort Worth",
       "email": "laura.clark@email.com",
-      "phone": "(555) 133-1802"
+      "phone": "(555) 133-1802",
+      "household": "Laura & Cynthia Clark Household"
     },
     {
       "id": "134",
@@ -2142,7 +2275,8 @@
       "stateCode": "TX",
       "city": "Plano",
       "email": "david.flores@email.com",
-      "phone": "(555) 134-3420"
+      "phone": "(555) 134-3420",
+      "household": "Madison & David Flores Household"
     },
     {
       "id": "135",
@@ -2153,12 +2287,13 @@
       "aum": 2051980,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-02-06",
+      "joinDate": "2019-02-06",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Arlington",
       "email": "gloria.evans@email.com",
-      "phone": "(555) 135-3625"
+      "phone": "(555) 135-3625",
+      "household": "Rebecca, Gloria & Andrew Evans Household"
     },
     {
       "id": "136",
@@ -2169,12 +2304,13 @@
       "aum": 2888513,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-08-12",
+      "joinDate": "2019-08-12",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Arlington",
       "email": "tyler.phillips@email.com",
-      "phone": "(555) 136-2628"
+      "phone": "(555) 136-2628",
+      "household": "Tyler & Samantha Phillips Household"
     },
     {
       "id": "137",
@@ -2190,7 +2326,8 @@
       "stateCode": "TX",
       "city": "San Antonio",
       "email": "laura.williams@email.com",
-      "phone": "(555) 137-9886"
+      "phone": "(555) 137-9886",
+      "household": "Nicole & Laura Williams Household"
     },
     {
       "id": "138",
@@ -2201,12 +2338,13 @@
       "aum": 1459384,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-02-17",
+      "joinDate": "2019-02-17",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Laredo",
       "email": "jennifer.taylor@email.com",
-      "phone": "(555) 138-5389"
+      "phone": "(555) 138-5389",
+      "household": "Jennifer & Charles Taylor Household"
     },
     {
       "id": "139",
@@ -2217,12 +2355,13 @@
       "aum": 596669,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-08-13",
+      "joinDate": "2019-08-13",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Laredo",
       "email": "robert.parker@email.com",
-      "phone": "(555) 139-0129"
+      "phone": "(555) 139-0129",
+      "household": "Robert & Ashley Parker Household"
     },
     {
       "id": "140",
@@ -2233,12 +2372,13 @@
       "aum": 736857,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-04-24",
+      "joinDate": "2019-04-24",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Houston",
       "email": "kevin.sanchez@email.com",
-      "phone": "(555) 140-9798"
+      "phone": "(555) 140-9798",
+      "household": "Stephanie & Kevin Sanchez Household"
     },
     {
       "id": "141",
@@ -2254,7 +2394,8 @@
       "stateCode": "TX",
       "city": "Lubbock",
       "email": "david.nelson@email.com",
-      "phone": "(555) 141-0672"
+      "phone": "(555) 141-0672",
+      "household": "David & Brittany Nelson Household"
     },
     {
       "id": "142",
@@ -2265,12 +2406,13 @@
       "aum": 94130,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-11-28",
+      "joinDate": "2019-11-28",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Dallas",
       "email": "jonathan.wright@email.com",
-      "phone": "(555) 142-7912"
+      "phone": "(555) 142-7912",
+      "household": "Joshua & Jonathan Wright Household"
     },
     {
       "id": "143",
@@ -2281,12 +2423,13 @@
       "aum": 877824,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-12-17",
+      "joinDate": "2019-12-17",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Irving",
       "email": "jessica.coleman@email.com",
-      "phone": "(555) 143-6894"
+      "phone": "(555) 143-6894",
+      "household": "Jessica & Alexander Coleman Household"
     },
     {
       "id": "144",
@@ -2297,12 +2440,13 @@
       "aum": 1058559,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-06-27",
+      "joinDate": "2019-06-27",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Arlington",
       "email": "emma.baker@email.com",
-      "phone": "(555) 144-7777"
+      "phone": "(555) 144-7777",
+      "household": "James & Emma Baker Household"
     },
     {
       "id": "145",
@@ -2318,7 +2462,8 @@
       "stateCode": "TX",
       "city": "Houston",
       "email": "jennifer.walker@email.com",
-      "phone": "(555) 145-9322"
+      "phone": "(555) 145-9322",
+      "household": "Michelle & Jennifer Walker Household"
     },
     {
       "id": "146",
@@ -2329,12 +2474,13 @@
       "aum": 260848,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-01-23",
+      "joinDate": "2019-01-23",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Arlington",
       "email": "benjamin.hill@email.com",
-      "phone": "(555) 146-5209"
+      "phone": "(555) 146-5209",
+      "household": "Amy & Benjamin Hill Household"
     },
     {
       "id": "147",
@@ -2345,12 +2491,13 @@
       "aum": 284529,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-09-28",
+      "joinDate": "2019-09-28",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Irving",
       "email": "daniel.brown@email.com",
-      "phone": "(555) 147-3828"
+      "phone": "(555) 147-3828",
+      "household": "Samantha & Daniel Brown Household"
     },
     {
       "id": "148",
@@ -2361,12 +2508,13 @@
       "aum": 3615056,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-12-18",
+      "joinDate": "2019-12-18",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Houston",
       "email": "mark.walsh@email.com",
-      "phone": "(555) 148-8874"
+      "phone": "(555) 148-8874",
+      "household": "Steven & Mark Walsh Household"
     },
     {
       "id": "149",
@@ -2377,12 +2525,13 @@
       "aum": 217476,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-06-16",
+      "joinDate": "2019-06-16",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Fort Worth",
       "email": "ashley.moore@email.com",
-      "phone": "(555) 149-9446"
+      "phone": "(555) 149-9446",
+      "household": "Ashley & William Moore Household"
     },
     {
       "id": "150",
@@ -2393,12 +2542,13 @@
       "aum": 2602621,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-08-19",
+      "joinDate": "2019-08-19",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Laredo",
       "email": "nicole.young@email.com",
-      "phone": "(555) 150-5605"
+      "phone": "(555) 150-5605",
+      "household": "Madison & Nicole Young Household"
     },
     {
       "id": "151",
@@ -2409,12 +2559,13 @@
       "aum": 983608,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-02-08",
+      "joinDate": "2019-02-08",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Amarillo",
       "email": "daniel.green@email.com",
-      "phone": "(555) 151-1297"
+      "phone": "(555) 151-1297",
+      "household": "Rachel & Daniel Green Household"
     },
     {
       "id": "152",
@@ -2425,12 +2576,13 @@
       "aum": 709721,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-07-23",
+      "joinDate": "2019-07-23",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Dallas",
       "email": "andrew.roberts@email.com",
-      "phone": "(555) 152-1497"
+      "phone": "(555) 152-1497",
+      "household": "Andrew & Samantha Roberts Household"
     },
     {
       "id": "153",
@@ -2441,12 +2593,13 @@
       "aum": 2174794,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-08-20",
+      "joinDate": "2019-08-20",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Irving",
       "email": "benjamin.walker@email.com",
-      "phone": "(555) 153-3245"
+      "phone": "(555) 153-3245",
+      "household": "Benjamin & Cynthia Walker Household"
     },
     {
       "id": "154",
@@ -2457,12 +2610,13 @@
       "aum": 777840,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-06-03",
+      "joinDate": "2019-06-03",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Arlington",
       "email": "samantha.roberts@email.com",
-      "phone": "(555) 154-4011"
+      "phone": "(555) 154-4011",
+      "household": "Andrew & Samantha Roberts Household"
     },
     {
       "id": "155",
@@ -2478,7 +2632,8 @@
       "stateCode": "TX",
       "city": "Garland",
       "email": "angela.rodriguez@email.com",
-      "phone": "(555) 155-0218"
+      "phone": "(555) 155-0218",
+      "household": "Angela & Nicole Rodriguez Household"
     },
     {
       "id": "156",
@@ -2489,12 +2644,13 @@
       "aum": 544025,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-10-04",
+      "joinDate": "2019-10-04",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Houston",
       "email": "nicole.mitchell@email.com",
-      "phone": "(555) 156-7004"
+      "phone": "(555) 156-7004",
+      "household": "Laura & Nicole Mitchell Household"
     },
     {
       "id": "157",
@@ -2505,12 +2661,13 @@
       "aum": 123992,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-06-05",
+      "joinDate": "2019-06-05",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Plano",
       "email": "jennifer.wilson@email.com",
-      "phone": "(555) 157-4534"
+      "phone": "(555) 157-4534",
+      "household": "Lisa & Jennifer Wilson Household"
     },
     {
       "id": "158",
@@ -2521,12 +2678,13 @@
       "aum": 692950,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-10-13",
+      "joinDate": "2019-10-13",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Laredo",
       "email": "joseph.johnson@email.com",
-      "phone": "(555) 158-8982"
+      "phone": "(555) 158-8982",
+      "household": "Joseph & Joshua Johnson Household"
     },
     {
       "id": "159",
@@ -2537,12 +2695,13 @@
       "aum": 545807,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-04-17",
+      "joinDate": "2019-04-17",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Garland",
       "email": "nicole.flores@email.com",
-      "phone": "(555) 159-9574"
+      "phone": "(555) 159-9574",
+      "household": "Nicole & Amy Flores Household"
     },
     {
       "id": "160",
@@ -2558,7 +2717,8 @@
       "stateCode": "TX",
       "city": "Dallas",
       "email": "scott.davis@email.com",
-      "phone": "(555) 160-7761"
+      "phone": "(555) 160-7761",
+      "household": "Rebecca & Scott Davis Household"
     },
     {
       "id": "161",
@@ -2574,7 +2734,8 @@
       "stateCode": "TX",
       "city": "Corpus Christi",
       "email": "brian.adams@email.com",
-      "phone": "(555) 161-1092"
+      "phone": "(555) 161-1092",
+      "household": "Brian & Benjamin Adams Household"
     },
     {
       "id": "162",
@@ -2590,7 +2751,8 @@
       "stateCode": "TX",
       "city": "Arlington",
       "email": "gloria.hall@email.com",
-      "phone": "(555) 162-6208"
+      "phone": "(555) 162-6208",
+      "household": "Benjamin & Gloria Hall Household"
     },
     {
       "id": "163",
@@ -2601,12 +2763,13 @@
       "aum": 550690,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-12-15",
+      "joinDate": "2019-12-15",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Corpus Christi",
       "email": "paul.lewis@email.com",
-      "phone": "(555) 163-6914"
+      "phone": "(555) 163-6914",
+      "household": "Samantha & Paul Lewis Household"
     },
     {
       "id": "164",
@@ -2617,12 +2780,13 @@
       "aum": 523957,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-03-27",
+      "joinDate": "2019-03-27",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Plano",
       "email": "lisa.mitchell@email.com",
-      "phone": "(555) 164-1238"
+      "phone": "(555) 164-1238",
+      "household": "Lisa & Alexander Mitchell Household"
     },
     {
       "id": "165",
@@ -2638,7 +2802,8 @@
       "stateCode": "TX",
       "city": "Plano",
       "email": "michelle.martin@email.com",
-      "phone": "(555) 165-4745"
+      "phone": "(555) 165-4745",
+      "household": "Michelle & Catherine Martin Household"
     },
     {
       "id": "166",
@@ -2654,7 +2819,8 @@
       "stateCode": "TX",
       "city": "Lubbock",
       "email": "brian.hill@email.com",
-      "phone": "(555) 166-6568"
+      "phone": "(555) 166-6568",
+      "household": "Brian & Megan Hill Household"
     },
     {
       "id": "167",
@@ -2665,12 +2831,13 @@
       "aum": 212360,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-03-21",
+      "joinDate": "2019-03-21",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Plano",
       "email": "melissa.wright@email.com",
-      "phone": "(555) 167-7451"
+      "phone": "(555) 167-7451",
+      "household": "Melissa & Amy Wright Household"
     },
     {
       "id": "168",
@@ -2686,7 +2853,8 @@
       "stateCode": "TX",
       "city": "Amarillo",
       "email": "alexander.martinez@email.com",
-      "phone": "(555) 168-0269"
+      "phone": "(555) 168-0269",
+      "household": "Alexander & Megan Martinez Household"
     },
     {
       "id": "169",
@@ -2697,12 +2865,13 @@
       "aum": 867532,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-03-12",
+      "joinDate": "2019-03-12",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Plano",
       "email": "sarah.davis@email.com",
-      "phone": "(555) 169-4666"
+      "phone": "(555) 169-4666",
+      "household": "Sarah & Gregory Davis Household"
     },
     {
       "id": "170",
@@ -2713,12 +2882,13 @@
       "aum": 1558772,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-07-23",
+      "joinDate": "2019-07-23",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Amarillo",
       "email": "tyler.chen@email.com",
-      "phone": "(555) 170-4610"
+      "phone": "(555) 170-4610",
+      "household": "Cynthia & Tyler Chen Household"
     },
     {
       "id": "171",
@@ -2729,12 +2899,13 @@
       "aum": 143406,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-08-19",
+      "joinDate": "2019-08-19",
       "state": "Texas",
       "stateCode": "TX",
       "city": "Plano",
       "email": "daniel.wilson@email.com",
-      "phone": "(555) 171-3773"
+      "phone": "(555) 171-3773",
+      "household": "Daniel & Richard Wilson Household"
     },
     {
       "id": "172",
@@ -2750,7 +2921,8 @@
       "stateCode": "FL",
       "city": "Cape Coral",
       "email": "charles.taylor@email.com",
-      "phone": "(555) 172-2459"
+      "phone": "(555) 172-2459",
+      "household": "Jennifer & Charles Taylor Household"
     },
     {
       "id": "173",
@@ -2766,7 +2938,8 @@
       "stateCode": "FL",
       "city": "St. Petersburg",
       "email": "jonathan.carter@email.com",
-      "phone": "(555) 173-4359"
+      "phone": "(555) 173-4359",
+      "household": "Christopher & Jonathan Carter Household"
     },
     {
       "id": "174",
@@ -2777,12 +2950,13 @@
       "aum": 112003,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-02-25",
+      "joinDate": "2019-02-25",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Port St. Lucie",
       "email": "catherine.martin@email.com",
-      "phone": "(555) 174-4039"
+      "phone": "(555) 174-4039",
+      "household": "Michelle & Catherine Martin Household"
     },
     {
       "id": "175",
@@ -2793,12 +2967,13 @@
       "aum": 1229019,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-03-17",
+      "joinDate": "2019-03-17",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Hialeah",
       "email": "stephanie.williams@email.com",
-      "phone": "(555) 175-1329"
+      "phone": "(555) 175-1329",
+      "household": "Stephanie & Gregory Williams Household"
     },
     {
       "id": "176",
@@ -2814,7 +2989,8 @@
       "stateCode": "FL",
       "city": "Fort Lauderdale",
       "email": "charles.garcia@email.com",
-      "phone": "(555) 176-1889"
+      "phone": "(555) 176-1889",
+      "household": "Hannah & Charles Garcia Household"
     },
     {
       "id": "177",
@@ -2825,12 +3001,13 @@
       "aum": 391116,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-03-03",
+      "joinDate": "2019-03-03",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Tallahassee",
       "email": "terry.turner@email.com",
-      "phone": "(555) 177-4168"
+      "phone": "(555) 177-4168",
+      "household": "Gloria & Terry Turner Household"
     },
     {
       "id": "178",
@@ -2841,12 +3018,13 @@
       "aum": 602742,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-04-22",
+      "joinDate": "2019-04-22",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Cape Coral",
       "email": "william.moore@email.com",
-      "phone": "(555) 178-3162"
+      "phone": "(555) 178-3162",
+      "household": "Ashley & William Moore Household"
     },
     {
       "id": "179",
@@ -2857,12 +3035,13 @@
       "aum": 1205250,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-03-13",
+      "joinDate": "2019-03-13",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Fort Lauderdale",
       "email": "jessica.garcia@email.com",
-      "phone": "(555) 179-5900"
+      "phone": "(555) 179-5900",
+      "household": "Jessica & Terry Garcia Household"
     },
     {
       "id": "180",
@@ -2873,12 +3052,13 @@
       "aum": 926711,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-10-12",
+      "joinDate": "2019-10-12",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Tampa",
       "email": "brittany.nelson@email.com",
-      "phone": "(555) 180-9834"
+      "phone": "(555) 180-9834",
+      "household": "David & Brittany Nelson Household"
     },
     {
       "id": "181",
@@ -2889,12 +3069,13 @@
       "aum": 104240,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-08-22",
+      "joinDate": "2019-08-22",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Hialeah",
       "email": "michelle.baker@email.com",
-      "phone": "(555) 181-4577"
+      "phone": "(555) 181-4577",
+      "household": "Michelle & Megan Baker Household"
     },
     {
       "id": "182",
@@ -2910,7 +3091,8 @@
       "stateCode": "FL",
       "city": "Cape Coral",
       "email": "justin.nelson@email.com",
-      "phone": "(555) 182-1720"
+      "phone": "(555) 182-1720",
+      "household": "Justin & Nicole Nelson Household"
     },
     {
       "id": "183",
@@ -2921,12 +3103,13 @@
       "aum": 1901074,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-03-07",
+      "joinDate": "2019-03-07",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Hialeah",
       "email": "hannah.hayes@email.com",
-      "phone": "(555) 183-0632"
+      "phone": "(555) 183-0632",
+      "household": "Hannah & Jonathan Hayes Household"
     },
     {
       "id": "184",
@@ -2942,7 +3125,8 @@
       "stateCode": "FL",
       "city": "Miami",
       "email": "amy.moore@email.com",
-      "phone": "(555) 184-0489"
+      "phone": "(555) 184-0489",
+      "household": "Amy & Lauren Moore Household"
     },
     {
       "id": "185",
@@ -2953,12 +3137,13 @@
       "aum": 2353065,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-07-23",
+      "joinDate": "2019-07-23",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Miami",
       "email": "kenneth.green@email.com",
-      "phone": "(555) 185-8020"
+      "phone": "(555) 185-8020",
+      "household": "Kenneth & Hannah Green Household"
     },
     {
       "id": "186",
@@ -2974,7 +3159,8 @@
       "stateCode": "FL",
       "city": "Hialeah",
       "email": "gloria.campbell@email.com",
-      "phone": "(555) 186-4653"
+      "phone": "(555) 186-4653",
+      "household": "Stephanie & Gloria Campbell Household"
     },
     {
       "id": "187",
@@ -2985,12 +3171,13 @@
       "aum": 4852695,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-05-06",
+      "joinDate": "2019-05-06",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Jacksonville",
       "email": "gregory.davis@email.com",
-      "phone": "(555) 187-4206"
+      "phone": "(555) 187-4206",
+      "household": "Sarah & Gregory Davis Household"
     },
     {
       "id": "188",
@@ -3006,7 +3193,8 @@
       "stateCode": "FL",
       "city": "Fort Lauderdale",
       "email": "nicole.rodriguez@email.com",
-      "phone": "(555) 188-8515"
+      "phone": "(555) 188-8515",
+      "household": "Angela & Nicole Rodriguez Household"
     },
     {
       "id": "189",
@@ -3017,12 +3205,13 @@
       "aum": 281326,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-08-02",
+      "joinDate": "2019-08-02",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Orlando",
       "email": "christopher.davis@email.com",
-      "phone": "(555) 189-0882"
+      "phone": "(555) 189-0882",
+      "household": "Christopher & Stephanie Davis Household"
     },
     {
       "id": "190",
@@ -3033,12 +3222,13 @@
       "aum": 2510298,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-11-17",
+      "joinDate": "2019-11-17",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Tallahassee",
       "email": "alexander.mitchell@email.com",
-      "phone": "(555) 190-7174"
+      "phone": "(555) 190-7174",
+      "household": "Lisa & Alexander Mitchell Household"
     },
     {
       "id": "191",
@@ -3049,12 +3239,13 @@
       "aum": 2052891,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-02-17",
+      "joinDate": "2019-02-17",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Port St. Lucie",
       "email": "amy.wright@email.com",
-      "phone": "(555) 191-4823"
+      "phone": "(555) 191-4823",
+      "household": "Melissa & Amy Wright Household"
     },
     {
       "id": "192",
@@ -3065,12 +3256,13 @@
       "aum": 601225,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-05-04",
+      "joinDate": "2019-05-04",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Cape Coral",
       "email": "richard.wilson@email.com",
-      "phone": "(555) 192-9300"
+      "phone": "(555) 192-9300",
+      "household": "Daniel & Richard Wilson Household"
     },
     {
       "id": "193",
@@ -3081,12 +3273,13 @@
       "aum": 2056834,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-10-14",
+      "joinDate": "2019-10-14",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Tampa",
       "email": "richard.anderson@email.com",
-      "phone": "(555) 193-3110"
+      "phone": "(555) 193-3110",
+      "household": "Richard & Charles Anderson Household"
     },
     {
       "id": "194",
@@ -3097,12 +3290,13 @@
       "aum": 168214,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-10-06",
+      "joinDate": "2019-10-06",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Hollywood",
       "email": "ashley.parker@email.com",
-      "phone": "(555) 194-1103"
+      "phone": "(555) 194-1103",
+      "household": "Robert & Ashley Parker Household"
     },
     {
       "id": "195",
@@ -3113,12 +3307,13 @@
       "aum": 126054,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-04-12",
+      "joinDate": "2019-04-12",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Port St. Lucie",
       "email": "robert.hall@email.com",
-      "phone": "(555) 195-7394"
+      "phone": "(555) 195-7394",
+      "household": "Robert & Scott Hall Household"
     },
     {
       "id": "196",
@@ -3129,12 +3324,13 @@
       "aum": 446597,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-06-21",
+      "joinDate": "2019-06-21",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Tampa",
       "email": "thomas.wright@email.com",
-      "phone": "(555) 196-5928"
+      "phone": "(555) 196-5928",
+      "household": "Thomas & Lauren Wright Household"
     },
     {
       "id": "197",
@@ -3145,12 +3341,13 @@
       "aum": 1375893,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-05-15",
+      "joinDate": "2019-05-15",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Tampa",
       "email": "michael.walsh@email.com",
-      "phone": "(555) 197-5054"
+      "phone": "(555) 197-5054",
+      "household": "Michael & Andrew Walsh Household"
     },
     {
       "id": "198",
@@ -3166,7 +3363,8 @@
       "stateCode": "FL",
       "city": "Pembroke Pines",
       "email": "kenneth.allen@email.com",
-      "phone": "(555) 198-4736"
+      "phone": "(555) 198-4736",
+      "household": "Frank & Kenneth Allen Household"
     },
     {
       "id": "199",
@@ -3177,12 +3375,13 @@
       "aum": 3046373,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-05-04",
+      "joinDate": "2019-05-04",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Hialeah",
       "email": "hannah.harris@email.com",
-      "phone": "(555) 199-1138"
+      "phone": "(555) 199-1138",
+      "household": "Richard & Hannah Harris Household"
     },
     {
       "id": "200",
@@ -3193,12 +3392,13 @@
       "aum": 2706567,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-03-22",
+      "joinDate": "2019-03-22",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Miami",
       "email": "amanda.jackson@email.com",
-      "phone": "(555) 200-4523"
+      "phone": "(555) 200-4523",
+      "household": "Amanda & Rebecca Jackson Household"
     },
     {
       "id": "201",
@@ -3214,7 +3414,8 @@
       "stateCode": "FL",
       "city": "Hollywood",
       "email": "hannah.robinson@email.com",
-      "phone": "(555) 201-6393"
+      "phone": "(555) 201-6393",
+      "household": "Kevin & Hannah Robinson Household"
     },
     {
       "id": "202",
@@ -3225,12 +3426,13 @@
       "aum": 1185737,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-06-21",
+      "joinDate": "2019-06-21",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Orlando",
       "email": "lauren.wright@email.com",
-      "phone": "(555) 202-3162"
+      "phone": "(555) 202-3162",
+      "household": "Thomas & Lauren Wright Household"
     },
     {
       "id": "203",
@@ -3241,12 +3443,13 @@
       "aum": 1455432,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-11-03",
+      "joinDate": "2019-11-03",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Port St. Lucie",
       "email": "megan.hill@email.com",
-      "phone": "(555) 203-6272"
+      "phone": "(555) 203-6272",
+      "household": "Brian & Megan Hill Household"
     },
     {
       "id": "204",
@@ -3262,7 +3465,8 @@
       "stateCode": "FL",
       "city": "Tallahassee",
       "email": "raymond.smith@email.com",
-      "phone": "(555) 204-4391"
+      "phone": "(555) 204-4391",
+      "household": "Marcus & Raymond Smith Household"
     },
     {
       "id": "205",
@@ -3273,12 +3477,13 @@
       "aum": 2867897,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-01-10",
+      "joinDate": "2019-01-10",
       "state": "Florida",
       "stateCode": "FL",
       "city": "St. Petersburg",
       "email": "amy.flores@email.com",
-      "phone": "(555) 205-2030"
+      "phone": "(555) 205-2030",
+      "household": "Nicole & Amy Flores Household"
     },
     {
       "id": "206",
@@ -3289,12 +3494,13 @@
       "aum": 772496,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-03-28",
+      "joinDate": "2019-03-28",
       "state": "Florida",
       "stateCode": "FL",
       "city": "Tampa",
       "email": "hannah.green@email.com",
-      "phone": "(555) 206-3703"
+      "phone": "(555) 206-3703",
+      "household": "Kenneth & Hannah Green Household"
     },
     {
       "id": "207",
@@ -3305,12 +3511,13 @@
       "aum": 94020,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-08-06",
+      "joinDate": "2019-08-06",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Rockford",
       "email": "rebecca.turner@email.com",
-      "phone": "(555) 207-8990"
+      "phone": "(555) 207-8990",
+      "household": "Rebecca & Terry Turner Household"
     },
     {
       "id": "208",
@@ -3321,12 +3528,13 @@
       "aum": 207850,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-06-01",
+      "joinDate": "2019-06-01",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Joliet",
       "email": "emma.brown@email.com",
-      "phone": "(555) 208-9204"
+      "phone": "(555) 208-9204",
+      "household": "Emma & Megan Brown Household"
     },
     {
       "id": "209",
@@ -3342,7 +3550,8 @@
       "stateCode": "IL",
       "city": "Waukegan",
       "email": "megan.baker@email.com",
-      "phone": "(555) 209-8341"
+      "phone": "(555) 209-8341",
+      "household": "Michelle & Megan Baker Household"
     },
     {
       "id": "210",
@@ -3353,12 +3562,13 @@
       "aum": 1291580,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-01-16",
+      "joinDate": "2019-01-16",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Aurora",
       "email": "rebecca.jackson@email.com",
-      "phone": "(555) 210-2728"
+      "phone": "(555) 210-2728",
+      "household": "Amanda & Rebecca Jackson Household"
     },
     {
       "id": "211",
@@ -3369,12 +3579,13 @@
       "aum": 1305972,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-02-28",
+      "joinDate": "2019-02-28",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Bloomington",
       "email": "jonathan.hayes@email.com",
-      "phone": "(555) 211-2243"
+      "phone": "(555) 211-2243",
+      "household": "Hannah & Jonathan Hayes Household"
     },
     {
       "id": "212",
@@ -3390,7 +3601,8 @@
       "stateCode": "IL",
       "city": "Bloomington",
       "email": "samantha.phillips@email.com",
-      "phone": "(555) 212-4262"
+      "phone": "(555) 212-4262",
+      "household": "Tyler & Samantha Phillips Household"
     },
     {
       "id": "213",
@@ -3401,12 +3613,13 @@
       "aum": 2474557,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-03-28",
+      "joinDate": "2019-03-28",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Waukegan",
       "email": "amanda.allen@email.com",
-      "phone": "(555) 213-9248"
+      "phone": "(555) 213-9248",
+      "household": "Amanda & David Allen Household"
     },
     {
       "id": "214",
@@ -3417,12 +3630,13 @@
       "aum": 1987303,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-06-17",
+      "joinDate": "2019-06-17",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Bloomington",
       "email": "brittany.parker@email.com",
-      "phone": "(555) 214-0143"
+      "phone": "(555) 214-0143",
+      "household": "Brittany & Amanda Parker Household"
     },
     {
       "id": "215",
@@ -3433,12 +3647,13 @@
       "aum": 247047,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-01-05",
+      "joinDate": "2019-01-05",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Champaign",
       "email": "kenneth.baker@email.com",
-      "phone": "(555) 215-5262"
+      "phone": "(555) 215-5262",
+      "household": "Kenneth & Jessica Baker Household"
     },
     {
       "id": "216",
@@ -3449,12 +3664,13 @@
       "aum": 251880,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-09-07",
+      "joinDate": "2019-09-07",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Aurora",
       "email": "alexander.coleman@email.com",
-      "phone": "(555) 216-4360"
+      "phone": "(555) 216-4360",
+      "household": "Jessica & Alexander Coleman Household"
     },
     {
       "id": "217",
@@ -3465,12 +3681,13 @@
       "aum": 593348,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-11-11",
+      "joinDate": "2019-11-11",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Cicero",
       "email": "richard.bell@email.com",
-      "phone": "(555) 217-0405"
+      "phone": "(555) 217-0405",
+      "household": "Benjamin & Richard Bell Household"
     },
     {
       "id": "218",
@@ -3481,12 +3698,13 @@
       "aum": 2481413,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-10-21",
+      "joinDate": "2019-10-21",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Peoria",
       "email": "kevin.flores@email.com",
-      "phone": "(555) 218-6862"
+      "phone": "(555) 218-6862",
+      "household": "Kevin & Ashley Flores Household"
     },
     {
       "id": "219",
@@ -3502,7 +3720,8 @@
       "stateCode": "IL",
       "city": "Bloomington",
       "email": "richard.coleman@email.com",
-      "phone": "(555) 219-9313"
+      "phone": "(555) 219-9313",
+      "household": "Richard Coleman Household"
     },
     {
       "id": "220",
@@ -3518,7 +3737,8 @@
       "stateCode": "IL",
       "city": "Naperville",
       "email": "andrew.evans@email.com",
-      "phone": "(555) 220-1184"
+      "phone": "(555) 220-1184",
+      "household": "Rebecca, Gloria & Andrew Evans Household"
     },
     {
       "id": "221",
@@ -3534,7 +3754,8 @@
       "stateCode": "IL",
       "city": "Champaign",
       "email": "melissa.hill@email.com",
-      "phone": "(555) 221-1911"
+      "phone": "(555) 221-1911",
+      "household": "Melissa & Emma Hill Household"
     },
     {
       "id": "222",
@@ -3545,12 +3766,13 @@
       "aum": 302858,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-04-14",
+      "joinDate": "2019-04-14",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Joliet",
       "email": "cynthia.walker@email.com",
-      "phone": "(555) 222-2699"
+      "phone": "(555) 222-2699",
+      "household": "Benjamin & Cynthia Walker Household"
     },
     {
       "id": "223",
@@ -3561,12 +3783,13 @@
       "aum": 291707,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-11-07",
+      "joinDate": "2019-11-07",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Cicero",
       "email": "laura.white@email.com",
-      "phone": "(555) 223-2768"
+      "phone": "(555) 223-2768",
+      "household": "Laura & Benjamin White Household"
     },
     {
       "id": "224",
@@ -3577,12 +3800,13 @@
       "aum": 2941067,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-01-23",
+      "joinDate": "2019-01-23",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Elgin",
       "email": "emily.carter@email.com",
-      "phone": "(555) 224-5590"
+      "phone": "(555) 224-5590",
+      "household": "Emily & Madison Carter Household"
     },
     {
       "id": "225",
@@ -3598,7 +3822,8 @@
       "stateCode": "IL",
       "city": "Bloomington",
       "email": "lauren.king@email.com",
-      "phone": "(555) 225-0692"
+      "phone": "(555) 225-0692",
+      "household": "Christopher & Lauren King Household"
     },
     {
       "id": "226",
@@ -3609,12 +3834,13 @@
       "aum": 127454,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-03-17",
+      "joinDate": "2019-03-17",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Joliet",
       "email": "joshua.lewis@email.com",
-      "phone": "(555) 226-0941"
+      "phone": "(555) 226-0941",
+      "household": "Joshua & Danielle Lewis Household"
     },
     {
       "id": "227",
@@ -3630,7 +3856,8 @@
       "stateCode": "IL",
       "city": "Waukegan",
       "email": "terry.garcia@email.com",
-      "phone": "(555) 227-7687"
+      "phone": "(555) 227-7687",
+      "household": "Jessica & Terry Garcia Household"
     },
     {
       "id": "228",
@@ -3641,12 +3868,13 @@
       "aum": 477035,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-11-27",
+      "joinDate": "2019-11-27",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Aurora",
       "email": "cynthia.clark@email.com",
-      "phone": "(555) 228-8865"
+      "phone": "(555) 228-8865",
+      "household": "Laura & Cynthia Clark Household"
     },
     {
       "id": "229",
@@ -3657,12 +3885,13 @@
       "aum": 618863,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-03-02",
+      "joinDate": "2019-03-02",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Peoria",
       "email": "benjamin.white@email.com",
-      "phone": "(555) 229-6727"
+      "phone": "(555) 229-6727",
+      "household": "Laura & Benjamin White Household"
     },
     {
       "id": "230",
@@ -3673,12 +3902,13 @@
       "aum": 2715525,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-02-13",
+      "joinDate": "2019-02-13",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Waukegan",
       "email": "samantha.king@email.com",
-      "phone": "(555) 230-4806"
+      "phone": "(555) 230-4806",
+      "household": "Samantha & Ashley King Household"
     },
     {
       "id": "231",
@@ -3689,12 +3919,13 @@
       "aum": 1748769,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-05-25",
+      "joinDate": "2019-05-25",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Rockford",
       "email": "andrew.walsh@email.com",
-      "phone": "(555) 231-9636"
+      "phone": "(555) 231-9636",
+      "household": "Michael & Andrew Walsh Household"
     },
     {
       "id": "232",
@@ -3705,12 +3936,13 @@
       "aum": 3415746,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-12-17",
+      "joinDate": "2019-12-17",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Elgin",
       "email": "samantha.rodriguez@email.com",
-      "phone": "(555) 232-0231"
+      "phone": "(555) 232-0231",
+      "household": "Samantha & Tyler Rodriguez Household"
     },
     {
       "id": "233",
@@ -3721,12 +3953,13 @@
       "aum": 1370360,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-08-20",
+      "joinDate": "2019-08-20",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Bloomington",
       "email": "jessica.baker@email.com",
-      "phone": "(555) 233-8057"
+      "phone": "(555) 233-8057",
+      "household": "Kenneth & Jessica Baker Household"
     },
     {
       "id": "234",
@@ -3737,12 +3970,13 @@
       "aum": 117517,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-11-08",
+      "joinDate": "2019-11-08",
       "state": "Illinois",
       "stateCode": "IL",
       "city": "Aurora",
       "email": "megan.martinez@email.com",
-      "phone": "(555) 234-4695"
+      "phone": "(555) 234-4695",
+      "household": "Alexander & Megan Martinez Household"
     },
     {
       "id": "235",
@@ -3753,12 +3987,13 @@
       "aum": 848456,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-10-28",
+      "joinDate": "2019-10-28",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Wilkes-Barre",
       "email": "nicole.clark@email.com",
-      "phone": "(555) 235-1649"
+      "phone": "(555) 235-1649",
+      "household": "Nicole & Zoe Clark Household"
     },
     {
       "id": "236",
@@ -3769,12 +4004,13 @@
       "aum": 652451,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-04-11",
+      "joinDate": "2019-04-11",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Reading",
       "email": "rachel.ross@email.com",
-      "phone": "(555) 236-5309"
+      "phone": "(555) 236-5309",
+      "household": "Rachel & David Ross Household"
     },
     {
       "id": "237",
@@ -3785,12 +4021,13 @@
       "aum": 2267586,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-07-06",
+      "joinDate": "2019-07-06",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Wilkes-Barre",
       "email": "christopher.perez@email.com",
-      "phone": "(555) 237-1999"
+      "phone": "(555) 237-1999",
+      "household": "Brittany & Christopher Perez Household"
     },
     {
       "id": "238",
@@ -3801,12 +4038,13 @@
       "aum": 416800,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-05-16",
+      "joinDate": "2019-05-16",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Bethlehem",
       "email": "rebecca.wilson@email.com",
-      "phone": "(555) 238-0435"
+      "phone": "(555) 238-0435",
+      "household": "Rebecca & Madison Wilson Household"
     },
     {
       "id": "239",
@@ -3817,12 +4055,13 @@
       "aum": 336725,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-11-16",
+      "joinDate": "2019-11-16",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Reading",
       "email": "ashley.flores@email.com",
-      "phone": "(555) 239-1753"
+      "phone": "(555) 239-1753",
+      "household": "Kevin & Ashley Flores Household"
     },
     {
       "id": "240",
@@ -3833,12 +4072,13 @@
       "aum": 300893,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-07-18",
+      "joinDate": "2019-07-18",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Wilkes-Barre",
       "email": "scott.harris@email.com",
-      "phone": "(555) 240-4748"
+      "phone": "(555) 240-4748",
+      "household": "Scott & Kimberly Harris Household"
     },
     {
       "id": "241",
@@ -3849,12 +4089,13 @@
       "aum": 907376,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-11-21",
+      "joinDate": "2019-11-21",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "York",
       "email": "madison.wilson@email.com",
-      "phone": "(555) 241-5666"
+      "phone": "(555) 241-5666",
+      "household": "Rebecca & Madison Wilson Household"
     },
     {
       "id": "242",
@@ -3870,7 +4111,8 @@
       "stateCode": "PA",
       "city": "Pittsburgh",
       "email": "nicole.nelson@email.com",
-      "phone": "(555) 242-1346"
+      "phone": "(555) 242-1346",
+      "household": "Justin & Nicole Nelson Household"
     },
     {
       "id": "243",
@@ -3881,12 +4123,13 @@
       "aum": 155096,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-12-07",
+      "joinDate": "2019-12-07",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Scranton",
       "email": "ashley.king@email.com",
-      "phone": "(555) 243-0948"
+      "phone": "(555) 243-0948",
+      "household": "Samantha & Ashley King Household"
     },
     {
       "id": "244",
@@ -3897,12 +4140,13 @@
       "aum": 198170,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-06-16",
+      "joinDate": "2019-06-16",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Harrisburg",
       "email": "jennifer.thompson@email.com",
-      "phone": "(555) 244-8596"
+      "phone": "(555) 244-8596",
+      "household": "Jennifer & Matthew Thompson Household"
     },
     {
       "id": "245",
@@ -3913,12 +4157,13 @@
       "aum": 737832,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-04-28",
+      "joinDate": "2019-04-28",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Allentown",
       "email": "danielle.lewis@email.com",
-      "phone": "(555) 245-4130"
+      "phone": "(555) 245-4130",
+      "household": "Joshua & Danielle Lewis Household"
     },
     {
       "id": "246",
@@ -3929,12 +4174,13 @@
       "aum": 77793,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-05-02",
+      "joinDate": "2019-05-02",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Wilkes-Barre",
       "email": "tyler.rodriguez@email.com",
-      "phone": "(555) 246-1239"
+      "phone": "(555) 246-1239",
+      "household": "Samantha & Tyler Rodriguez Household"
     },
     {
       "id": "247",
@@ -3945,12 +4191,13 @@
       "aum": 491567,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-01-14",
+      "joinDate": "2019-01-14",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Erie",
       "email": "david.taylor@email.com",
-      "phone": "(555) 247-2741"
+      "phone": "(555) 247-2741",
+      "household": "David & Michael Taylor Household"
     },
     {
       "id": "248",
@@ -3961,12 +4208,13 @@
       "aum": 307780,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-03-12",
+      "joinDate": "2019-03-12",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Wilkes-Barre",
       "email": "david.allen@email.com",
-      "phone": "(555) 248-6951"
+      "phone": "(555) 248-6951",
+      "household": "Amanda & David Allen Household"
     },
     {
       "id": "249",
@@ -3977,12 +4225,13 @@
       "aum": 493193,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-05-09",
+      "joinDate": "2019-05-09",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Scranton",
       "email": "zoe.walker@email.com",
-      "phone": "(555) 249-2386"
+      "phone": "(555) 249-2386",
+      "household": "Zoe & Steven Walker Household"
     },
     {
       "id": "250",
@@ -3993,12 +4242,13 @@
       "aum": 581610,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-07-17",
+      "joinDate": "2019-07-17",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Wilkes-Barre",
       "email": "megan.brown@email.com",
-      "phone": "(555) 250-1690"
+      "phone": "(555) 250-1690",
+      "household": "Emma & Megan Brown Household"
     },
     {
       "id": "251",
@@ -4009,12 +4259,13 @@
       "aum": 1245798,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-02-14",
+      "joinDate": "2019-02-14",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Philadelphia",
       "email": "amanda.parker@email.com",
-      "phone": "(555) 251-3514"
+      "phone": "(555) 251-3514",
+      "household": "Brittany & Amanda Parker Household"
     },
     {
       "id": "252",
@@ -4030,7 +4281,8 @@
       "stateCode": "PA",
       "city": "York",
       "email": "raymond.roberts@email.com",
-      "phone": "(555) 252-7258"
+      "phone": "(555) 252-7258",
+      "household": "Raymond & Michelle Roberts Household"
     },
     {
       "id": "253",
@@ -4041,12 +4293,13 @@
       "aum": 214675,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-02-27",
+      "joinDate": "2019-02-27",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Allentown",
       "email": "thomas.king@email.com",
-      "phone": "(555) 253-3353"
+      "phone": "(555) 253-3353",
+      "household": "Thomas & Cynthia King Household"
     },
     {
       "id": "254",
@@ -4057,12 +4310,13 @@
       "aum": 1547262,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-03-03",
+      "joinDate": "2019-03-03",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Erie",
       "email": "laura.hayes@email.com",
-      "phone": "(555) 254-2049"
+      "phone": "(555) 254-2049",
+      "household": "Laura Hayes Household"
     },
     {
       "id": "255",
@@ -4078,7 +4332,8 @@
       "stateCode": "PA",
       "city": "Reading",
       "email": "terry.turner@email.com",
-      "phone": "(555) 255-9897"
+      "phone": "(555) 255-9897",
+      "household": "Rebecca & Terry Turner Household"
     },
     {
       "id": "256",
@@ -4089,12 +4344,13 @@
       "aum": 670240,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-02-20",
+      "joinDate": "2019-02-20",
       "state": "Pennsylvania",
       "stateCode": "PA",
       "city": "Scranton",
       "email": "victoria.green@email.com",
-      "phone": "(555) 256-6820"
+      "phone": "(555) 256-6820",
+      "household": "Victoria & Frank Green Household"
     },
     {
       "id": "257",
@@ -4110,7 +4366,8 @@
       "stateCode": "OH",
       "city": "Youngstown",
       "email": "michael.taylor@email.com",
-      "phone": "(555) 257-5879"
+      "phone": "(555) 257-5879",
+      "household": "David & Michael Taylor Household"
     },
     {
       "id": "258",
@@ -4121,12 +4378,13 @@
       "aum": 2416776,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-07-17",
+      "joinDate": "2019-07-17",
       "state": "Ohio",
       "stateCode": "OH",
       "city": "Cincinnati",
       "email": "amanda.scott@email.com",
-      "phone": "(555) 258-9926"
+      "phone": "(555) 258-9926",
+      "household": "Ryan & Amanda Scott Household"
     },
     {
       "id": "259",
@@ -4137,12 +4395,13 @@
       "aum": 552661,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-11-21",
+      "joinDate": "2019-11-21",
       "state": "Ohio",
       "stateCode": "OH",
       "city": "Youngstown",
       "email": "paul.chen@email.com",
-      "phone": "(555) 259-9680"
+      "phone": "(555) 259-9680",
+      "household": "Paul & Kevin Chen Household"
     },
     {
       "id": "260",
@@ -4153,12 +4412,13 @@
       "aum": 567521,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-05-28",
+      "joinDate": "2019-05-28",
       "state": "Ohio",
       "stateCode": "OH",
       "city": "Lorain",
       "email": "david.ross@email.com",
-      "phone": "(555) 260-0483"
+      "phone": "(555) 260-0483",
+      "household": "Rachel & David Ross Household"
     },
     {
       "id": "261",
@@ -4169,12 +4429,13 @@
       "aum": 660522,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-06-18",
+      "joinDate": "2019-06-18",
       "state": "Ohio",
       "stateCode": "OH",
       "city": "Hamilton",
       "email": "madison.parker@email.com",
-      "phone": "(555) 261-8707"
+      "phone": "(555) 261-8707",
+      "household": "Madison Parker Household"
     },
     {
       "id": "262",
@@ -4190,7 +4451,8 @@
       "stateCode": "OH",
       "city": "Dayton",
       "email": "steven.walker@email.com",
-      "phone": "(555) 262-5753"
+      "phone": "(555) 262-5753",
+      "household": "Zoe & Steven Walker Household"
     },
     {
       "id": "263",
@@ -4206,7 +4468,8 @@
       "stateCode": "OH",
       "city": "Cleveland",
       "email": "madison.wright@email.com",
-      "phone": "(555) 263-7044"
+      "phone": "(555) 263-7044",
+      "household": "Madison & Lauren Wright Household"
     },
     {
       "id": "264",
@@ -4222,7 +4485,8 @@
       "stateCode": "OH",
       "city": "Springfield",
       "email": "rebecca.jackson@email.com",
-      "phone": "(555) 264-6153"
+      "phone": "(555) 264-6153",
+      "household": "Rebecca Jackson Household"
     },
     {
       "id": "265",
@@ -4233,12 +4497,13 @@
       "aum": 231222,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-12-16",
+      "joinDate": "2019-12-16",
       "state": "Ohio",
       "stateCode": "OH",
       "city": "Hamilton",
       "email": "rebecca.lewis@email.com",
-      "phone": "(555) 265-7872"
+      "phone": "(555) 265-7872",
+      "household": "Rebecca & Megan Lewis Household"
     },
     {
       "id": "266",
@@ -4249,12 +4514,13 @@
       "aum": 2281409,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-10-14",
+      "joinDate": "2019-10-14",
       "state": "Ohio",
       "stateCode": "OH",
       "city": "Akron",
       "email": "kimberly.white@email.com",
-      "phone": "(555) 266-5883"
+      "phone": "(555) 266-5883",
+      "household": "Kimberly & Lisa White Household"
     },
     {
       "id": "267",
@@ -4265,12 +4531,13 @@
       "aum": 3351213,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-02-03",
+      "joinDate": "2019-02-03",
       "state": "Ohio",
       "stateCode": "OH",
       "city": "Lorain",
       "email": "kimberly.harris@email.com",
-      "phone": "(555) 267-4676"
+      "phone": "(555) 267-4676",
+      "household": "Scott & Kimberly Harris Household"
     },
     {
       "id": "268",
@@ -4286,7 +4553,8 @@
       "stateCode": "OH",
       "city": "Canton",
       "email": "matthew.thompson@email.com",
-      "phone": "(555) 268-7837"
+      "phone": "(555) 268-7837",
+      "household": "Jennifer & Matthew Thompson Household"
     },
     {
       "id": "269",
@@ -4297,12 +4565,13 @@
       "aum": 134976,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-03-06",
+      "joinDate": "2019-03-06",
       "state": "Ohio",
       "stateCode": "OH",
       "city": "Dayton",
       "email": "stephanie.davis@email.com",
-      "phone": "(555) 269-5326"
+      "phone": "(555) 269-5326",
+      "household": "Christopher & Stephanie Davis Household"
     },
     {
       "id": "270",
@@ -4313,12 +4582,13 @@
       "aum": 87359,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-06-13",
+      "joinDate": "2019-06-13",
       "state": "Ohio",
       "stateCode": "OH",
       "city": "Springfield",
       "email": "michelle.garcia@email.com",
-      "phone": "(555) 270-2741"
+      "phone": "(555) 270-2741",
+      "household": "Michelle & Kenneth Garcia Household"
     },
     {
       "id": "271",
@@ -4329,12 +4599,13 @@
       "aum": 2903596,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-07-11",
+      "joinDate": "2019-07-11",
       "state": "Ohio",
       "stateCode": "OH",
       "city": "Columbus",
       "email": "zoe.clark@email.com",
-      "phone": "(555) 271-1769"
+      "phone": "(555) 271-1769",
+      "household": "Nicole & Zoe Clark Household"
     },
     {
       "id": "272",
@@ -4345,12 +4616,13 @@
       "aum": 339003,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-10-19",
+      "joinDate": "2019-10-19",
       "state": "Ohio",
       "stateCode": "OH",
       "city": "Columbus",
       "email": "scott.nelson@email.com",
-      "phone": "(555) 272-0110"
+      "phone": "(555) 272-0110",
+      "household": "Scott & James Nelson Household"
     },
     {
       "id": "273",
@@ -4361,12 +4633,13 @@
       "aum": 699031,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-01-22",
+      "joinDate": "2019-01-22",
       "state": "Ohio",
       "stateCode": "OH",
       "city": "Toledo",
       "email": "megan.mitchell@email.com",
-      "phone": "(555) 273-2272"
+      "phone": "(555) 273-2272",
+      "household": "Megan & James Mitchell Household"
     },
     {
       "id": "274",
@@ -4377,12 +4650,13 @@
       "aum": 695966,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-08-20",
+      "joinDate": "2019-08-20",
       "state": "Ohio",
       "stateCode": "OH",
       "city": "Canton",
       "email": "tyler.walsh@email.com",
-      "phone": "(555) 274-4359"
+      "phone": "(555) 274-4359",
+      "household": "Tyler & Melissa Walsh Household"
     },
     {
       "id": "275",
@@ -4398,7 +4672,8 @@
       "stateCode": "GA",
       "city": "Albany",
       "email": "alexis.baker@email.com",
-      "phone": "(555) 275-7473"
+      "phone": "(555) 275-7473",
+      "household": "Alexis & Angela Baker Household"
     },
     {
       "id": "276",
@@ -4409,12 +4684,13 @@
       "aum": 216969,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-05-23",
+      "joinDate": "2019-05-23",
       "state": "Georgia",
       "stateCode": "GA",
       "city": "Atlanta",
       "email": "kenneth.garcia@email.com",
-      "phone": "(555) 276-0466"
+      "phone": "(555) 276-0466",
+      "household": "Michelle & Kenneth Garcia Household"
     },
     {
       "id": "277",
@@ -4425,12 +4701,13 @@
       "aum": 247783,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-09-25",
+      "joinDate": "2019-09-25",
       "state": "Georgia",
       "stateCode": "GA",
       "city": "Atlanta",
       "email": "charles.wilson@email.com",
-      "phone": "(555) 277-2514"
+      "phone": "(555) 277-2514",
+      "household": "Charles & Christopher Wilson Household"
     },
     {
       "id": "278",
@@ -4441,12 +4718,13 @@
       "aum": 332961,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-01-08",
+      "joinDate": "2019-01-08",
       "state": "Georgia",
       "stateCode": "GA",
       "city": "Roswell",
       "email": "joshua.johnson@email.com",
-      "phone": "(555) 278-9111"
+      "phone": "(555) 278-9111",
+      "household": "Joseph & Joshua Johnson Household"
     },
     {
       "id": "279",
@@ -4457,12 +4735,13 @@
       "aum": 1431232,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-01-12",
+      "joinDate": "2019-01-12",
       "state": "Georgia",
       "stateCode": "GA",
       "city": "Warner Robins",
       "email": "terry.harris@email.com",
-      "phone": "(555) 279-9663"
+      "phone": "(555) 279-9663",
+      "household": "Terry Harris Household"
     },
     {
       "id": "280",
@@ -4478,7 +4757,8 @@
       "stateCode": "GA",
       "city": "Augusta",
       "email": "cynthia.garcia@email.com",
-      "phone": "(555) 280-1252"
+      "phone": "(555) 280-1252",
+      "household": "Cynthia & Lisa Garcia Household"
     },
     {
       "id": "281",
@@ -4494,7 +4774,8 @@
       "stateCode": "GA",
       "city": "Atlanta",
       "email": "emily.flores@email.com",
-      "phone": "(555) 281-9878"
+      "phone": "(555) 281-9878",
+      "household": "Emily Flores Household"
     },
     {
       "id": "282",
@@ -4510,7 +4791,8 @@
       "stateCode": "GA",
       "city": "Savannah",
       "email": "michelle.johnson@email.com",
-      "phone": "(555) 282-6526"
+      "phone": "(555) 282-6526",
+      "household": "Michelle & Brittany Johnson Household"
     },
     {
       "id": "283",
@@ -4526,7 +4808,8 @@
       "stateCode": "GA",
       "city": "Athens",
       "email": "benjamin.perez@email.com",
-      "phone": "(555) 283-8838"
+      "phone": "(555) 283-8838",
+      "household": "Benjamin & Jessica Perez Household"
     },
     {
       "id": "284",
@@ -4542,7 +4825,8 @@
       "stateCode": "GA",
       "city": "Savannah",
       "email": "jennifer.brown@email.com",
-      "phone": "(555) 284-9921"
+      "phone": "(555) 284-9921",
+      "household": "Jennifer & Matthew Brown Household"
     },
     {
       "id": "285",
@@ -4553,12 +4837,13 @@
       "aum": 1603519,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-10-03",
+      "joinDate": "2019-10-03",
       "state": "Georgia",
       "stateCode": "GA",
       "city": "Albany",
       "email": "michelle.roberts@email.com",
-      "phone": "(555) 285-1431"
+      "phone": "(555) 285-1431",
+      "household": "Raymond & Michelle Roberts Household"
     },
     {
       "id": "286",
@@ -4569,12 +4854,13 @@
       "aum": 642801,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-04-24",
+      "joinDate": "2019-04-24",
       "state": "Georgia",
       "stateCode": "GA",
       "city": "Roswell",
       "email": "gregory.williams@email.com",
-      "phone": "(555) 286-9511"
+      "phone": "(555) 286-9511",
+      "household": "Stephanie & Gregory Williams Household"
     },
     {
       "id": "287",
@@ -4585,12 +4871,13 @@
       "aum": 1129846,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-06-02",
+      "joinDate": "2019-06-02",
       "state": "Georgia",
       "stateCode": "GA",
       "city": "Athens",
       "email": "brian.price@email.com",
-      "phone": "(555) 287-7802"
+      "phone": "(555) 287-7802",
+      "household": "Mark & Brian Price Household"
     },
     {
       "id": "288",
@@ -4606,7 +4893,8 @@
       "stateCode": "GA",
       "city": "Columbus",
       "email": "lauren.wright@email.com",
-      "phone": "(555) 288-3468"
+      "phone": "(555) 288-3468",
+      "household": "Madison & Lauren Wright Household"
     },
     {
       "id": "289",
@@ -4617,12 +4905,13 @@
       "aum": 1128836,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-08-16",
+      "joinDate": "2019-08-16",
       "state": "Georgia",
       "stateCode": "GA",
       "city": "Johns Creek",
       "email": "amy.bell@email.com",
-      "phone": "(555) 289-5229"
+      "phone": "(555) 289-5229",
+      "household": "Amy Bell Household"
     },
     {
       "id": "290",
@@ -4633,12 +4922,13 @@
       "aum": 2012179,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-10-10",
+      "joinDate": "2019-10-10",
       "state": "North Carolina",
       "stateCode": "NC",
       "city": "Cary",
       "email": "terry.wright@email.com",
-      "phone": "(555) 290-1283"
+      "phone": "(555) 290-1283",
+      "household": "Terry & Brian Wright Household"
     },
     {
       "id": "291",
@@ -4649,12 +4939,13 @@
       "aum": 785437,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-02-06",
+      "joinDate": "2019-02-06",
       "state": "North Carolina",
       "stateCode": "NC",
       "city": "Durham",
       "email": "james.robinson@email.com",
-      "phone": "(555) 291-2862"
+      "phone": "(555) 291-2862",
+      "household": "James & Amanda Robinson Household"
     },
     {
       "id": "292",
@@ -4670,7 +4961,8 @@
       "stateCode": "NC",
       "city": "High Point",
       "email": "christopher.wilson@email.com",
-      "phone": "(555) 292-8664"
+      "phone": "(555) 292-8664",
+      "household": "Charles & Christopher Wilson Household"
     },
     {
       "id": "293",
@@ -4686,7 +4978,8 @@
       "stateCode": "NC",
       "city": "Asheville",
       "email": "lisa.white@email.com",
-      "phone": "(555) 293-0408"
+      "phone": "(555) 293-0408",
+      "household": "Kimberly & Lisa White Household"
     },
     {
       "id": "294",
@@ -4697,12 +4990,13 @@
       "aum": 1064563,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-05-13",
+      "joinDate": "2019-05-13",
       "state": "North Carolina",
       "stateCode": "NC",
       "city": "Winston-Salem",
       "email": "matthew.brown@email.com",
-      "phone": "(555) 294-7318"
+      "phone": "(555) 294-7318",
+      "household": "Jennifer & Matthew Brown Household"
     },
     {
       "id": "295",
@@ -4713,12 +5007,13 @@
       "aum": 405315,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-04-13",
+      "joinDate": "2019-04-13",
       "state": "North Carolina",
       "stateCode": "NC",
       "city": "Fayetteville",
       "email": "angela.baker@email.com",
-      "phone": "(555) 295-7290"
+      "phone": "(555) 295-7290",
+      "household": "Alexis & Angela Baker Household"
     },
     {
       "id": "296",
@@ -4729,12 +5024,13 @@
       "aum": 93894,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-05-13",
+      "joinDate": "2019-05-13",
       "state": "North Carolina",
       "stateCode": "NC",
       "city": "Asheville",
       "email": "charles.anderson@email.com",
-      "phone": "(555) 296-0307"
+      "phone": "(555) 296-0307",
+      "household": "Richard & Charles Anderson Household"
     },
     {
       "id": "297",
@@ -4745,12 +5041,13 @@
       "aum": 113479,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-12-06",
+      "joinDate": "2019-12-06",
       "state": "North Carolina",
       "stateCode": "NC",
       "city": "High Point",
       "email": "jessica.perez@email.com",
-      "phone": "(555) 297-3436"
+      "phone": "(555) 297-3436",
+      "household": "Benjamin & Jessica Perez Household"
     },
     {
       "id": "298",
@@ -4761,12 +5058,13 @@
       "aum": 2123119,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-10-18",
+      "joinDate": "2019-10-18",
       "state": "North Carolina",
       "stateCode": "NC",
       "city": "Fayetteville",
       "email": "thomas.baker@email.com",
-      "phone": "(555) 298-1542"
+      "phone": "(555) 298-1542",
+      "household": "Thomas & Catherine Baker Household"
     },
     {
       "id": "299",
@@ -4777,12 +5075,13 @@
       "aum": 79861,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-06-03",
+      "joinDate": "2019-06-03",
       "state": "North Carolina",
       "stateCode": "NC",
       "city": "Fayetteville",
       "email": "frank.green@email.com",
-      "phone": "(555) 299-9794"
+      "phone": "(555) 299-9794",
+      "household": "Victoria & Frank Green Household"
     },
     {
       "id": "300",
@@ -4793,12 +5092,13 @@
       "aum": 314820,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-04-09",
+      "joinDate": "2019-04-09",
       "state": "North Carolina",
       "stateCode": "NC",
       "city": "High Point",
       "email": "ryan.sanchez@email.com",
-      "phone": "(555) 300-5434"
+      "phone": "(555) 300-5434",
+      "household": "Ryan & Angela Sanchez Household"
     },
     {
       "id": "301",
@@ -4809,12 +5109,13 @@
       "aum": 2355253,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-06-13",
+      "joinDate": "2019-06-13",
       "state": "North Carolina",
       "stateCode": "NC",
       "city": "High Point",
       "email": "lisa.garcia@email.com",
-      "phone": "(555) 301-7872"
+      "phone": "(555) 301-7872",
+      "household": "Cynthia & Lisa Garcia Household"
     },
     {
       "id": "302",
@@ -4830,7 +5131,8 @@
       "stateCode": "MI",
       "city": "Flint",
       "email": "james.mitchell@email.com",
-      "phone": "(555) 302-4683"
+      "phone": "(555) 302-4683",
+      "household": "Megan & James Mitchell Household"
     },
     {
       "id": "303",
@@ -4846,7 +5148,8 @@
       "stateCode": "MI",
       "city": "Livonia",
       "email": "emily.williams@email.com",
-      "phone": "(555) 303-5369"
+      "phone": "(555) 303-5369",
+      "household": "Emily & Tyler Williams Household"
     },
     {
       "id": "304",
@@ -4857,12 +5160,13 @@
       "aum": 2147683,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-05-06",
+      "joinDate": "2019-05-06",
       "state": "Michigan",
       "stateCode": "MI",
       "city": "Lansing",
       "email": "james.nelson@email.com",
-      "phone": "(555) 304-2577"
+      "phone": "(555) 304-2577",
+      "household": "Scott & James Nelson Household"
     },
     {
       "id": "305",
@@ -4878,7 +5182,8 @@
       "stateCode": "MI",
       "city": "Dearborn",
       "email": "jessica.scott@email.com",
-      "phone": "(555) 305-7564"
+      "phone": "(555) 305-7564",
+      "household": "Jessica Scott Household"
     },
     {
       "id": "306",
@@ -4894,7 +5199,8 @@
       "stateCode": "MI",
       "city": "Livonia",
       "email": "angela.sanchez@email.com",
-      "phone": "(555) 306-7570"
+      "phone": "(555) 306-7570",
+      "household": "Ryan & Angela Sanchez Household"
     },
     {
       "id": "307",
@@ -4905,12 +5211,13 @@
       "aum": 220324,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-08-11",
+      "joinDate": "2019-08-11",
       "state": "Michigan",
       "stateCode": "MI",
       "city": "Ann Arbor",
       "email": "james.martinez@email.com",
-      "phone": "(555) 307-9215"
+      "phone": "(555) 307-9215",
+      "household": "James Martinez Household"
     },
     {
       "id": "308",
@@ -4926,7 +5233,8 @@
       "stateCode": "MI",
       "city": "Dearborn",
       "email": "james.campbell@email.com",
-      "phone": "(555) 308-4631"
+      "phone": "(555) 308-4631",
+      "household": "James Campbell Household"
     },
     {
       "id": "309",
@@ -4937,12 +5245,13 @@
       "aum": 619863,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-04-08",
+      "joinDate": "2019-04-08",
       "state": "Michigan",
       "stateCode": "MI",
       "city": "Livonia",
       "email": "lauren.ramirez@email.com",
-      "phone": "(555) 309-8598"
+      "phone": "(555) 309-8598",
+      "household": "Christopher & Lauren Ramirez Household"
     },
     {
       "id": "310",
@@ -4953,12 +5262,13 @@
       "aum": 191970,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-11-15",
+      "joinDate": "2019-11-15",
       "state": "Michigan",
       "stateCode": "MI",
       "city": "Lansing",
       "email": "brian.wright@email.com",
-      "phone": "(555) 310-0849"
+      "phone": "(555) 310-0849",
+      "household": "Terry & Brian Wright Household"
     },
     {
       "id": "311",
@@ -4974,7 +5284,8 @@
       "stateCode": "MI",
       "city": "Lansing",
       "email": "joseph.wright@email.com",
-      "phone": "(555) 311-0094"
+      "phone": "(555) 311-0094",
+      "household": "Joseph Wright Household"
     },
     {
       "id": "312",
@@ -4990,7 +5301,8 @@
       "stateCode": "IN",
       "city": "Fort Wayne",
       "email": "michael.smith@email.com",
-      "phone": "(555) 312-6455"
+      "phone": "(555) 312-6455",
+      "household": "Michael Smith Household"
     },
     {
       "id": "313",
@@ -5001,12 +5313,13 @@
       "aum": 992624,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-12-02",
+      "joinDate": "2019-12-02",
       "state": "Wisconsin",
       "stateCode": "WI",
       "city": "Green Bay",
       "email": "cynthia.king@email.com",
-      "phone": "(555) 313-6156"
+      "phone": "(555) 313-6156",
+      "household": "Thomas & Cynthia King Household"
     },
     {
       "id": "314",
@@ -5017,12 +5330,13 @@
       "aum": 728189,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-06-21",
+      "joinDate": "2019-06-21",
       "state": "Wisconsin",
       "stateCode": "WI",
       "city": "Green Bay",
       "email": "brian.rodriguez@email.com",
-      "phone": "(555) 314-4627"
+      "phone": "(555) 314-4627",
+      "household": "Brian Rodriguez Household"
     },
     {
       "id": "315",
@@ -5033,12 +5347,13 @@
       "aum": 215998,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-05-27",
+      "joinDate": "2019-05-27",
       "state": "Colorado",
       "stateCode": "CO",
       "city": "Denver",
       "email": "scott.price@email.com",
-      "phone": "(555) 315-8544"
+      "phone": "(555) 315-8544",
+      "household": "Scott Price Household"
     },
     {
       "id": "316",
@@ -5049,12 +5364,13 @@
       "aum": 339927,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-03-24",
+      "joinDate": "2019-03-24",
       "state": "Indiana",
       "stateCode": "IN",
       "city": "Indianapolis",
       "email": "kenneth.nelson@email.com",
-      "phone": "(555) 316-7551"
+      "phone": "(555) 316-7551",
+      "household": "Kenneth Nelson Household"
     },
     {
       "id": "317",
@@ -5065,12 +5381,13 @@
       "aum": 3816663,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-11-14",
+      "joinDate": "2019-11-14",
       "state": "Massachusetts",
       "stateCode": "MA",
       "city": "Worcester",
       "email": "scott.hall@email.com",
-      "phone": "(555) 317-6074"
+      "phone": "(555) 317-6074",
+      "household": "Robert & Scott Hall Household"
     },
     {
       "id": "318",
@@ -5081,12 +5398,13 @@
       "aum": 1479759,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-07-28",
+      "joinDate": "2019-07-28",
       "state": "Maryland",
       "stateCode": "MD",
       "city": "Baltimore",
       "email": "amanda.robinson@email.com",
-      "phone": "(555) 318-5011"
+      "phone": "(555) 318-5011",
+      "household": "James & Amanda Robinson Household"
     },
     {
       "id": "319",
@@ -5097,12 +5415,13 @@
       "aum": 515197,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-09-04",
+      "joinDate": "2019-09-04",
       "state": "Maryland",
       "stateCode": "MD",
       "city": "Baltimore",
       "email": "chelsea.mitchell@email.com",
-      "phone": "(555) 319-6587"
+      "phone": "(555) 319-6587",
+      "household": "Chelsea & Danielle Mitchell Household"
     },
     {
       "id": "320",
@@ -5113,12 +5432,13 @@
       "aum": 1482723,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-08-09",
+      "joinDate": "2019-08-09",
       "state": "Minnesota",
       "stateCode": "MN",
       "city": "St. Paul",
       "email": "rachel.robinson@email.com",
-      "phone": "(555) 320-5098"
+      "phone": "(555) 320-5098",
+      "household": "Rachel & Steven Robinson Household"
     },
     {
       "id": "321",
@@ -5129,12 +5449,13 @@
       "aum": 60482,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-10-08",
+      "joinDate": "2019-10-08",
       "state": "Minnesota",
       "stateCode": "MN",
       "city": "Minneapolis",
       "email": "lauren.moore@email.com",
-      "phone": "(555) 321-1244"
+      "phone": "(555) 321-1244",
+      "household": "Amy & Lauren Moore Household"
     },
     {
       "id": "322",
@@ -5145,12 +5466,13 @@
       "aum": 312281,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-09-08",
+      "joinDate": "2019-09-08",
       "state": "Tennessee",
       "stateCode": "TN",
       "city": "Nashville",
       "email": "rebecca.green@email.com",
-      "phone": "(555) 322-9940"
+      "phone": "(555) 322-9940",
+      "household": "Rebecca Green Household"
     },
     {
       "id": "323",
@@ -5161,12 +5483,13 @@
       "aum": 762685,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-09-01",
+      "joinDate": "2019-09-01",
       "state": "Minnesota",
       "stateCode": "MN",
       "city": "Minneapolis",
       "email": "samantha.phillips@email.com",
-      "phone": "(555) 323-2719"
+      "phone": "(555) 323-2719",
+      "household": "Samantha Phillips Household"
     },
     {
       "id": "324",
@@ -5177,12 +5500,13 @@
       "aum": 437893,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-06-11",
+      "joinDate": "2019-06-11",
       "state": "Tennessee",
       "stateCode": "TN",
       "city": "Nashville",
       "email": "melissa.walsh@email.com",
-      "phone": "(555) 324-3854"
+      "phone": "(555) 324-3854",
+      "household": "Tyler & Melissa Walsh Household"
     },
     {
       "id": "325",
@@ -5198,7 +5522,8 @@
       "stateCode": "MN",
       "city": "Rochester",
       "email": "benjamin.adams@email.com",
-      "phone": "(555) 325-1238"
+      "phone": "(555) 325-1238",
+      "household": "Brian & Benjamin Adams Household"
     },
     {
       "id": "326",
@@ -5214,7 +5539,8 @@
       "stateCode": "AZ",
       "city": "Mesa",
       "email": "emma.foster@email.com",
-      "phone": "(555) 326-3476"
+      "phone": "(555) 326-3476",
+      "household": "Emma & Charles Foster Household"
     },
     {
       "id": "327",
@@ -5230,7 +5556,8 @@
       "stateCode": "MA",
       "city": "Springfield",
       "email": "brittany.turner@email.com",
-      "phone": "(555) 327-7289"
+      "phone": "(555) 327-7289",
+      "household": "Brittany Turner Household"
     },
     {
       "id": "328",
@@ -5246,7 +5573,8 @@
       "stateCode": "MD",
       "city": "Frederick",
       "email": "tyler.williams@email.com",
-      "phone": "(555) 328-2674"
+      "phone": "(555) 328-2674",
+      "household": "Emily & Tyler Williams Household"
     },
     {
       "id": "329",
@@ -5257,12 +5585,13 @@
       "aum": 602072,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-05-19",
+      "joinDate": "2019-05-19",
       "state": "Arizona",
       "stateCode": "AZ",
       "city": "Tucson",
       "email": "madison.carter@email.com",
-      "phone": "(555) 329-2854"
+      "phone": "(555) 329-2854",
+      "household": "Emily & Madison Carter Household"
     },
     {
       "id": "330",
@@ -5278,7 +5607,8 @@
       "stateCode": "MO",
       "city": "St. Louis",
       "email": "sarah.taylor@email.com",
-      "phone": "(555) 330-7316"
+      "phone": "(555) 330-7316",
+      "household": "Sarah Taylor Household"
     },
     {
       "id": "331",
@@ -5294,7 +5624,8 @@
       "stateCode": "WA",
       "city": "Tacoma",
       "email": "steven.robinson@email.com",
-      "phone": "(555) 331-7611"
+      "phone": "(555) 331-7611",
+      "household": "Rachel & Steven Robinson Household"
     },
     {
       "id": "332",
@@ -5310,7 +5641,8 @@
       "stateCode": "WI",
       "city": "Milwaukee",
       "email": "brittany.johnson@email.com",
-      "phone": "(555) 332-1441"
+      "phone": "(555) 332-1441",
+      "household": "Michelle & Brittany Johnson Household"
     },
     {
       "id": "333",
@@ -5321,12 +5653,13 @@
       "aum": 68640,
       "advisor": "Jackson Miller",
       "advisorId": "1",
-      "joinDate": "2015-01-18",
+      "joinDate": "2019-01-18",
       "state": "Massachusetts",
       "stateCode": "MA",
       "city": "Boston",
       "email": "emma.hill@email.com",
-      "phone": "(555) 333-4901"
+      "phone": "(555) 333-4901",
+      "household": "Melissa & Emma Hill Household"
     },
     {
       "id": "334",
@@ -5337,12 +5670,13 @@
       "aum": 497087,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-05-08",
+      "joinDate": "2019-05-08",
       "state": "Minnesota",
       "stateCode": "MN",
       "city": "Minneapolis",
       "email": "megan.lewis@email.com",
-      "phone": "(555) 334-4744"
+      "phone": "(555) 334-4744",
+      "household": "Rebecca & Megan Lewis Household"
     },
     {
       "id": "335",
@@ -5358,7 +5692,8 @@
       "stateCode": "WI",
       "city": "Green Bay",
       "email": "christopher.moore@email.com",
-      "phone": "(555) 335-2709"
+      "phone": "(555) 335-2709",
+      "household": "Christopher & Raymond Moore Household"
     },
     {
       "id": "336",
@@ -5369,12 +5704,13 @@
       "aum": 1735636,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-05-03",
+      "joinDate": "2019-05-03",
       "state": "Massachusetts",
       "stateCode": "MA",
       "city": "Springfield",
       "email": "danielle.mitchell@email.com",
-      "phone": "(555) 336-6989"
+      "phone": "(555) 336-6989",
+      "household": "Chelsea & Danielle Mitchell Household"
     },
     {
       "id": "337",
@@ -5390,7 +5726,8 @@
       "stateCode": "IN",
       "city": "Indianapolis",
       "email": "david.ross@email.com",
-      "phone": "(555) 337-0350"
+      "phone": "(555) 337-0350",
+      "household": "David Ross Household"
     },
     {
       "id": "338",
@@ -5406,7 +5743,8 @@
       "stateCode": "WA",
       "city": "Spokane",
       "email": "lauren.allen@email.com",
-      "phone": "(555) 338-8852"
+      "phone": "(555) 338-8852",
+      "household": "Lauren Allen Household"
     },
     {
       "id": "339",
@@ -5417,12 +5755,13 @@
       "aum": 1408216,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-08-06",
+      "joinDate": "2019-08-06",
       "state": "Wisconsin",
       "stateCode": "WI",
       "city": "Milwaukee",
       "email": "charles.foster@email.com",
-      "phone": "(555) 339-3457"
+      "phone": "(555) 339-3457",
+      "household": "Emma & Charles Foster Household"
     },
     {
       "id": "340",
@@ -5433,12 +5772,13 @@
       "aum": 432670,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-05-02",
+      "joinDate": "2019-05-02",
       "state": "Massachusetts",
       "stateCode": "MA",
       "city": "Springfield",
       "email": "terry.clark@email.com",
-      "phone": "(555) 340-9338"
+      "phone": "(555) 340-9338",
+      "household": "Terry Clark Household"
     },
     {
       "id": "341",
@@ -5454,7 +5794,8 @@
       "stateCode": "TN",
       "city": "Nashville",
       "email": "raymond.moore@email.com",
-      "phone": "(555) 341-2946"
+      "phone": "(555) 341-2946",
+      "household": "Christopher & Raymond Moore Household"
     },
     {
       "id": "342",
@@ -5465,12 +5806,13 @@
       "aum": 307172,
       "advisor": "Sarah Johnson",
       "advisorId": "2",
-      "joinDate": "2015-03-15",
+      "joinDate": "2019-03-15",
       "state": "Minnesota",
       "stateCode": "MN",
       "city": "Rochester",
       "email": "kevin.chen@email.com",
-      "phone": "(555) 342-2163"
+      "phone": "(555) 342-2163",
+      "household": "Hayes, Chen & Martin Household"
     },
     {
       "id": "343",
@@ -5481,12 +5823,13 @@
       "aum": 175136,
       "advisor": "Thomas Chen",
       "advisorId": "3",
-      "joinDate": "2015-10-09",
+      "joinDate": "2019-10-09",
       "state": "Wisconsin",
       "stateCode": "WI",
       "city": "Green Bay",
       "email": "catherine.baker@email.com",
-      "phone": "(555) 343-0624"
+      "phone": "(555) 343-0624",
+      "household": "Thomas & Catherine Baker Household"
     },
     {
       "id": "344",
@@ -5497,12 +5840,13 @@
       "aum": 376913,
       "advisor": "Maria Reynolds",
       "advisorId": "4",
-      "joinDate": "2015-03-25",
+      "joinDate": "2019-03-25",
       "state": "Arizona",
       "stateCode": "AZ",
       "city": "Tucson",
       "email": "tyler.walsh@email.com",
-      "phone": "(555) 344-7784"
+      "phone": "(555) 344-7784",
+      "household": "Tyler Walsh Household"
     },
     {
       "id": "345",
@@ -5518,7 +5862,8 @@
       "stateCode": "MA",
       "city": "Springfield",
       "email": "charles.mitchell@email.com",
-      "phone": "(555) 345-3642"
+      "phone": "(555) 345-3642",
+      "household": "Charles Mitchell Household"
     },
     {
       "id": "346",
@@ -5534,7 +5879,8 @@
       "stateCode": "MD",
       "city": "Frederick",
       "email": "paul.kim@email.com",
-      "phone": "(555) 346-5828"
+      "phone": "(555) 346-5828",
+      "household": "Paul Kim Household"
     }
   ],
   "advisors": [

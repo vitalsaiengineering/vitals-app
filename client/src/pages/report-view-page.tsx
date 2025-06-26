@@ -34,7 +34,7 @@ const reportRegistry: { [key: string]: { component: React.FC<any>, title: string
   'advisory-firm-dashboard': { component: AdvisoryFirmDashboard, title: 'Advisory Firm Dashboard' },
   'age-demographics': { component: AgeDemographicsReport, title: 'Age Demographics' },
   'birthday-report': { component: ClientBirthdayReport, title: 'Birthday Report' },
-  'book-development': { component: BookDevelopmentBySegmentReport, title: 'Book Development' },
+  'clients-aum-overtime': { component: BookDevelopmentBySegmentReport, title: 'Book Development' },
   'client-dashboard': { component: ClientDashboard, title: 'Client Dashboard' },
   'geographic-footprint': { component: ClientDistributionByStateReport, title: 'Geographic Footprint' },
   'client-referral-rate': { component: ClientReferralRate, title: 'Client Referral Rate' },

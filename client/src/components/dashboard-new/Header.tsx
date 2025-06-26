@@ -86,9 +86,13 @@ export const Header = () => {
   const handleLogout = async () => {
     try {
       await axios.post("/api/logout");
+      // Dispatch logout event to update MockDataProvider
+      window.dispatchEvent(new CustomEvent('authLogout'));
       navigate("/login");
     } catch (error) {
       console.error("Error logging out:", error);
+      // Dispatch logout event even if logout API fails
+      window.dispatchEvent(new CustomEvent('authLogout'));
       // Even if the API fails, still redirect to login
       navigate("/login");
     }

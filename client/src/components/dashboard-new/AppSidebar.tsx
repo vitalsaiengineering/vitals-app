@@ -146,7 +146,7 @@ const SidebarItem = ({
 
 // Main AppSidebar component
 export const AppSidebar = () => {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState(false);
@@ -313,6 +313,9 @@ export const AppSidebar = () => {
     // Find the report ID from the path
     const reportId = itemToRemove.path.split('/').pop() || '';
     removeFavoriteReport(reportId);
+    window.dispatchEvent(new CustomEvent('reportFavoriteChanged', { 
+      detail: { reportId: reportId, isFavorite: false } 
+    }));
   };
 
   // Search handling
@@ -464,11 +467,11 @@ export const AppSidebar = () => {
                 New Firm
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/profile')}>
                 <User className="h-4 w-4 mr-2" />
                 Profile Settings
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer" onClick={() => navigate('/settings')}>
                 <Users className="h-4 w-4 mr-2" />
                 Firm Settings
               </DropdownMenuItem>

@@ -1,10 +1,11 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { useLocation } from "wouter"; // Import useLocation from wouter
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ReportTableView } from "@/components/reporting/ReportTableView";
 import { ReportCardView } from "@/components/reporting/ReportCardView";
 import { useToast } from "@/hooks/use-toast";
+import { isFavoriteReport } from "@/lib/favorites";
 import {
   LayoutGrid,
   List,
@@ -66,7 +67,7 @@ const initialMockReports: Report[] = [
   {
     id: "clients-aum-overtime",
     name: "Book Development",
-    routePath: "book-development",
+    routePath: "clients-aum-overtime",
     description:
       "Visualize client growth and assets under management over time.",
     integrations: ["Data Sources"],
@@ -105,7 +106,7 @@ const initialMockReports: Report[] = [
     isFavorite: false,
   },
   {
-    id: "referral",
+    id: "referral-analytics",
     name: "Referral Analytics",
     routePath: "referral-analytics",
     description: "Analyze referral patterns and sources.",
@@ -132,12 +133,37 @@ const initialMockReports: Report[] = [
   }
 ].sort((a, b) => a.name.localeCompare(b.name));
 
+// Function to initialize reports with correct favorite status from localStorage
+const initializeReportsWithFavorites = (): Report[] => {
+  return initialMockReports.map(report => ({
+    ...report,
+    isFavorite: isFavoriteReport(report.id)
+  }));
+};
+
 export default function Reporting() {
   const [activeView, setActiveView] = useState<"card" | "table">("table");
   const [searchTerm, setSearchTerm] = useState("");
-  const [reports, setReports] = useState<Report[]>(initialMockReports);
+  const [reports, setReports] = useState<Report[]>(initializeReportsWithFavorites());
   const { toast } = useToast();
   const [, navigate] = useLocation(); // Use wouter's useLocation for navigation
+
+  // Listen for favorite changes from ReportSearchDialog
+  useEffect(() => {
+    const handleReportFavoriteChanged = (event: CustomEvent) => {
+      const { reportId, isFavorite } = event.detail;
+      setReports((prevReports) =>
+        prevReports.map((report) =>
+          report.id === reportId
+            ? { ...report, isFavorite }
+            : report
+        )
+      );
+    };
+
+    window.addEventListener('reportFavoriteChanged', handleReportFavoriteChanged as EventListener);
+    return () => window.removeEventListener('reportFavoriteChanged', handleReportFavoriteChanged as EventListener);
+  }, []);
 
   // Filtered reports based on search term
   const searchedReports = useMemo(() => {

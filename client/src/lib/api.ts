@@ -33,6 +33,8 @@ export const signup = async (userData: any) => {
 
 export const logout = async () => {
   const response = await apiRequest("POST", "/api/logout");
+  // Dispatch logout event to update MockDataProvider
+  window.dispatchEvent(new CustomEvent('authLogout'));
   return response.json();
 };
 

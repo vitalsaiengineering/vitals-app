@@ -48,6 +48,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+// Add type definition for Client
+interface Client {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  age?: number;
+  aum?: number;
+  revenue?: number;
+  household?: string;
+}
+
 // Schema for the client form
 const clientSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -79,8 +95,8 @@ export default function Clients() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch clients
-  const { data: clients, isLoading } = useQuery({
+  // Fetch clients with proper typing
+  const { data: clients, isLoading } = useQuery<Client[]>({
     queryKey: ['/api/clients'],
   });
 
@@ -368,13 +384,14 @@ export default function Clients() {
                   <TableHead>Name</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>Location</TableHead>
+                  <TableHead>Household</TableHead>
                   <TableHead>AUM</TableHead>
                   <TableHead>Revenue</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {clients.map((client) => (
+                {clients.map((client: Client) => (
                   <TableRow key={client.id}>
                     <TableCell className="font-medium">{client.name}</TableCell>
                     <TableCell>
@@ -386,6 +403,11 @@ export default function Clients() {
                     <TableCell>
                       {client.city && client.state ? `${client.city}, ${client.state}` : 
                         client.city || client.state || 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-neutral-600">
+                        {client.household || 'N/A'}
+                      </span>
                     </TableCell>
                     <TableCell>
                       {client.aum ? formatCurrency(client.aum) : 'N/A'}
