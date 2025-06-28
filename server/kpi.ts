@@ -890,9 +890,9 @@ export async function getClientBirthdayReportHandler(
   }
 }
 
-// --- Client Segmentation Dashboard ---
+// --- Segmentation Dashboard ---
 
-async function getClientSegmentationDashboardData(
+async function getSegmentationDashboardData(
   organizationId: number,
   selectedSegment: string = "Platinum",
   advisorIds?: number[]
@@ -1031,7 +1031,7 @@ async function getClientSegmentationDashboardData(
   };
 }
 
-export async function getClientSegmentationDashboardHandler(
+export async function getSegmentationDashboardHandler(
   req: Request,
   res: Response
 ) {
@@ -1051,7 +1051,7 @@ export async function getClientSegmentationDashboardHandler(
     }
 
     // Use real data processing
-    const dashboardData = await getClientSegmentationDashboardData(
+    const dashboardData = await getSegmentationDashboardData(
       organizationId,
       selectedSegment,
       advisorIds
@@ -1059,9 +1059,9 @@ export async function getClientSegmentationDashboardHandler(
 
     res.json(dashboardData);
   } catch (error) {
-    console.error("Error fetching client segmentation dashboard data:", error);
+    console.error("Error fetching segmentation dashboard data:", error);
     res.status(500).json({
-      message: "Failed to fetch client segmentation dashboard data",
+      message: "Failed to fetch segmentation dashboard data",
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }
@@ -1692,9 +1692,9 @@ export async function getClientReferralRateHandler(
   }
 }
 
-// --- Advisory Firm Dashboard ---
+// --- Firm Activity Dashboard ---
 
-export async function getAdvisoryFirmDashboardHandler(
+export async function getFirmActivityDashboardHandler(
   req: Request,
   res: Response
 ) {
@@ -1714,9 +1714,9 @@ export async function getAdvisoryFirmDashboardHandler(
 
     res.json(reportData);
   } catch (error) {
-    console.error("Error fetching advisory firm dashboard data:", error);
+    console.error("Error fetching firm activity dashboard data:", error);
     res.status(500).json({
-      message: "Failed to fetch advisory firm dashboard data",
+      message: "Failed to fetch firm activity dashboard data",
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }

@@ -391,7 +391,7 @@ export const generateBookDevelopmentBySegmentReport = () => {
   };
 };
 
-// Generate Client Segmentation Dashboard data
+// Generate Segmentation Dashboard data
 export const generateClientSegmentationDashboard = () => {
   const clients = getAllClients();
   const advisors = getAllAdvisors();

@@ -15,11 +15,11 @@ type Report = {
 
 // Sample reports data
 const availableReports: Report[] = [
-  { id: 'advisory-firm-dashboard', name: 'Advisory Firm Dashboard', path: '/reporting/advisory-firm-dashboard', description: 'Monitor staff activities and performance across all departments.', integrations: ['Data Sources'], isFavorite: false },
+  { id: 'firm-activity-dashboard', name: 'Firm Activity Dashboard', path: '/reporting/firm-activity-dashboard', description: 'Monitor staff activities and performance across all departments.', integrations: ['Data Sources'], isFavorite: false },
   { id: 'age-demographics', name: 'Age Demographics', path: '/reporting/age-demographics' },
   { id: 'birthday', name: 'Birthday Report', path: '/reporting/birthday' },
   { id: 'clients-aum-overtime', name: 'Book Development', path: '/reporting/clients-aum-overtime' },
-  { id: 'client-segmentation', name: 'Client Segmentation Dashboard', path: '/reporting/client-segmentation-dashboard' },
+  { id: 'segmentation-dashboard', name: 'Segmentation Dashboard', path: '/reporting/segmentation-dashboard' },
   { id: 'client-referral-rate', name: 'Client Referral Rate', path: '/reporting/client-referral-rate' },
   { id: 'geographic-footprint', name: 'Geographic Footprint', path: '/reporting/geographic-footprint' },
   { id: 'net-new-assets', name: 'Net New Assets', path: '/reporting/net-new-assets' },

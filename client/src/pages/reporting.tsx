@@ -40,11 +40,12 @@ export interface Report {
 
 const initialMockReports: Report[] = [
   {
-    id: "advisory-firm-dashboard",
-    name: "Advisory Firm Dashboard",
-    routePath: "advisory-firm-dashboard",
+    id: "firm-activity-dashboard",
+    name: "Firm Activity Dashboard",
+    routePath: "firm-activity-dashboard",
     description: "Monitor staff activities and performance across all departments.",
     integrations: ["Data Sources"],
+    status: "Coming Soon",
     isFavorite: false,
   },
   {
@@ -74,9 +75,9 @@ const initialMockReports: Report[] = [
     isFavorite: false,
   },
   {
-    id: "client-dashboard",
-    name: "Client Dashboard",
-    routePath: "client-dashboard",
+    id: "client-inception-report",
+    name: "Client Inception Report",
+    routePath: "client-inception-report",
     description: "Track client acquisition and segmentation metrics.",
     integrations: ["Data Sources"],
     isFavorite: false,
@@ -98,9 +99,9 @@ const initialMockReports: Report[] = [
     isFavorite: false,
   },
   {
-    id: "client-segmentation",
-    name: "Client Segmentation Dashboard",
-    routePath: "client-segmentation-dashboard",
+    id: "segmentation-dashboard",
+    name: "Segmentation Dashboard",
+    routePath: "segmentation-dashboard",
     description: "Visualize client segmentation across different categories.",
     integrations: ["Data Sources"],
     isFavorite: false,
