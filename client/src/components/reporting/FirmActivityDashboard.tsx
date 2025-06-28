@@ -126,7 +126,7 @@ export const AdvisoryFirmDashboard: React.FC<AdvisoryFirmDashboardProps> = ({
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load data');
-        console.error('Error fetching advisory firm dashboard data:', err);
+        console.error('Error fetching firm activity dashboard data:', err);
       } finally {
         setIsLoading(false);
       }

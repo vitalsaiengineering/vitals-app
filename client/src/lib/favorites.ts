@@ -88,7 +88,7 @@ export const isFavoriteReport = (reportId: string): boolean => {
 // Helper functions to map report IDs to names and paths (for backward compatibility)
 const getReportNameFromId = (id: string): string => {
   const reportMap: Record<string, string> = {
-    'advisory-firm-dashboard': 'Advisory Firm Dashboard',
+    'firm-activity-dashboard': 'Firm Activity Dashboard',
     'age-demographics': 'Age Demographics',
     'birthday': 'Birthday Report',
     'clients-aum-overtime': 'Book Development',

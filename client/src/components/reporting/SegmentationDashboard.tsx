@@ -224,17 +224,20 @@ export default function ClientSegmentationDashboard() {
       return clientSegment === selectedSegment;
     });
 
+    // Sort clients by AUM (assets) from largest to smallest
+    const sortedFiltered = filtered.sort((a, b) => b.assets - a.assets);
+
     // Debug logging
     if (process.env.NODE_ENV === "development") {
-      console.log("ClientSegmentationDashboard - Segment filtering:", {
+      console.log("ClientSegmentationDashboard - Segment filtering and sorting:", {
         selectedSegment,
         totalClients: dashboardData.tableData.clients.length,
-        filteredClients: filtered.length,
-        sampleAssets: filtered.slice(0, 3).map(c => ({ name: c.name, assets: c.assets }))
+        filteredClients: sortedFiltered.length,
+        sampleAssets: sortedFiltered.slice(0, 3).map(c => ({ name: c.name, assets: c.assets }))
       });
     }
 
-    return filtered;
+    return sortedFiltered;
   }, [dashboardData, selectedSegment]);
 
   if (isLoading && !dashboardData) {
@@ -258,8 +261,8 @@ export default function ClientSegmentationDashboard() {
             <div>
               <CardTitle className="text-2xl">
                 {selectedAdvisor !== "All Advisors" 
-                  ? `${selectedAdvisor}'s Client Segmentation Dashboard` 
-                  : "Client Segmentation Dashboard"}
+                  ? `${selectedAdvisor}'s Segmentation Dashboard` 
+                  : "Segmentation Dashboard"}
               </CardTitle>
               <p className="text-muted-foreground mt-2">
                 View and analyze your client base by segment and advisor

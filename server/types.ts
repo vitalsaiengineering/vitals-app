@@ -270,7 +270,7 @@ export interface ClientReferralRateData {
   chartData: ReferralRateDataPoint[];
 }
 
-// --- Advisory Firm Dashboard Types ---
+// --- Firm Activity Dashboard Types ---
 export interface StaffMember {
   id: string;
   initials: string;

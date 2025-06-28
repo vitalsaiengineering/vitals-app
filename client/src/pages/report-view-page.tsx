@@ -6,11 +6,11 @@ import AgeDemographicsReport from '@/components/reporting/AgeDemographicsReport'
 import ClientDistributionByStateReport from '@/components/reporting/ClientDistributionByStateReport'; // Import the new report
 import BookDevelopmentBySegmentReport from '@/components/reporting/BookDevelopmentBySegmentReport';
 import ClientBirthdayReport from '@/components/reporting/ClientBirthdayReport';
-import ClientSegmentationDashboard from '@/components/reporting/ClientSegmentationDashboard';
-import ClientDashboard from '@/components/reporting/ClientDashboard';
+import SegmentationDashboard from '@/components/reporting/SegmentationDashboard';
+import ClientInceptionReport from '@/components/reporting/ClientInceptionReport';
 import ReferralAnalyticsReport from '@/components/reporting/ReferralAnalyticsReport';
 import ClientReferralRate from '@/components/reporting/ClientReferralRate';
-import AdvisoryFirmDashboard from '@/components/reporting/AdvisoryFirmDashboard'; // Import the new report
+import FirmActivityDashboard from '@/components/reporting/FirmActivityDashboard'; // Import the new report
 import {
   Dialog,
   DialogContent,
@@ -31,14 +31,14 @@ import { Star } from 'lucide-react';
 
 // Define a registry for report components
 const reportRegistry: { [key: string]: { component: React.FC<any>, title: string } } = {
-  'advisory-firm-dashboard': { component: AdvisoryFirmDashboard, title: 'Advisory Firm Dashboard' },
+  'firm-activity-dashboard': { component: FirmActivityDashboard, title: 'Firm Activity Dashboard' },
   'age-demographics': { component: AgeDemographicsReport, title: 'Age Demographics' },
   'birthday-report': { component: ClientBirthdayReport, title: 'Birthday Report' },
   'clients-aum-overtime': { component: BookDevelopmentBySegmentReport, title: 'Book Development' },
-  'client-dashboard': { component: ClientDashboard, title: 'Client Dashboard' },
+  'client-inception-report': { component: ClientInceptionReport, title: 'Client Inception Report' },
   'geographic-footprint': { component: ClientDistributionByStateReport, title: 'Geographic Footprint' },
   'client-referral-rate': { component: ClientReferralRate, title: 'Client Referral Rate' },
-  'client-segmentation-dashboard': { component: ClientSegmentationDashboard, title: 'Client Segmentation Dashboard' },
+  'segmentation-dashboard': { component: SegmentationDashboard, title: 'Segmentation Dashboard' },
   'referral-analytics': { component: ReferralAnalyticsReport, title: 'Referral Analytics' },
   // Add other reports here as they are created
   // 'clients-aum-overtime': { component: ClientsAUMOverTimeReport, title: 'Clients & AUM Over Time' },

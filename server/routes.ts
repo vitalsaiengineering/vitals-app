@@ -68,12 +68,12 @@ import {
   getClientDistributionReportHandler,
   getBookDevelopmentReportHandler,
   getClientBirthdayReportHandler,
-  getClientSegmentationDashboardHandler,
+  getSegmentationDashboardHandler,
   getClientAnniversaryHandler,
   getClientInceptionHandler,
   getReferralAnalyticsHandler,
   getClientReferralRateHandler,
-  getAdvisoryFirmDashboardHandler,
+  getFirmActivityDashboardHandler,
 } from "./kpi";
 
 // Load environment variables
@@ -764,9 +764,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // --- END: Register new route for Client Birthday Report ---
 
   app.get(
-    "/api/analytics/client-segmentation-dashboard",
+    "/api/analytics/segmentation-dashboard",
     requireAuth,
-    getClientSegmentationDashboardHandler
+    getSegmentationDashboardHandler
   );
   app.get(
     "/api/analytics/client-anniversaries",
@@ -792,9 +792,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 );
 
 app.get(
-    "/api/analytics/advisory-firm-dashboard",
+    "/api/analytics/firm-activity-dashboard",
     requireAuth,
-    getAdvisoryFirmDashboardHandler
+    getFirmActivityDashboardHandler
   );
 
   // Save WealthBox configuration

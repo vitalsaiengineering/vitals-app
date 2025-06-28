@@ -6,7 +6,7 @@ export interface AgeGroup {
   colorClass: string;
 }
 
-// --- START: Added for Advisory Firm Dashboard ---
+// --- START: Added for Firm Activity Dashboard ---
 export interface StaffMember {
   id: string;
   initials: string;
@@ -77,20 +77,20 @@ export interface GetAdvisoryFirmDashboardParams {
 }
 
 /**
- * Fetches advisory firm dashboard data from the API
+ * Fetches firm activity dashboard data from the API
  * @param params Optional parameters including advisorId, date range, and department
- * @returns Promise with the advisory firm dashboard data
+ * @returns Promise with the firm activity dashboard data
  */
 export async function getAdvisoryFirmDashboardData(params?: GetAdvisoryFirmDashboardParams): Promise<AdvisoryFirmDashboardData> {
   try {
-    const data = await dataService.fetchData("analytics/advisory-firm-dashboard", params);
+    const data = await dataService.fetchData("analytics/firm-activity-dashboard", params);
     return data as AdvisoryFirmDashboardData;
   } catch (error) {
-    console.error("Error fetching advisory firm dashboard data:", error);
+    console.error("Error fetching firm activity dashboard data:", error);
     throw error;
   }
 }
-// --- END: Added for Advisory Firm Dashboard ---
+// --- END: Added for Firm Activity Dashboard ---
 
 // Data service for API calls
 export const dataService = {
@@ -1343,7 +1343,7 @@ export async function getClientDistributionReportData(): Promise<ClientDistribut
 }
 // --- END: Added for Client Distribution by State Report ---
 
-// --- START: Added for Client Segmentation Dashboard ---
+// --- START: Added for Segmentation Dashboard ---
 export interface SegmentationKPI {
   value: number | string;
   label: string;
@@ -1395,14 +1395,14 @@ export interface GetClientSegmentationDashboardParams {
 
 export async function getClientSegmentationDashboardData(params?: GetClientSegmentationDashboardParams): Promise<ClientSegmentationDashboardData> {
   try {
-    const data = await dataService.fetchData("analytics/client-segmentation-dashboard", params);
+    const data = await dataService.fetchData("analytics/segmentation-dashboard", params);
     return data as ClientSegmentationDashboardData;
   } catch (error) {
-    console.error("Error fetching client segmentation dashboard data:", error);
+    console.error("Error fetching segmentation dashboard data:", error);
     throw error;
   }
 }
-// --- END: Added for Client Segmentation Dashboard ---
+// --- END: Added for Segmentation Dashboard ---
 
 // --- START: Added for Client Dashboard ---
 export interface AnniversaryClient {

@@ -12,7 +12,7 @@ import { useAdvisor } from '@/contexts/AdvisorContext';
  * Main dashboard with exact layout matching reference image
  * Uses original data sources from ClientInceptionView and ClientAnniversaryView
  */
-export default function ClientDashboard() {
+export default function ClientInceptionReport() {
   const [globalSearch, setGlobalSearch] = useState('');
   const { selectedAdvisor } = useAdvisor();
 
@@ -25,8 +25,8 @@ export default function ClientDashboard() {
         <div className="flex justify-between items-start mb-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground">{selectedAdvisor !== "All Advisors" 
-                  ? `${selectedAdvisor}'s Client Dashboard` 
-                  : "Client Dashboard"}</h1>
+                  ? `${selectedAdvisor}'s Client Inception Report` 
+                  : "Client Inception Report"}</h1>
             <p className="text-muted-foreground mt-1">
               Track client acquisition and segmentation metrics
             </p>
