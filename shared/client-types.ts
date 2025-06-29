@@ -27,7 +27,7 @@ export interface StandardClient {
   referredBy?: string;
   contactType?: string;
   title?: string;
-  status: 'active' | 'inactive' | 'archived';
+  status: 'active' | 'inactive' | 'archived' | 'pending' | 'suspended';
 }
 
 export interface ClientFilters {

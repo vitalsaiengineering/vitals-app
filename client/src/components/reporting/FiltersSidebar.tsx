@@ -186,20 +186,10 @@ const FiltersSidebar: React.FC = () => {
           </Select>
         </div>
       </div>
-
-      {/* Apply Filters Button */}
-      <div className="p-4 border-t border-border">
-        <Button 
-          onClick={applyFilters} 
-          className="w-full bg-slate-900 hover:bg-slate-800 text-white"
-          disabled={!hasActiveFilters}
-        >
-          Apply Filters
-        </Button>
         
         {/* Active Filters Summary */}
         {hasActiveFilters && (
-          <div className="mt-3 space-y-2">
+          <div className="mt-3 space-y-2 p-4 border-t border-border">
             <div className="text-xs text-muted-foreground">Active Filters:</div>
             <div className="flex flex-wrap gap-1">
               {filters.dateRange.preset !== 'last12months' && (
@@ -220,6 +210,16 @@ const FiltersSidebar: React.FC = () => {
             </div>
           </div>
         )}
+      {/* Apply Filters Button */}
+      <div className="p-4 border-t border-border">
+        <Button 
+          onClick={applyFilters} 
+          className="w-full bg-slate-900 hover:bg-slate-800 text-white"
+          disabled={!hasActiveFilters}
+        >
+          Apply Filters
+        </Button>
+
       </div>
     </div>
   );

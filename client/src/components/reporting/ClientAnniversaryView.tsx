@@ -30,6 +30,7 @@ import { useAdvisor } from "@/contexts/AdvisorContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
+import { getAdvisorReportTitle } from "@/lib/utils";
 
 // Define transformed interfaces for compatibility
 interface AnniversaryClient {
@@ -165,7 +166,7 @@ export default function ClientAnniversaryView({
 }: ClientAnniversaryViewProps) {
   const [allAnniversaryData, setAllAnniversaryData] = useState<AnniversaryClient[]>([]); // Store all data
   const [filteredAnniversaryData, setFilteredAnniversaryData] = useState<AnniversaryClient[]>([]); // Store filtered data
-  const [filterOptions, setFilterOptions] = useState<AnniversaryFilterOptions>({
+  const [localFilterOptions, setLocalFilterOptions] = useState<AnniversaryFilterOptions>({
     segments: [],
     tenures: [],
     advisors: [],
@@ -181,7 +182,7 @@ export default function ClientAnniversaryView({
 
   // Get contexts
   const { selectedAdvisor } = useAdvisor();
-  const { filters } = useReportFilters();
+  const { filters, filterOptions } = useReportFilters();
 
   const { useMock } = useMockData();
 
@@ -203,7 +204,7 @@ export default function ClientAnniversaryView({
         
         // Generate filter options from the client data
         const options = generateFilterOptions(clients);
-        setFilterOptions(options);
+        setLocalFilterOptions(options);
         
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to load anniversary data";
@@ -293,9 +294,7 @@ export default function ClientAnniversaryView({
           <div className="flex justify-between items-start">
             <div>
                 <CardTitle className="text-xl">
-                  {filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" 
-                    ? `${filters.advisorIds[0]}'s Client Anniversary Dates` 
-                    : "Client Anniversary Dates"}
+                  {getAdvisorReportTitle("Client Anniversary Dates", filters, filterOptions || undefined)}
                 </CardTitle>              
               <p className="text-sm text-muted-foreground mt-1">
                 {displayClients.length} records
@@ -324,7 +323,7 @@ export default function ClientAnniversaryView({
                 <SelectValue placeholder="Segment" />
               </SelectTrigger>
               <SelectContent>
-                {filterOptions?.segments.map((segment) => (
+                {localFilterOptions?.segments.map((segment) => (
                   <SelectItem key={segment} value={segment}>
                     {segment}
                   </SelectItem>
@@ -337,7 +336,7 @@ export default function ClientAnniversaryView({
                 <SelectValue placeholder="Tenure" />
               </SelectTrigger>
               <SelectContent>
-                {filterOptions?.tenures.map((tenure) => (
+                {localFilterOptions?.tenures.map((tenure) => (
                   <SelectItem key={tenure} value={tenure}>
                     {tenure}
                   </SelectItem>

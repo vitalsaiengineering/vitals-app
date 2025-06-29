@@ -5,6 +5,7 @@ import { Users } from 'lucide-react';
 import ClientAnniversaryView from './ClientAnniversaryView';
 import ClientInceptionView from './ClientInceptionView';
 import { useReportFilters } from '@/contexts/ReportFiltersContext';
+import { getAdvisorReportTitle } from '@/lib/utils';
 
 /**
  * ClientDashboard Component
@@ -14,7 +15,7 @@ import { useReportFilters } from '@/contexts/ReportFiltersContext';
  */
 export default function ClientInceptionReport() {
   const [globalSearch, setGlobalSearch] = useState('');
-  const { filters } = useReportFilters();
+  const { filters, filterOptions } = useReportFilters();
 
   const [activeTab, setActiveTab] = useState('clients');
 
@@ -24,9 +25,7 @@ export default function ClientInceptionReport() {
         {/* Header with toggle buttons - exact match to reference image */}
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">{filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" 
-                  ? `${filters.advisorIds[0]}'s Client Inception Report` 
-                  : "Client Inception Report"}</h1>
+            <h1 className="text-3xl font-bold text-foreground">{getAdvisorReportTitle("Client Inception Report", filters, filterOptions || undefined)}</h1>
             <p className="text-muted-foreground mt-1">
               Track client acquisition and segmentation metrics
             </p>
