@@ -11,8 +11,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useWealthboxFields } from '@/hooks/use-wealthbox-fields';
 import { fieldHasOptions } from '@/services/wealthbox-api';
 import axios from 'axios';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useMockData } from '@/contexts/MockDataContext';
+import { importWealthboxData } from '@/lib/api';
 
 // Mock data for Wealthbox fields
 const mockWealthboxFields: FieldOption[] = [
@@ -143,34 +144,6 @@ const mockWealthboxSections: MappingSection[] = [
   },
 ];
 
-// Mock segmentation sections
-const mockSegmentationSections: MappingSection[] = [
-  {
-    title: 'Client Segmentation Definitions',
-    description: 'Define your client tiers and map them to segmentation attributes',
-    mappings: [
-      {
-        sourceField: 'topTier',
-        sourceLabel: 'What indicates a top tier client?',
-        targetField: '',
-        targetOptions: mockWealthboxFields,
-      },
-      {
-        sourceField: 'secondTier',
-        sourceLabel: 'What indicates a second tier client?',
-        targetField: '',
-        targetOptions: mockWealthboxFields,
-      },
-      {
-        sourceField: 'thirdTier',
-        sourceLabel: 'What indicates a third tier client?',
-        targetField: '',
-        targetOptions: mockWealthboxFields,
-      },
-    ],
-  },
-];
-
 interface WealthboxMappingProps {
   accessToken?: string;
 }
@@ -182,40 +155,58 @@ const WealthboxMapping: React.FC<WealthboxMappingProps> = ({ accessToken = '' })
   const [tokenLoading, setTokenLoading] = useState(true);
   const [tokenError, setTokenError] = useState(false);
 
-  const { isLoading, hasError, getOptions, searchOptions } = useWealthboxFields();
+  const { isLoading, hasError, getOptions, searchOptions } = useWealthboxFields(wealthboxToken);
+  
+  // Import data mutation
+  const [isImporting, setIsImporting] = useState(false);
+  const importMutation = useMutation({
+    mutationFn: (token: string) => importWealthboxData(token),
+    onSuccess: (data) => {
+      if (data.success) {
+        console.log(`Import completed successfully: ${data.contacts.imported} contacts imported`);
+      } else {
+        console.error("Import partially failed:", data.message);
+      }
+      setIsImporting(false);
+    },
+    onError: (error: any) => {
+      console.error("Import failed:", error.message || "Unknown error");
+      setIsImporting(false);
+    },
+  });
 
   // Fetch the Wealthbox token when the component mounts (only if not using mock data)
-useEffect(() => {
-  const fetchWealthboxToken = async () => {
-    if (useMock) {
-      // Skip token fetching for mock data
-      setTokenLoading(false);
-      setTokenError(false);
-      return;
-    }
-    
-    try {
-      setTokenLoading(true);
-      setTokenError(false);
-      
-      const response = await axios.get('/api/wealthbox/token');
-      if (response.data.success && response.data.token) {
-        setWealthboxToken(response.data.token);
-      } else {
-        console.error('No Wealthbox token available:', response.data);
-        setTokenError(true);
+  useEffect(() => {
+    const fetchWealthboxToken = async () => {
+      if (useMock) {
+        // Skip token fetching for mock data
+        setTokenLoading(false);
+        setTokenError(false);
+        return;
       }
-    } catch (error) {
-      console.error('Error fetching Wealthbox token:', error);
-      setTokenError(true);
-    } finally {
-      setTokenLoading(false);
-    }
-  };
-  
-  fetchWealthboxToken();
-}, [useMock]);
-  
+      
+      try {
+        setTokenLoading(true);
+        setTokenError(false);
+        
+        const response = await axios.get('/api/wealthbox/token');
+        if (response.data.success && response.data.token) {
+          console.log('Successfully retrieved Wealthbox token');
+          setWealthboxToken(response.data.token);
+        } else {
+          console.error('No Wealthbox token available:', response.data);
+          setTokenError(true);
+        }
+      } catch (error) {
+        console.error('Error fetching Wealthbox token:', error);
+        setTokenError(true);
+      } finally {
+        setTokenLoading(false);
+      }
+    };
+    
+    fetchWealthboxToken();
+  }, [useMock]);
   
   // Callback to search for field options as user types
   const handleFieldSearch = useCallback(
@@ -392,34 +383,6 @@ useEffect(() => {
     },
   ]);
 
-  // Add client segmentation section
-  const [segmentationSections, setSegmentationSections] = useState<MappingSection[]>(
-    useMock ? mockSegmentationSections : [
-    {
-      title: 'Client Segmentation Definitions',
-      description: 'Define your client tiers and map them to segmentation attributes',
-      mappings: [
-        {
-          sourceField: 'topTier',
-          sourceLabel: 'What indicates a top tier client?',
-          targetField: '',
-          targetOptions: [],
-        },
-        {
-          sourceField: 'secondTier',
-          sourceLabel: 'What indicates a second tier client?',
-          targetField: '',
-          targetOptions: [],
-        },
-        {
-          sourceField: 'thirdTier',
-          sourceLabel: 'What indicates a third tier client?',
-          targetField: '',
-          targetOptions: [],
-        },
-      ],
-    },
-  ]);
   
   // Load existing mappings from the database
   const [isMappingsLoading, setIsMappingsLoading] = useState(false);
@@ -455,16 +418,6 @@ useEffect(() => {
             }))
           );
           
-          // Update segmentation sections with saved mappings
-          setSegmentationSections(prevSections => 
-            prevSections.map(section => ({
-              ...section,
-              mappings: section.mappings.map(mapping => ({
-                ...mapping,
-                targetField: savedMappings[mapping.sourceField] || mapping.targetField,
-              }))
-            }))
-          );
         }
       }
     } catch (error) {
@@ -477,43 +430,39 @@ useEffect(() => {
 
   // Update sections with field options once they're loaded
   useEffect(() => {
+    // For mock data, sections are already initialized with mock fields
     if (useMock) {
-      // For mock data, sections are already initialized with mock fields
       // Just load saved mappings
       loadSavedMappings();
-    } else if (!isLoading && !hasError && wealthboxToken) {
+      return;
+    }
+    
+    // Only proceed if we have a token and field options are loaded
+    if (!wealthboxToken) {
+      return; // Wait until token is available
+    }
+    
+    if (!isLoading && !hasError) {
       const allOptions = getOptions('all');
       
-      if(allOptions.length > 0) {
-      // Update main sections
-      const updatedSections = sections.map(section => ({
-        ...section,
-        mappings: section.mappings.map(mapping => ({
-          ...mapping,
-          targetOptions: allOptions,
-        })),
-      }));
-      
-      // Update segmentation sections
-      const updatedSegmentationSections = segmentationSections.map(section => ({
-        ...section,
-        mappings: section.mappings.map(mapping => ({
-          ...mapping,
-          targetOptions: allOptions,
-        })),
-      }));
-      
-      setSections(updatedSections);
-      setSegmentationSections(updatedSegmentationSections);
-
-      // Load saved mappings after field options are ready
-      loadSavedMappings();
-    } 
+      if (allOptions.length > 0) {
+        // Update main sections
+        const updatedSections = sections.map(section => ({
+          ...section,
+          mappings: section.mappings.map(mapping => ({
+            ...mapping,
+            targetOptions: allOptions,
+          })),
+        }));
+        
+        setSections(updatedSections);
+        // Load saved mappings after field options are ready
+        loadSavedMappings();
+      }
     }
-  }, [isLoading, hasError, wealthboxToken, getOptions, loadSavedMappings, useMock]);
+  }, [isLoading, hasError, wealthboxToken, getOptions, useMock]);
   
-  const [tierCount, setTierCount] = useState(3);
-
+  
   const handleMappingChange = (sectionIndex: number, sourceField: string, targetField: string) => {
     const newSections = [...sections];
     const mappingIndex = newSections[sectionIndex].mappings.findIndex(
@@ -526,40 +475,6 @@ useEffect(() => {
     }
   };
 
-  const handleSegmentationMappingChange = (sectionIndex: number, sourceField: string, targetField: string) => {
-    const newSections = [...segmentationSections];
-    const mappingIndex = newSections[sectionIndex].mappings.findIndex(
-      m => m.sourceField === sourceField
-    );
-    
-    if (mappingIndex !== -1) {
-      newSections[sectionIndex].mappings[mappingIndex].targetField = targetField;
-      setSegmentationSections(newSections);
-    }
-  };
-
-  const handleAddTier = () => {
-    const newTierCount = tierCount + 1;
-    const newSections = [...segmentationSections];
-    
-    // Get current field options
-    const allOptions = useMock ? mockWealthboxFields : getOptions('all');
-    
-    newSections[0].mappings.push({
-      sourceField: `tier${newTierCount}`,
-      sourceLabel: `What indicates a tier ${newTierCount} client?`,
-      targetField: '',
-      targetOptions: allOptions,
-    });
-    
-    setSegmentationSections(newSections);
-    setTierCount(newTierCount);
-    
-    toast({
-      title: "Tier added",
-      description: `Added tier ${newTierCount} to your client segmentation.`,
-    });
-  };
 
   const handleSave = async () => {
     try {
@@ -569,19 +484,7 @@ useEffect(() => {
       // Add main section mappings
       sections.forEach(section => {
         section.mappings.forEach(mapping => {
-          if (mapping.targetField) {
-            allMappings.push({
-              sourceField: mapping.sourceField,
-              targetField: mapping.targetField
-            });
-          }
-        });
-      });
-      
-      // Add segmentation section mappings
-      segmentationSections.forEach(section => {
-        section.mappings.forEach(mapping => {
-          if (mapping.targetField) {
+          if (mapping.targetField && !mapping.targetField.includes('_')) {
             allMappings.push({
               sourceField: mapping.sourceField,
               targetField: mapping.targetField
@@ -603,11 +506,12 @@ useEffect(() => {
           description: "Your Wealthbox field mapping has been saved successfully.",
         });
 
-        // Redirect back to settings page with data-mapping tab
-        setTimeout(() => {
-          window.history.pushState({}, "", "/settings?tab=data-mapping");
-          window.dispatchEvent(new Event('popstate'));
-        }, 1000); // Small delay to let user see the success toast
+        // Start the import in the background
+        importMutation.mutate(wealthboxToken);
+        
+        // Redirect immediately back to settings page
+        window.history.pushState({}, "", "/settings?tab=data-mapping");
+        window.dispatchEvent(new Event('popstate'));
       } else {
         throw new Error(response.data.message || 'Failed to save mappings');
       }
@@ -654,46 +558,6 @@ useEffect(() => {
     );
   };
 
-  const renderDefinitionsSection = () => {
-    const section = segmentationSections[0];
-    
-    return (
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>{section.title}</CardTitle>
-          {section.description && <CardDescription>{section.description}</CardDescription>}
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="border-t border-border">
-            {section.mappings.map((mapping) => (
-              <div key={mapping.sourceField}>
-                <FieldMappingRow
-                  mapping={mapping}
-                  onMappingChange={(sourceField, targetField) => 
-                    handleSegmentationMappingChange(0, sourceField, targetField)
-                  }
-                  sourceSystem="Firm"
-                  targetSystem="Segmentation Engine"
-                />
-                <FieldInfoDisplay fieldValue={mapping.targetField} />
-              </div>
-            ))}
-            <div className="border-t border-border p-4">
-              <Button 
-                variant="outline" 
-                onClick={handleAddTier} 
-                className="w-full"
-                disabled={useMock ? false : (isLoading || hasError || tokenError)}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add More Tiers
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
 
   if (tokenError && !useMock) {
     return (
@@ -786,7 +650,7 @@ useEffect(() => {
             {renderDefinitionsSection()} */}
             
             <div className="max-w-5xl mx-auto px-4 mt-6">
-            <Button onClick={handleSave} className="px-6">
+              <Button onClick={handleSave} className="px-6">
                 <SaveIcon className="w-4 h-4 mr-2" />
                 Save Mappings
               </Button>

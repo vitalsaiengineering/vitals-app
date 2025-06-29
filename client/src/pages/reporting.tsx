@@ -58,7 +58,7 @@ const initialMockReports: Report[] = [
     isFavorite: false,
   },
   {
-    id: "birthday",
+    id: "birthday-report",
     name: "Birthday Report",
     routePath: "birthday-report",
     description: "Track upcoming client birthdays for timely engagement.",
@@ -123,15 +123,15 @@ const initialMockReports: Report[] = [
     status: "Coming Soon",
     isFavorite: false,
   },
-  {
-    id: "revenue-vs-expense",
-    name: "Revenue vs Client Expense",
-    routePath: "revenue-vs-client-expense",
-    description: "Compare client revenue against expenses over time.",
-    integrations: ["Data Sources"],
-    status: "Coming Soon",
-    isFavorite: false,
-  }
+  // {
+  //   id: "revenue-vs-expense",
+  //   name: "Revenue vs Client Expense",
+  //   routePath: "revenue-vs-client-expense",
+  //   description: "Compare client revenue against expenses over time.",
+  //   integrations: ["Data Sources"],
+  //   status: "Coming Soon",
+  //   isFavorite: false,
+  // }
 ].sort((a, b) => a.name.localeCompare(b.name));
 
 // Function to initialize reports with correct favorite status from localStorage
