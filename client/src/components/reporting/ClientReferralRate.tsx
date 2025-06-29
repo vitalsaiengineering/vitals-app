@@ -17,8 +17,8 @@ import { StandardClient } from '@/types/client';
 import { getClients } from '@/lib/clientData';
 import { useReportFilters } from '@/contexts/ReportFiltersContext';
 import { filtersToApiParams } from '@/utils/filter-utils';
-import { getPrettyClientName, getSegmentName } from '@/utils/client-analytics';
 import { ReportSkeleton } from '@/components/ui/skeleton';
+import { getAdvisorReportTitle } from '@/lib/utils';
 
 interface ReferralData {
   month: string;
@@ -117,7 +117,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export const ClientReferralRate: React.FC = () => {
-  const { filters } = useReportFilters();
+  const { filters, filterOptions } = useReportFilters();
   const [data, setData] = useState<ClientReferralRateData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -205,9 +205,7 @@ export const ClientReferralRate: React.FC = () => {
       {/* Header */}
       <div className="space-y-2">
         <h2 className="text-2xl font-bold text-gray-900">
-          {filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" 
-            ? `${filters.advisorIds[0]} - New Client Referral Performance` 
-            : "New Client Referral Performance"}
+          {getAdvisorReportTitle("New Client Referral Performance", filters, filterOptions || undefined)}
         </h2>
         <p className="text-gray-600">
           Track the percentage of new clients that come through referrals from existing clients each month.

@@ -42,15 +42,15 @@ interface DbClient {
   isActive: boolean | null;
   representativeName: string | null;
   representativeId: number | null;
-  startDate: Date | null;
+  startDate: Date | string | null;
   contactInfo: any;
   source: string | null;
-  dateOfBirth: Date | null;
+  dateOfBirth: Date | string | null;
   referredBy: number | null;
-  inceptionDate: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-  status: "active" | "inactive" | "archived";
+  inceptionDate: Date | string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  status: "active" | "inactive" | "archived" | "pending" | "suspended";
 }
 
 interface DbUser {
@@ -121,8 +121,8 @@ export function mapDbClientToStandard(
     household: contactInfo.household || "",
     isActive: dbClient.isActive ?? false,
     referredBy: dbClient.referredBy?.toString(),
-    contactType: dbClient.contactType,
-    title: dbClient.title,
+    contactType: dbClient.contactType || undefined,
+    title: dbClient.title || undefined,
     status: dbClient.status,
   };
 }

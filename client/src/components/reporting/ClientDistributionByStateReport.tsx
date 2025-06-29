@@ -23,6 +23,7 @@ import { filtersToApiParams } from "@/utils/filter-utils";
 import { formatAUM, getPrettyClientName, getSegmentName } from "@/utils/client-analytics";
 import { ReportSkeleton } from "@/components/ui/skeleton";
 import { useMockData } from "@/contexts/MockDataContext";
+import { getAdvisorReportTitle, getAdvisorName } from '@/lib/utils';
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -182,7 +183,7 @@ const getMapFillColor = (
 
 const ClientDistributionByStateReport = () => {
   const { useMock } = useMockData();
-  const { filters } = useReportFilters();
+  const { filters, filterOptions } = useReportFilters();
   const [reportData, setReportData] = useState<ClientDistributionReportData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -315,9 +316,10 @@ const ClientDistributionByStateReport = () => {
     };
   };
 
-  const tableTitle = selectedStateMetric
-    ? `${selectedStateMetric.stateName} CLIENTS${filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" ? ` - ${filters.advisorIds[0].toUpperCase()}` : ""}`
-    : filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" ? `${filters.advisorIds[0].toUpperCase()}'S CLIENTS` : "ALL CLIENTS";
+      const advisorName = getAdvisorName(filters.advisorIds[0], filterOptions || undefined);
+    const tableTitle = selectedStateMetric
+      ? `${selectedStateMetric.stateName} CLIENTS${advisorName ? ` - ${advisorName.toUpperCase()}` : ""}`
+      : advisorName ? `${advisorName.toUpperCase()}'S CLIENTS` : "ALL CLIENTS";
 
   const summaryClientCount = selectedStateMetric
     ? selectedStateMetric.clientCount
@@ -399,11 +401,9 @@ const ClientDistributionByStateReport = () => {
       <Card className="flex flex-col h-[calc(100vh-300px)]">
       <CardHeader className="flex-shrink-0">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-      <CardTitle>
-              {filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" 
-                ? `${filters.advisorIds[0]}'s Client Distribution Map` 
-                : "Client Distribution Map"}
-            </CardTitle>
+              <CardTitle>
+                {getAdvisorReportTitle("Client Distribution Map", filters, filterOptions || undefined)}
+              </CardTitle>
             <div className="flex space-x-2">
               <Button
                 variant={

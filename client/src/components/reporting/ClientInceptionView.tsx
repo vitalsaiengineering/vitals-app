@@ -37,6 +37,7 @@ import { filtersToApiParams } from "@/utils/filter-utils";
 import { useMockData } from "@/contexts/MockDataContext";
 import { useAdvisor } from "@/contexts/AdvisorContext";
 import { TableSkeleton } from "@/components/ui/skeleton";
+import { getAdvisorReportTitle } from '@/lib/utils';
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -244,7 +245,7 @@ export default function ClientInceptionView({
   // Get contexts
   const { selectedAdvisor } = useAdvisor();
   const { useMock } = useMockData();
-  const { filters } = useReportFilters();
+  const { filters, filterOptions } = useReportFilters();
 
   // Fetch data using centralized approach
   useEffect(() => {
@@ -402,7 +403,7 @@ export default function ClientInceptionView({
                 <Users className="h-5 w-5 text-blue-600" />
                 <h3 className="text-lg font-medium">
                   {filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" 
-                    ? `${filters.advisorIds[0]}'s Clients by Inception Date` 
+                    ? getAdvisorReportTitle("Clients by Inception Date", filters, filterOptions || undefined)
                     : "Clients by Inception Date by Segmentation"}
                 </h3>
               </div>

@@ -17,36 +17,26 @@ import type {
   FilterableClientResponse 
 } from '../types/client';
 import { STATE_MAPPING, YEAR_MAPPING, mapDbClientToStandard, mapDbClientsToStandard } from '../utils/client-mapper';
+import { MockDataService } from './mock-data.service';
 
 export class ClientService {
+  private mockDataService = new MockDataService();
+
   /**
    * Main method to get clients with filtering and pagination
    */
   async getClients(
     organizationId: number,
     filters: ClientFilters = {},
-    pagination: PaginationOptions = { page: 1, perPage: 50 },
+    pagination: PaginationOptions = { page: 1, perPage: 500 }, // TODO: remove this
     userId?: number
   ): Promise<FilterableClientResponse> {
     // Check if we should use mock data based on Wealthbox token
     const shouldUseMock = await this.shouldUseMockData(organizationId, userId);
     
     if (shouldUseMock) {
-      // For now, return empty array - will be implemented in Phase 2
-      return {
-        clients: [],
-        totalCount: 0,
-        hasMore: false,
-        page: pagination.page,
-        perPage: pagination.perPage,
-        availableFilters: {
-          segments: [],
-          advisors: [],
-          states: [],
-          years: [],
-          referrers: []
-        }
-      };
+      // Use mock data service
+      return this.mockDataService.getClients(organizationId, filters, pagination, userId);
     }
 
     return this.getRealClientsFromDb(organizationId, filters, pagination, userId);
@@ -180,10 +170,18 @@ export class ClientService {
     };
   }
 
-  /**
+
+  private async getAvailableFilters(organizationId: number, userId?: number) {
+      /**
    * Get available filter options for the organization with role-based advisor filtering
    */
-  private async getAvailableFilters(organizationId: number, userId?: number) {
+    // Check if we should use mock data
+    const shouldUseMock = await this.shouldUseMockData(organizationId, userId);
+    
+    if (shouldUseMock) {
+      // Use mock data service for available filters
+      return this.mockDataService.getAvailableFilters();
+    }
     // Get all clients for filter options (could be optimized with aggregation queries)
     const allClients = await db
       .select({
@@ -237,8 +235,10 @@ export class ClientService {
       }));
     }
 
-    // Process segments
-    const segments = Array.from(new Set(allClients.map(c => c.segment).filter(Boolean)));
+    // Process segments - filter out null values and ensure strings
+    const segments = Array.from(new Set(
+      allClients.map(c => c.segment).filter((seg): seg is string => Boolean(seg))
+    ));
 
     // Process states (from contact info)
     const states = Object.entries(STATE_MAPPING).map(([code, name]) => ({
@@ -246,11 +246,8 @@ export class ClientService {
       name
     }));
 
-    // Process years (from inception dates)
-    const years = Object.entries(YEAR_MAPPING).map(([year, name]) => ({
-      year,
-      name
-    }));
+    // Process years (from inception dates) - convert to numbers
+    const years = Object.keys(YEAR_MAPPING).map(year => parseInt(year)).sort((a, b) => b - a);
 
     // Process referrers (placeholder - would need proper referrer lookup)
     const referrers = allUsers.map(user => ({
@@ -363,7 +360,7 @@ export class ClientService {
   static parsePaginationFromQuery(query: any): PaginationOptions {
     return {
       page: query.page ? parseInt(query.page) : 1,
-      perPage: query.perPage ? parseInt(query.perPage) : 50,
+      perPage: query.perPage ? parseInt(query.perPage) : 500,
       sortBy: query.sortBy || 'name',
       sortOrder: query.sortOrder === 'desc' ? 'desc' : 'asc'
     };

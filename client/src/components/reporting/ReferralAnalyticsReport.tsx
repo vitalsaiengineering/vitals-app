@@ -13,6 +13,7 @@ import { filtersToApiParams } from "@/utils/filter-utils";
 import { StandardClient } from "@/types/client";
 import { formatAUM, getPrettyClientName, getSegmentName } from "@/utils/client-analytics";
 import { ReportSkeleton } from "@/components/ui/skeleton";
+import { getAdvisorReportTitle } from '@/lib/utils';
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -275,9 +276,7 @@ export default function ReferralAnalyticsReport() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">
-          {filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" 
-            ? `${filters.advisorIds[0]}'s Referral Analytics` 
-            : "Referral Analytics"}
+          {getAdvisorReportTitle("Referral Analytics", filters, filterOptions || undefined)}
         </h1>
         <p className="text-muted-foreground mt-1">
           Track your top referral sources and measure their performance.
@@ -474,11 +473,9 @@ export default function ReferralAnalyticsReport() {
         <TabsContent value="all" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>
-                {filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" 
-                  ? `${filters.advisorIds[0]}'s All Referrals` 
-                  : "All Referrals"}
-              </CardTitle>
+                              <CardTitle>
+                  {getAdvisorReportTitle("All Referrals", filters, filterOptions || undefined)}
+                </CardTitle>
               {analyticsData && (
                 <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                   <div className="flex items-center space-x-1">
