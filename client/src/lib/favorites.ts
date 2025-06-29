@@ -90,14 +90,14 @@ const getReportNameFromId = (id: string): string => {
   const reportMap: Record<string, string> = {
     'firm-activity-dashboard': 'Firm Activity Dashboard',
     'age-demographics': 'Age Demographics',
-    'birthday': 'Birthday Report',
+    'birthday-report': 'Birthday Report',
     'clients-aum-overtime': 'Book Development',
     'client-dashboard': 'Client Inception Report',
     'client-segmentation': 'Client Segmentation Report',
     'geographic-footprint': 'Geographic Footprint',
     'net-new-assets': 'Net New Assets',
-    'referral': 'Referral Analytics',
-    'revenue-vs-expense': 'Revenue vs Client Expense'
+    'referral-analytics': 'Referral Analytics',
+    // 'revenue-vs-expense': 'Revenue vs Client Expense'
   };
   return reportMap[id] || id;
 };

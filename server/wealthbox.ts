@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
-import { User, Client, Activity } from "@shared/schema";
+import { User, Client, Activity, firmDataMappings } from "@shared/schema";
 import { storage } from "./storage";
 import { getWealthboxToken } from "./utils/wealthbox-token";
 import { getValidWealthboxToken, createWealthboxHeaders, makeWealthboxRequest } from "./utils/wealthbox-auth";
+import { db } from "./db";
+import { and, eq } from "drizzle-orm";
 
 // Wealthbox API base URL
 const WEALTHBOX_API_BASE_URL = "https://api.crmworkspace.com/v1";
@@ -81,7 +83,7 @@ export async function importWealthboxContacts(
 
   try {
     // Get all contacts from Wealthbox (paginated)
-    let allContacts = await fetchAllContacts(accessToken);
+    let allContacts = await fetchAllContacts(accessToken, userId);
 
     const user = await storage.getUser(userId);
     if (!user) {
@@ -225,15 +227,69 @@ export async function importWealthboxDataHandler(req: Request, res: Response) {
  */
 async function fetchAllContacts(
   accessToken: string,
+  userId: number = 0,
   limit: number = 100,
 ): Promise<any[]> {
   let allContacts: any[] = [];
   let page = 1;
   let hasMore = true;
+  let activeClientParam = "active=true";
+  let additionalParams = "";
+  let targetFieldId: number | null = null;
+
+  try {
+    console.log(`Fetching all contacts for user ${userId}`);
+    // Get user info to determine firm ID
+    if (userId > 0) {
+      const user = await storage.getUser(userId);
+      if (user && user.organizationId) {
+        // Get the integration type ID for Wealthbox
+        const wealthboxIntegration = await storage.getIntegrationTypeByName("wealthbox");
+        console.log(`Wealthbox integration: ${JSON.stringify(wealthboxIntegration)}`);
+        
+        if (wealthboxIntegration) {
+          // Query the firm_data_mappings table for activeClient mapping
+          const dataMappings = await db
+            .select()
+            .from(firmDataMappings)
+            .where(
+              and(
+                eq(firmDataMappings.firmId, user.organizationId),
+                eq(firmDataMappings.integrationTypeId, wealthboxIntegration.id),
+                eq(firmDataMappings.sourceField, "activeClient"),
+                eq(firmDataMappings.entityType, "client")
+              )
+            );
+          
+          console.log(`Data mappings: ${JSON.stringify(dataMappings)}`);
+          // If a mapping exists, use the target field value instead of the default
+          if (dataMappings && dataMappings.length > 0) {
+            const mapping = dataMappings[0];
+            if (mapping.targetField) {
+              // Check if the target field is a numeric ID
+              const parsedId = parseInt(mapping.targetField);
+              if (!isNaN(parsedId)) {
+                // If it's a number, store it to filter contacts later
+                targetFieldId = parsedId;
+                console.log(`Will filter contacts by ID: ${targetFieldId}`);
+              } else {
+                // Otherwise, use it as an additional parameter
+                additionalParams = `&contact_type=${mapping.targetField}`;
+                console.log(`Using custom parameter: ${additionalParams}`);
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching data mapping for activeClient:", error);
+    // Continue with the default parameter if there's an error
+  }
 
   while (hasMore) {
     const response = await fetch(
-      `${ENDPOINTS.CONTACTS}?page=${page}`,
+      `${ENDPOINTS.CONTACTS}?page=${page}&${activeClientParam}${additionalParams}`,
       {
         method: "GET",
         headers: createWealthboxHeaders(accessToken),
@@ -247,7 +303,18 @@ async function fetchAllContacts(
     }
 
     const data = await response.json();
-    allContacts = [...allContacts, ...data.contacts];
+    
+    if (targetFieldId !== null) {
+      console.log(`Total Contacts Filtered: ${data.contacts.length} on page ${page}`);
+
+      const filteredContacts = data.contacts.filter((contact: any) => {
+        return contactContainsId(contact, targetFieldId);
+      });
+      allContacts = [...allContacts, ...filteredContacts];
+    } else {
+      // Otherwise, add all contacts
+      allContacts = [...allContacts, ...data.contacts];
+    }
 
     // Check if there are more pages
     hasMore = data.meta.total_pages !== page;
@@ -255,6 +322,42 @@ async function fetchAllContacts(
   }
 
   return allContacts;
+}
+
+/**
+ * Checks if a contact object contains a specific ID in tags, custom_fields, or contact_roles
+ */
+function contactContainsId(contact: any, targetId: number): boolean {
+  if (!contact) return false;
+  
+  // Check tags array
+  if (Array.isArray(contact.tags)) {
+    for (const tag of contact.tags) {
+      if (tag && tag.id === targetId) {
+        return true;
+      }
+    }
+  }
+  
+  // Check custom_fields array
+  if (Array.isArray(contact.custom_fields)) {
+    for (const field of contact.custom_fields) {
+      if (field && field.id === targetId) {
+        return true;
+      }
+    }
+  }
+  
+  // Check contact_roles array
+  if (Array.isArray(contact.contact_roles)) {
+    for (const role of contact.contact_roles) {
+      if (role && role.id === targetId) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
 }
 
 /**

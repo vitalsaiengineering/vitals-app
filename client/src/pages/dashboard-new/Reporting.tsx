@@ -172,7 +172,7 @@ const Reporting = () => {
           ]
         },
         {
-          id: "referral" as ReportType,
+          id: "referral-analytics" as ReportType,
           name: "Referral Analytics",
           description: "Track referral sources and conversion rates",
           url: "https://preview--referral-metrics-harmony.lovable.app/",
@@ -188,24 +188,24 @@ const Reporting = () => {
             }
           ]
         },
-        {
-          id: "revenue-vs-expense" as ReportType,
-          name: "Revenue vs Client Expense",
-          description: "Compare client revenue against expenses over time",
-          url: "https://preview--client-expenditure-inspector.lovable.app/",
-          integrations: [
-            { 
-              source: "Wealthbox" as IntegrationSource, 
-              status: "connected" as const, 
-              lastSync: "2025-05-02" 
-            },
-            { 
-              source: "Orion" as IntegrationSource, 
-              status: "connected" as const, 
-              lastSync: "2025-05-02" 
-            }
-          ]
-        }
+        // {
+        //   id: "revenue-vs-expense" as ReportType,
+        //   name: "Revenue vs Client Expense",
+        //   description: "Compare client revenue against expenses over time",
+        //   url: "https://preview--client-expenditure-inspector.lovable.app/",
+        //   integrations: [
+        //     { 
+        //       source: "Wealthbox" as IntegrationSource, 
+        //       status: "connected" as const, 
+        //       lastSync: "2025-05-02" 
+        //     },
+        //     { 
+        //       source: "Orion" as IntegrationSource, 
+        //       status: "connected" as const, 
+        //       lastSync: "2025-05-02" 
+        //     }
+        //   ]
+        // }
       ].sort((a, b) => a.name.localeCompare(b.name)); // Sort reports alphabetically by name
 
       // Initialize reports with favorites from centralized system
@@ -225,7 +225,7 @@ const Reporting = () => {
       // Fallback to default reports if there's an error
       setReports([
         {
-          id: "birthday" as ReportType,
+          id: "birthday-report" as ReportType,
           name: "Birthday Report",
           description: "Track upcoming client birthdays",
           url: "https://preview--birthday-wealth-whisper.lovable.app/",

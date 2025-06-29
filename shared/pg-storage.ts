@@ -297,6 +297,7 @@ export class PostgresStorage implements IStorage {
       .where(
         and(
           eq(advisorAuthTokens.advisorId, advisorId),
+          eq(advisorAuthTokens.integrationType, wealthboxIntegration.id),
           // eq(
           //   advisorAuthTokens.integrationType,
           //   wealthboxIntegration.id,

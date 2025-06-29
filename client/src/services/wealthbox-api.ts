@@ -15,10 +15,16 @@ interface BackendApiResponse<T> {
  * Fetches all field options from our backend (which proxies to Wealthbox)
  * This avoids CORS issues by going through our server
  */
-export const fetchAllWealthboxFieldOptions = async (): Promise<Record<string, FieldOption[]>> => {
+export const fetchAllWealthboxFieldOptions = async (token?: string): Promise<Record<string, FieldOption[]>> => {
   try {
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await axios.get<BackendApiResponse<Record<string, FieldOption[]>>>(
-      `${API_BASE_URL}/field-options`
+      `${API_BASE_URL}/field-options`,
+      { headers }
     );
 
     if (response.data.success) {
@@ -29,6 +35,7 @@ export const fetchAllWealthboxFieldOptions = async (): Promise<Record<string, Fi
         customFields: [],
         contactTypes: [],
         contactRoles: [],
+        tags: [],
       };
     }
   } catch (error) {
@@ -37,6 +44,7 @@ export const fetchAllWealthboxFieldOptions = async (): Promise<Record<string, Fi
       customFields: [],
       contactTypes: [],
       contactRoles: [],
+      tags: [],
     };
   }
 };
@@ -46,13 +54,20 @@ export const fetchAllWealthboxFieldOptions = async (): Promise<Record<string, Fi
  * This is useful for dynamic searching as user types
  */
 export const searchWealthboxFieldOptions = async (
-  searchTerm: string = ""
+  searchTerm: string = "",
+  token?: string
 ): Promise<FieldOption[]> => {
   try {
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     const response = await axios.get<BackendApiResponse<FieldOption[]>>(
       `${API_BASE_URL}/field-options/search`,
       {
-        params: { search: searchTerm }
+        params: { search: searchTerm },
+        headers
       }
     );
 

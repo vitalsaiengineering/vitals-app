@@ -14,6 +14,7 @@ const ENDPOINTS = {
   CUSTOM_FIELDS: "/categories/custom_fields",
   CONTACT_TYPES: "/categories/contact_types", 
   CONTACT_ROLES: "/categories/contact_roles",
+  TAGS: "/categories/tags",
 };
 
 /**
@@ -72,10 +73,10 @@ const fetchFromWealthboxServer = async (
 /**
  * Converts Wealthbox field items to standardized format
  */
-const convertToFieldOptions = (items: WealthboxFieldItem[]) => {
+const convertToFieldOptions = (items: WealthboxFieldItem[], label: string) => {
   return items.map(item => ({
-    label: item.name,
-    value: item.id ? String(item.id) : item.name,
+    label: `${item.document_type || ''} ${label} - ${item.name}`,
+    value: label === "Contact Types" ? item.name : (item.id ? String(item.id) : item.name),
     fieldType: item.field_type,
     documentType: item.document_type,
     options: item.options ? item.options.map(option => ({
@@ -100,8 +101,19 @@ export async function getWealthboxFieldOptionsHandler(req: Request, res: Respons
       });
     }
 
-    // Get valid access token for the user
-    const accessToken = await getValidWealthboxToken(userId);
+    // Check for token in Authorization header first
+    let accessToken: string | null = null;
+    const authHeader = req.headers.authorization;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      accessToken = authHeader.substring(7); // Remove 'Bearer ' prefix
+      console.log('Using token from Authorization header');
+    } else {
+      // Fall back to getting token from user ID
+      accessToken = await getValidWealthboxToken(userId);
+      console.log('Using token from user ID lookup');
+    }
+
     if (!accessToken) {
       return res.status(401).json({
         success: false,
@@ -110,17 +122,19 @@ export async function getWealthboxFieldOptionsHandler(req: Request, res: Respons
     }
 
     // Fetch all data in parallel
-    const [customFields, contactTypes, contactRoles] = await Promise.all([
+    const [customFields, contactTypes, contactRoles, tags] = await Promise.all([
       fetchFromWealthboxServer(accessToken, ENDPOINTS.CUSTOM_FIELDS),
       fetchFromWealthboxServer(accessToken, ENDPOINTS.CONTACT_TYPES),
       fetchFromWealthboxServer(accessToken, ENDPOINTS.CONTACT_ROLES),
+      fetchFromWealthboxServer(accessToken, ENDPOINTS.TAGS),
     ]);
 
     // Convert each result to standardized format
     const result = {
-      customFields: convertToFieldOptions(customFields),
-      contactTypes: convertToFieldOptions(contactTypes),
-      contactRoles: convertToFieldOptions(contactRoles),
+      customFields: convertToFieldOptions(customFields, "Custom Fields"),
+      contactTypes: convertToFieldOptions(contactTypes, "Contact Types"),
+      contactRoles: convertToFieldOptions(contactRoles, "Contact Roles"),
+      tags: convertToFieldOptions(tags, "Tags"),
     };
 
     return res.json({
@@ -153,8 +167,19 @@ export async function searchWealthboxFieldOptionsHandler(req: Request, res: Resp
       });
     }
 
-    // Get valid access token for the user
-    const accessToken = await getValidWealthboxToken(userId);
+    // Check for token in Authorization header first
+    let accessToken: string | null = null;
+    const authHeader = req.headers.authorization;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      accessToken = authHeader.substring(7); // Remove 'Bearer ' prefix
+      console.log('Using token from Authorization header for search');
+    } else {
+      // Fall back to getting token from user ID
+      accessToken = await getValidWealthboxToken(userId);
+      console.log('Using token from user ID lookup for search');
+    }
+
     if (!accessToken) {
       return res.status(401).json({
         success: false,
@@ -163,17 +188,19 @@ export async function searchWealthboxFieldOptionsHandler(req: Request, res: Resp
     }
 
     // Fetch all data in parallel
-    const [customFields, contactTypes, contactRoles] = await Promise.all([
+    const [customFields, contactTypes, contactRoles, tags] = await Promise.all([
       fetchFromWealthboxServer(accessToken, ENDPOINTS.CUSTOM_FIELDS),
       fetchFromWealthboxServer(accessToken, ENDPOINTS.CONTACT_TYPES),
       fetchFromWealthboxServer(accessToken, ENDPOINTS.CONTACT_ROLES),
+      fetchFromWealthboxServer(accessToken, ENDPOINTS.TAGS),
     ]);
 
     // Convert and combine all options
     const allOptions = [
-      ...convertToFieldOptions(customFields),
-      ...convertToFieldOptions(contactTypes),
-      ...convertToFieldOptions(contactRoles),
+      ...convertToFieldOptions(customFields, "Custom Fields"),
+      ...convertToFieldOptions(contactTypes, "Contact Types"),
+      ...convertToFieldOptions(contactRoles, "Contact Roles"),
+      ...convertToFieldOptions(tags, "Tags"),
     ];
 
     // Filter options based on the search term

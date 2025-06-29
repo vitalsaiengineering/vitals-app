@@ -3,25 +3,30 @@ import { FieldOption } from '@/types/mapping';
 import { fetchAllWealthboxFieldOptions, fieldHasOptions, searchWithinFieldOptions } from '@/services/wealthbox-api';
 import { useToast } from '@/hooks/use-toast';
 
-type FieldCategory = 'customFields' | 'contactTypes' | 'contactRoles' | 'all';
+type FieldCategory = 'customFields' | 'contactTypes' | 'contactRoles' | 'tags' | 'all';
 
-export function useWealthboxFields() {
+export function useWealthboxFields(token?: string) {
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [fieldOptions, setFieldOptions] = useState<Record<string, FieldOption[]>>({
     customFields: [],
     contactTypes: [],
     contactRoles: [],
+    tags: [],
   });
   const { toast } = useToast();
 
   // Function to fetch all field options from our backend
   const fetchOptions = useCallback(async () => {
+    if (!token) {
+      return; // Don't fetch if token is not available
+    }
+    
     setIsLoading(true);
     setHasError(false);
 
     try {
-      const options = await fetchAllWealthboxFieldOptions();
+      const options = await fetchAllWealthboxFieldOptions(token);
       setFieldOptions(options);
     } catch (error) {
       console.error('Error in useWealthboxFields:', error);
@@ -34,12 +39,14 @@ export function useWealthboxFields() {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, token]);
 
-  // Fetch options on initial load
+  // Fetch options on initial load or when token changes
   useEffect(() => {
-    fetchOptions();
-  }, [fetchOptions]);
+    if (token) {
+      fetchOptions();
+    }
+  }, [fetchOptions, token]);
 
   /**
    * Get options from a specific category or combine all categories
@@ -51,6 +58,7 @@ export function useWealthboxFields() {
           ...fieldOptions.customFields,
           ...fieldOptions.contactTypes,
           ...fieldOptions.contactRoles,
+          ...fieldOptions.tags,
         ];
       }
       return fieldOptions[category] || [];

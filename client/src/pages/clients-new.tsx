@@ -120,7 +120,7 @@ const Clients = () => {
 
   // Filter clients by advisor and apply to clientData
   useEffect(() => {
-    let filtered = [...allClientData];
+    let filtered = Array.isArray(allClientData) ? allClientData : [];
     
     // Apply advisor filter
     if (selectedAdvisor !== 'All Advisors') {

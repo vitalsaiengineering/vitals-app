@@ -2,6 +2,15 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { z } from "zod";
+import { 
+  asyncHandler, 
+  ValidationError,
+  UnauthorizedError,
+  dbOperation,
+  validateInput,
+  withTimeout,
+  rateLimitGuard 
+} from "./utils/error-handler";
 import {
   insertUserSchema,
   insertClientSchema,
@@ -1040,7 +1049,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const redirectUri = "https://app.advisorvitals.com/settings";
+      const redirectUri = "https://moved-repeatedly-mongrel.ngrok-free.app/settings";
 
       // Exchange authorization code for access token using query parameters
       const tokenUrl = new URL("https://app.crmworkspace.com/oauth/token");
