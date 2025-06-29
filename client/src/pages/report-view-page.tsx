@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useRoute, Link, useLocation } from 'wouter'; // Import wouter hooks and Link
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
-import AgeDemographicsReport from '@/components/reporting/AgeDemographicsReport';
+import { ArrowLeft, ChevronLeft, ChevronRight, Filter, Brain } from 'lucide-react';
+import { ReportFiltersProvider } from '@/contexts/ReportFiltersContext';
+import FiltersSidebar from '@/components/reporting/FiltersSidebar';
+import AgeDemographicsReport from '@/components/reporting/ClientAgeDemographicsReport';
 import ClientDistributionByStateReport from '@/components/reporting/ClientDistributionByStateReport'; // Import the new report
 import BookDevelopmentBySegmentReport from '@/components/reporting/BookDevelopmentBySegmentReport';
 import ClientBirthdayReport from '@/components/reporting/ClientBirthdayReport';
@@ -51,6 +53,8 @@ export default function ReportViewPage() {
   const [match, params] = useRoute("/reporting/:reportId");
   const [, navigate] = useLocation(); // For navigation
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
+  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
 
   const reportId = params?.reportId; // Access reportId from params
 
@@ -94,49 +98,163 @@ export default function ReportViewPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <Link href="/reporting">
-          <Button variant="outline" className="mb-4">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Back to Reports
+    <ReportFiltersProvider>
+      <div className="flex h-screen bg-background">
+        {/* Left Sidebar - Filters */}
+        <div className={`transition-all duration-300 ${leftSidebarCollapsed ? 'w-0' : 'w-100'} relative h-full`}>
+          <div className={`${leftSidebarCollapsed ? 'hidden' : 'block'} h-full`}>
+            <FiltersSidebar />
+          </div>
+          
+          {/* Left Sidebar Toggle Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className={`absolute top-4 z-10 p-2 bg-background border shadow-md flex items-center whitespace-nowrap ${
+              leftSidebarCollapsed ? '-right-12' : 'right-6'
+            }`}
+            onClick={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)}
+          >
+            {leftSidebarCollapsed ? (
+              <div className="flex items-center space-x-1">
+                <Filter className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4" />
+              </div>
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
           </Button>
-        </Link>
+        </div>
         
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" className="bg-white">
-              Change Report: <span className="font-medium ml-2">{reportDetails.title}</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
-            <DialogHeader>
-              <DialogTitle>Select Report</DialogTitle>
-            </DialogHeader>
-            <Command className="rounded-lg border shadow-md">
-              <CommandInput placeholder="Search reports..." />
-              <CommandList className="max-h-[400px]">
-                <CommandEmpty>No reports found.</CommandEmpty>
-                <CommandGroup heading="All Reports">
-                  {Object.entries(reportRegistry).map(([id, report]) => (
-                    <CommandItem
-                      key={id}
-                      value={report.title}
-                      onSelect={() => handleReportChange(id)}
-                      className="flex items-center justify-between cursor-pointer"
-                    >
-                      <span className={reportId === id ? "font-medium" : ""}>
-                        {report.title}
-                      </span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </DialogContent>
-        </Dialog>
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Header */}
+          <div className="p-6 border-b border-border bg-background">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Link href="/reporting">
+                  <Button variant="outline">
+                    <ArrowLeft className="mr-2 h-4 w-4" /> Back to Reports
+                  </Button>
+                </Link>
+                
+                {/* Filters Toggle for Mobile/Small Screens */}
+                {leftSidebarCollapsed && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setLeftSidebarCollapsed(false)}
+                    className="lg:hidden"
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    Filters
+                  </Button>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {/* Intelligence Toggle for Mobile/Small Screens */}
+                {rightSidebarCollapsed && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRightSidebarCollapsed(false)}
+                    className="lg:hidden"
+                  >
+                    <Brain className="h-4 w-4 mr-2" />
+                    AI Insights
+                  </Button>
+                )}
+                
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="bg-white">
+                      Change Report: <span className="font-medium ml-2">{reportDetails.title}</span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-xl">
+                    <DialogHeader>
+                      <DialogTitle>Select Report</DialogTitle>
+                    </DialogHeader>
+                    <Command className="rounded-lg border shadow-md">
+                      <CommandInput placeholder="Search reports..." />
+                      <CommandList className="max-h-[400px]">
+                        <CommandEmpty>No reports found.</CommandEmpty>
+                        <CommandGroup heading="All Reports">
+                          {Object.entries(reportRegistry).map(([id, report]) => (
+                            <CommandItem
+                              key={id}
+                              value={report.title}
+                              onSelect={() => handleReportChange(id)}
+                              className="flex items-center justify-between cursor-pointer"
+                            >
+                              <span className={reportId === id ? "font-medium" : ""}>
+                                {report.title}
+                              </span>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          </div>
+          
+          {/* Report Content */}
+          <div className="flex-1 overflow-auto">
+            <div className="p-6">
+              <ReportComponent reportId={reportId} />
+            </div>
+          </div>
+        </div>
+        
+        {/* Right Sidebar - Vitals Intelligence */}
+        <div className={`transition-all duration-300 ${rightSidebarCollapsed ? 'w-0' : 'w-100'} relative h-full`}>
+          <div className={`${rightSidebarCollapsed ? 'hidden' : 'block'} w-80 bg-background border-l border-border p-6 overflow-y-auto h-full`}>
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <h3 className="text-lg font-semibold">Vitals Intelligence</h3>
+            </div>
+            <div className="space-y-4 text-sm text-muted-foreground">
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <h4 className="font-medium text-foreground mb-2">AI Analysis Active</h4>
+                <p>Intelligence features will be displayed here based on the current report and filters.</p>
+              </div>
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <h4 className="font-medium text-foreground mb-2">Coming Soon</h4>
+                <ul className="space-y-1">
+                  <li>• AI-Powered Client Segmentation</li>
+                  <li>• Growth Trajectory Analysis</li>
+                  <li>• Retention Risk Assessment</li>
+                  <li>• Optimal Service Allocation</li>
+                  <li>• Demographic Imbalance Alert</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          {/* Right Sidebar Toggle Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className={`absolute top-4 z-10 p-2 bg-background border shadow-md flex items-center whitespace-nowrap ${
+              rightSidebarCollapsed ? '-left-12' : 'left-6'
+            }`}
+            onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
+          >
+            {rightSidebarCollapsed ? (
+              <div className="flex items-center space-x-1">
+                <ChevronLeft className="h-4 w-4" />
+                <Brain className="h-4 w-4" />
+              </div>
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
       </div>
-      
-      <ReportComponent reportId={reportId} />
-    </div>
+    </ReportFiltersProvider>
   );
 }

@@ -1,11 +1,4 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  getClientDistributionReportData,
-  type ClientDistributionReportData,
-  type ClientInStateDetail,
-  type StateMetric,
-  filterClientsByAdvisor,
-} from "@/lib/clientData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,8 +16,13 @@ import {
   Geographies,
   Geography,
 } from "react-simple-maps";
+import { StandardClient } from "@/types/client";
+import { getClients } from "@/lib/clientData";
+import { useReportFilters } from "@/contexts/ReportFiltersContext";
+import { filtersToApiParams } from "@/utils/filter-utils";
+import { formatAUM, getPrettyClientName, getSegmentName } from "@/utils/client-analytics";
+import { ReportSkeleton } from "@/components/ui/skeleton";
 import { useMockData } from "@/contexts/MockDataContext";
-import { useAdvisor } from "@/contexts/AdvisorContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -38,6 +36,104 @@ type SortConfig = {
   direction: 'asc' | 'desc';
 };
 
+interface ClientInStateDetail {
+  id: string;
+  name: string;
+  segment: string;
+  aum: number;
+}
+
+interface StateMetric {
+  stateCode: string;
+  stateName: string;
+  clientCount: number;
+  totalAum: number;
+}
+
+interface TopStateSummary {
+  stateName: string;
+  value: number | string;
+  metricLabel: 'clients' | 'AUM';
+}
+
+interface ClientDistributionReportData {
+  topStateByClients: TopStateSummary;
+  topStateByAUM: TopStateSummary;
+  stateMetrics: StateMetric[];
+  clientDetailsByState: { [stateCode: string]: ClientInStateDetail[] };
+}
+
+// Data transformation functions
+const transformToClientInStateDetail = (client: StandardClient): ClientInStateDetail => ({
+  id: client.id,
+  name: getPrettyClientName(client),
+  segment: getSegmentName(client.segment),
+  aum: client.aum || 0
+});
+
+const generateDistributionReportFromClients = (clients: StandardClient[]): ClientDistributionReportData => {
+  // Group clients by state
+  const clientsByState = clients.reduce((acc, client) => {
+    const stateCode = client.stateCode || 'N/A';
+    const stateName = client.state || stateCode;
+    
+    if (!acc[stateCode]) {
+      acc[stateCode] = {
+        stateName,
+        clients: []
+      };
+    }
+    acc[stateCode].clients.push(transformToClientInStateDetail(client));
+    return acc;
+  }, {} as { [key: string]: { stateName: string; clients: ClientInStateDetail[] } });
+
+  // Calculate state metrics
+  const stateMetrics: StateMetric[] = Object.entries(clientsByState).map(([stateCode, stateData]) => {
+    const totalAum = stateData.clients.reduce((sum, client) => {
+      // Debug: Log each AUM addition
+      const clientAum = Number(client.aum) || 0;
+      return sum + clientAum;
+    }, 0);
+        
+    return {
+      stateCode,
+      stateName: stateData.stateName,
+      clientCount: stateData.clients.length,
+      totalAum
+    };
+  });
+
+  // Find top states
+  const topStateByClients = stateMetrics.length > 0 
+    ? stateMetrics.reduce((max, state) => state.clientCount > max.clientCount ? state : max, stateMetrics[0])
+    : { stateName: 'N/A', clientCount: 0, totalAum: 0, stateCode: '' };
+
+  const topStateByAUM = stateMetrics.length > 0
+    ? stateMetrics.reduce((max, state) => state.totalAum > max.totalAum ? state : max, stateMetrics[0])
+    : { stateName: 'N/A', clientCount: 0, totalAum: 0, stateCode: '' };
+
+  // Create client details by state
+  const clientDetailsByState = Object.entries(clientsByState).reduce((acc, [stateCode, stateData]) => {
+    acc[stateCode] = stateData.clients;
+    return acc;
+  }, {} as { [stateCode: string]: ClientInStateDetail[] });
+
+  return {
+    topStateByClients: {
+      stateName: topStateByClients.stateName,
+      value: topStateByClients.clientCount,
+      metricLabel: 'clients' as const
+    },
+    topStateByAUM: {
+      stateName: topStateByAUM.stateName,
+      value: topStateByAUM.totalAum,
+      metricLabel: 'AUM' as const
+    },
+    stateMetrics,
+    clientDetailsByState
+  };
+};
+
 const getSegmentClass = (segment: string) => {
   const s = segment.toLowerCase();
   if (s.includes("ultra high net worth"))
@@ -46,6 +142,12 @@ const getSegmentClass = (segment: string) => {
     return "bg-blue-100 text-blue-700 border-blue-300";
   if (s.includes("mass affluent"))
     return "bg-green-100 text-green-700 border-green-300";
+  if (s.includes("platinum"))
+    return "bg-blue-100 text-blue-700 border-blue-300";
+  if (s.includes("gold"))
+    return "bg-yellow-100 text-yellow-700 border-yellow-300";
+  if (s.includes("silver"))
+    return "bg-gray-100 text-gray-700 border-gray-300";
   return "bg-gray-100 text-gray-700 border-gray-300";
 };
 
@@ -80,13 +182,11 @@ const getMapFillColor = (
 
 const ClientDistributionByStateReport = () => {
   const { useMock } = useMockData();
-  const { selectedAdvisor } = useAdvisor();
-  const [reportData, setReportData] =
-    useState<ClientDistributionReportData | null>(null);
+  const { filters } = useReportFilters();
+  const [reportData, setReportData] = useState<ClientDistributionReportData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedStateMetric, setSelectedStateMetric] =
-    useState<StateMetric | null>(null); // Null for "All Clients" view
+  const [selectedStateMetric, setSelectedStateMetric] = useState<StateMetric | null>(null);
   const [mapViewType, setMapViewType] = useState<MapViewType>("clientDensity");
   const [searchTerm, setSearchTerm] = useState("");
   const [hoveredStateName, setHoveredStateName] = useState<string | null>(null);
@@ -100,105 +200,15 @@ const ClientDistributionByStateReport = () => {
       try {
         if (useMock) {
           // Use mock data
-          let mockReportData =
-            mockData.ClientDistributionByState as ClientDistributionReportData;
-          
-          // If an advisor is selected, filter the data
-          if (selectedAdvisor !== 'All Advisors') {
-            // Create a new filtered report data structure
-            const filteredClientsByState: Record<string, ClientInStateDetail[]> = {};
-            
-            // Filter client details by state and advisor
-            Object.entries(mockReportData.clientDetailsByState).forEach(([stateCode, clients]) => {
-              // Filter clients that belong to the selected advisor
-              const filteredClients = clients.filter((client: any) => client.advisor === selectedAdvisor);
-              if (filteredClients.length > 0) {
-                filteredClientsByState[stateCode] = filteredClients;
-              }
-            });
-            
-            // Recalculate state metrics based on filtered clients
-            const filteredStateMetrics: StateMetric[] = [];
-            Object.entries(filteredClientsByState).forEach(([stateCode, clients]) => {
-              const totalAum = clients.reduce((sum, client) => sum + client.aum, 0);
-              // Find the state name from the original state metrics
-              const originalStateMetric = mockReportData.stateMetrics.find(
-                metric => metric.stateCode === stateCode
-              );
-              const stateName = originalStateMetric?.stateName || '';
-              
-              filteredStateMetrics.push({
-                stateCode,
-                stateName,
-                clientCount: clients.length,
-                totalAum
-              });
-            });
-            
-            // Find top state by clients and AUM
-            let topStateByClients = { 
-              stateName: '', 
-              value: 0, 
-              metricLabel: 'clients' as const
-            };
-            
-            let topStateByAUM = { 
-              stateName: '', 
-              value: 0, 
-              metricLabel: 'AUM' as const
-            };
-            
-            if (filteredStateMetrics.length > 0) {
-              const topClientState = filteredStateMetrics.reduce(
-                (max, state) => (state.clientCount > max.clientCount ? state : max),
-                filteredStateMetrics[0]
-              );
-              
-              const topAumState = filteredStateMetrics.reduce(
-                (max, state) => (state.totalAum > max.totalAum ? state : max),
-                filteredStateMetrics[0]
-              );
-              
-              topStateByClients = {
-                stateName: topClientState.stateName,
-                value: topClientState.clientCount,
-                metricLabel: 'clients' as const
-              };
-              
-              topStateByAUM = {
-                stateName: topAumState.stateName,
-                value: topAumState.totalAum,
-                metricLabel: 'AUM' as const
-              };
-            }
-            
-            // Create the filtered report data
-            mockReportData = {
-              ...mockReportData,
-              clientDetailsByState: filteredClientsByState,
-              stateMetrics: filteredStateMetrics,
-              topStateByClients,
-              topStateByAUM
-            };
-          }
-          
+          let mockReportData = mockData.ClientDistributionByState as ClientDistributionReportData;
           setReportData(mockReportData);
         } else {
-          // Try to fetch from API, fallback to mock data on error
-          try {
-            const data = await getClientDistributionReportData();
-            setReportData(data);
-          } catch (apiError) {
-            console.warn(
-              "API fetch failed, falling back to mock data:",
-              apiError
-            );
-            const mockReportData =
-              mockData.ClientDistributionByState as ClientDistributionReportData;
-            setReportData(mockReportData);
-          }
+          // Use centralized getClients function
+          const apiParams = filtersToApiParams(filters);
+          const clients = await getClients(apiParams);
+          const transformedData = generateDistributionReportFromClients(clients);
+          setReportData(transformedData);
         }
-        // Initially, selectedStateMetric is null, showing "All Clients"
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to fetch report data"
@@ -209,7 +219,7 @@ const ClientDistributionByStateReport = () => {
       }
     };
     fetchData();
-  }, [useMock, selectedAdvisor]);
+  }, [useMock, filters]);
 
   const allClientsFromReport = useMemo(() => {
     if (!reportData) return [];
@@ -219,14 +229,11 @@ const ClientDistributionByStateReport = () => {
   const clientsToDisplayPreSearch = useMemo(() => {
     if (!reportData) return [];
     if (selectedStateMetric) {
-      // For real states, gets clients. For synthetic states, stateCode (geoId) won't match,
-      // so reportData.clientDetailsByState[selectedStateMetric.stateCode] will be undefined,
-      // correctly defaulting to [].
       return (
         reportData.clientDetailsByState[selectedStateMetric.stateCode] || []
       );
     }
-    return allClientsFromReport; // "All Clients" view
+    return allClientsFromReport;
   }, [reportData, selectedStateMetric, allClientsFromReport]);
 
   const clientsInSelectedState = useMemo(() => {
@@ -251,12 +258,10 @@ const ClientDistributionByStateReport = () => {
         const bValue = b[sortConfig.key as keyof typeof b];
         
         if (sortConfig.key === 'aum') {
-          // Numeric sorting for AUM
           return sortConfig.direction === 'asc' 
             ? (aValue as number) - (bValue as number)
             : (bValue as number) - (aValue as number);
         } else {
-          // String sorting for other fields
           const aString = String(aValue).toLowerCase();
           const bString = String(bValue).toLowerCase();
           if (sortConfig.direction === 'asc') {
@@ -272,7 +277,6 @@ const ClientDistributionByStateReport = () => {
   }, [clientsToDisplayPreSearch, searchTerm, sortConfig]);
 
   const handleStateSelectFromMap = (geoName: string, geoId: string) => {
-    // geoName is already uppercased from map logic
     const stateData = reportData?.stateMetrics.find(
       (s) => s.stateName.toUpperCase() === geoName
     );
@@ -280,13 +284,11 @@ const ClientDistributionByStateReport = () => {
     if (stateData) {
       setSelectedStateMetric(stateData);
     } else {
-      // Create a synthetic StateMetric for states not in our data
       setSelectedStateMetric({
-        stateName: geoName, // Use the uppercased name from the map geography
-        stateCode: geoId, // Use FIPS code from geo.id as a unique code
+        stateName: geoName,
+        stateCode: geoId,
         clientCount: 0,
         totalAum: 0,
-        // Ensure all fields of StateMetric are present if it has more
       });
     }
     setSearchTerm("");
@@ -314,15 +316,15 @@ const ClientDistributionByStateReport = () => {
   };
 
   const tableTitle = selectedStateMetric
-    ? `${selectedStateMetric.stateName} CLIENTS${selectedAdvisor !== "All Advisors" ? ` - ${selectedAdvisor.toUpperCase()}` : ""}` // Displaying state name in uppercase as per image
-    : selectedAdvisor !== "All Advisors" ? `${selectedAdvisor.toUpperCase()}'S CLIENTS` : "ALL CLIENTS";
+    ? `${selectedStateMetric.stateName} CLIENTS${filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" ? ` - ${filters.advisorIds[0].toUpperCase()}` : ""}`
+    : filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" ? `${filters.advisorIds[0].toUpperCase()}'S CLIENTS` : "ALL CLIENTS";
 
   const summaryClientCount = selectedStateMetric
-    ? selectedStateMetric.clientCount // Will be 0 for synthetic states
+    ? selectedStateMetric.clientCount
     : allClientsFromReport.length;
 
   const summaryTotalAum = selectedStateMetric
-    ? selectedStateMetric.totalAum // Will be 0 for synthetic states
+    ? selectedStateMetric.totalAum
     : allClientsFromReport.reduce((sum, client) => sum + client.aum, 0);
 
   let emptyTableMessage = "No data to display.";
@@ -331,11 +333,9 @@ const ClientDistributionByStateReport = () => {
       if (searchTerm) {
         emptyTableMessage = `No clients match your search in ${selectedStateMetric.stateName}.`;
       } else {
-        // This covers real states with 0 clients and synthetic states (which have clientCount=0).
         emptyTableMessage = `No client data available for ${selectedStateMetric.stateName}.`;
       }
     } else {
-      // All clients view
       emptyTableMessage = searchTerm
         ? "No clients match your search."
         : reportData && allClientsFromReport.length === 0
@@ -344,16 +344,17 @@ const ClientDistributionByStateReport = () => {
     }
   }
 
-  if (isLoading)
-    return (
-      <div className="p-6 text-center">Loading client distribution data...</div>
-    );
-  if (error || !reportData)
+  if (isLoading) {
+    return <ReportSkeleton />;
+  }
+  
+  if (error || !reportData) {
     return (
       <div className="p-6 text-center text-red-500">
         Error: {error || "Could not load data."}
       </div>
     );
+  }
 
   return (
     <div className="space-y-6 p-4 md:p-6">
@@ -387,9 +388,7 @@ const ClientDistributionByStateReport = () => {
               {reportData.topStateByAUM.stateName}
             </div>
             <p className="text-xs text-muted-foreground">
-              {typeof reportData.topStateByAUM.value === 'number' 
-                ? `$${reportData.topStateByAUM.value.toLocaleString()}`
-                : reportData.topStateByAUM.value}
+              {formatAUM(reportData.topStateByAUM.value)}
             </p>
           </CardContent>
         </Card>
@@ -401,8 +400,8 @@ const ClientDistributionByStateReport = () => {
       <CardHeader className="flex-shrink-0">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
       <CardTitle>
-              {selectedAdvisor !== "All Advisors" 
-                ? `${selectedAdvisor}'s Client Distribution Map` 
+              {filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" 
+                ? `${filters.advisorIds[0]}'s Client Distribution Map` 
                 : "Client Distribution Map"}
             </CardTitle>
             <div className="flex space-x-2">
@@ -531,12 +530,7 @@ const ClientDistributionByStateReport = () => {
                     <div className="flex items-center gap-1">
                       <DollarSign className="h-3 w-3" />
                       <span>
-                        {stateData.totalAum.toLocaleString("en-US", {
-                          style: "currency",
-                          currency: "USD",
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 0,
-                        })}
+                        {formatAUM(stateData.totalAum)}
                       </span>
                     </div>
                   </div>
@@ -558,12 +552,7 @@ const ClientDistributionByStateReport = () => {
               </span>
               <span>
                 <DollarSign className="inline h-4 w-4 mr-1" />{" "}
-                {summaryTotalAum.toLocaleString("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                })}
+                {formatAUM(summaryTotalAum)}
               </span>
             </div>
           </div>
@@ -619,12 +608,7 @@ const ClientDistributionByStateReport = () => {
                         </span>
                       </TableCell>
                       <TableCell className="text-right">
-                        {client.aum.toLocaleString("en-US", {
-                          style: "currency",
-                          currency: "USD",
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 0,
-                        })}
+                        {formatAUM(client.aum)}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button variant="default" size="sm">

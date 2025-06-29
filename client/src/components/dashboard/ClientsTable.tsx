@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Client, getClientsInAgeGroup } from "@/lib/data";
+import { getPrettyClientName } from "@/utils/client-analytics";
 
 interface ClientsTableProps {
   className?: string;
@@ -48,19 +49,19 @@ const ClientsTable: React.FC<ClientsTableProps> = ({
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Age</TableHead>
-                  <TableHead>Join Date</TableHead>
+                  <TableHead>Inception Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {clients.map((client) => (
                   <TableRow key={client.id} className="animate-fade-in">
-                    <TableCell className="font-medium">{client.name}</TableCell>
+                    <TableCell className="font-medium">{getPrettyClientName(client)}</TableCell>
                     <TableCell
                       className={`font-medium ${getAgeColor(client.age)}`}
                     >
                       {client.age}
                     </TableCell>
-                    <TableCell>{client.joinDate}</TableCell>
+                    <TableCell>{client.inceptionDate}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

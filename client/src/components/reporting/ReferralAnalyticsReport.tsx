@@ -1,26 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Search, Users, ExternalLink } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import {
-  getReferralAnalyticsData,
-  type ReferralAnalyticsData,
-  type ReferralSource,
-  type ReferralClient,
-  type GetReferralAnalyticsParams,
-  ClientDistributionReportData
-} from '@/lib/clientData';
 import { useMockData } from "@/contexts/MockDataContext";
+import { useReportFilters } from "@/contexts/ReportFiltersContext";
+import { getClients } from "@/lib/clientData";
+import { filtersToApiParams } from "@/utils/filter-utils";
+import { StandardClient } from "@/types/client";
+import { formatAUM, getPrettyClientName, getSegmentName } from "@/utils/client-analytics";
+import { ReportSkeleton } from "@/components/ui/skeleton";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
 
+// Define types locally
+interface ReferralClient {
+  id: string;
+  clientName: string;
+  segment: string;
+  primaryAdvisor: string;
+  aum: number;
+  referralDate: string;
+  referredBy: string;
+}
+
+interface ReferralSource {
+  id: string;
+  name: string;
+  company?: string;
+  totalReferrals: number;
+  totalAUM: number;
+  percentage: number;
+  clients: ReferralClient[];
+}
+
+interface ReferralAnalyticsData {
+  totalReferrals: number;
+  totalAUM: number;
+  referralSources: ReferralSource[];
+  allReferrals: ReferralClient[];
+  filterOptions: {
+    referrers: Array<{ id: string; name: string; }>;
+  };
+}
 
 // Colors for the pie chart
 const COLORS = [
@@ -42,18 +68,9 @@ const getGradeBadgeClasses = (grade: string) => {
     Platinum: 'bg-violet-100 text-violet-800',
     Gold: 'bg-amber-100 text-amber-800', 
     Silver: 'bg-gray-100 text-gray-800',
+    'N/A': 'bg-gray-100 text-gray-800',
   };
   return GRADE_COLORS[grade] || 'bg-gray-100 text-gray-800';
-};
-
-// Format currency
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
 };
 
 // Format date
@@ -65,20 +82,109 @@ const formatDate = (dateString: string) => {
   });
 };
 
-interface ReferralAnalyticsReportProps {
-  globalSearch?: string;
-}
+// Transform StandardClient to ReferralClient
+const transformToReferralClient = (client: StandardClient, advisors?: { id: string; name: string }[]): ReferralClient => ({
+  id: client.id,
+  clientName: getPrettyClientName(client),
+  segment: getSegmentName(client.segment),
+  primaryAdvisor: getAdvisorDisplayName(client.primaryAdvisorId || '', advisors),
+  aum: Number(client.aum) || 0,
+  referralDate: client.inceptionDate || new Date().toISOString(),
+  referredBy: getAdvisorDisplayName(client.referredBy || 'direct', advisors)
+});
 
-export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralAnalyticsReportProps) {
+// Helper function to convert advisor ID to advisor name
+const getAdvisorDisplayName = (advisorId: string, advisors?: { id: string; name: string }[]): string => {
+  if (!advisorId || advisorId === '' || advisorId === 'direct') {
+    return 'N/A';
+  }
+
+  if (!advisors) {
+    return advisorId;
+  }
+
+  // Find advisor by ID
+  const advisor = advisors.find(a => Number(a.id) === Number(advisorId));
+  if (advisor) {
+    return advisor.name;
+  }
+
+  // If no advisor found, return a user-friendly message
+  return `Unknown Advisor (${advisorId})`;
+};
+
+// Generate ReferralAnalyticsData from StandardClient array
+const generateReferralAnalyticsFromClients = (clients: StandardClient[], advisors?: { id: string; name: string }[]): ReferralAnalyticsData => {
+  // Filter only clients that have referral information
+  const referredClients = clients.filter(client => Boolean(client.referredBy));
+  
+  // Create referral source mapping with proper names
+  const referralSourceMap = new Map<string, { displayName: string; clients: ReferralClient[] }>();
+  
+  referredClients.forEach(client => {
+    const referralId = client.referredBy || 'direct';
+    const displayName = getAdvisorDisplayName(referralId, advisors);
+    const transformedClient = transformToReferralClient(client, advisors);
+    
+    if (!referralSourceMap.has(referralId)) {
+      referralSourceMap.set(referralId, {
+        displayName,
+        clients: []
+      });
+    }
+    referralSourceMap.get(referralId)!.clients.push(transformedClient);
+  });
+  
+  // Transform to ReferralClient format for allReferrals
+  const allReferrals = Array.from(referralSourceMap.values()).flatMap(source => source.clients);
+  
+  // Calculate totals
+  const totalReferrals = allReferrals.length;
+  const totalAUM = allReferrals.reduce((sum, client) => sum + client.aum, 0);
+  
+  // Create referral sources data
+  const referralSources: ReferralSource[] = Array.from(referralSourceMap.entries())
+    .map(([referralId, sourceData]) => {
+      const sourceAUM = sourceData.clients.reduce((sum, client) => sum + client.aum, 0);
+      const percentage = totalReferrals > 0 ? Math.round((sourceData.clients.length / totalReferrals) * 100) : 0;
+      
+      return {
+        id: sourceData.displayName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+        name: sourceData.displayName,
+        company: '', // Could be extracted from source name if needed
+        totalReferrals: sourceData.clients.length,
+        totalAUM: sourceAUM,
+        percentage,
+        clients: sourceData.clients.sort((a, b) => b.aum - a.aum) // Sort by AUM descending
+      };
+    })
+    .sort((a, b) => b.totalReferrals - a.totalReferrals); // Sort by referral count descending
+  
+  // Create filter options
+  const filterOptions = {
+    referrers: [
+      { id: 'all', name: 'All Referrers' },
+      ...referralSources.map(source => ({ id: source.id, name: source.name }))
+    ]
+  };
+  
+  return {
+    totalReferrals,
+    totalAUM,
+    referralSources,
+    allReferrals: allReferrals.sort((a, b) => new Date(b.referralDate).getTime() - new Date(a.referralDate).getTime()),
+    filterOptions
+  };
+};
+
+export default function ReferralAnalyticsReport() {
   const { useMock } = useMockData();
+  const { filters, filterOptions } = useReportFilters();
   const [analyticsData, setAnalyticsData] = useState<ReferralAnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('sources');
-  const [selectedReferrer, setSelectedReferrer] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedReferralSource, setSelectedReferralSource] = useState<ReferralSource | null>(null);
-  const [viewMode, setViewMode] = useState<'numbers' | 'keynote'>('numbers');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -87,27 +193,15 @@ export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralA
       try {
         if (useMock) {
           // Use mock data
-          console.log('Using mock data');
-          console.log(mockData.ReferralAnalytics);
-          const mockReportData =
-            mockData.ReferralAnalytics as ReferralAnalyticsData;
+          const mockReportData = mockData.ReferralAnalytics as ReferralAnalyticsData;
           setAnalyticsData(mockReportData);
         } else {
-          // Try to fetch from API, fallback to mock data on error
-          try {
-            const data = await getReferralAnalyticsData();
-            setAnalyticsData(data);
-          } catch (apiError) {
-            console.warn(
-              "API fetch failed, falling back to mock data:",
-              apiError
-            );
-            const mockReportData =
-              mockData.ReferralAnalytics as ReferralAnalyticsData;
-            setAnalyticsData(mockReportData);
-          }
+          // Use centralized getClients function
+          const apiParams = filtersToApiParams(filters);
+          const clients = await getClients(apiParams);
+          const transformedData = generateReferralAnalyticsFromClients(clients, filterOptions?.advisors);
+          setAnalyticsData(transformedData);
         }
-        // Initially, selectedStateMetric is null, showing "All Clients"
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to fetch report data"
@@ -118,44 +212,7 @@ export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralA
       }
     };
     fetchData();
-  }, [useMock]);
-
-  const fetchAnalyticsData = async (params?: GetReferralAnalyticsParams) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await getReferralAnalyticsData(params);
-      setAnalyticsData(data);
-      // Don't set a default selected source - let user click to select
-      if (!selectedReferralSource && data.referralSources.length > 0) {
-        setSelectedReferralSource(null); // Start with no selection
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load referral analytics data';
-      setError(errorMessage);
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAnalyticsData(); // Initial fetch
-  }, []);
-
-  // Effect to re-fetch data when filters change
-  useEffect(() => {
-    const params: GetReferralAnalyticsParams = {};
-    const search = globalSearch || searchQuery;
-    if (search.trim()) params.search = search.trim();
-    if (selectedReferrer !== 'all') params.referrer = selectedReferrer;
-    
-    const timer = setTimeout(() => {
-      fetchAnalyticsData(params);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [globalSearch, searchQuery, selectedReferrer]);
+  }, [useMock, filters, filterOptions]);
 
   const handlePieClick = (data: any) => {
     const source = analyticsData?.referralSources.find(s => s.name === data.name);
@@ -171,9 +228,12 @@ export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralA
     totalReferrals: number;
   }> = ({ active, payload, totalReferrals }) => {
     if (active && payload && payload.length) {
-      const data = payload[0].payload; // Access the data object passed to the Pie segment
+      const data = payload[0].payload;
+      // Find the source by matching the name from chartData
       const source = analyticsData?.referralSources.find(s => s.name === data.name);
       const percentage = totalReferrals > 0 ? ((data.value / totalReferrals) * 100).toFixed(0) : 0;
+      // Use AUM from chart data if source lookup fails
+      const aumValue = source?.totalAUM ?? data.totalAUM ?? 0;
       
       return (
         <div className="bg-white p-3 rounded shadow-lg border border-gray-200 text-sm">
@@ -183,17 +243,21 @@ export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralA
           )}
           <p className="text-gray-600 mt-1">{data.value} referrals</p>
           <p className="text-gray-600">{percentage}% of total</p>
-          {source && (
-            <p className="text-green-600 font-medium">
-              Total AUM: {formatCurrency(source.totalAUM)}
-            </p>
-          )}
+          <p className="text-green-600 font-medium">
+            Total AUM: {formatAUM(aumValue)}
+          </p>
         </div>
       );
     }
 
     return null;
   };
+
+
+
+  if (isLoading) {
+    return <ReportSkeleton />;
+  }
 
   if (error) {
     return <div className="p-6 text-red-500 text-center">Error: {error}</div>;
@@ -202,14 +266,19 @@ export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralA
   const chartData = analyticsData?.referralSources.map(source => ({
     name: source.name,
     value: source.totalReferrals,
-    percentage: source.percentage
+    percentage: source.percentage,
+    totalAUM: source.totalAUM // Add AUM to chart data for tooltip
   })) || [];
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">Referral Analytics</h1>
+        <h1 className="text-2xl font-bold">
+          {filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" 
+            ? `${filters.advisorIds[0]}'s Referral Analytics` 
+            : "Referral Analytics"}
+        </h1>
         <p className="text-muted-foreground mt-1">
           Track your top referral sources and measure their performance.
         </p>
@@ -325,7 +394,7 @@ export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralA
                       <span>{selectedReferralSource.totalReferrals} clients</span>
                     </div>
                     <div className="text-green-600 font-semibold">
-                      Total AUM: {formatCurrency(selectedReferralSource.totalAUM)}
+                      Total AUM: {formatAUM(selectedReferralSource.totalAUM)}
                     </div>
                   </div>
                 )}
@@ -363,7 +432,7 @@ export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralA
                             </div>
                             <div className="col-span-2 text-right">
                               <div className="font-semibold text-green-600 text-sm">
-                                {formatCurrency(client.aum)}
+                                {formatAUM(client.aum)}
                               </div>
                             </div>
                           </div>
@@ -387,7 +456,7 @@ export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralA
                             </div>
                             <div className="col-span-2 text-right">
                               <div className="font-semibold text-green-600 text-sm">
-                                {formatCurrency(client.aum)}
+                                {formatAUM(client.aum)}
                               </div>
                             </div>
                           </div>
@@ -405,42 +474,31 @@ export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralA
         <TabsContent value="all" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>All Referrals</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {/* Filters */}
-              <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Search clients..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-                <Select value={selectedReferrer} onValueChange={setSelectedReferrer}>
-                  <SelectTrigger className="w-full sm:w-48">
-                    <SelectValue placeholder="Select referrer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {analyticsData?.filterOptions.referrers.map(referrer => (
-                      <SelectItem key={referrer.id} value={referrer.id}>
-                        {referrer.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Table */}
-              {isLoading && <div className="p-4 text-center text-muted-foreground">Loading referrals data...</div>}
-              {!isLoading && analyticsData && analyticsData.allReferrals.length === 0 && (
-                <div className="text-center text-muted-foreground py-10">
-                  No referrals match the current filters.
+              <CardTitle>
+                {filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" 
+                  ? `${filters.advisorIds[0]}'s All Referrals` 
+                  : "All Referrals"}
+              </CardTitle>
+              {analyticsData && (
+                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                  <div className="flex items-center space-x-1">
+                    <Users className="h-4 w-4" />
+                    <span>{analyticsData.totalReferrals} total referrals</span>
+                  </div>
+                  <div className="text-green-600 font-semibold">
+                    Total AUM: {formatAUM(analyticsData.totalAUM)}
+                  </div>
                 </div>
               )}
-              {!isLoading && analyticsData && analyticsData.allReferrals.length > 0 && (
+            </CardHeader>
+            <CardContent>
+              {/* Table */}
+              {analyticsData && analyticsData.allReferrals.length === 0 && (
+                <div className="text-center text-muted-foreground py-10">
+                  No referrals found for the current filters.
+                </div>
+              )}
+              {analyticsData && analyticsData.allReferrals.length > 0 && (
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
@@ -470,11 +528,11 @@ export default function ReferralAnalyticsReport({ globalSearch = '' }: ReferralA
                           <TableCell className="text-gray-700">{referral.referredBy}</TableCell>
                           <TableCell className="text-gray-700">{referral.primaryAdvisor || 'N/A'}</TableCell>
                           <TableCell className="text-right font-semibold text-green-600">
-                            {formatCurrency(referral.aum)}
+                            {formatAUM(referral.aum)}
                           </TableCell>
                           <TableCell className="text-gray-700">{formatDate(referral.referralDate)}</TableCell>
                           <TableCell className="text-right">
-                          <Button variant="default" size="sm">
+                            <Button variant="default" size="sm">
                               View Contact
                             </Button>
                           </TableCell>

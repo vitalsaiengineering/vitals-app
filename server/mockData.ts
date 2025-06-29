@@ -287,13 +287,13 @@ export const getMockAgeDemographicsReportData = async (
     byAgeBracket: updatedByAgeBracket,
     clientDetails: clients.map((client: any, index: number) => {
       const mockDetailsList = [
-        { segment: "Gold", joinDate: "2022-02-14", aum: 130000 },
-        { segment: "Platinum", joinDate: "2018-07-21", aum: 750000 },
-        { segment: "Silver", joinDate: "2023-01-10", aum: 80000 },
-        { segment: "Gold", joinDate: "2019-05-05", aum: 220000 },
-        { segment: "Platinum", joinDate: "2019-11-30", aum: 1200000 },
-        { segment: "Silver", joinDate: "2024-01-15", aum: 50000 },
-        { segment: "Silver", joinDate: "2023-08-22", aum: 60000 },
+        { segment: "Gold", inceptionDate: "2022-02-14", aum: 130000 },
+        { segment: "Platinum", inceptionDate: "2018-07-21", aum: 750000 },
+        { segment: "Silver", inceptionDate: "2023-01-10", aum: 80000 },
+        { segment: "Gold", inceptionDate: "2019-05-05", aum: 220000 },
+        { segment: "Platinum", inceptionDate: "2019-11-30", aum: 1200000 },
+        { segment: "Silver", inceptionDate: "2024-01-15", aum: 50000 },
+        { segment: "Silver", inceptionDate: "2023-08-22", aum: 60000 },
       ];
       const mockEntry = mockDetailsList[index % mockDetailsList.length];
 
@@ -302,7 +302,7 @@ export const getMockAgeDemographicsReportData = async (
         name: `${client.firstName || ""} ${client.lastName || ""}`.trim(),
         age: client.age || 0,
         segment: mockEntry.segment,
-        joinDate: mockEntry.joinDate,
+        inceptionDate: mockEntry.inceptionDate,
         aum: mockEntry.aum,
       };
     }),
@@ -480,8 +480,8 @@ export const getMockBookDevelopmentReportData = async (
         1,
         new Date().getFullYear() - new Date(client.createdAt).getFullYear()
       );
-      const joinDate = new Date(client.createdAt);
-      const sinceDateText = `Since ${joinDate.toLocaleDateString("en-US", {
+      const inceptionDate = new Date(client.createdAt);
+      const sinceDateText = `Since ${inceptionDate.toLocaleDateString("en-US", {
         month: "short",
         year: "numeric",
       })}`;

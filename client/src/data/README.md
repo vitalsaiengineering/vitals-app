@@ -14,7 +14,7 @@ The core data file containing 346 realistic client records with the following pr
 - **aum**: Assets Under Management
 - **advisor**: Assigned advisor name
 - **advisorId**: Advisor identifier
-- **joinDate**: Date client joined the firm (YYYY-MM-DD)
+- **inceptionDate**: Date client joined the firm (YYYY-MM-DD)
 - **state**: Full state name
 - **stateCode**: Two-letter state code
 - **city**: Client's city

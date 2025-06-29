@@ -35,20 +35,45 @@ import {
   ValueType,
 } from "recharts/types/component/DefaultTooltipContent";
 import { AumChart } from "@/components/dashboard-new/AumChart";
-import {
-  getBookDevelopmentReportData,
-  type BookDevelopmentReportData,
-  type BookDevelopmentClient,
-  type BookDevelopmentSegmentData,
-} from "@/lib/clientData";
+import { getClients } from "@/lib/clientData";
+import { StandardClient } from "@/types/client";
 import { useMockData } from "@/contexts/MockDataContext";
-import { useAdvisor } from "@/contexts/AdvisorContext";
+import { useReportFilters } from "@/contexts/ReportFiltersContext";
+import { filtersToApiParams } from "@/utils/filter-utils";
+import { getSegmentName, getPrettyClientName } from "@/utils/client-analytics";
+import { FilteredReportSkeleton } from "@/components/ui/skeleton";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
 
+// Define types that work with StandardClient
+interface BookDevelopmentClient extends StandardClient {
+  yearsWithFirm: number;
+  yearsWithFirmText: string;
+  sinceDateText: string;
+}
+
+interface YearlySegmentDataPoint {
+  year: number;
+  value: number;
+  previousYearValue?: number;
+}
+
+interface BookDevelopmentSegmentData {
+  name: 'Platinum' | 'Gold' | 'Silver' | 'N/A';
+  color: string;
+  fillColor?: string;
+  dataAUM: YearlySegmentDataPoint[];
+  dataClientCount: YearlySegmentDataPoint[];
+  clients: BookDevelopmentClient[];
+}
+
+interface BookDevelopmentReportData {
+  allSegmentsData: BookDevelopmentSegmentData[];
+}
+
 type ChartView = "clientCount" | "assetsUnderManagement";
-type SegmentName = "Platinum" | "Gold" | "Silver";
+type SegmentName = "Platinum" | "Gold" | "Silver" | "N/A";
 type SegmentSelection = SegmentName | "All Segments";
 
 // Updated colors to match the design's blue theme more closely
@@ -70,6 +95,12 @@ const SEGMENT_COLORS = {
     badgeBg: "bg-slate-100",
     badgeText: "text-slate-600",
     badgeBorder: "border-slate-200",
+  },
+  "N/A": {
+    base: "hsl(0, 0%, 60%)",
+    badgeBg: "bg-gray-100",
+    badgeText: "text-gray-600",
+    badgeBorder: "border-gray-200",
   },
 };
 
@@ -223,7 +254,71 @@ interface SegmentChartData {
   Platinum: number;
   Gold: number;
   Silver: number;
+  "N/A": number;
 }
+
+// Helper function to transform StandardClient to BookDevelopmentClient
+const transformToBookDevelopmentClient = (client: StandardClient): BookDevelopmentClient => {
+  const today = new Date();
+  const inceptionDate = client.inceptionDate ? new Date(client.inceptionDate) : today;
+  const yearsWithFirm = Math.floor((today.getTime() - inceptionDate.getTime()) / (1000 * 60 * 60 * 24 * 365));
+  
+  return {
+    ...client,
+    name: getPrettyClientName(client), // Use getPrettyClientName function
+    yearsWithFirm,
+    yearsWithFirmText: `${yearsWithFirm} years`,
+    sinceDateText: inceptionDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+    segment: getSegmentName(client.segment) as 'Platinum' | 'Gold' | 'Silver' | 'N/A'
+  };
+};
+
+// Helper function to generate mock segment data from clients
+const generateSegmentDataFromClients = (clients: StandardClient[]): BookDevelopmentReportData => {
+  const transformedClients = clients.map(transformToBookDevelopmentClient);
+  
+  // Group clients by segment (including N/A)
+  const clientsBySegment = transformedClients.reduce((acc, client) => {
+    const segmentName = client.segment as SegmentName; // Already normalized by getSegmentName
+    if (!acc[segmentName]) acc[segmentName] = [];
+    acc[segmentName].push(client);
+    return acc;
+  }, {} as Record<SegmentName, BookDevelopmentClient[]>);
+
+  // Generate yearly data for each segment (mock data for now)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
+  
+  const allSegmentsData: BookDevelopmentSegmentData[] = (['Platinum', 'Gold', 'Silver', 'N/A'] as SegmentName[]).map(segmentName => {
+    const segmentClients = clientsBySegment[segmentName] || [];
+    const segmentAUM = segmentClients.reduce((sum, c) => sum + c.aum, 0);
+    
+    // Generate mock yearly progression
+    const baseClientCount = segmentClients.length;
+    const baseAUM = segmentAUM;
+    
+    const dataClientCount = years.map(year => ({
+      year,
+      value: baseClientCount > 0 ? Math.max(1, Math.floor(baseClientCount * (0.6 + Math.random() * 0.4))) : 0,
+    }));
+    
+    const dataAUM = years.map(year => ({
+      year,
+      value: baseAUM > 0 ? Math.max(100000, Math.floor(baseAUM * (0.6 + Math.random() * 0.4))) : 0,
+    }));
+
+    return {
+      name: segmentName,
+      color: SEGMENT_COLORS[segmentName].base,
+      fillColor: SEGMENT_COLORS[segmentName].base,
+      dataClientCount,
+      dataAUM,
+      clients: segmentClients
+    };
+  }); // Show all segments even if they have no clients
+
+  return { allSegmentsData };
+};
 
 export default function BookDevelopmentBySegmentReport() {
   const [reportData, setReportData] =
@@ -235,7 +330,8 @@ export default function BookDevelopmentBySegmentReport() {
   const [selectedSegments, setSelectedSegments] = useState<SegmentName[]>([
     "Platinum",
     "Gold", 
-    "Silver"
+    "Silver",
+    "N/A"
   ]);
   const [filterSearchTerm, setFilterSearchTerm] = useState("");
 
@@ -246,85 +342,37 @@ export default function BookDevelopmentBySegmentReport() {
   }>({ key: null, direction: "ascending" });
 
   const { useMock } = useMockData();
-  const { selectedAdvisor, advisorList } = useAdvisor();
+  const { filters, filterOptions } = useReportFilters();
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        // Check if we should use mock data first
         if (useMock) {
           // Get mock data
           const mockReportData = mockData.BookDevelopmentBySegmentReport;
-          
-          // Add advisor information to clients if using mock data
-          if (mockReportData && mockReportData.allSegmentsData) {
-            // Get list of advisors (excluding "All Advisors")
-            const advisors = advisorList.filter(advisor => advisor !== "All Advisors");
-            
-            // Add advisor to each client in each segment
-            mockReportData.allSegmentsData.forEach((segment: BookDevelopmentSegmentData) => {
-              if (segment.clients && Array.isArray(segment.clients)) {
-                segment.clients.forEach((client: BookDevelopmentClient, index: number) => {
-                  // Distribute clients evenly among advisors
-                  const advisorIndex = index % advisors.length;
-                  (client as BookDevelopmentClient).advisor = advisors[advisorIndex];
-                });
-              }
-            });
-          }
-          
           setReportData(mockReportData);
         } else {
-          // Fetch real data from API
+          // Fetch real data from standardized API
           try {
-            const data = await getBookDevelopmentReportData();
-            if (!data || !data.allSegmentsData) {
-              throw new Error("Invalid API response: missing allSegmentsData");
-            }
-            setReportData(data);
-            // Keep default segment selection
+            const apiParams = filtersToApiParams(filters);
+            const clients = await getClients(apiParams);
+            const transformedData = generateSegmentDataFromClients(clients);
+            setReportData(transformedData);
           } catch (apiError) {
-            console.warn(
-              "API fetch failed, falling back to mock data:",
-              apiError
-            );
-            const mockReportData =
-              mockData.BookDevelopmentBySegmentReport as BookDevelopmentReportData;
-            if (!mockReportData || !mockReportData.allSegmentsData) {
-              throw new Error("Fallback failed: invalid mock data structure");
-            }
+            console.warn("API fetch failed, falling back to mock data:", apiError);
+            const mockReportData = mockData.BookDevelopmentBySegmentReport as BookDevelopmentReportData;
             setReportData(mockReportData);
-            // Keep default segment selection
           }
         }
       } catch (error) {
         console.error("Error fetching report data:", error);
         setError("Failed to load report data. Please try again later.");
         
-        // Use mock data as fallback even if useMock is false
+        // Use mock data as final fallback
         try {
-          // Get mock data
           const mockReportData = mockData.BookDevelopmentBySegmentReport;
-          
-          // Add advisor information to clients
-          if (mockReportData && mockReportData.allSegmentsData) {
-            // Get list of advisors (excluding "All Advisors")
-            const advisors = advisorList.filter(advisor => advisor !== "All Advisors");
-            
-            // Add advisor to each client in each segment
-            mockReportData.allSegmentsData.forEach((segment: BookDevelopmentSegmentData) => {
-              if (segment.clients && Array.isArray(segment.clients)) {
-                segment.clients.forEach((client: BookDevelopmentClient, index: number) => {
-                  // Distribute clients evenly among advisors
-                  const advisorIndex = index % advisors.length;
-                  (client as BookDevelopmentClient).advisor = advisors[advisorIndex];
-                });
-              }
-            });
-          }
-          
           setReportData(mockReportData);
         } catch (mockError) {
           console.error("Error loading mock data:", mockError);
@@ -335,76 +383,44 @@ export default function BookDevelopmentBySegmentReport() {
     };
 
     fetchData();
-  }, [advisorList, useMock]);
+  }, [filters, useMock]);
 
-
-  // Filter clients based on search term and selected segments
+  // Filter clients based on search term and selected segments (now using server-filtered data)
   const filteredClients = useMemo(() => {
     if (!reportData) return [];
     
-    // Ensure we have clients data, either directly or from segments
+    // Extract all clients from the segment data
     let allClients: BookDevelopmentClient[] = [];
-    if ('clients' in reportData && Array.isArray(reportData.clients)) {
-      allClients = [...reportData.clients] as BookDevelopmentClient[];
-    } else if (reportData.allSegmentsData) {
-      // Fallback to extracting clients from segments if needed
-      // Use a safer approach with a loop instead of flatMap
-      allClients = [];
-      reportData.allSegmentsData.forEach((segment: any) => {
+    if (reportData.allSegmentsData) {
+      reportData.allSegmentsData.forEach((segment: BookDevelopmentSegmentData) => {
         if (segment.clients && Array.isArray(segment.clients)) {
-          allClients.push(...segment.clients as BookDevelopmentClient[]);
+          allClients.push(...segment.clients);
         }
       });
     }
     
-    // First filter by advisor if one is selected
+    // Client data is now pre-filtered by advisor/date/segment from server
+    // Only apply local search term filtering
     let filtered = allClients;
-    if (selectedAdvisor !== 'All Advisors') {
-      filtered = filtered.filter(client => 
-        client.advisor === selectedAdvisor
-      );
-      
-      // Debug logging
-      if (process.env.NODE_ENV === "development") {
-        console.log("BookDevelopmentBySegmentReport - Filtered by advisor:", {
-          selectedAdvisor,
-          beforeFilter: allClients.length,
-          afterFilter: filtered.length
-        });
-      }
-    }
-    
-    // Then filter by search term
     if (filterSearchTerm.trim()) {
       const searchLower = filterSearchTerm.toLowerCase();
       filtered = filtered.filter(
         (client) =>
-          client.name.toLowerCase().includes(searchLower) ||
+          getPrettyClientName(client).toLowerCase().includes(searchLower) ||
           client.segment.toLowerCase().includes(searchLower) ||
           client.aum.toString().includes(searchLower)
       );
     }
     
-    // Finally filter by selected segments
+    // Filter by selected segments (for chart display)
     if (selectedSegments.length > 0) {
       filtered = filtered.filter((client) =>
         selectedSegments.includes(client.segment as SegmentName)
       );
     }
     
-    // Debug logging for segment filtering
-    if (process.env.NODE_ENV === "development") {
-      console.log("BookDevelopmentBySegmentReport - Segment filtering:", {
-        selectedSegments,
-        totalClients: allClients.length,
-        afterAdvisorFilter: selectedAdvisor !== 'All Advisors' ? filtered.length : allClients.length,
-        afterSegmentFilter: filtered.length,
-        clientSegments: filtered.map(c => c.segment)
-      });
-    }
-    
     return filtered;
-  }, [reportData, filterSearchTerm, selectedSegments, selectedAdvisor]);
+  }, [reportData, filterSearchTerm, selectedSegments]);
 
   // Sort clients based on sort config
   const sortedClients = useMemo(() => {
@@ -438,13 +454,13 @@ export default function BookDevelopmentBySegmentReport() {
   };
 
   const handleClearSegmentFilters = () => {
-    setSelectedSegments(["Platinum", "Gold", "Silver"]);
+    setSelectedSegments(["Platinum", "Gold", "Silver", "N/A"]);
     setCurrentPage(1);
   };
 
   const handleTableSegmentChange = (value: string) => {
     if (value === "All Segments") {
-      setSelectedSegments(["Platinum", "Gold", "Silver"]);
+      setSelectedSegments(["Platinum", "Gold", "Silver", "N/A"]);
     } else {
       setSelectedSegments([value as SegmentName]);
     }
@@ -455,7 +471,7 @@ export default function BookDevelopmentBySegmentReport() {
     if (!reportData || !reportData.allSegmentsData) return [];
 
     let clientsToShow: BookDevelopmentClient[] = [];
-    if (selectedSegments.length === 3) {
+    if (selectedSegments.length === 4) {
       // All segments selected
       clientsToShow = reportData.allSegmentsData.flatMap(
         (s) => s.clients || []
@@ -471,7 +487,7 @@ export default function BookDevelopmentBySegmentReport() {
       const lowerSearchTerm = filterSearchTerm.toLowerCase();
       clientsToShow = clientsToShow.filter(
         (client) =>
-          client.name?.toLowerCase().includes(lowerSearchTerm) ||
+          getPrettyClientName(client).toLowerCase().includes(lowerSearchTerm) ||
           client.segment?.toLowerCase().includes(lowerSearchTerm) ||
           client.aum?.toString().includes(lowerSearchTerm)
       );
@@ -516,11 +532,19 @@ export default function BookDevelopmentBySegmentReport() {
 
   const activeChartSeries = useMemo(() => {
     if (!reportData) return [];
-    const order: SegmentName[] = ["Platinum", "Gold", "Silver"];
+    const order: SegmentName[] = ["Platinum", "Gold", "Silver", "N/A"];
     
     return reportData.allSegmentsData
       .filter((segment) => selectedSegments.includes(segment.name))
-      .sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name))
+      .sort((a, b) => {
+        const aIndex = order.indexOf(a.name);
+        const bIndex = order.indexOf(b.name);
+        // Handle case where segment might not be in order array
+        if (aIndex === -1 && bIndex === -1) return 0;
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+        return aIndex - bIndex;
+      })
       .map((segment) => ({
         name: segment.name,
         color: segment.color,
@@ -547,6 +571,7 @@ export default function BookDevelopmentBySegmentReport() {
           Platinum: 0,
           Gold: 0,
           Silver: 0,
+          "N/A": 0,
         };
 
         segmentReport.allSegmentsData.forEach((segment: any) => {
@@ -565,13 +590,13 @@ export default function BookDevelopmentBySegmentReport() {
       console.error("Error loading mock segment data:", error);
       // Fallback data
       return [
-        { year: 2019, Platinum: 40000000, Gold: 25000000, Silver: 12000000 },
-        { year: 2020, Platinum: 43000000, Gold: 27000000, Silver: 13000000 },
-        { year: 2021, Platinum: 46000000, Gold: 29000000, Silver: 14000000 },
-        { year: 2022, Platinum: 50000000, Gold: 31000000, Silver: 15000000 },
-        { year: 2023, Platinum: 54000000, Gold: 33000000, Silver: 16000000 },
-        { year: 2024, Platinum: 58000000, Gold: 36000000, Silver: 17000000 },
-        { year: 2025, Platinum: 63000000, Gold: 39000000, Silver: 18000000 },
+        { year: 2019, Platinum: 40000000, Gold: 25000000, Silver: 12000000, "N/A": 2000000 },
+        { year: 2020, Platinum: 43000000, Gold: 27000000, Silver: 13000000, "N/A": 2200000 },
+        { year: 2021, Platinum: 46000000, Gold: 29000000, Silver: 14000000, "N/A": 2400000 },
+        { year: 2022, Platinum: 50000000, Gold: 31000000, Silver: 15000000, "N/A": 2600000 },
+        { year: 2023, Platinum: 54000000, Gold: 33000000, Silver: 16000000, "N/A": 2800000 },
+        { year: 2024, Platinum: 58000000, Gold: 36000000, Silver: 17000000, "N/A": 3000000 },
+        { year: 2025, Platinum: 63000000, Gold: 39000000, Silver: 18000000, "N/A": 3200000 },
       ];
     }
   };
@@ -589,36 +614,37 @@ export default function BookDevelopmentBySegmentReport() {
       } else {
         // Client count data
         baseData = [
-          { year: 2019, Platinum: 30, Gold: 45, Silver: 60 },
-          { year: 2020, Platinum: 32, Gold: 48, Silver: 63 },
-          { year: 2021, Platinum: 34, Gold: 50, Silver: 66 },
-          { year: 2022, Platinum: 36, Gold: 53, Silver: 69 },
-          { year: 2023, Platinum: 38, Gold: 56, Silver: 73 },
-          { year: 2024, Platinum: 40, Gold: 59, Silver: 77 },
-          { year: 2025, Platinum: 42, Gold: 62, Silver: 81 },
+          { year: 2019, Platinum: 30, Gold: 45, Silver: 60, "N/A": 8 },
+          { year: 2020, Platinum: 32, Gold: 48, Silver: 63, "N/A": 9 },
+          { year: 2021, Platinum: 34, Gold: 50, Silver: 66, "N/A": 10 },
+          { year: 2022, Platinum: 36, Gold: 53, Silver: 69, "N/A": 11 },
+          { year: 2023, Platinum: 38, Gold: 56, Silver: 73, "N/A": 12 },
+          { year: 2024, Platinum: 40, Gold: 59, Silver: 77, "N/A": 13 },
+          { year: 2025, Platinum: 42, Gold: 62, Silver: 81, "N/A": 14 },
         ];
       }
       
       // If filtering by advisor, adjust the data
-      if (selectedAdvisor !== "All Advisors") {
+      if (filters.advisorIds.length > 0) {
         // Create advisor-specific distribution patterns
-        const advisorDistributionPatterns: Record<string, {Platinum: number, Gold: number, Silver: number}> = {
-          "Jackson Miller": { Platinum: 0.40, Gold: 0.35, Silver: 0.25 }, // First advisor has more Platinum
-          "Sarah Johnson": { Platinum: 0.30, Gold: 0.45, Silver: 0.25 },  // Second advisor has more Gold
-          "Thomas Chen": { Platinum: 0.25, Gold: 0.35, Silver: 0.40 },    // Third advisor has more Silver
-          "Maria Reynolds": { Platinum: 0.35, Gold: 0.35, Silver: 0.30 }  // Fourth advisor is balanced
+        const advisorDistributionPatterns: Record<string, {Platinum: number, Gold: number, Silver: number, "N/A": number}> = {
+          "Jackson Miller": { Platinum: 0.40, Gold: 0.35, Silver: 0.20, "N/A": 0.05 }, // First advisor has more Platinum
+          "Sarah Johnson": { Platinum: 0.30, Gold: 0.45, Silver: 0.20, "N/A": 0.05 },  // Second advisor has more Gold
+          "Thomas Chen": { Platinum: 0.25, Gold: 0.35, Silver: 0.35, "N/A": 0.05 },    // Third advisor has more Silver
+          "Maria Reynolds": { Platinum: 0.30, Gold: 0.30, Silver: 0.30, "N/A": 0.10 }  // Fourth advisor is balanced with more N/A
         };
         
         // Use the pattern for this advisor (or a default pattern as fallback)
-        const pattern = advisorDistributionPatterns[selectedAdvisor] || 
-          { Platinum: 0.33, Gold: 0.33, Silver: 0.34 };
+        const advisorName = filters.advisorIds[0]; // Assuming single advisor selection for now
+        const pattern = advisorDistributionPatterns[advisorName] || 
+          { Platinum: 0.30, Gold: 0.30, Silver: 0.30, "N/A": 0.10 };
         
         // Assume each advisor manages roughly 25% of the total
         const ratio = 0.25;
         
         baseData = baseData.map(dataPoint => {
-          // Calculate total for this year
-          const totalValue = dataPoint.Platinum + dataPoint.Gold + dataPoint.Silver;
+          // Calculate total for this year including N/A
+          const totalValue = dataPoint.Platinum + dataPoint.Gold + dataPoint.Silver + dataPoint["N/A"];
           
           // Apply the ratio to get this advisor's portion
           const advisorTotal = totalValue * ratio;
@@ -628,7 +654,8 @@ export default function BookDevelopmentBySegmentReport() {
             year: dataPoint.year,
             Platinum: advisorTotal * pattern.Platinum,
             Gold: advisorTotal * pattern.Gold,
-            Silver: advisorTotal * pattern.Silver
+            Silver: advisorTotal * pattern.Silver,
+            "N/A": advisorTotal * pattern["N/A"]
           };
         });
       }
@@ -645,6 +672,7 @@ export default function BookDevelopmentBySegmentReport() {
         Platinum: 0,
         Gold: 0,
         Silver: 0,
+        "N/A": 0,
       };
 
       reportData.allSegmentsData.forEach((segment) => {
@@ -662,25 +690,26 @@ export default function BookDevelopmentBySegmentReport() {
     });
 
     // Apply advisor filtering to real data as well
-    if (selectedAdvisor !== "All Advisors") {
+    if (filters.advisorIds.length > 0) {
       // Create advisor-specific distribution patterns
-      const advisorDistributionPatterns: Record<string, {Platinum: number, Gold: number, Silver: number}> = {
-        "Jackson Miller": { Platinum: 0.40, Gold: 0.35, Silver: 0.25 }, // First advisor has more Platinum
-        "Sarah Johnson": { Platinum: 0.30, Gold: 0.45, Silver: 0.25 },  // Second advisor has more Gold
-        "Thomas Chen": { Platinum: 0.25, Gold: 0.35, Silver: 0.40 },    // Third advisor has more Silver
-        "Maria Reynolds": { Platinum: 0.35, Gold: 0.35, Silver: 0.30 }  // Fourth advisor is balanced
+      const advisorDistributionPatterns: Record<string, {Platinum: number, Gold: number, Silver: number, "N/A": number}> = {
+        "Jackson Miller": { Platinum: 0.40, Gold: 0.35, Silver: 0.20, "N/A": 0.05 }, // First advisor has more Platinum
+        "Sarah Johnson": { Platinum: 0.30, Gold: 0.45, Silver: 0.20, "N/A": 0.05 },  // Second advisor has more Gold
+        "Thomas Chen": { Platinum: 0.25, Gold: 0.35, Silver: 0.35, "N/A": 0.05 },    // Third advisor has more Silver
+        "Maria Reynolds": { Platinum: 0.30, Gold: 0.30, Silver: 0.30, "N/A": 0.10 }  // Fourth advisor is balanced with more N/A
       };
       
       // Use the pattern for this advisor (or a default pattern as fallback)
-      const pattern = advisorDistributionPatterns[selectedAdvisor] || 
-        { Platinum: 0.33, Gold: 0.33, Silver: 0.34 };
+      const advisorName = filters.advisorIds[0]; // Assuming single advisor selection for now
+      const pattern = advisorDistributionPatterns[advisorName] || 
+        { Platinum: 0.30, Gold: 0.30, Silver: 0.30, "N/A": 0.10 };
       
       // Assume each advisor manages roughly 25% of the total
       const ratio = 0.25;
       
       baseData = baseData.map(dataPoint => {
-        // Calculate total for this year
-        const totalValue = dataPoint.Platinum + dataPoint.Gold + dataPoint.Silver;
+        // Calculate total for this year including N/A
+        const totalValue = dataPoint.Platinum + dataPoint.Gold + dataPoint.Silver + dataPoint["N/A"];
         
         // Apply the ratio to get this advisor's portion
         const advisorTotal = totalValue * ratio;
@@ -690,13 +719,14 @@ export default function BookDevelopmentBySegmentReport() {
           year: dataPoint.year,
           Platinum: advisorTotal * pattern.Platinum,
           Gold: advisorTotal * pattern.Gold,
-          Silver: advisorTotal * pattern.Silver
+          Silver: advisorTotal * pattern.Silver,
+          "N/A": advisorTotal * pattern["N/A"]
         };
       });
     }
 
     return baseData;
-  }, [reportData, useMock, selectedAdvisor, chartView]);
+  }, [reportData, useMock, filters.advisorIds, chartView]);
 
   const yAxisTickFormatter = (value: number) => {
     if (chartView === "assetsUnderManagement") {
@@ -715,10 +745,10 @@ export default function BookDevelopmentBySegmentReport() {
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedSegments, filterSearchTerm, selectedAdvisor]);
+  }, [selectedSegments, filterSearchTerm, filters.advisorIds]);
 
   if (isLoading)
-    return <div className="p-6 text-center">Loading report data...</div>;
+    return <FilteredReportSkeleton />;
   if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
   if (!reportData)
     return <div className="p-6 text-center">No data available.</div>;
@@ -748,13 +778,13 @@ export default function BookDevelopmentBySegmentReport() {
       <Card>
         <CardHeader>
           <CardTitle>
-            {selectedAdvisor !== "All Advisors" 
-              ? `${selectedAdvisor}'s Book Development by Segment` 
+            {filters.advisorIds.length === 1 
+              ? `${filterOptions?.advisors.find(a => a.id === filters.advisorIds[0])?.name}'s Book Development by Segment` 
               : "Book Development by Segment"}
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             Track cumulative client growth and AUM by segment over time
-            {selectedAdvisor !== "All Advisors" && ` for ${selectedAdvisor}`}
+            {filters.advisorIds.length === 1 && ` for ${filterOptions?.advisors.find(a => a.id === filters.advisorIds[0])?.name}`}
           </p>
         </CardHeader>
         <CardContent>
@@ -895,7 +925,7 @@ export default function BookDevelopmentBySegmentReport() {
             <div>
               <CardTitle>Clients as of 2025</CardTitle>
               <p className="text-sm text-muted-foreground">
-                {selectedSegments.length === 3
+                {selectedSegments.length === 4
                   ? "All segments"
                   : `Filtered by ${selectedSegments.join(", ")} segments`}
               </p>
@@ -914,7 +944,7 @@ export default function BookDevelopmentBySegmentReport() {
                 />
               </div>
               <Select
-                value={selectedSegments.length === 3 ? "All Segments" : selectedSegments[0]}
+                value={selectedSegments.length === 4 ? "All Segments" : selectedSegments[0]}
                 onValueChange={handleTableSegmentChange}
               >
                 <SelectTrigger className="w-full md:w-[180px]">

@@ -157,7 +157,7 @@ export interface ClientReportDetail { // Renamed from ClientDetail to avoid conf
   name: string;
   age: number;
   segment: string;
-  joinDate: string;
+  inceptionDate: string;
   aum: number;
 }
 
@@ -632,77 +632,77 @@ export const fetchClientDemographicsData = async () => {
       name: "Harper Lee",
       age: 42,
       segment: "Gold",
-      joinDate: "2022-02-14",
+      inceptionDate: "2022-02-14",
     },
     {
       id: 2,
       name: "Indigo Brown",
       age: 45,
       segment: "Silver",
-      joinDate: "2021-12-30",
+      inceptionDate: "2021-12-30",
     },
     {
       id: 3,
       name: "Charles Smith",
       age: 55,
       segment: "Bronze",
-      joinDate: "2023-01-10",
+      inceptionDate: "2023-01-10",
     },
     {
       id: 4,
       name: "Diana Evans",
       age: 48,
       segment: "Gold",
-      joinDate: "2022-05-20",
+      inceptionDate: "2022-05-20",
     },
     {
       id: 5,
       name: "Ethan Garcia",
       age: 59,
       segment: "Silver",
-      joinDate: "2021-11-15",
+      inceptionDate: "2021-11-15",
     },
     {
       id: 6,
       name: "Fiona Miller",
       age: 41,
       segment: "Gold",
-      joinDate: "2023-03-01",
+      inceptionDate: "2023-03-01",
     },
     {
       id: 7,
       name: "George Davis",
       age: 52,
       segment: "Bronze",
-      joinDate: "2022-08-08",
+      inceptionDate: "2022-08-08",
     },
     {
       id: 8,
       name: "Hannah Rodriguez",
       age: 60,
       segment: "Silver",
-      joinDate: "2021-09-25",
+      inceptionDate: "2021-09-25",
     },
     {
       id: 9,
       name: "Ian Wilson",
       age: 49,
       segment: "Gold",
-      joinDate: "2023-04-12",
+      inceptionDate: "2023-04-12",
     },
     {
       id: 10,
       name: "Julia Martinez",
       age: 57,
       segment: "Bronze",
-      joinDate: "2022-10-30",
+      inceptionDate: "2022-10-30",
     },
     {
       id: 11,
       name: "Kevin Anderson",
       age: 46,
       segment: "Silver",
-      joinDate: "2021-07-05",
+      inceptionDate: "2021-07-05",
     },
 
     // < 20 Group (2 clients)
@@ -711,14 +711,14 @@ export const fetchClientDemographicsData = async () => {
       name: "Liam Thomas",
       age: 18,
       segment: "Bronze",
-      joinDate: "2023-06-01",
+      inceptionDate: "2023-06-01",
     },
     {
       id: 13,
       name: "Mia Jackson",
       age: 19,
       segment: "Silver",
-      joinDate: "2023-07-15",
+      inceptionDate: "2023-07-15",
     },
 
     // 21-40 Group (8 clients)
@@ -727,56 +727,56 @@ export const fetchClientDemographicsData = async () => {
       name: "Noah White",
       age: 25,
       segment: "Gold",
-      joinDate: "2022-01-20",
+      inceptionDate: "2022-01-20",
     },
     {
       id: 15,
       name: "Olivia Harris",
       age: 30,
       segment: "Silver",
-      joinDate: "2021-12-01",
+      inceptionDate: "2021-12-01",
     },
     {
       id: 16,
       name: "Peter Martin",
       age: 35,
       segment: "Bronze",
-      joinDate: "2023-02-10",
+      inceptionDate: "2023-02-10",
     },
     {
       id: 17,
       name: "Quinn Thompson",
       age: 22,
       segment: "Gold",
-      joinDate: "2022-04-15",
+      inceptionDate: "2022-04-15",
     },
     {
       id: 18,
       name: "Rachel Garcia",
       age: 38,
       segment: "Silver",
-      joinDate: "2021-10-05",
+      inceptionDate: "2021-10-05",
     },
     {
       id: 19,
       name: "Samuel Martinez",
       age: 29,
       segment: "Bronze",
-      joinDate: "2023-05-25",
+      inceptionDate: "2023-05-25",
     },
     {
       id: 20,
       name: "Tara Robinson",
       age: 33,
       segment: "Gold",
-      joinDate: "2022-09-18",
+      inceptionDate: "2022-09-18",
     },
     {
       id: 21,
       name: "Uma Clark",
       age: 27,
       segment: "Silver",
-      joinDate: "2021-08-30",
+      inceptionDate: "2021-08-30",
     },
 
     // 61-80 Group (10 clients)
@@ -785,70 +785,70 @@ export const fetchClientDemographicsData = async () => {
       name: "Victor Rodriguez",
       age: 65,
       segment: "Gold",
-      joinDate: "2022-03-10",
+      inceptionDate: "2022-03-10",
     },
     {
       id: 23,
       name: "Wendy Lewis",
       age: 70,
       segment: "Silver",
-      joinDate: "2021-11-20",
+      inceptionDate: "2021-11-20",
     },
     {
       id: 24,
       name: "Xavier Lee",
       age: 75,
       segment: "Bronze",
-      joinDate: "2023-01-05",
+      inceptionDate: "2023-01-05",
     },
     {
       id: 25,
       name: "Yara Walker",
       age: 62,
       segment: "Gold",
-      joinDate: "2022-06-12",
+      inceptionDate: "2022-06-12",
     },
     {
       id: 26,
       name: "Zane Hall",
       age: 78,
       segment: "Silver",
-      joinDate: "2021-09-10",
+      inceptionDate: "2021-09-10",
     },
     {
       id: 27,
       name: "Alice Allen",
       age: 68,
       segment: "Bronze",
-      joinDate: "2023-04-01",
+      inceptionDate: "2023-04-01",
     },
     {
       id: 28,
       name: "Bob Young",
       age: 72,
       segment: "Gold",
-      joinDate: "2022-11-05",
+      inceptionDate: "2022-11-05",
     },
     {
       id: 29,
       name: "Catherine Hernandez",
       age: 61,
       segment: "Silver",
-      joinDate: "2021-07-20",
+      inceptionDate: "2021-07-20",
     },
     {
       id: 30,
       name: "David King",
       age: 79,
       segment: "Bronze",
-      joinDate: "2023-08-15",
+      inceptionDate: "2023-08-15",
     },
     {
       id: 31,
       name: "Eleanor Wright",
       age: 63,
       segment: "Gold",
-      joinDate: "2022-12-25",
+      inceptionDate: "2022-12-25",
     },
 
     // > 80 Group (4 clients)
@@ -857,28 +857,28 @@ export const fetchClientDemographicsData = async () => {
       name: "Frank Lopez",
       age: 85,
       segment: "Silver",
-      joinDate: "2021-06-10",
+      inceptionDate: "2021-06-10",
     },
     {
       id: 33,
       name: "Grace Hill",
       age: 90,
       segment: "Bronze",
-      joinDate: "2023-03-20",
+      inceptionDate: "2023-03-20",
     },
     {
       id: 34,
       name: "Henry Scott",
       age: 81,
       segment: "Gold",
-      joinDate: "2022-07-14",
+      inceptionDate: "2022-07-14",
     },
     {
       id: 35,
       name: "Isla Green",
       age: 95,
       segment: "Silver",
-      joinDate: "2021-10-28",
+      inceptionDate: "2021-10-28",
     },
   ];
 
@@ -1217,7 +1217,7 @@ export interface ClientInStateDetail {
   name: string;
   segment: 'Ultra High Net Worth' | 'High Net Worth' | 'Mass Affluent' | string; // Allow for other segments
   aum: number;
-  // joinDate?: string; // Optional, if needed
+  // inceptionDate?: string; // Optional, if needed
 }
 
 export interface ClientDistributionReportData {
@@ -1538,6 +1538,76 @@ export async function getClientReferralRateData(params?: GetClientReferralRatePa
   }
 }
 // --- END: Added for Client Referral Rate ---
+
+// --- START: Client Filters ---
+export interface ClientFiltersResponse {
+  segments: string[];
+  advisors: { id: string; name: string }[];
+  states: { code: string; name: string }[];
+  years: number[];
+  referrers: { id: string; name: string }[];
+}
+
+/**
+ * Fetches available filter options for clients
+ * @returns Promise with available filter options
+ */
+export async function getClientFilters(): Promise<ClientFiltersResponse> {
+  try {
+    const response = await dataService.fetchData("clients/filters");
+    return response.data as ClientFiltersResponse;
+  } catch (error) {
+    console.error("Error fetching client filters:", error);
+    throw error;
+  }
+}
+// --- END: Client Filters ---
+
+// --- START: Clients API ---
+// Import StandardClient type
+import { StandardClient } from "@/types/client";
+
+/**
+ * Fetches clients from the unified clients endpoint
+ * @param params URLSearchParams with filter parameters
+ * @returns Promise with array of StandardClient objects
+ */
+export async function getClients(params?: URLSearchParams): Promise<StandardClient[]> {
+  try {
+    // Convert URLSearchParams to the format expected by dataService
+    const queryParams: Record<string, string | number | boolean | undefined> = {};
+    
+    if (params) {
+      params.forEach((value, key) => {
+        // Handle multiple values for the same key (like advisorIds, segments)
+        const existingValue = queryParams[key];
+        if (existingValue !== undefined) {
+          // If key already exists, convert to comma-separated string
+          queryParams[key] = `${existingValue},${value}`;
+        } else {
+          queryParams[key] = value;
+        }
+      });
+    }
+
+    const response = await dataService.fetchData("clients", queryParams);
+    // The response should be an array of StandardClient objects
+    if (Array.isArray(response)) {
+      return response as StandardClient[];
+    } else if (response && response.data && Array.isArray(response.data)) {
+      return response.data as StandardClient[];
+    } else if (response && response.clients && Array.isArray(response.clients)) {
+      return response.clients as StandardClient[];
+    } else {
+      console.warn("Unexpected response format from clients API:", response);
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching clients:", error);
+    throw error;
+  }
+}
+// --- END: Clients API ---
 
 export function filterClientsByAdvisor<T extends { advisor?: string }>(clients: T[], selectedAdvisor: string): T[] {
   if (!selectedAdvisor || selectedAdvisor === 'All Advisors') {

@@ -20,17 +20,93 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ExternalLink, User, Search, Filter } from "lucide-react";
-import {
-  getClientAnniversaryData,
-  type ClientAnniversaryData,
-  type AnniversaryClient,
-  type GetClientAnniversaryParams,
-} from "@/lib/clientData";
+import { StandardClient } from "@/types/client";
+import { getClients } from "@/lib/clientData";
+import { useReportFilters } from "@/contexts/ReportFiltersContext";
+import { filtersToApiParams } from "@/utils/filter-utils";
+import { getPrettyClientName, getSegmentName } from "@/utils/client-analytics";
 import { useMockData } from "@/contexts/MockDataContext";
 import { useAdvisor } from "@/contexts/AdvisorContext";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
+
+// Define transformed interfaces for compatibility
+interface AnniversaryClient {
+  id: string;
+  clientName: string;
+  segment: string;
+  anniversaryDate: string;
+  daysUntilNextAnniversary: number;
+  yearsWithFirm: number;
+  advisorName: string;
+  advisorId: string;
+}
+
+interface AnniversaryFilterOptions {
+  segments: string[];
+  tenures: string[];
+  advisors: { id: string; name: string }[];
+}
+
+// Data transformation utilities
+const transformToAnniversaryClient = (client: StandardClient): AnniversaryClient => {
+  // Handle case where inception date is not available
+  if (!client.inceptionDate) {
+    return {
+      id: client.id,
+      clientName: getPrettyClientName(client),
+      segment: getSegmentName(client.segment),
+      anniversaryDate: '', // Empty for N/A
+      daysUntilNextAnniversary: 0, // No meaningful anniversary
+      yearsWithFirm: 0, // No meaningful tenure
+      advisorName: client.advisor,
+      advisorId: client.advisorId
+    };
+  }
+
+  const inceptionDate = new Date(client.inceptionDate);
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  
+  // Calculate anniversary date for this year
+  const anniversaryThisYear = new Date(currentYear, inceptionDate.getMonth(), inceptionDate.getDate());
+  
+  // If anniversary already passed this year, calculate for next year
+  let nextAnniversary = anniversaryThisYear;
+  if (anniversaryThisYear < today) {
+    nextAnniversary = new Date(currentYear + 1, inceptionDate.getMonth(), inceptionDate.getDate());
+  }
+  
+  // Calculate days until next anniversary
+  const daysUntil = Math.ceil((nextAnniversary.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  
+  // Calculate years with firm
+  const yearsWithFirm = Math.floor((today.getTime() - inceptionDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25));
+
+  return {
+    id: client.id,
+    clientName: getPrettyClientName(client),
+    segment: getSegmentName(client.segment),
+    anniversaryDate: client.inceptionDate,
+    daysUntilNextAnniversary: daysUntil,
+    yearsWithFirm: Math.max(yearsWithFirm, 1), // Minimum 1 year
+    advisorName: client.advisor,
+    advisorId: client.advisorId
+  };
+};
+
+const generateFilterOptions = (clients: StandardClient[]): AnniversaryFilterOptions => {
+  const segments = Array.from(new Set(clients.map(c => getSegmentName(c.segment))));
+  const advisors = Array.from(new Set(clients.map(c => ({ id: c.advisorId, name: c.advisor }))))
+    .filter(a => a.id && a.name);
+  
+  return {
+    segments: ["All Segments", ...segments.sort()],
+    tenures: ["Any Tenure", "1-2 years", "3-5 years", "6-10 years", "10+ years"],
+    advisors: [{ id: "all", name: "All Advisors" }, ...advisors]
+  };
+};
 
 // Grade badge colors
 const getGradeBadgeClasses = (grade: string) => {
@@ -89,11 +165,7 @@ export default function ClientAnniversaryView({
 }: ClientAnniversaryViewProps) {
   const [allAnniversaryData, setAllAnniversaryData] = useState<AnniversaryClient[]>([]); // Store all data
   const [filteredAnniversaryData, setFilteredAnniversaryData] = useState<AnniversaryClient[]>([]); // Store filtered data
-  const [filterOptions, setFilterOptions] = useState<{
-    segments: string[];
-    tenures: string[];
-    advisors: { id: string; name: string }[];
-  }>({
+  const [filterOptions, setFilterOptions] = useState<AnniversaryFilterOptions>({
     segments: [],
     tenures: [],
     advisors: [],
@@ -107,94 +179,47 @@ export default function ClientAnniversaryView({
   const [selectedTenure, setSelectedTenure] = useState("Any Tenure");
   const [showUpcomingMilestones, setShowUpcomingMilestones] = useState(false);
 
-  // Get the selected advisor from context
+  // Get contexts
   const { selectedAdvisor } = useAdvisor();
+  const { filters } = useReportFilters();
 
   const { useMock } = useMockData();
 
-  /**
-   * Fetches client anniversary data from API or mock data
-   */
-  const fetchAnniversaryData = async (params?: GetClientAnniversaryParams) => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      if (useMock) {
-        const mockAnniversaryData =
-          mockData.ClientAnniversaryData as ClientAnniversaryData;
+  // Fetch data using centralized approach
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Build API parameters with filters from context
+        const params = filtersToApiParams(filters, selectedAdvisor);
         
-        // If an advisor is selected from the global context, filter the data
-        let clients = mockAnniversaryData.clients;
-        if (selectedAdvisor !== 'All Advisors') {
-          // Filter clients by the selected advisor
-          clients = clients.filter(
-            (client) => {
-              // Using advisorName field which should match the selectedAdvisor
-              return client.advisorName === selectedAdvisor;
-            }
-          );
-        }
+        // Use the centralized getClients function
+        const clients = await getClients(params);
         
-        setAllAnniversaryData(clients);
-        setFilterOptions(mockAnniversaryData.filterOptions);
-      } else {
-        try {
-          const data = await getClientAnniversaryData();
-          
-          // If an advisor is selected from the global context, filter the data
-          let clients = data.clients;
-          if (selectedAdvisor !== 'All Advisors') {
-            clients = clients.filter(
-              (client) => client.advisorName === selectedAdvisor
-            );
-          }
-          
-          setAllAnniversaryData(clients);
-          setFilterOptions(data.filterOptions);
-        } catch (apiError) {
-          console.warn(
-            "API fetch failed, falling back to mock data:",
-            apiError
-          );
-          const mockAnniversaryData =
-            mockData.ClientAnniversaryData as ClientAnniversaryData;
-          
-          // If an advisor is selected from the global context, filter the data
-          let clients = mockAnniversaryData.clients;
-          if (selectedAdvisor !== 'All Advisors') {
-            clients = clients.filter(
-              (client) => client.advisorName === selectedAdvisor
-            );
-          }
-          
-          setAllAnniversaryData(clients);
-          setFilterOptions(mockAnniversaryData.filterOptions);
-        }
+        // Transform clients data into anniversary format
+        const anniversaryClients = clients.map(transformToAnniversaryClient);
+        setAllAnniversaryData(anniversaryClients);
+        
+        // Generate filter options from the client data
+        const options = generateFilterOptions(clients);
+        setFilterOptions(options);
+        
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Failed to load anniversary data";
+        setError(errorMessage);
+        console.error(err);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to load anniversary data";
-      setError(errorMessage);
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  // Client-side filtering function
-  const applyFilters = () => {
+    fetchData();
+  }, [filters, selectedAdvisor, useMock]);
+
+  // Client-side filtering function (now for display filters only since server handles main filtering)
+  const applyDisplayFilters = () => {
     let filtered = [...allAnniversaryData];
-
-    // Debug logging
-    if (process.env.NODE_ENV === "development") {
-      console.log("ClientAnniversaryView - Applying filters:", {
-        totalClients: allAnniversaryData.length,
-        globalSearch,
-        selectedSegment,
-        selectedTenure,
-        showUpcomingMilestones,
-      });
-    }
 
     // Apply global search filter
     if (globalSearch.trim()) {
@@ -213,7 +238,6 @@ export default function ClientAnniversaryView({
     // Apply tenure filter
     if (selectedTenure !== "Any Tenure") {
       filtered = filtered.filter(client => {
-        // Implement tenure filtering logic based on the actual tenure options
         const years = client.yearsWithFirm;
         switch (selectedTenure) {
           case "1-2 years":
@@ -230,46 +254,23 @@ export default function ClientAnniversaryView({
       });
     }
 
-    // Note: Advisor filtering is now handled at data fetch time using selectedAdvisor context
-
     // Apply upcoming milestones filter
     if (showUpcomingMilestones) {
       filtered = filtered.filter(client => isMilestoneAnniversary(client.yearsWithFirm));
     }
 
-    // Debug logging for results
-    if (process.env.NODE_ENV === "development") {
-      console.log("ClientAnniversaryView - Filter results:", {
-        filteredCount: filtered.length,
-        sampleTenures: filtered.slice(0, 5).map(c => ({ name: c.clientName, tenure: c.yearsWithFirm, segment: c.segment })),
-        selectedFilters: { selectedSegment, selectedTenure, showUpcomingMilestones }
-      });
-    }
-
-    setFilteredAnniversaryData(filtered);
+    return filtered;
   };
 
-  useEffect(() => {
-    fetchAnniversaryData(); // Initial fetch
-  }, [useMock, selectedAdvisor]);
-
-  // Apply filters whenever filter criteria or data changes
-  useEffect(() => {
-    applyFilters();
-  }, [
-    allAnniversaryData,
-    globalSearch,
-    selectedSegment,
-    selectedTenure,
-    showUpcomingMilestones,
-  ]);
+  // Get filtered clients for display
+  const displayClients = applyDisplayFilters();
 
   if (error) {
     return <div className="p-6 text-red-500 text-center">Error: {error}</div>;
   }
 
   // Use the properly filtered data from client-side filtering
-  const filteredClients = filteredAnniversaryData;
+  const filteredClients = displayClients;
 
   return (
     <div className="space-y-6">
@@ -292,12 +293,12 @@ export default function ClientAnniversaryView({
           <div className="flex justify-between items-start">
             <div>
                 <CardTitle className="text-xl">
-                  {selectedAdvisor !== "All Advisors" 
-                    ? `${selectedAdvisor}'s Client Anniversary Dates` 
+                  {filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" 
+                    ? `${filters.advisorIds[0]}'s Client Anniversary Dates` 
                     : "Client Anniversary Dates"}
                 </CardTitle>              
               <p className="text-sm text-muted-foreground mt-1">
-                {filteredAnniversaryData.length} records
+                {displayClients.length} records
                 {showUpcomingMilestones && " • Milestone anniversaries (5+ year increments)"}
               </p>
             </div>
@@ -433,21 +434,25 @@ export default function ClientAnniversaryView({
                             <svg className="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            {formatDateToUS(client.nextAnniversaryDate)}
+                            {client.anniversaryDate ? formatDateToUS(client.anniversaryDate) : 'N/A'}
                           </div>
                         </TableCell>
                         <TableCell>
                           <span className="font-medium">
-                            {client.daysUntilNextAnniversary === 1
-                              ? "1 day"
-                              : `${client.daysUntilNextAnniversary} days`}
+                            {client.anniversaryDate ? (
+                              client.daysUntilNextAnniversary === 1
+                                ? "1 day"
+                                : `${client.daysUntilNextAnniversary} days`
+                            ) : 'N/A'}
                           </span>
                         </TableCell>
                         <TableCell>
                           <span className={isMilestone ? "font-semibold text-yellow-700" : "font-medium"}>
-                            {client.yearsWithFirm === 1
-                              ? "1 year"
-                              : `${client.yearsWithFirm} years`}
+                            {client.anniversaryDate ? (
+                              client.yearsWithFirm === 1
+                                ? "1 year"
+                                : `${client.yearsWithFirm} years`
+                            ) : 'N/A'}
                           </span>
                         </TableCell>
                         <TableCell>

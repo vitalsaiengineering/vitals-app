@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { createClient } from "@/lib/api";
+import { formatAUM } from "@/utils/client-analytics";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -410,7 +411,7 @@ export default function Clients() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      {client.aum ? formatCurrency(client.aum) : 'N/A'}
+                      {client.aum ? formatAUM(client.aum) : 'N/A'}
                     </TableCell>
                     <TableCell>
                       {client.revenue ? formatCurrency(client.revenue) : 'N/A'}

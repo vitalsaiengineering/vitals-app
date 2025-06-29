@@ -24,10 +24,10 @@ export const calculateAge = (dateOfBirth) => {
 };
 
 // Calculate client tenure in years
-export const calculateTenure = (joinDate) => {
+export const calculateTenure = (inceptionDate) => {
   const today = new Date();
-  const joinDateObj = new Date(joinDate);
-  const diffTime = Math.abs(today - joinDateObj);
+  const inceptionDateObj = new Date(inceptionDate);
+  const diffTime = Math.abs(today - inceptionDateObj);
   const diffYears = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 365.25));
   return diffYears;
 };
@@ -46,10 +46,10 @@ export const calculateNextBirthday = (dateOfBirth) => {
 };
 
 // Calculate next anniversary
-export const calculateNextAnniversary = (joinDate) => {
+export const calculateNextAnniversary = (inceptionDate) => {
   const today = new Date();
-  const joinDateObj = new Date(joinDate);
-  const nextAnniversary = new Date(today.getFullYear(), joinDateObj.getMonth(), joinDateObj.getDate());
+  const inceptionDateObj = new Date(inceptionDate);
+  const nextAnniversary = new Date(today.getFullYear(), inceptionDateObj.getMonth(), inceptionDateObj.getDate());
   
   if (nextAnniversary < today) {
     nextAnniversary.setFullYear(today.getFullYear() + 1);
@@ -137,7 +137,7 @@ export const generateAgeDemographicsReport = () => {
       segment: client.segment,
       aum: client.aum,
       advisor: client.advisor,
-      joinDate: client.joinDate
+      inceptionDate: client.inceptionDate
     }))
   };
 };
@@ -219,9 +219,9 @@ export const generateClientAnniversaryData = () => {
   const advisors = getAllAdvisors();
 
   const clientsWithAnniversary = clients.map(client => {
-    const nextAnniversary = calculateNextAnniversary(client.joinDate);
+          const nextAnniversary = calculateNextAnniversary(client.inceptionDate);
     const daysUntil = calculateDaysUntil(nextAnniversary);
-    const tenure = calculateTenure(client.joinDate);
+    const tenure = calculateTenure(client.inceptionDate);
 
     return {
       id: client.id,
@@ -255,7 +255,7 @@ export const generateClientBirthdayReport = () => {
 
   const clientsWithBirthday = clients.map(client => {
     const nextBirthday = calculateNextBirthday(client.dateOfBirth);
-    const tenure = calculateTenure(client.joinDate);
+    const tenure = calculateTenure(client.inceptionDate);
     const turningAge = client.age + 1;
 
     return {
@@ -348,7 +348,7 @@ export const generateBookDevelopmentBySegmentReport = () => {
   // Format clients for each segment
   const formatClientsForSegment = (segmentClients, segmentName) => {
     return segmentClients.map(client => {
-      const tenure = calculateTenure(client.joinDate);
+      const tenure = calculateTenure(client.inceptionDate);
       return {
         id: client.id,
         name: client.name,
@@ -356,7 +356,7 @@ export const generateBookDevelopmentBySegmentReport = () => {
         yearsWithFirm: tenure,
         yearsWithFirmText: `${tenure} year${tenure !== 1 ? 's' : ''}`,
         advisor: "Thomas Chen",
-        sinceDateText: `Since ${new Date(client.joinDate).getFullYear()}`,
+        sinceDateText: `Since ${new Date(client.inceptionDate).getFullYear()}`,
         aum: client.aum
       };
     });
@@ -414,7 +414,7 @@ export const generateClientSegmentationDashboard = () => {
   // Format clients for table display
   const formatClientsForTable = (clientList) => {
     return clientList.map(client => {
-      const tenure = calculateTenure(client.joinDate);
+      const tenure = calculateTenure(client.inceptionDate);
       return {
         id: client.id,
         name: client.name,
@@ -500,11 +500,11 @@ export const generateClientInceptionData = () => {
   // Get current year and calculate KPIs
   const currentYear = new Date().getFullYear();
   const currentYearClients = clients.filter(client => 
-    new Date(client.joinDate).getFullYear() === currentYear
+    new Date(client.inceptionDate).getFullYear() === currentYear
   );
   
   const previousYearClients = clients.filter(client => 
-    new Date(client.joinDate).getFullYear() === currentYear - 1
+          new Date(client.inceptionDate).getFullYear() === currentYear - 1
   );
   
   const ytdNewClients = currentYearClients.length;
@@ -517,7 +517,7 @@ export const generateClientInceptionData = () => {
   const years = [2019, 2020, 2021, 2022, 2023, 2024, 2025];
   const chartData = years.map(year => {
     const yearClients = clients.filter(client => 
-      new Date(client.joinDate).getFullYear() === year
+      new Date(client.inceptionDate).getFullYear() === year
     );
     
     const segmentCounts = {
@@ -549,8 +549,8 @@ export const generateClientInceptionData = () => {
     name: client.name,
     email: client.email,
     segment: client.segment,
-    inceptionDate: client.joinDate,
-    inceptionYear: new Date(client.joinDate).getFullYear(),
+          inceptionDate: client.inceptionDate,
+      inceptionYear: new Date(client.inceptionDate).getFullYear(),
     advisor: client.advisor
   }));
 

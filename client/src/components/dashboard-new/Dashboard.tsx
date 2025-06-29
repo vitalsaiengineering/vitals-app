@@ -9,6 +9,7 @@ import axios from "axios";
 import { useMockData } from "@/contexts/MockDataContext";
 import { useAdvisor } from "@/contexts/AdvisorContext";
 import { filterClientsByAdvisor } from "@/lib/clientData";
+import { formatAUMShort, formatRevenue } from "@/utils/client-analytics";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -138,14 +139,6 @@ export const Dashboard = () => {
     fetchMetrics();
   }, [useMock, selectedAdvisor]); // Re-fetch when selectedAdvisor changes
 
-  const formatAUM = (value: number) => {
-    return `$${value}M`;
-  };
-
-  const formatRevenue = (value: number) => {
-    return `$${value}M`;
-  };
-
   return (
     <div className="flex-1 overflow-auto bg-gray-50 p-6">
       <div className="mb-8">
@@ -164,7 +157,7 @@ export const Dashboard = () => {
           />
           <StatCard
             title="AUM"
-            value={loading ? "Loading..." : formatAUM(metrics.aum)}
+            value={loading ? "Loading..." : formatAUMShort(metrics.aum)}
             change={12.4}
             icon={<DollarSign size={20} className="text-vitals-blue" />}
           />

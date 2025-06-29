@@ -1,9 +1,9 @@
 /**
  * Formats a date string to MM-DD-YYYY format
- * @param {string} dateString - The input date string to format
- * @returns {string} The formatted date string in MM-DD-YYYY format
+ * @param dateString - The input date string to format
+ * @returns The formatted date string in MM-DD-YYYY format
  */
-export const formatDate = (dateString) => {
+export const formatDate = (dateString: string | null | undefined): string => {
   try {
     // Handle null, undefined, or empty string
     if (!dateString || typeof dateString !== 'string') {

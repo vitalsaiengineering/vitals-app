@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Users } from 'lucide-react';
 import ClientAnniversaryView from './ClientAnniversaryView';
 import ClientInceptionView from './ClientInceptionView';
-import { useAdvisor } from '@/contexts/AdvisorContext';
+import { useReportFilters } from '@/contexts/ReportFiltersContext';
 
 /**
  * ClientDashboard Component
@@ -14,7 +14,7 @@ import { useAdvisor } from '@/contexts/AdvisorContext';
  */
 export default function ClientInceptionReport() {
   const [globalSearch, setGlobalSearch] = useState('');
-  const { selectedAdvisor } = useAdvisor();
+  const { filters } = useReportFilters();
 
   const [activeTab, setActiveTab] = useState('clients');
 
@@ -24,8 +24,8 @@ export default function ClientInceptionReport() {
         {/* Header with toggle buttons - exact match to reference image */}
         <div className="flex justify-between items-start mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">{selectedAdvisor !== "All Advisors" 
-                  ? `${selectedAdvisor}'s Client Inception Report` 
+            <h1 className="text-3xl font-bold text-foreground">{filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" 
+                  ? `${filters.advisorIds[0]}'s Client Inception Report` 
                   : "Client Inception Report"}</h1>
             <p className="text-muted-foreground mt-1">
               Track client acquisition and segmentation metrics
@@ -56,7 +56,7 @@ export default function ClientInceptionReport() {
               onClick={() => setActiveTab('anniversaries')}
             >
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z" />
               </svg>
               Anniversaries
             </Button>
