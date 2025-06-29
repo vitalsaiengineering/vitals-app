@@ -13,7 +13,12 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { getClientReferralRateData } from '@/lib/clientData'; // Adjust the import based on your project structure
+import { StandardClient } from '@/types/client';
+import { getClients } from '@/lib/clientData';
+import { useReportFilters } from '@/contexts/ReportFiltersContext';
+import { filtersToApiParams } from '@/utils/filter-utils';
+import { getPrettyClientName, getSegmentName } from '@/utils/client-analytics';
+import { ReportSkeleton } from '@/components/ui/skeleton';
 
 interface ReferralData {
   month: string;
@@ -33,9 +38,60 @@ interface ClientReferralRateData {
   chartData: ReferralData[];
 }
 
-interface ClientReferralRateProps {
-  advisorId?: number;
-}
+// Data transformation functions
+const generateReferralReportFromClients = (clients: StandardClient[]): ClientReferralRateData => {
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  
+  // Generate last 12 months of data
+  const chartData: ReferralData[] = [];
+  
+  for (let i = 11; i >= 0; i--) {
+    const monthDate = new Date(currentYear, currentMonth - i, 1);
+    const month = monthDate.getMonth();
+    const year = monthDate.getFullYear();
+    
+    // Get clients for this month (based on inception date)
+    const monthlyClients = clients.filter(client => {
+      if (!client.inceptionDate) return false;
+      const inceptionDate = new Date(client.inceptionDate);
+      return inceptionDate.getMonth() === month && inceptionDate.getFullYear() === year;
+          });
+
+      const totalNewClients = monthlyClients.length;
+      const referredClients = monthlyClients.filter(client => 
+        Boolean(client.referredBy)
+      ).length;
+      const referralRate = totalNewClients > 0 ? Math.round((referredClients / totalNewClients) * 100) : 0;
+      
+      chartData.push({
+      month: monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      shortMonth: monthDate.toLocaleDateString('en-US', { month: 'short' }),
+      referralRate,
+      referredClients,
+      totalNewClients
+    });
+  }
+  
+  // Calculate current month KPIs
+  const currentMonthData = chartData[chartData.length - 1];
+  const previousMonthData = chartData[chartData.length - 2];
+  
+  const currentRate = currentMonthData.referralRate;
+  const previousRate = previousMonthData ? previousMonthData.referralRate : 0;
+  const rateChange = previousRate > 0 ? currentRate - previousRate : 0;
+  
+  return {
+    kpi: {
+      currentRate,
+      rateChange,
+      newClientsThisMonth: currentMonthData.totalNewClients,
+      referredClientsThisMonth: currentMonthData.referredClients
+    },
+    chartData
+  };
+};
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -60,9 +116,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export const ClientReferralRate: React.FC<ClientReferralRateProps> = ({
-  advisorId,
-}) => {
+export const ClientReferralRate: React.FC = () => {
+  const { filters } = useReportFilters();
   const [data, setData] = useState<ClientReferralRateData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,9 +126,13 @@ export const ClientReferralRate: React.FC<ClientReferralRateProps> = ({
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const result = await getClientReferralRateData({ advisorId });
-        setData(result);
         setError(null);
+        
+        const apiParams = filtersToApiParams(filters);
+        const clients = await getClients(apiParams);
+        const transformedData = generateReferralReportFromClients(clients);
+        
+        setData(transformedData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load data');
         console.error('Error fetching referral rate data:', err);
@@ -83,23 +142,10 @@ export const ClientReferralRate: React.FC<ClientReferralRateProps> = ({
     };
 
     fetchData();
-  }, [advisorId]);
+  }, [filters]);
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <div className="h-8 bg-gray-200 rounded animate-pulse" />
-          <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 bg-gray-200 rounded animate-pulse" />
-          ))}
-        </div>
-        <div className="h-80 bg-gray-200 rounded animate-pulse" />
-      </div>
-    );
+    return <ReportSkeleton />;
   }
 
   if (error) {
@@ -128,24 +174,29 @@ export const ClientReferralRate: React.FC<ClientReferralRateProps> = ({
     return `${sign}${value.toFixed(1)}% from last month`;
   };
 
+  // Dynamic insights based on actual data
   const keyInsights = [
     {
-      title: "Exceptional Referral Performance",
-      description: `Your referral rate has increased by ${Math.abs(kpi.rateChange).toFixed(1)} percentage points over the past 12 months, with ${kpi.currentRate}% of new clients now coming through referrals.`,
-      color: "border-l-green-500",
-      bgColor: "bg-green-50"
+      title: kpi.rateChange >= 0 ? "Strong Referral Performance" : "Referral Rate Opportunity",
+      description: `Your referral rate has ${kpi.rateChange >= 0 ? 'increased' : 'decreased'} by ${Math.abs(kpi.rateChange).toFixed(1)} percentage points over the past month, with ${kpi.currentRate}% of new clients now coming through referrals.`,
+      color: kpi.rateChange >= 0 ? "border-l-green-500" : "border-l-amber-500",
+      bgColor: kpi.rateChange >= 0 ? "bg-green-50" : "bg-amber-50"
     },
     {
-      title: "Strong Upward Trajectory", 
-      description: "The trend shows consistent growth in referral effectiveness, indicating strong client satisfaction and advocacy.",
+      title: kpi.rateChange >= 0 ? "Positive Growth Trajectory" : "Focus on Client Satisfaction", 
+      description: kpi.rateChange >= 0 
+        ? "The trend shows consistent growth in referral effectiveness, indicating strong client satisfaction and advocacy."
+        : "Consider reviewing client satisfaction initiatives to improve referral rates and client advocacy.",
       color: "border-l-blue-500",
       bgColor: "bg-blue-50"
     },
     {
-      title: "Market Leadership",
-      description: `At ${kpi.currentRate}%, your referral rate significantly exceeds industry averages. This indicates exceptional client trust and service quality.`,
-      color: "border-l-amber-500",
-      bgColor: "bg-amber-50"
+      title: kpi.currentRate >= 30 ? "Market Leadership" : "Industry Benchmark",
+      description: kpi.currentRate >= 30 
+        ? `At ${kpi.currentRate}%, your referral rate significantly exceeds industry averages. This indicates exceptional client trust and service quality.`
+        : `At ${kpi.currentRate}%, there's opportunity to grow toward industry leaders who typically see 30%+ referral rates through enhanced client experience.`,
+      color: kpi.currentRate >= 30 ? "border-l-purple-500" : "border-l-orange-500",
+      bgColor: kpi.currentRate >= 30 ? "bg-purple-50" : "bg-orange-50"
     }
   ];
 
@@ -153,7 +204,11 @@ export const ClientReferralRate: React.FC<ClientReferralRateProps> = ({
     <div className="space-y-6">
       {/* Header */}
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900">New Client Referral Performance</h2>
+        <h2 className="text-2xl font-bold text-gray-900">
+          {filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" 
+            ? `${filters.advisorIds[0]} - New Client Referral Performance` 
+            : "New Client Referral Performance"}
+        </h2>
         <p className="text-gray-600">
           Track the percentage of new clients that come through referrals from existing clients each month.
         </p>
@@ -167,13 +222,17 @@ export const ClientReferralRate: React.FC<ClientReferralRateProps> = ({
             <CardTitle className="text-sm font-medium text-gray-600">
               Current Referral Rate
             </CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
+            {kpi.rateChange >= 0 ? (
+              <TrendingUp className="h-4 w-4 text-green-600" />
+            ) : (
+              <TrendingDown className="h-4 w-4 text-red-600" />
+            )}
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-gray-900">
               {formatPercentage(kpi.currentRate)}
             </div>
-            <p className="text-sm text-green-600 mt-1">
+            <p className={`text-sm mt-1 ${kpi.rateChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {formatChange(kpi.rateChange)}
             </p>
           </CardContent>
@@ -286,7 +345,11 @@ export const ClientReferralRate: React.FC<ClientReferralRateProps> = ({
       <Card>
         <CardHeader>
           <div className="flex items-center space-x-2">
-            <TrendingUp className="h-5 w-5 text-green-600" />
+            {kpi.rateChange >= 0 ? (
+              <TrendingUp className="h-5 w-5 text-green-600" />
+            ) : (
+              <TrendingDown className="h-5 w-5 text-amber-600" />
+            )}
             <CardTitle className="text-lg font-semibold text-gray-900">
               Key Insights
             </CardTitle>

@@ -18,6 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Search,
   CalendarDays,
@@ -27,15 +29,16 @@ import {
   Star,
 } from "lucide-react"; // Added Star icon for milestones
 import {
-  getClientBirthdayReportData,
-  type ClientBirthdayReportData,
+  getClients,
   type BirthdayClient,
-  type GetClientBirthdayReportParams,
   type BirthdayReportFilters as ReportFilterOptions,
-  filterClientsByAdvisor,
 } from "@/lib/clientData";
+import { getBirthdayClients, formatAUM } from "@/utils/client-analytics";
 import { useMockData } from "@/contexts/MockDataContext";
 import { useAdvisor } from "@/contexts/AdvisorContext";
+import { useReportFilters } from "@/contexts/ReportFiltersContext";
+import { filtersToApiParams } from "@/utils/filter-utils";
+import { FilteredReportSkeleton } from "@/components/ui/skeleton";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
@@ -65,11 +68,16 @@ const GRADE_COLORS: Record<
     badgeText: "text-orange-700",
     badgeBorder: "border-orange-200",
   }, // Kept for completeness
+  "N/A": {
+    badgeBg: "bg-gray-400",
+    badgeText: "text-white",
+    badgeBorder: "border-gray-400",
+  }, // Gray for missing segments
   Default: {
     badgeBg: "bg-gray-500",
     badgeText: "text-white",
     badgeBorder: "border-gray-500",
-  }, // Default to a gray blue
+  }, // Default fallback
 };
 
 const getGradeBadgeClasses = (grade: string) => {
@@ -143,92 +151,25 @@ const TENURE_OPTIONS = [
 const ClientBirthdayReport = () => {
   const { useMock } = useMockData();
   const { selectedAdvisor } = useAdvisor();
+  const { filters } = useReportFilters();
+  
   const [allReportData, setAllReportData] = useState<BirthdayClient[]>([]); // Store all data
   const [filteredReportData, setFilteredReportData] = useState<BirthdayClient[]>([]); // Store filtered data
-  const [filterOptions, setFilterOptions] = useState<ReportFilterOptions>({
-    grades: [],
-    advisors: [],
-  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filter states
+  // Local filter states for birthday-specific filters ONLY
+  // NOTE: Advisor and Segment filters are handled by the sidebar (useReportFilters)
   const [nameSearch, setNameSearch] = useState("");
-  const [selectedGrade, setSelectedGrade] = useState("All Grades");
   const [selectedMonth, setSelectedMonth] = useState("Any month");
   const [selectedTenure, setSelectedTenure] = useState("Any tenure");
-  const [selectedReportAdvisor, setSelectedReportAdvisor] = useState("All Advisors");
+  const [showMilestonesOnly, setShowMilestonesOnly] = useState(false);
 
-  const fetchReportData = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      if (useMock) {
-        // Use mock data
-        const mockBirthdayData =
-          mockData.ClientBirthdayReport as ClientBirthdayReportData;
-        
-        // If an advisor is selected from the header, filter the data
-        let clients = mockBirthdayData.clients;
-        if (selectedAdvisor !== 'All Advisors') {
-          // Filter clients by the selected advisor from header
-          clients = clients.filter(
-            client => client.advisorName === selectedAdvisor
-          );
-        }
-        
-        setAllReportData(clients);
-        setFilterOptions(mockBirthdayData.filters);
-      } else {
-        // Try to fetch from API, fallback to mock data on error
-        try {
-          const data = await getClientBirthdayReportData();
-          
-          // If an advisor is selected from the header, filter the data
-          let clients = data.clients;
-          if (selectedAdvisor !== 'All Advisors') {
-            // Filter clients by the selected advisor from header
-            clients = clients.filter(
-              client => client.advisorName === selectedAdvisor
-            );
-          }
-          
-          setAllReportData(clients);
-          setFilterOptions(data.filters);
-        } catch (apiError) {
-          console.warn(
-            "API fetch failed, falling back to mock data:",
-            apiError
-          );
-          const mockBirthdayData =
-            mockData.ClientBirthdayReport as ClientBirthdayReportData;
-          
-          // If an advisor is selected from the header, filter the data
-          let clients = mockBirthdayData.clients;
-          if (selectedAdvisor !== 'All Advisors') {
-            // Filter clients by the selected advisor from header
-            clients = clients.filter(
-              client => client.advisorName === selectedAdvisor
-            );
-          }
-          
-          setAllReportData(clients);
-          setFilterOptions(mockBirthdayData.filters);
-        }
-      }
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Failed to load birthday report data";
-      setError(errorMessage);
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Note: Segment and Advisor filtering is handled by sidebar filters
+  // No need for local dropdowns since they would conflict with global filters
 
-  // Client-side filtering function
+  // Client-side filtering for birthday-specific filters ONLY
+  // NOTE: Advisor and Segment filtering is handled by sidebar → server-side via API
   const applyFilters = () => {
     let filtered = [...allReportData];
 
@@ -240,12 +181,7 @@ const ClientBirthdayReport = () => {
       );
     }
 
-    // Apply grade filter
-    if (selectedGrade !== "All Grades") {
-      filtered = filtered.filter(client => client.grade === selectedGrade);
-    }
-
-    // Apply month filter
+    // Apply month filter (birthday-specific)
     if (selectedMonth !== "Any month") {
       const monthNumber = parseInt(selectedMonth);
       filtered = filtered.filter(client => {
@@ -254,7 +190,7 @@ const ClientBirthdayReport = () => {
       });
     }
 
-    // Apply tenure filter
+    // Apply tenure filter (birthday-specific)
     if (selectedTenure !== "Any tenure") {
       filtered = filtered.filter(client => {
         const tenure = client.clientTenure;
@@ -275,17 +211,50 @@ const ClientBirthdayReport = () => {
       });
     }
 
-    // Apply advisor filter (from the filter dropdown, not the header)
-    if (selectedReportAdvisor !== "All Advisors") {
-      filtered = filtered.filter(client => client.advisorName === selectedReportAdvisor);
+    // Apply milestone filter (birthday-specific)
+    if (showMilestonesOnly) {
+      filtered = filtered.filter(client =>
+        isMilestoneAge(client.turningAge)
+      );
     }
 
     setFilteredReportData(filtered);
   };
 
+  // Fetch report data
   useEffect(() => {
-    fetchReportData(); // Initial fetch
-  }, [useMock, selectedAdvisor]); // Re-fetch when selectedAdvisor changes
+    const fetchReportData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Build API parameters with global filters
+        const params = filtersToApiParams(filters, selectedAdvisor);
+        
+        // Use the centralized getClients function
+        const clients = await getClients(params);
+        
+        if (clients && clients.length > 0) {
+          // Use the frontend analytics utility to calculate birthday data
+          const birthdayClients = getBirthdayClients(clients);
+          setAllReportData(birthdayClients);
+        } else {
+          console.warn('No clients data received, using empty array');
+          setAllReportData([]);
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to load birthday report data";
+        setError(errorMessage);
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchReportData();
+  }, [useMock, selectedAdvisor, filters]); // Re-fetch when filters change
 
   // Apply filters whenever filter criteria or data changes
   useEffect(() => {
@@ -293,22 +262,20 @@ const ClientBirthdayReport = () => {
   }, [
     allReportData,
     nameSearch,
-    selectedGrade,
     selectedMonth,
     selectedTenure,
-    selectedReportAdvisor,
+    showMilestonesOnly,
   ]);
 
   const handleResetFilters = () => {
     setNameSearch("");
-    setSelectedGrade("All Grades");
     setSelectedMonth("Any month");
     setSelectedTenure("Any tenure");
-    setSelectedReportAdvisor("All Advisors");
+    setShowMilestonesOnly(false);
   };
 
   if (isLoading && allReportData.length === 0 && !error) {
-    return <div className="p-6 text-center">Loading birthday report...</div>;
+    return <FilteredReportSkeleton />;
   }
 
   if (error) {
@@ -331,10 +298,30 @@ const ClientBirthdayReport = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Filter Clients</CardTitle>
+          <CardTitle className="text-xl">Birthday-Specific Filters</CardTitle>
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-muted-foreground">
+              Use the sidebar for Advisor and Segment filters. Additional birthday-specific filters below:
+            </p>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="show-milestones"
+                  checked={showMilestonesOnly}
+                  onCheckedChange={setShowMilestonesOnly}
+                />
+                <Label htmlFor="show-milestones" className="text-sm">
+                  Show Milestones
+                </Label>
+              </div>
+              <Button variant="outline" onClick={handleResetFilters}>
+                Reset
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -344,19 +331,6 @@ const ClientBirthdayReport = () => {
                 onChange={(e) => setNameSearch(e.target.value)}
               />
             </div>
-            <Select value={selectedGrade} onValueChange={setSelectedGrade}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Grades" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All Grades">All Grades</SelectItem>
-                {filterOptions.grades.map((grade) => (
-                  <SelectItem key={grade} value={grade}>
-                    {grade}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <Select value={selectedMonth} onValueChange={setSelectedMonth}>
               <SelectTrigger>
                 <SelectValue placeholder="Any month" />
@@ -381,24 +355,6 @@ const ClientBirthdayReport = () => {
                 ))}
               </SelectContent>
             </Select>
-            {/* <Select value={selectedReportAdvisor} onValueChange={setSelectedReportAdvisor}>
-              <SelectTrigger>
-                <SelectValue placeholder="All Advisors" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All Advisors">All Advisors</SelectItem>
-                {filterOptions.advisors.map((adv) => (
-                  <SelectItem key={adv} value={adv}>
-                    {adv}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select> */}
-          </div>
-          <div className="flex justify-end">
-            <Button variant="outline" onClick={handleResetFilters}>
-              Reset
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -484,12 +440,7 @@ const ClientBirthdayReport = () => {
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end">
                             <DollarSign className={iconClasses} />
-                            {client.aum.toLocaleString("en-US", {
-                              style: "currency",
-                              currency: "USD",
-                              minimumFractionDigits: 0,
-                              maximumFractionDigits: 0,
-                            })}
+                            {formatAUM(client.aum)}
                           </div>
                         </TableCell>
                         <TableCell>

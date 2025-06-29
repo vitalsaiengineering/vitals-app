@@ -19,7 +19,7 @@ export interface ClientReportDetail {
   name: string;
   age: number;
   segment: string;
-  joinDate: string;
+  inceptionDate: string;
   aum: number;
 }
 

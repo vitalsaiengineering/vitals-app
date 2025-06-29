@@ -164,8 +164,8 @@ async function getAgeDemographicsReportData(
     name: `${client.firstName || ""} ${client.lastName || ""}`.trim(),
     age: client.age || 0, // Frontend will display "N/A" for age 0 or missing age
     segment: determineSegment(client.aum || "0"),
-    joinDate: client.startDate
-      ? client.startDate.toISOString().split("T")[0]
+          inceptionDate: client.startDate
+        ? client.startDate.toISOString().split("T")[0]
       : client.createdAt.toISOString().split("T")[0],
     aum: Math.round(parseFloat(client.aum || "0")),
   }));
@@ -500,11 +500,11 @@ async function getBookDevelopmentReportData(
 
       // Calculate growth based on actual client join dates (use inceptionDate, fallback to createdAt)
       const clientsJoinedThisYear = baseClients.filter((client) => {
-        const joinDate = client.inceptionDate
+        const inceptionDate = client.inceptionDate
           ? new Date(client.inceptionDate)
           : new Date(client.createdAt);
-        const joinYear = joinDate.getFullYear();
-        return joinYear === year;
+        const inceptionYear = inceptionDate.getFullYear();
+                  return inceptionYear === year;
       }).length;
 
       const baseGrowth =
@@ -530,14 +530,14 @@ async function getBookDevelopmentReportData(
   ): any[] => {
     return clients.map((client) => {
       // Use inceptionDate if available, fallback to createdAt
-      const joinDate = client.inceptionDate
+      const inceptionDate = client.inceptionDate
         ? new Date(client.inceptionDate)
         : new Date(client.createdAt);
       const yearsWithFirm = Math.max(
         1,
-        new Date().getFullYear() - joinDate.getFullYear()
+        new Date().getFullYear() - inceptionDate.getFullYear()
       );
-      const sinceDateText = `Since ${joinDate.toLocaleDateString("en-US", {
+      const sinceDateText = `Since ${inceptionDate.toLocaleDateString("en-US", {
         month: "short",
         year: "numeric",
       })}`;
@@ -706,11 +706,11 @@ async function getClientBirthdayReportData(
   const calculateTenure = (
     client: any
   ): { years: number; tenureText: string } => {
-    const joinDate = client.inceptionDate
+    const inceptionDate = client.inceptionDate
       ? new Date(client.inceptionDate)
       : new Date(client.createdAt);
     const today = new Date();
-    const years = Math.max(1, today.getFullYear() - joinDate.getFullYear());
+    const years = Math.max(1, today.getFullYear() - inceptionDate.getFullYear());
     return {
       years,
       tenureText: `${years} year${years !== 1 ? "s" : ""}`,
@@ -1002,12 +1002,12 @@ async function getSegmentationDashboardData(
   const currentSegmentClients = clientsBySegment[selectedSegment] || [];
   const tableClients = currentSegmentClients.map((client) => {
     // Calculate years with firm
-    const joinDate = client.inceptionDate
+    const inceptionDate = client.inceptionDate
       ? new Date(client.inceptionDate)
       : new Date(client.createdAt);
     const yearsWithFirm = Math.max(
       1,
-      new Date().getFullYear() - joinDate.getFullYear()
+      new Date().getFullYear() - inceptionDate.getFullYear()
     );
 
     return {

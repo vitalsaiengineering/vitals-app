@@ -20,6 +20,7 @@ import {
 } from "@/utils/clientDataUtils.js";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/utils/dateFormatter";
+import { getPrettyClientName, formatAUM } from "@/utils/client-analytics";
 
 interface Client {
   title: any;
@@ -34,7 +35,7 @@ interface Client {
   segment: string;
   age: number;
   tenure: number;
-  joinDate: string;
+  inceptionDate: string;
   state: string;
   household?: string;
 }
@@ -65,8 +66,8 @@ const Clients = () => {
             aum: client.aum,
             segment: client.segment,
             age: calculateAge(client.dateOfBirth),
-            tenure: calculateTenure(client.joinDate),
-            joinDate: client.joinDate,
+            tenure: calculateTenure(client.inceptionDate),
+            inceptionDate: client.inceptionDate,
             state: client.state,
             title: client.title,
             firstName: client.firstName,
@@ -95,8 +96,8 @@ const Clients = () => {
               aum: client.aum,
               segment: client.segment,
               age: calculateAge(client.dateOfBirth),
-              tenure: calculateTenure(client.joinDate),
-              joinDate: client.joinDate,
+              tenure: calculateTenure(client.inceptionDate),
+              inceptionDate: client.inceptionDate,
               state: client.state,
               title: client.title,
               firstName: client.firstName,
@@ -256,7 +257,7 @@ const Clients = () => {
           </div>
           <div className="bg-green-50 p-4 rounded-lg border border-green-200">
             <div className="text-2xl font-bold text-green-900">
-              {formatCurrency(
+              {formatAUM(
                 filteredClients.reduce((sum, client) => sum + client.aum, 0)
               )}
             </div>
@@ -310,7 +311,7 @@ const Clients = () => {
                   key={client.id}
                   className="cursor-pointer hover:bg-muted/50"
                 >
-                  <TableCell className="font-medium">{client.name} {client.title} {client.firstName} {client.lastName}</TableCell>
+                  <TableCell className="font-medium">{getPrettyClientName(client)}</TableCell>
                   <TableCell>
                     <div className="space-y-1">
                       <div className="flex items-center text-sm text-muted-foreground">
@@ -339,7 +340,7 @@ const Clients = () => {
                     </span>
                   </TableCell>
                   <TableCell className="font-medium">
-                    {formatCurrency(client.aum) || "N/A"}
+                    {formatAUM(client.aum) || "N/A"}
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">
@@ -347,7 +348,7 @@ const Clients = () => {
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Calendar className="h-3 w-3 mr-1" />
                         {client.tenure} year{client.tenure !== 1 ? "s" : ""}{" "} 
-                        with firm {formatDate(client.joinDate) || "N/A"}
+                        with firm {formatDate(client.inceptionDate) || "N/A"}
                       </div>
                     </div>
                   </TableCell>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react"; // Added useEffect
+import React, { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -38,57 +38,36 @@ import {
 } from "@/components/ui/chart";
 import * as RechartsPrimitive from "recharts";
 
-// Import the new data fetching function and the interface
-import {
-  getAgeDemographicsReportData,
-  AgeDemographicsData,
-  filterClientsByAdvisor,
-} from "@/lib/clientData";
+// Import standardized types and utilities
+import { StandardClient, FilterableClientResponse } from "@/types/client";
+import { calculateAgeDemographics, AgeDemographicsData, getPrettyClientName, formatAUM } from "@/utils/client-analytics";
+import { useReportFilters } from "@/contexts/ReportFiltersContext";
+import { filtersToApiParams } from "@/utils/filter-utils";
+import { getClients } from "@/lib/clientData";
+import { ReportSkeleton } from "@/components/ui/skeleton";
 
-// Import mock data
-import mockData from "@/data/mockData.js";
-
-// Import the useMockData context
+// Import contexts
 import { useMockData } from "@/contexts/MockDataContext";
 import { useAdvisor } from "@/contexts/AdvisorContext";
 
-// ... (Existing interfaces like AgeDemographicsData might be slightly different from the one in clientData.ts, ensure consistency or use the imported one)
-// For this example, I'll assume the AgeDemographicsData interface defined in this file is the one we want to use for structuring the fetched data.
-// If clientData.ts exports a more accurate/complete one, prefer that.
-
-// Define types for chart config and client data
-type ChartConfigKey = 'silver' | 'gold' | 'platinum' | 'totalClients' | 'totalAum';
-
-// Extended client type that includes all the properties we need
-interface ClientDetail {
-  id: string;
-  name: string;
-  age: number;
-  segment: string;
-  aum: number;
-  advisor?: string;
-  joinDate: string;
-  [key: string]: any; // Allow for additional properties
-}
-
-// ... (SEGMENT_COLORS_HSL and chartConfig remain the same) ...
+// Segment colors configuration
 const SEGMENT_COLORS_HSL: { [key: string]: string } = {
-  SILVER: "hsl(var(--chart-3))",
-  GOLD: "hsl(var(--chart-2))",
-  PLATINUM: "hsl(var(--chart-1))",
+  silver: "hsl(var(--chart-3))",
+  gold: "hsl(var(--chart-2))",
+  platinum: "hsl(var(--chart-1))",
   DEFAULT: "hsl(var(--chart-4))",
 };
 
-// Add type assertion to chartConfig
+// Chart configuration for the 3 segments
 const chartConfig: { [key: string]: { label: string; color: string } } = {
-  silver: { label: "Silver", color: SEGMENT_COLORS_HSL.SILVER },
-  gold: { label: "Gold", color: SEGMENT_COLORS_HSL.GOLD },
-  platinum: { label: "Platinum", color: SEGMENT_COLORS_HSL.PLATINUM },
+  silver: { label: "Silver", color: SEGMENT_COLORS_HSL.silver },
+  gold: { label: "Gold", color: SEGMENT_COLORS_HSL.gold },
+  platinum: { label: "Platinum", color: SEGMENT_COLORS_HSL.platinum },
   totalClients: { label: "Total Clients", color: SEGMENT_COLORS_HSL.DEFAULT },
   totalAum: { label: "Total AUM", color: SEGMENT_COLORS_HSL.DEFAULT },
 };
 
-// Custom Tooltip Component - Updated to use reportData from state
+// Custom Tooltip Component
 const CustomChartTooltip = ({
   active,
   payload,
@@ -100,7 +79,6 @@ const CustomChartTooltip = ({
   reportData: AgeDemographicsData | null;
 }) => {
   if (active && payload && payload.length && reportData) {
-    // Check if reportData is available
     const originalBracketData = reportData.byAgeBracket.find(
       (b) => b.bracket === label
     );
@@ -121,12 +99,7 @@ const CustomChartTooltip = ({
           <p className="mb-1 text-muted-foreground">
             Total:{" "}
             <span className="font-semibold text-foreground">
-              {originalBracketData.aum.toLocaleString("en-US", {
-                style: "currency",
-                currency: "USD",
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              })}{" "}
+              {formatAUM(originalBracketData.aum)}{" "}
               ({originalBracketData.aumPercentage.toFixed(1)}%)
             </span>
           </p>
@@ -157,12 +130,7 @@ const CustomChartTooltip = ({
                   <span className="font-medium text-foreground">
                     {!isAumViewInTooltip
                       ? Number(entry.value).toLocaleString()
-                      : Number(entry.value).toLocaleString("en-US", {
-                          style: "currency",
-                          currency: "USD",
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 0,
-                        })}
+                      : formatAUM(Number(entry.value))}
                   </span>
                 </div>
               );
@@ -176,31 +144,30 @@ const CustomChartTooltip = ({
   return null;
 };
 
-// Helper function to get dot color for age brackets
+// Helper function to get dot color for age brackets (updated brackets)
 const getBracketDotColor = (bracket: string): string => {
   switch (bracket) {
-    case "<20":
-      return "hsl(var(--age-band-under-20))";
+    case "0-20":
+      return "hsl(var(--age-band-0-20))";
     case "21-40":
       return "hsl(var(--age-band-21-40))";
     case "41-60":
       return "hsl(var(--age-band-41-60))";
     case "61-80":
       return "hsl(var(--age-band-61-80))";
-    case ">80":
-      return "hsl(var(--age-band-over-80))";
+    case "81+":
+      return "hsl(var(--age-band-81-plus))";
     default:
       return "hsl(var(--age-band-default))";
   }
 };
 
 interface AgeDemographicsReportProps {
-  reportId: string; // Assuming reportId might be used to fetch specific report, or advisorId if available
-  // advisorId?: number; // Consider adding advisorId if needed for fetching
+  reportId: string;
 }
 
 export default function AgeDemographicsReport({
-  reportId /*, advisorId */,
+  reportId,
 }: AgeDemographicsReportProps) {
   const [isAumView, setIsAumView] = useState<boolean>(false);
   const [selectedAgeBracketForTable, setSelectedAgeBracketForTable] = useState<
@@ -208,131 +175,51 @@ export default function AgeDemographicsReport({
   >(null);
 
   // State for fetched data, loading, and error
-  const [reportData, setReportData] = useState<AgeDemographicsData | null>(
-    null
-  );
+  const [clients, setClients] = useState<StandardClient[]>([]);
+  const [reportData, setReportData] = useState<AgeDemographicsData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Import the useMockData context
+  // Contexts
   const { useMock } = useMockData();
-  // Import the advisor context
   const { selectedAdvisor } = useAdvisor();
+  const { filters } = useReportFilters();
 
-  // Fetch data on component mount
+  // Fetch data from unified API endpoint
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        if (useMock) {
-          // Use mock data
-          const mockReportData =
-            mockData.AgeDemographicsReport as AgeDemographicsData;
-          
-          // If an advisor is selected, filter the data
-          if (selectedAdvisor !== 'All Advisors') {
-            // Filter the mock data by advisor and cast to ClientDetail[]
-            const filteredClients = filterClientsByAdvisor(mockData.AgeDemographicsReport.clientDetails, selectedAdvisor) as ClientDetail[];
-            
-            // Recalculate the age demographics based on filtered clients
-            const totalClients = filteredClients.length;
-            const totalAUM = filteredClients.reduce((sum, client) => sum + (client.aum || 0), 0);
-            const averageClientAge = totalClients > 0 
-              ? filteredClients.reduce((sum, client) => sum + (client.age || 0), 0) / totalClients 
-              : 0;
-            
-            // Recalculate byAgeBracket data
-            const recalculatedAgeBrackets = mockReportData.byAgeBracket.map(bracket => {
-              // Filter clients that belong to this age bracket
-              const bracketClients = filteredClients.filter(client => {
-                const age = client.age;
-                switch (bracket.bracket) {
-                  case "<20": return age < 20;
-                  case "21-40": return age >= 21 && age <= 40;
-                  case "41-60": return age >= 41 && age <= 60;
-                  case "61-80": return age >= 61 && age <= 80;
-                  case ">80": return age > 80;
-                  default: return false;
-                }
-              });
-              
-              // Calculate new metrics for this bracket
-              const clientCount = bracketClients.length;
-              const clientPercentage = totalClients > 0 ? (clientCount / totalClients) * 100 : 0;
-              const aum = bracketClients.reduce((sum, client) => sum + (client.aum || 0), 0);
-              const aumPercentage = totalAUM > 0 ? (aum / totalAUM) * 100 : 0;
-              
-              // Recalculate detailed breakdown by segment
-              const detailedBreakdown = ['Platinum', 'Gold', 'Silver'].map(segment => {
-                const segmentClients = bracketClients.filter(client => 
-                  client.segment.toLowerCase() === segment.toLowerCase()
-                );
-                return {
-                  segment,
-                  clients: segmentClients.length,
-                  aum: segmentClients.reduce((sum, client) => sum + (client.aum || 0), 0)
-                };
-              }).filter(item => item.clients > 0);
-              
-              return {
-                ...bracket,
-                clientCount,
-                clientPercentage,
-                aum,
-                aumPercentage,
-                detailedBreakdown
-              };
-            });
-            
-            // Create the filtered report data
-            const filteredReportData = {
-              byAgeBracket: recalculatedAgeBrackets,
-              clientDetails: filteredClients,
-              overall: {
-                totalClients,
-                totalAUM,
-                averageClientAge
-              }
-            };
-            
-            setReportData(filteredReportData as AgeDemographicsData);
-          } else {
-            setReportData(mockReportData);
-          }
-        } else {
-          // Try to fetch from API, fallback to mock data on error
-          try {
-            const data = await getAgeDemographicsReportData();
-            console.log("data", data);
-            setReportData(data);
-          } catch (apiError) {
-            console.warn(
-              "API fetch failed, falling back to mock data:",
-              apiError
-            );
-            const mockReportData =
-              mockData.AgeDemographicsReport as AgeDemographicsData;
-            setReportData(mockReportData);
-          }
-        }
+        // Build API parameters with filters from context
+        const params = filtersToApiParams(filters, selectedAdvisor);
+        
+        // Use the centralized getClients function
+        const result = await getClients(params);
+        
+        // Set clients and calculate analytics
+        setClients(result);
+        const calculatedData = calculateAgeDemographics(result);
+        setReportData(calculatedData);
+        
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to fetch report data"
         );
-        console.error(err);
+        console.error('Error fetching clients:', err);
       } finally {
         setIsLoading(false);
       }
     };
+    
     fetchData();
-  }, [reportId, useMock, selectedAdvisor]); // Re-fetch if reportId, useMock, or selectedAdvisor changes
+  }, [reportId, selectedAdvisor, filters]);
 
   // Define the desired stacking order (bottom to top)
   const desiredSegmentOrder = ["platinum", "gold", "silver"];
 
   const chartDataForRecharts = useMemo(() => {
-    if (!reportData) return []; // Return empty if no data
+    if (!reportData) return [];
     return reportData.byAgeBracket.map((bracket) => {
       const base = { name: bracket.bracket };
       if (!isAumView) {
@@ -358,48 +245,38 @@ export default function AgeDemographicsReport({
   }, [reportData, isAumView]);
 
   const displayData = useMemo(() => {
-    if (!reportData) return null; // Return null if no data
+    if (!reportData) return null;
     return {
       totalValue: !isAumView
         ? reportData.overall.totalClients
-        : reportData.overall.totalAUM.toLocaleString("en-US", {
-            style: "currency",
-            currency: "USD",
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-          }),
+        : formatAUM(reportData.overall.totalAUM),
       totalLabel: !isAumView ? "Total Clients" : "Total AUM",
       averageClientAge: reportData.overall.averageClientAge,
       brackets: reportData.byAgeBracket.map((b) => ({
         ...b,
         displayValue: !isAumView
           ? b.clientCount
-          : b.aum.toLocaleString("en-US", {
-              style: "currency",
-              currency: "USD",
-              minimumFractionDigits: 0,
-              maximumFractionDigits: 0,
-            }),
+          : formatAUM(b.aum),
         displayPercentage: !isAumView ? b.clientPercentage : b.aumPercentage,
         valueLabel: !isAumView ? "Clients" : "AUM",
         isSelected: selectedAgeBracketForTable === b.bracket,
         dotColor: getBracketDotColor(b.bracket),
       })),
-      tableData: reportData.clientDetails
+      tableData: clients
         .filter((client) => {
           if (!selectedAgeBracketForTable) return true;
           const age = client.age;
           switch (selectedAgeBracketForTable) {
-            case "<20":
-              return age < 20;
+            case "0-20":
+              return age >= 0 && age <= 20;
             case "21-40":
               return age >= 21 && age <= 40;
             case "41-60":
               return age >= 41 && age <= 60;
             case "61-80":
               return age >= 61 && age <= 80;
-            case ">80":
-              return age > 80;
+            case "81+":
+              return age >= 81;
             default:
               return true;
           }
@@ -408,16 +285,11 @@ export default function AgeDemographicsReport({
         .map((client) => ({
           ...client,
           aumDisplay: client.aum
-            ? client.aum.toLocaleString("en-US", {
-                style: "currency",
-                currency: "USD",
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              })
+            ? formatAUM(client.aum)
             : "N/A",
         })),
     };
-  }, [isAumView, reportData, selectedAgeBracketForTable]);
+  }, [isAumView, reportData, selectedAgeBracketForTable, clients]);
 
   const segmentsInChart = useMemo(() => {
     if (!reportData) return [];
@@ -455,11 +327,10 @@ export default function AgeDemographicsReport({
   };
 
   if (isLoading) {
-    return <div className="p-6 text-center">Loading report data...</div>;
+    return <ReportSkeleton />;
   }
 
   if (error || !displayData) {
-    // Also check if displayData is null
     return (
       <div className="p-6 text-center text-red-500">
         Error loading report: {error || "No data available"}
@@ -572,7 +443,7 @@ export default function AgeDemographicsReport({
                     />
                   ))}
                   {segmentsInChart.length === 0 &&
-                    reportData && ( // Ensure reportData exists
+                    reportData && (
                       <Bar
                         dataKey={!isAumView ? "totalClients" : "totalAum"}
                         fill={`var(--color-${
@@ -637,7 +508,7 @@ export default function AgeDemographicsReport({
                     <TableHead>Name</TableHead>
                     <TableHead>Age</TableHead>
                     <TableHead>Segment</TableHead>
-                    <TableHead>Join Date</TableHead>
+                    <TableHead>Inception Date</TableHead>
                     {isAumView && (
                       <TableHead className="text-right">AUM</TableHead>
                     )}
@@ -649,7 +520,7 @@ export default function AgeDemographicsReport({
                     displayData.tableData.map((client) => (
                       <TableRow key={client.id}>
                         <TableCell className="font-medium">
-                          {client.name}
+                          {getPrettyClientName(client)}
                         </TableCell>
                         <TableCell>{client.age}</TableCell>
                         <TableCell>
@@ -657,15 +528,15 @@ export default function AgeDemographicsReport({
                             className="px-2.5 py-1 text-xs rounded-full font-medium"
                             style={{
                               backgroundColor:
-                                chartConfig[client.segment.toLowerCase()]
+                                chartConfig[client.segment?.toLowerCase() || 'silver']
                                   ?.color || SEGMENT_COLORS_HSL.DEFAULT,
                               color: "hsl(var(--primary-foreground))",
                             }}
                           >
-                            {client.segment}
+                            {client.segment || 'N/A'}
                           </span>
                         </TableCell>
-                        <TableCell>{formatDate(client.joinDate)}</TableCell>
+                        <TableCell>{formatDate(client.inceptionDate)}</TableCell>
                         {isAumView && (
                           <TableCell className="text-right">
                             {client.aumDisplay}

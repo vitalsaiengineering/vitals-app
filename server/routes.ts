@@ -76,6 +76,10 @@ import {
   getFirmActivityDashboardHandler,
 } from "./kpi";
 
+// Import the new unified clients router
+import clientsRouter from "./routes/clients";
+import { ClientService } from "./services/client.service";
+
 // Load environment variables
 dotenv.config();
 
@@ -342,10 +346,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(statuses);
   });
 
-  // Get financial advisors (filtered by firm if specified)
+  // Get financial advisors (role-based access)
   app.get(
     "/api/users/advisors",
-    requireRole(["home_office", "firm_admin", "firm_admin"]),
+    requireRole(["advisor", "firm_admin", "home_office"]),
     async (req, res) => {
       const user = req.user as any;
       const firmId = req.query.firmId
@@ -354,21 +358,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let advisors;
 
-      if (user.role === "home_office" && firmId) {
+      if (user.role === "advisor") {
+        // Advisor role: return only themselves
+        advisors = [{
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          fullName: user.fullName || `${user.firstName} ${user.lastName}`.trim(),
+          email: user.email,
+          role: user.role,
+          organizationId: user.organizationId
+        }];
+        console.log(`Advisor ${user.username} accessing their own data`);
+      } else if (user.role === "firm_admin") {
+        // Firm admin: return all advisors in their organization
+        const allUsers = await storage.getUsersByOrganization(user.organizationId);
+        advisors = allUsers.filter(u => u.role?.name === "advisor");
+        console.log(
+          `Firm admin ${user.username} found ${advisors.length} advisors in organization ${user.organizationId}`
+        );
+      } else if (user.role === "home_office" && firmId) {
         // Get advisors for a specific firm under this home office
         advisors = await storage.getAdvisorsByFirm(firmId);
       } else if (user.role === "home_office") {
         // Get all advisors across all firms under this home office
         advisors = await storage.getAdvisorsByHomeOffice(user.organizationId);
-      } else {
-        // Firm admin or client admin - get advisors in their organization
-        advisors = await storage.getUsersByRoleAndOrganization(
-          "advisor",
-          user.organizationId
-        );
-        console.log(
-          `Found ${advisors.length} advisors for ${user.username} in organization ${user.organizationId}`
-        );
       }
 
       res.json(advisors);
@@ -471,20 +485,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   );
-
-  // Client routes
-  app.get("/api/clients", requireAuth, async (req, res) => {
-    const user = req.user as any;
-    let clients;
-
-    if (user.role === "advisor") {
-      clients = await storage.getClientsByAdvisor(user.id);
-    } else {
-      clients = await storage.getClientsByOrganization(user.organizationId);
-    }
-
-    res.json(clients);
-  });
 
   app.post(
     "/api/clients",
@@ -791,11 +791,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
   getClientReferralRateHandler
 );
 
-app.get(
+  app.get(
     "/api/analytics/firm-activity-dashboard",
     requireAuth,
     getFirmActivityDashboardHandler
   );
+
+  // Get available filter options for clients
+  app.get("/api/clients/filters", requireAuth, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const organizationId = user?.organizationId;
+      const userId = user?.id;
+
+      if (!organizationId) {
+        return res.status(401).json({
+          error: 'Organization ID not found'
+        });
+      }
+
+      // Create client service instance
+      const clientService = new ClientService();
+      
+      // Get available filters with role-based advisor filtering
+      const availableFilters = await (clientService as any).getAvailableFilters(organizationId, userId);
+
+      res.json({
+        success: true,
+        data: availableFilters
+      });
+    } catch (error) {
+      console.error('Error fetching available filters:', error);
+      res.status(500).json({
+        error: 'Failed to fetch available filters',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Register the new unified clients API
+  app.use('/api', requireAuth, clientsRouter);
 
   // Save WealthBox configuration
   app.get("/api/wealthbox/auth/setup", async (req, res) => {
