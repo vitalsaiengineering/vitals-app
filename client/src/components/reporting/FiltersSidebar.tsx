@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { CalendarDays, Users, Target, Filter, X } from 'lucide-react';
 import { useReportFilters } from '@/contexts/ReportFiltersContext';
+import { FilterSidebarSkeleton } from '@/components/ui/skeleton';
 
 const FiltersSidebar: React.FC = () => {
   const { 
@@ -21,14 +22,8 @@ const FiltersSidebar: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="w-64 bg-background border-r border-border p-4">
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Filter className="h-5 w-5" />
-            <h2 className="text-lg font-semibold">Filters</h2>
-          </div>
-          <div className="text-sm text-muted-foreground">Loading filter options...</div>
-        </div>
+      <div className="w-64 bg-background border-r border-border">
+        <FilterSidebarSkeleton />
       </div>
     );
   }

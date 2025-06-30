@@ -94,6 +94,69 @@ export function KPICardsSkeleton({ count = 3 }: { count?: number }) {
   );
 }
 
+// Left side filter panel skeleton
+export function FilterSidebarSkeleton() {
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="p-4 border-b border-border">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-5 w-5" /> {/* Filter icon */}
+            <Skeleton className="h-6 w-16" /> {/* "Filters" title */}
+          </div>
+          <Skeleton className="h-8 w-8 rounded" /> {/* Reset button */}
+        </div>
+      </div>
+
+      {/* Filter Controls */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {/* Date Range Filter */}
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-4 w-4" /> {/* Calendar icon */}
+            <Skeleton className="h-4 w-20" /> {/* "Date Range" label */}
+          </div>
+          <Skeleton className="h-10 w-full" /> {/* Select dropdown */}
+        </div>
+
+        {/* Separator */}
+        <Skeleton className="h-px w-full" />
+
+        {/* Advisor Filter */}
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-4 w-4" /> {/* Users icon */}
+            <Skeleton className="h-4 w-16" /> {/* "Advisor" label */}
+          </div>
+          <Skeleton className="h-10 w-full" /> {/* Select dropdown */}
+        </div>
+
+        {/* Separator */}
+        <Skeleton className="h-px w-full" />
+
+        {/* Client Segment Filter */}
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-4 w-4" /> {/* Target icon */}
+            <Skeleton className="h-4 w-24" /> {/* "Client Segment" label */}
+          </div>
+          <Skeleton className="h-10 w-full" /> {/* Select dropdown */}
+        </div>
+      </div>
+
+      {/* Active Filters Summary */}
+      <div className="p-4 border-t border-border space-y-2">
+        <Skeleton className="h-3 w-20" /> {/* "Active Filters:" label */}
+        <div className="flex flex-wrap gap-1">
+          <Skeleton className="h-6 w-16 rounded-full" /> {/* Badge 1 */}
+          <Skeleton className="h-6 w-20 rounded-full" /> {/* Badge 2 */}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // For reports with filters and search
 export function FilteredReportSkeleton() {
   return (

@@ -47,7 +47,7 @@ import { getClients } from "@/lib/clientData";
 import { ReportSkeleton } from "@/components/ui/skeleton";
 
 // Import contexts
-import { useMockData } from "@/contexts/MockDataContext";
+
 import { useAdvisor } from "@/contexts/AdvisorContext";
 
 // Segment colors configuration
@@ -181,7 +181,6 @@ export default function AgeDemographicsReport({
   const [error, setError] = useState<string | null>(null);
 
   // Contexts
-  const { useMock } = useMockData();
   const { selectedAdvisor } = useAdvisor();
   const { filters } = useReportFilters();
 

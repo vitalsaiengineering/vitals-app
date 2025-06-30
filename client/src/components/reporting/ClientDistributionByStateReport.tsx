@@ -22,11 +22,8 @@ import { useReportFilters } from "@/contexts/ReportFiltersContext";
 import { filtersToApiParams } from "@/utils/filter-utils";
 import { formatAUM, getPrettyClientName, getSegmentName } from "@/utils/client-analytics";
 import { ReportSkeleton } from "@/components/ui/skeleton";
-import { useMockData } from "@/contexts/MockDataContext";
-import { getAdvisorReportTitle, getAdvisorName } from '@/lib/utils';
 
-// Import mock data
-import mockData from "@/data/mockData.js";
+import { getAdvisorReportTitle, getAdvisorName } from '@/lib/utils';
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 
@@ -182,7 +179,6 @@ const getMapFillColor = (
 };
 
 const ClientDistributionByStateReport = () => {
-  const { useMock } = useMockData();
   const { filters, filterOptions } = useReportFilters();
   const [reportData, setReportData] = useState<ClientDistributionReportData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -199,17 +195,11 @@ const ClientDistributionByStateReport = () => {
       setIsLoading(true);
       setError(null);
       try {
-        if (useMock) {
-          // Use mock data
-          let mockReportData = mockData.ClientDistributionByState as ClientDistributionReportData;
-          setReportData(mockReportData);
-        } else {
-          // Use centralized getClients function
-          const apiParams = filtersToApiParams(filters);
-          const clients = await getClients(apiParams);
-          const transformedData = generateDistributionReportFromClients(clients);
-          setReportData(transformedData);
-        }
+        // Use centralized getClients function
+        const apiParams = filtersToApiParams(filters);
+        const clients = await getClients(apiParams);
+        const transformedData = generateDistributionReportFromClients(clients);
+        setReportData(transformedData);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to fetch report data"
@@ -220,7 +210,7 @@ const ClientDistributionByStateReport = () => {
       }
     };
     fetchData();
-  }, [useMock, filters]);
+  }, [filters]);
 
   const allClientsFromReport = useMemo(() => {
     if (!reportData) return [];

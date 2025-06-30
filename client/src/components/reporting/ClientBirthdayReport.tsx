@@ -34,14 +34,11 @@ import {
   type BirthdayReportFilters as ReportFilterOptions,
 } from "@/lib/clientData";
 import { getBirthdayClients, formatAUM } from "@/utils/client-analytics";
-import { useMockData } from "@/contexts/MockDataContext";
+
 import { useAdvisor } from "@/contexts/AdvisorContext";
 import { useReportFilters } from "@/contexts/ReportFiltersContext";
 import { filtersToApiParams } from "@/utils/filter-utils";
 import { FilteredReportSkeleton } from "@/components/ui/skeleton";
-
-// Import mock data
-import mockData from "@/data/mockData.js";
 
 // Define Grade colors - Updated for blue backgrounds and white text
 const GRADE_COLORS: Record<
@@ -149,7 +146,6 @@ const TENURE_OPTIONS = [
 ];
 
 const ClientBirthdayReport = () => {
-  const { useMock } = useMockData();
   const { selectedAdvisor } = useAdvisor();
   const { filters } = useReportFilters();
   
@@ -214,7 +210,7 @@ const ClientBirthdayReport = () => {
     // Apply milestone filter (birthday-specific)
     if (showMilestonesOnly) {
       filtered = filtered.filter(client =>
-        isMilestoneAge(client.turningAge)
+        client.turningAge > 0 && isMilestoneAge(client.turningAge)
       );
     }
 
@@ -254,8 +250,9 @@ const ClientBirthdayReport = () => {
     };
 
     fetchReportData();
-  }, [useMock, selectedAdvisor, filters]); // Re-fetch when filters change
+  }, [selectedAdvisor, filters]); // Re-fetch when filters change
 
+  console.log("allReportData", allReportData);
   // Apply filters whenever filter criteria or data changes
   useEffect(() => {
     applyFilters();
@@ -415,25 +412,41 @@ const ClientBirthdayReport = () => {
                             {formatDate(client.dateOfBirth)}
                           </div>
                         </TableCell>
-                        <TableCell>{formatDate(client.nextBirthdayDisplay)}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{client.nextBirthdayDisplay}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(client.nextBirthdayDate).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric' 
+                              })}
+                            </span>
+                          </div>
+                        </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center">
-                            {isMilestoneAge(client.turningAge) && (
-                              <Star className="mr-1.5 h-4 w-4 text-yellow-500" />
-                            )}
-                            <span 
-                              className={`font-medium ${
-                                isMilestoneAge(client.turningAge) 
-                                  ? 'text-yellow-600 font-bold' 
-                                  : 'text-blue-600'
-                              }`}
-                            >
-                              {client.turningAge}
-                            </span>
-                            {isMilestoneAge(client.turningAge) && (
-                              <span className="ml-1.5 text-xs text-yellow-600 font-semibold">
-                                MILESTONE
-                              </span>
+                            {client.turningAge === 0 ? (
+                              <span className="text-gray-500 font-medium">N/A</span>
+                            ) : (
+                              <>
+                                {client.turningAge > 0 && isMilestoneAge(client.turningAge) && (
+                                  <Star className="mr-1.5 h-4 w-4 text-yellow-500" />
+                                )}
+                                <span 
+                                  className={`font-medium ${
+                                    client.turningAge > 0 && isMilestoneAge(client.turningAge) 
+                                      ? 'text-yellow-600 font-bold' 
+                                      : 'text-blue-600'
+                                  }`}
+                                >
+                                  {client.turningAge}
+                                </span>
+                                {client.turningAge > 0 && isMilestoneAge(client.turningAge) && (
+                                  <span className="ml-1.5 text-xs text-yellow-600 font-semibold">
+                                    MILESTONE
+                                  </span>
+                                )}
+                              </>
                             )}
                           </div>
                         </TableCell>

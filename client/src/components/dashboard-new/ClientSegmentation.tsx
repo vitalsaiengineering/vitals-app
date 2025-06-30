@@ -11,9 +11,6 @@ import {
 import { useMockData } from "@/contexts/MockDataContext";
 import { filterClientsByAdvisor } from "@/lib/clientData";
 
-// Import mock data
-import mockData from "@/data/mockData.js";
-
 // Define types for chart data
 interface SegmentData {
   name: string;

@@ -37,14 +37,11 @@ import {
 import { AumChart } from "@/components/dashboard-new/AumChart";
 import { getClients } from "@/lib/clientData";
 import { StandardClient } from "@/types/client";
-import { useMockData } from "@/contexts/MockDataContext";
+
 import { useReportFilters } from "@/contexts/ReportFiltersContext";
 import { filtersToApiParams } from "@/utils/filter-utils";
 import { getSegmentName, getPrettyClientName } from "@/utils/client-analytics";
 import { FilteredReportSkeleton } from "@/components/ui/skeleton";
-
-// Import mock data
-import mockData from "@/data/mockData.js";
 
 // Define types that work with StandardClient
 interface BookDevelopmentClient extends StandardClient {
@@ -341,7 +338,6 @@ export default function BookDevelopmentBySegmentReport() {
     direction: "ascending" | "descending";
   }>({ key: null, direction: "ascending" });
 
-  const { useMock } = useMockData();
   const { filters, filterOptions } = useReportFilters();
 
   useEffect(() => {
@@ -349,41 +345,21 @@ export default function BookDevelopmentBySegmentReport() {
       setIsLoading(true);
       setError(null);
       try {
-        if (useMock) {
-          // Get mock data
-          const mockReportData = mockData.BookDevelopmentBySegmentReport;
-          setReportData(mockReportData);
-        } else {
-          // Fetch real data from standardized API
-          try {
-            const apiParams = filtersToApiParams(filters);
-            const clients = await getClients(apiParams);
-            const transformedData = generateSegmentDataFromClients(clients);
-            setReportData(transformedData);
-          } catch (apiError) {
-            console.warn("API fetch failed, falling back to mock data:", apiError);
-            const mockReportData = mockData.BookDevelopmentBySegmentReport as BookDevelopmentReportData;
-            setReportData(mockReportData);
-          }
-        }
+        // Fetch real data from standardized API
+        const apiParams = filtersToApiParams(filters);
+        const clients = await getClients(apiParams);
+        const transformedData = generateSegmentDataFromClients(clients);
+        setReportData(transformedData);
       } catch (error) {
         console.error("Error fetching report data:", error);
         setError("Failed to load report data. Please try again later.");
-        
-        // Use mock data as final fallback
-        try {
-          const mockReportData = mockData.BookDevelopmentBySegmentReport;
-          setReportData(mockReportData);
-        } catch (mockError) {
-          console.error("Error loading mock data:", mockError);
-        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, [filters, useMock]);
+  }, [filters]);
 
   // Filter clients based on search term and selected segments (now using server-filtered data)
   const filteredClients = useMemo(() => {
@@ -605,63 +581,7 @@ export default function BookDevelopmentBySegmentReport() {
   const rechartsFormattedData = useMemo(() => {
     if (!reportData) return [];
     
-    if (useMock) {
-      // Define fixed base data that will always work
-      let baseData;
-      
-      if (chartView === "assetsUnderManagement") {
-        baseData = getMockSegmentData();
-      } else {
-        // Client count data
-        baseData = [
-          { year: 2019, Platinum: 30, Gold: 45, Silver: 60, "N/A": 8 },
-          { year: 2020, Platinum: 32, Gold: 48, Silver: 63, "N/A": 9 },
-          { year: 2021, Platinum: 34, Gold: 50, Silver: 66, "N/A": 10 },
-          { year: 2022, Platinum: 36, Gold: 53, Silver: 69, "N/A": 11 },
-          { year: 2023, Platinum: 38, Gold: 56, Silver: 73, "N/A": 12 },
-          { year: 2024, Platinum: 40, Gold: 59, Silver: 77, "N/A": 13 },
-          { year: 2025, Platinum: 42, Gold: 62, Silver: 81, "N/A": 14 },
-        ];
-      }
-      
-      // If filtering by advisor, adjust the data
-      if (filters.advisorIds.length > 0) {
-        // Create advisor-specific distribution patterns
-        const advisorDistributionPatterns: Record<string, {Platinum: number, Gold: number, Silver: number, "N/A": number}> = {
-          "Jackson Miller": { Platinum: 0.40, Gold: 0.35, Silver: 0.20, "N/A": 0.05 }, // First advisor has more Platinum
-          "Sarah Johnson": { Platinum: 0.30, Gold: 0.45, Silver: 0.20, "N/A": 0.05 },  // Second advisor has more Gold
-          "Thomas Chen": { Platinum: 0.25, Gold: 0.35, Silver: 0.35, "N/A": 0.05 },    // Third advisor has more Silver
-          "Maria Reynolds": { Platinum: 0.30, Gold: 0.30, Silver: 0.30, "N/A": 0.10 }  // Fourth advisor is balanced with more N/A
-        };
-        
-        // Use the pattern for this advisor (or a default pattern as fallback)
-        const advisorName = filters.advisorIds[0]; // Assuming single advisor selection for now
-        const pattern = advisorDistributionPatterns[advisorName] || 
-          { Platinum: 0.30, Gold: 0.30, Silver: 0.30, "N/A": 0.10 };
-        
-        // Assume each advisor manages roughly 25% of the total
-        const ratio = 0.25;
-        
-        baseData = baseData.map(dataPoint => {
-          // Calculate total for this year including N/A
-          const totalValue = dataPoint.Platinum + dataPoint.Gold + dataPoint.Silver + dataPoint["N/A"];
-          
-          // Apply the ratio to get this advisor's portion
-          const advisorTotal = totalValue * ratio;
-          
-          // Distribute according to this advisor's pattern
-          return {
-            year: dataPoint.year,
-            Platinum: advisorTotal * pattern.Platinum,
-            Gold: advisorTotal * pattern.Gold,
-            Silver: advisorTotal * pattern.Silver,
-            "N/A": advisorTotal * pattern["N/A"]
-          };
-        });
-      }
-      
-      return baseData;
-    }
+
 
     // For real data, transform it to match the same format as AumChart
     const years = [2019, 2020, 2021, 2022, 2023, 2024, 2025];
@@ -726,7 +646,7 @@ export default function BookDevelopmentBySegmentReport() {
     }
 
     return baseData;
-  }, [reportData, useMock, filters.advisorIds, chartView]);
+  }, [reportData, filters.advisorIds, chartView]);
 
   const yAxisTickFormatter = (value: number) => {
     if (chartView === "assetsUnderManagement") {
