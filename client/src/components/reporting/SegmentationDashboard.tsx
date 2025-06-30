@@ -18,16 +18,13 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { useMockData } from "@/contexts/MockDataContext";
+
 import { useReportFilters } from "@/contexts/ReportFiltersContext";
 import { getClients } from "@/lib/clientData";
 import { filtersToApiParams } from "@/utils/filter-utils";
 import { StandardClient } from "@/types/client";
 import { formatAUM, getPrettyClientName, getSegmentName } from "@/utils/client-analytics";
 import { ReportSkeleton } from "@/components/ui/skeleton";
-
-// Import mock data
-import mockData from "@/data/mockData.js";
 
 // Chart colors for segments
 const SEGMENT_COLORS = {
@@ -180,7 +177,6 @@ const generateSegmentationDashboardFromClients = (
 };
 
 export default function SegmentationDashboard() {
-  const { useMock } = useMockData();
   const { filters, filterOptions } = useReportFilters();
   const [dashboardData, setDashboardData] = useState<SegmentationDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -192,17 +188,11 @@ export default function SegmentationDashboard() {
       setIsLoading(true);
       setError(null);
       try {
-        if (useMock) {
-          // Use mock data
-          const mockSegmentationData = mockData.ClientSegmentationDashboard as any;
-          setDashboardData(mockSegmentationData);
-        } else {
-          // Use centralized getClients function
-          const apiParams = filtersToApiParams(filters);
-          const clients = await getClients(apiParams);
-          const transformedData = generateSegmentationDashboardFromClients(clients, filterOptions?.advisors);
-          setDashboardData(transformedData);
-        }
+        // Use centralized getClients function
+        const apiParams = filtersToApiParams(filters);
+        const clients = await getClients(apiParams);
+        const transformedData = generateSegmentationDashboardFromClients(clients, filterOptions?.advisors);
+        setDashboardData(transformedData);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to fetch dashboard data"
@@ -213,7 +203,7 @@ export default function SegmentationDashboard() {
       }
     };
     fetchData();
-  }, [useMock, filters, filterOptions]);
+  }, [filters, filterOptions]);
 
   const handleSegmentClick = (segmentName: string) => {
     console.log("Segment clicked:", segmentName);

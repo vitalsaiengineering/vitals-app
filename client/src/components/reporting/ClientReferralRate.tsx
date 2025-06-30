@@ -36,6 +36,7 @@ interface ClientReferralRateData {
     referredClientsThisMonth: number;
   };
   chartData: ReferralData[];
+  clients: StandardClient[]; // Store underlying client data for advanced analysis
 }
 
 // Data transformation functions
@@ -89,7 +90,8 @@ const generateReferralReportFromClients = (clients: StandardClient[]): ClientRef
       newClientsThisMonth: currentMonthData.totalNewClients,
       referredClientsThisMonth: currentMonthData.referredClients
     },
-    chartData
+    chartData,
+    clients // Include clients data for advanced analysis and filtering
   };
 };
 
@@ -119,6 +121,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export const ClientReferralRate: React.FC = () => {
   const { filters, filterOptions } = useReportFilters();
   const [data, setData] = useState<ClientReferralRateData | null>(null);
+  const [clients, setClients] = useState<StandardClient[]>([]); // Store client data in state
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -129,9 +132,10 @@ export const ClientReferralRate: React.FC = () => {
         setError(null);
         
         const apiParams = filtersToApiParams(filters);
-        const clients = await getClients(apiParams);
-        const transformedData = generateReferralReportFromClients(clients);
+        const clientsData = await getClients(apiParams);
+        const transformedData = generateReferralReportFromClients(clientsData);
         
+        setClients(clientsData); // Store clients in state for advanced analysis
         setData(transformedData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load data');

@@ -188,30 +188,67 @@ export function getBirthdayClients(clients: StandardClient[], targetMonth?: numb
 
   return clients
     .filter(client => {
-      // if (!client.dateOfBirth) return false;
-      const birthMonth = new Date(client.dateOfBirth).getMonth() + 1;
-      return targetMonth ? birthMonth === targetMonth : true;
+      // If filtering by target month, only include clients with valid birth dates in that month
+      if (targetMonth) {
+        if (!client.dateOfBirth) return false;
+        const birthDate = new Date(client.dateOfBirth);
+        if (isNaN(birthDate.getTime())) return false;
+        const birthMonth = birthDate.getMonth() + 1;
+        return birthMonth === targetMonth;
+      }
+      // If no target month filter, include all clients
+      return true;
     })
     .map(client => {
+      // Calculate tenure (this should work for all clients)
+      const inceptionDate = client.inceptionDate ? new Date(client.inceptionDate) : new Date();
+      const tenureYears = Math.floor((today.getTime() - inceptionDate.getTime()) / (1000 * 60 * 60 * 24 * 365));
+      
+      // Check if client has valid birth date
+      const hasValidBirthDate = client.dateOfBirth && !isNaN(new Date(client.dateOfBirth).getTime());
+      
+      if (!hasValidBirthDate) {
+        // Client without valid birth date - show N/A for birthday fields
+        return {
+          id: client.id,
+          clientName: getPrettyClientName(client),
+          grade: getSegmentName(client.segment),
+          dateOfBirth: 'N/A',
+          nextBirthdayDisplay: 'N/A',
+          nextBirthdayDate: 'N/A',
+          turningAge: 0, // or could be N/A, but number field expected
+          aum: client.aum,
+          clientTenure: `${tenureYears} years`,
+          advisorName: client.advisor,
+          daysUntilNextBirthday: 999999 // Large number to sort at end
+        };
+      }
+      
+      // Client with valid birth date - calculate birthday info
       const birthDate = new Date(client.dateOfBirth);
-      const thisYearBirthday = new Date(currentYear, birthDate.getMonth(), birthDate.getDate());
-      const nextYearBirthday = new Date(currentYear + 1, birthDate.getMonth(), birthDate.getDate());
+      
+      // Create dates in local timezone to avoid timezone conversion issues
+      const birthMonth = birthDate.getMonth();
+      const birthDay = birthDate.getDate();
+      
+      // Create this year's birthday (noon to avoid timezone issues)
+      const thisYearBirthday = new Date(currentYear, birthMonth, birthDay, 12, 0, 0);
+      const nextYearBirthday = new Date(currentYear + 1, birthMonth, birthDay, 12, 0, 0);
       
       // Determine next birthday
       const nextBirthday = thisYearBirthday >= today ? thisYearBirthday : nextYearBirthday;
       const daysUntil = Math.ceil((nextBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       
-      // Calculate tenure
-        const inceptionDate = new Date(client.inceptionDate);
-  const tenureYears = Math.floor((today.getTime() - inceptionDate.getTime()) / (1000 * 60 * 60 * 24 * 365));
+      // Format next birthday date without timezone conversion
+      const nextBirthdayDateString = `${nextBirthday.getFullYear()}-${String(nextBirthday.getMonth() + 1).padStart(2, '0')}-${String(nextBirthday.getDate()).padStart(2, '0')}`;
       
       return {
         id: client.id,
         clientName: getPrettyClientName(client),
         grade: getSegmentName(client.segment),
         dateOfBirth: client.dateOfBirth,
-        nextBirthdayDisplay: daysUntil <= 7 ? `In ${daysUntil} days` : nextBirthday.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        nextBirthdayDate: nextBirthday.toISOString().split('T')[0],
+        nextBirthdayDisplay: `In ${daysUntil} days`,
+        nextBirthdayDate: nextBirthdayDateString,
         turningAge: nextBirthday.getFullYear() - birthDate.getFullYear(),
         aum: client.aum,
         clientTenure: `${tenureYears} years`,

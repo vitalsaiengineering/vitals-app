@@ -25,11 +25,9 @@ import { getClients } from "@/lib/clientData";
 import { useReportFilters } from "@/contexts/ReportFiltersContext";
 import { filtersToApiParams } from "@/utils/filter-utils";
 import { getPrettyClientName, getSegmentName } from "@/utils/client-analytics";
-import { useMockData } from "@/contexts/MockDataContext";
+
 import { useAdvisor } from "@/contexts/AdvisorContext";
 
-// Import mock data
-import mockData from "@/data/mockData.js";
 import { getAdvisorReportTitle } from "@/lib/utils";
 
 // Define transformed interfaces for compatibility
@@ -184,7 +182,7 @@ export default function ClientAnniversaryView({
   const { selectedAdvisor } = useAdvisor();
   const { filters, filterOptions } = useReportFilters();
 
-  const { useMock } = useMockData();
+
 
   // Fetch data using centralized approach
   useEffect(() => {
@@ -216,7 +214,7 @@ export default function ClientAnniversaryView({
     };
 
     fetchData();
-  }, [filters, selectedAdvisor, useMock]);
+  }, [filters, selectedAdvisor]);
 
   // Client-side filtering function (now for display filters only since server handles main filtering)
   const applyDisplayFilters = () => {

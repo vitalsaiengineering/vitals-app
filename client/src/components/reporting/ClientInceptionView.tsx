@@ -34,13 +34,10 @@ import { StandardClient } from "@/types/client";
 import { getClients } from "@/lib/clientData";
 import { useReportFilters } from "@/contexts/ReportFiltersContext";
 import { filtersToApiParams } from "@/utils/filter-utils";
-import { useMockData } from "@/contexts/MockDataContext";
+
 import { useAdvisor } from "@/contexts/AdvisorContext";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import { getAdvisorReportTitle } from '@/lib/utils';
-
-// Import mock data
-import mockData from "@/data/mockData.js";
 
 // Define transformed interfaces for compatibility
 interface InceptionReportData {
@@ -244,7 +241,7 @@ export default function ClientInceptionView({
 
   // Get contexts
   const { selectedAdvisor } = useAdvisor();
-  const { useMock } = useMockData();
+
   const { filters, filterOptions } = useReportFilters();
 
   // Fetch data using centralized approach
@@ -277,7 +274,7 @@ export default function ClientInceptionView({
     };
 
     fetchData();
-  }, [filters, selectedAdvisor, useMock]);
+  }, [filters, selectedAdvisor]);
 
   // Client-side filtering function (now for display filters only since server handles main filtering)
   const applyDisplayFilters = () => {

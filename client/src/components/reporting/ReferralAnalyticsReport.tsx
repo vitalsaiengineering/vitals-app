@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Users } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { useMockData } from "@/contexts/MockDataContext";
+
 import { useReportFilters } from "@/contexts/ReportFiltersContext";
 import { getClients } from "@/lib/clientData";
 import { filtersToApiParams } from "@/utils/filter-utils";
@@ -15,8 +15,6 @@ import { formatAUM, getPrettyClientName, getSegmentName } from "@/utils/client-a
 import { ReportSkeleton } from "@/components/ui/skeleton";
 import { getAdvisorReportTitle } from '@/lib/utils';
 
-// Import mock data
-import mockData from "@/data/mockData.js";
 
 // Define types locally
 interface ReferralClient {
@@ -179,7 +177,6 @@ const generateReferralAnalyticsFromClients = (clients: StandardClient[], advisor
 };
 
 export default function ReferralAnalyticsReport() {
-  const { useMock } = useMockData();
   const { filters, filterOptions } = useReportFilters();
   const [analyticsData, setAnalyticsData] = useState<ReferralAnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -192,17 +189,11 @@ export default function ReferralAnalyticsReport() {
       setIsLoading(true);
       setError(null);
       try {
-        if (useMock) {
-          // Use mock data
-          const mockReportData = mockData.ReferralAnalytics as ReferralAnalyticsData;
-          setAnalyticsData(mockReportData);
-        } else {
-          // Use centralized getClients function
-          const apiParams = filtersToApiParams(filters);
-          const clients = await getClients(apiParams);
-          const transformedData = generateReferralAnalyticsFromClients(clients, filterOptions?.advisors);
-          setAnalyticsData(transformedData);
-        }
+        // Use centralized getClients function
+        const apiParams = filtersToApiParams(filters);
+        const clients = await getClients(apiParams);
+        const transformedData = generateReferralAnalyticsFromClients(clients, filterOptions?.advisors);
+        setAnalyticsData(transformedData);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to fetch report data"
@@ -213,7 +204,7 @@ export default function ReferralAnalyticsReport() {
       }
     };
     fetchData();
-  }, [useMock, filters, filterOptions]);
+  }, [filters, filterOptions]);
 
   const handlePieClick = (data: any) => {
     const source = analyticsData?.referralSources.find(s => s.name === data.name);
