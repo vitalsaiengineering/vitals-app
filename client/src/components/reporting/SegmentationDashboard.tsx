@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, Database, TrendingUp } from "lucide-react";
+import { Users, Database, TrendingUp, ExternalLink } from "lucide-react";
 import {
   PieChart,
   Pie,
@@ -29,6 +29,7 @@ import {
   getSegmentName,
 } from "@/utils/client-analytics";
 import { ReportSkeleton } from "@/components/ui/skeleton";
+import { ViewContactButton } from "@/components/ui/view-contact-button";
 
 // Chart colors for segments - matching the blue theme from the UI
 const SEGMENT_COLORS = {
@@ -70,6 +71,8 @@ interface SegmentClient {
   yearsWithFirm: number | null;
   assets: number;
   advisor: string;
+  wealthboxClientId: string;
+  orionClientId: string;
 }
 
 interface DonutSegmentData {
@@ -127,6 +130,8 @@ const transformToSegmentClient = (
     yearsWithFirm: calculateYearsWithFirm(client.inceptionDate),
     assets: Number(client.aum) || 0,
     advisor: advisorName,
+    wealthboxClientId: client.wealthboxClientId || '',
+    orionClientId: client.orionClientId || ''
   };
 };
 
@@ -688,13 +693,11 @@ export default function SegmentationDashboard() {
                               {formatAUM(client.assets)}
                             </TableCell>
                             <TableCell className="text-right py-4">
-                              <Button
-                                variant="default"
-                                size="sm"
-                                className="bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all duration-200 hover:scale-105 hover:shadow-md opacity-70 group-hover:opacity-100"
-                              >
-                                View Contact
-                              </Button>
+                            <ViewContactButton 
+                            clientId={client.id} 
+                            wealthboxClientId={client.wealthboxClientId}
+                            orionClientId={client.orionClientId}
+                          />
                             </TableCell>
                           </TableRow>
                         );

@@ -11,8 +11,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
   const [location] = useLocation();
   
   // Don't show header on settings and profile pages
-  const hideHeaderPaths = ['/settings', '/profile'];
-  const shouldShowHeader = !hideHeaderPaths.includes(location);
+  const showHeaderPaths = ['/dashboard'];
+  const shouldShowHeader = showHeaderPaths.includes(location);
 
   return (
     <div className="flex h-screen overflow-hidden">

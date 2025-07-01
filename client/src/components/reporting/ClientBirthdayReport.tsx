@@ -39,6 +39,7 @@ import { useAdvisor } from "@/contexts/AdvisorContext";
 import { useReportFilters } from "@/contexts/ReportFiltersContext";
 import { filtersToApiParams } from "@/utils/filter-utils";
 import { FilteredReportSkeleton } from "@/components/ui/skeleton";
+import { ViewContactButton } from "@/components/ui/view-contact-button";
 
 // Define Grade colors - Updated for blue backgrounds and white text
 const GRADE_COLORS: Record<
@@ -471,9 +472,11 @@ const ClientBirthdayReport = () => {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
-                        <Button variant="default" size="sm">
-                            View Contact
-                          </Button>
+                          <ViewContactButton 
+                            clientId={client.id} 
+                            wealthboxClientId={client.wealthboxClientId}
+                            orionClientId={client.orionClientId}
+                          />
                         </TableCell>
                       </TableRow>
                     );

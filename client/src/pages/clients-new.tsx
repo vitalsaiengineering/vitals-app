@@ -8,16 +8,16 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-import { Search, Users, Database, Mail, Phone, Calendar } from "lucide-react";
+import { Search, Users, Mail, Phone, Calendar } from "lucide-react";
 import { useAdvisor } from "@/contexts/AdvisorContext";
 
-import { Button } from "@/components/ui/button";
 import { formatDate } from "@/utils/dateFormatter";
 import { getPrettyClientName, formatAUM } from "@/utils/client-analytics";
 import { getClients } from "@/lib/clientData";
 import { StandardClient } from "@/types/client";
 // @ts-ignore - JavaScript utility file
 import { calculateTenure } from "@/utils/clientDataUtils.js";
+import { ViewContactButton } from "@/components/ui/view-contact-button";
 
 interface Client {
   title: any;
@@ -35,6 +35,8 @@ interface Client {
   inceptionDate: string;
   state: string;
   household?: string;
+  wealthboxClientId?: string;
+  orionClientId?: string;
 }
 
 const Clients = () => {
@@ -325,9 +327,11 @@ const Clients = () => {
                   </TableCell>
                   <TableCell>{client.state || "N/A"}</TableCell>
                   <TableCell>
-                    <Button variant="default" size="sm">
-                      View Contact
-                    </Button>
+                    <ViewContactButton 
+                      clientId={client.id} 
+                      wealthboxClientId={client.wealthboxClientId}
+                      orionClientId={client.orionClientId}
+                    />
                   </TableCell>
                 </TableRow>
               ))

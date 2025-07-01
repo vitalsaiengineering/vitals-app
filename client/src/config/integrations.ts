@@ -15,7 +15,7 @@ export const INTEGRATIONS: Record<string, IntegrationConfig> = {
     name: "Wealthbox",
     oauthUrl: "https://app.crmworkspace.com/oauth/authorize",
     clientId: "MbnIzrEtWejPZ96qHXFwxbkU1R9euNqfrSeynciUgL0",
-    redirectUri: "https://app.advisorvitals.com/settings",
+    redirectUri: "https://moved-repeatedly-mongrel.ngrok-free.app/settings",
     scope: "login+data",
   },
   orion: {

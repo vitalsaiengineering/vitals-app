@@ -27,6 +27,7 @@ import { filtersToApiParams } from "@/utils/filter-utils";
 import { getPrettyClientName, getSegmentName } from "@/utils/client-analytics";
 
 import { useAdvisor } from "@/contexts/AdvisorContext";
+import { ViewContactButton } from "@/components/ui/view-contact-button";
 
 import { getAdvisorReportTitle } from "@/lib/utils";
 
@@ -40,6 +41,8 @@ interface AnniversaryClient {
   yearsWithFirm: number;
   advisorName: string;
   advisorId: string;
+  wealthboxClientId?: string;
+  orionClientId?: string;
 }
 
 interface AnniversaryFilterOptions {
@@ -91,7 +94,9 @@ const transformToAnniversaryClient = (client: StandardClient): AnniversaryClient
     daysUntilNextAnniversary: daysUntil,
     yearsWithFirm: Math.max(yearsWithFirm, 1), // Minimum 1 year
     advisorName: client.advisor,
-    advisorId: client.advisorId
+    advisorId: client.advisorId,
+    wealthboxClientId: client.wealthboxClientId,
+    orionClientId: client.orionClientId
   };
 };
 
@@ -456,14 +461,11 @@ export default function ClientAnniversaryView({
                           <span className="font-medium">{client.advisorName}</span>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button 
-                            size="sm" 
-                            className="gap-1 bg-blue-500 text-white hover:bg-blue-600"
-                            onClick={() => window.open(`/crm/contact/${client.id}`, '_blank')}
-                          >
-                            View Contact
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </Button>
+                          <ViewContactButton 
+                            clientId={client.id} 
+                            wealthboxClientId={client.wealthboxClientId}
+                            orionClientId={client.orionClientId}
+                          />
                         </TableCell>
                       </TableRow>
                     );

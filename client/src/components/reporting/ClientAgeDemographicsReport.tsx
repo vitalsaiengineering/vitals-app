@@ -54,6 +54,8 @@ import { ReportSkeleton } from "@/components/ui/skeleton";
 // Import contexts
 
 import { useAdvisor } from "@/contexts/AdvisorContext";
+import { ExternalLink } from "lucide-react";
+import { ViewContactButton } from "@/components/ui/view-contact-button";
 
 // Segment colors configuration
 const SEGMENT_COLORS_HSL: { [key: string]: string } = {
@@ -546,9 +548,11 @@ export default function AgeDemographicsReport({
                           </TableCell>
                         )}
                         <TableCell className="text-right">
-                          <Button variant="default" size="sm">
-                            View Contact
-                          </Button>
+                          <ViewContactButton 
+                            clientId={client.id} 
+                            wealthboxClientId={client.wealthboxClientId}
+                            orionClientId={client.orionClientId}
+                          />
                         </TableCell>
                       </TableRow>
                     ))

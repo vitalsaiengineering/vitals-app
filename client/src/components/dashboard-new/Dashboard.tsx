@@ -20,6 +20,12 @@ interface DashboardMetrics {
   aum: number;
   revenue: number;
   averageAge: number;
+  changes?: {
+    clientChange: number;
+    aumChange: number;
+    revenueChange: number;
+    ageChange: number;
+  };
 }
 
 export const Dashboard = () => {
@@ -58,11 +64,20 @@ export const Dashboard = () => {
           // Calculate revenue as a percentage of AUM (typical advisory fee is 1-1.5%)
           const revenue = totalAUM * 0.012; // 1.2% fee
 
+          // Generate mock changes for consistency with API
+          const mockChanges = {
+            clientChange: parseFloat((Math.random() * 6 - 1).toFixed(1)), // -1% to 5%
+            aumChange: parseFloat((Math.random() * 15 + 2).toFixed(1)),   // 2% to 17%
+            revenueChange: parseFloat((Math.random() * 10 + 1).toFixed(1)), // 1% to 11%
+            ageChange: parseFloat((Math.random() * 1 - 0.5).toFixed(1))   // -0.5% to 0.5%
+          };
+
           setMetrics({
             totalClients,
             aum: Math.round(totalAUM / 1000000), // Convert to millions
             revenue: Math.round((revenue / 1000000) * 10) / 10, // Convert to millions with 1 decimal
             averageAge,
+            changes: mockChanges
           });
         } else {
           // Try to fetch from API
@@ -74,6 +89,12 @@ export const Dashboard = () => {
               aum: response.data.metrics.aum || 0,
               revenue: response.data.metrics.revenue || 0,
               averageAge: response.data.metrics.averageAge || 0,
+              changes: response.data.metrics.changes || {
+                clientChange: 0,
+                aumChange: 0,
+                revenueChange: 0,
+                ageChange: 0
+              }
             });
           } else {
             throw new Error("API response invalid");
@@ -106,11 +127,20 @@ export const Dashboard = () => {
 
             const revenue = totalAUM * 0.012;
 
+            // Generate fallback changes
+            const fallbackChanges = {
+              clientChange: 2.1,
+              aumChange: 8.3,
+              revenueChange: 5.2,
+              ageChange: 0.1
+            };
+
             setMetrics({
               totalClients,
               aum: Math.round(totalAUM / 1000000),
               revenue: Math.round((revenue / 1000000) * 10) / 10,
               averageAge,
+              changes: fallbackChanges
             });
           } catch (fallbackError) {
             console.error("Error loading fallback data:", fallbackError);
@@ -120,6 +150,12 @@ export const Dashboard = () => {
               aum: 0,
               revenue: 0,
               averageAge: 0,
+              changes: {
+                clientChange: 0,
+                aumChange: 0,
+                revenueChange: 0,
+                ageChange: 0
+              }
             });
           }
         } else {
@@ -129,6 +165,12 @@ export const Dashboard = () => {
             aum: 0,
             revenue: 0,
             averageAge: 0,
+            changes: {
+              clientChange: 0,
+              aumChange: 0,
+              revenueChange: 0,
+              ageChange: 0
+            }
           });
         }
       } finally {
@@ -152,25 +194,26 @@ export const Dashboard = () => {
           <StatCard
             title="Total Clients"
             value={loading ? "Loading..." : metrics.totalClients.toString()}
-            change={4.2}
+            change={metrics.changes?.clientChange || 0}
             icon={<Users size={20} className="text-vitals-blue" />}
           />
           <StatCard
             title="AUM"
             value={loading ? "Loading..." : formatAUMShort(metrics.aum)}
-            change={12.4}
+            change={metrics.changes?.aumChange || 0}
             icon={<DollarSign size={20} className="text-vitals-blue" />}
           />
           <StatCard
             title="Revenue"
             value={loading ? "Loading..." : formatRevenue(metrics.revenue)}
-            change={6.3}
+            change={metrics.changes?.revenueChange || 0}
             icon={<BarChart size={20} className="text-vitals-blue" />}
           />
           <StatCard
             title="Average Client Age"
             value={loading ? "Loading..." : metrics.averageAge.toString()}
-            suffix="Average"
+            change={metrics.changes?.ageChange || 0}
+            suffix="Years"
             icon={<Users size={20} className="text-vitals-blue" />}
           />
         </div>

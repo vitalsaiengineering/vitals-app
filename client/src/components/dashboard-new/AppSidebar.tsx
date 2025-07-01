@@ -433,7 +433,12 @@ export const AppSidebar = () => {
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-2 w-full hover:bg-white/10 rounded-md p-2 transition-colors">
                 <div className="rounded-md h-8 w-8 bg-white flex items-center justify-center">
-                  <span className="text-[#001027] font-bold text-lg">{currentWorkspace.name.charAt(0)}</span>
+                  <img 
+                    src="/images/vitals.png" 
+                    alt="Vitals Logo" 
+                    className="h-6 w-6 object-contain bg-white rounded-md"
+                  />
+                  {/* <span className="text-[#001027] font-bold text-lg">{currentWorkspace.name.charAt(0)}</span> */}
                 </div>
                 {!collapsed && <div className="flex flex-1 items-center justify-between">
                     <span className="font-semibold text-sm">{currentWorkspace.name}</span>
@@ -454,7 +459,11 @@ export const AppSidebar = () => {
                   onClick={() => handleWorkspaceChange(workspace)}
                 >
                   <div className="rounded-md h-6 w-6 bg-[#001027] flex items-center justify-center mr-2">
-                    <span className="text-white font-bold text-xs">{workspace.name.charAt(0)}</span>
+                    <img 
+                      src="/images/vitals.png" 
+                      alt="Vitals Logo" 
+                      className="h-6 w-6 object-contain bg-white rounded-md"
+                    />
                   </div>
                   {workspace.name}
                 </DropdownMenuItem>

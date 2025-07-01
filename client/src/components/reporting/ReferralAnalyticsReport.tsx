@@ -14,6 +14,8 @@ import { StandardClient } from "@/types/client";
 import { formatAUM, getPrettyClientName, getSegmentName } from "@/utils/client-analytics";
 import { ReportSkeleton } from "@/components/ui/skeleton";
 import { getAdvisorReportTitle } from '@/lib/utils';
+import { ViewContactButton } from "@/components/ui/view-contact-button";
+import { ExternalLink } from "lucide-react";
 
 
 // Define types locally
@@ -25,6 +27,8 @@ interface ReferralClient {
   aum: number;
   referralDate: string;
   referredBy: string;
+  wealthboxClientId?: string;
+  orionClientId?: string;
 }
 
 interface ReferralSource {
@@ -89,7 +93,9 @@ const transformToReferralClient = (client: StandardClient, advisors?: { id: stri
   primaryAdvisor: getAdvisorDisplayName(client.primaryAdvisorId || '', advisors),
   aum: Number(client.aum) || 0,
   referralDate: client.inceptionDate || new Date().toISOString(),
-  referredBy: getAdvisorDisplayName(client.referredBy || 'direct', advisors)
+  referredBy: getAdvisorDisplayName(client.referredBy || 'direct', advisors),
+  wealthboxClientId: client.wealthboxClientId,
+  orionClientId: client.orionClientId
 });
 
 // Helper function to convert advisor ID to advisor name
@@ -520,9 +526,11 @@ export default function ReferralAnalyticsReport() {
                           </TableCell>
                           <TableCell className="text-gray-700">{formatDate(referral.referralDate)}</TableCell>
                           <TableCell className="text-right">
-                            <Button variant="default" size="sm">
-                              View Contact
-                            </Button>
+                            <ViewContactButton 
+                              clientId={referral.id} 
+                              wealthboxClientId={referral.wealthboxClientId}
+                              orionClientId={referral.orionClientId}
+                            />
                           </TableCell>
                         </TableRow>
                       ))}

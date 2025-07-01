@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TrendingUp, TrendingDown, Users, Search } from "lucide-react";
+import { TrendingUp, TrendingDown, Users, Search, ExternalLink } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -37,7 +37,11 @@ import { filtersToApiParams } from "@/utils/filter-utils";
 
 import { useAdvisor } from "@/contexts/AdvisorContext";
 import { TableSkeleton } from "@/components/ui/skeleton";
-import { getAdvisorReportTitle } from "@/lib/utils";
+import { getAdvisorReportTitle } from '@/lib/utils';
+import { ViewContactButton } from "@/components/ui/view-contact-button";
+
+// Import mock data
+import mockData from "@/data/mockData.js";
 
 // Define transformed interfaces for compatibility
 interface InceptionReportData {
@@ -67,6 +71,8 @@ interface InceptionClient {
   segment: string;
   inceptionDate: string;
   advisor: string;
+  wealthboxClientId?: string;
+  orionClientId?: string;
 }
 
 // Segment colors including N/A
@@ -87,8 +93,10 @@ const transformToInceptionClient = (
   lastName: client.lastName,
   email: client.email || "N/A",
   segment: getSegmentName(client.segment),
-  inceptionDate: client.inceptionDate || "", // Empty string for N/A dates
-  advisor: client.advisor || "N/A",
+  inceptionDate: client.inceptionDate || '', // Empty string for N/A dates
+  advisor: client.advisor || 'N/A',
+  wealthboxClientId: client.wealthboxClientId,
+  orionClientId: client.orionClientId
 });
 
 const generateInceptionReportFromClients = (
@@ -760,13 +768,11 @@ export default function ClientInceptionView({
                         </TableCell>
                         <TableCell>{client.advisor || "N/A"}</TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 px-2 text-xs"
-                          >
-                            View Client
-                          </Button>
+                          <ViewContactButton 
+                            clientId={client.id} 
+                            wealthboxClientId={client.wealthboxClientId}
+                            orionClientId={client.orionClientId}
+                          />
                         </TableCell>
                       </TableRow>
                     );
