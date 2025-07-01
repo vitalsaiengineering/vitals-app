@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, DollarSign, Search, Building, ChevronUp, ChevronDown } from "lucide-react";
+import { Users, DollarSign, Search, Building, ChevronUp, ChevronDown, ExternalLink } from "lucide-react";
 import {
   ComposableMap,
   Geographies,
@@ -22,7 +22,8 @@ import { useReportFilters } from "@/contexts/ReportFiltersContext";
 import { filtersToApiParams } from "@/utils/filter-utils";
 import { formatAUM, getPrettyClientName, getSegmentName } from "@/utils/client-analytics";
 import { ReportSkeleton } from "@/components/ui/skeleton";
-
+import { useMockData } from "@/contexts/MockDataContext";
+import { ViewContactButton } from "@/components/ui/view-contact-button";
 import { getAdvisorReportTitle, getAdvisorName } from '@/lib/utils';
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
@@ -601,9 +602,11 @@ const ClientDistributionByStateReport = () => {
                         {formatAUM(client.aum)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="default" size="sm">
-                          View Client
-                        </Button>
+                        <ViewContactButton 
+                          clientId={client.id} 
+                          wealthboxClientId={client.wealthboxClientId}
+                          orionClientId={client.orionClientId}
+                        />
                       </TableCell>
                     </TableRow>
                   ))

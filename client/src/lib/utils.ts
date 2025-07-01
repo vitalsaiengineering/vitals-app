@@ -50,3 +50,29 @@ export function getAdvisorName(
   const advisor = filterOptions?.advisors.find(a => a.id === advisorId);
   return advisor?.name || null;
 }
+
+/**
+ * Determines the correct URL for viewing a client contact based on available IDs
+ * Prioritizes Wealthbox, then Orion, then falls back to internal ID
+ * 
+ * @param clientId - Internal client ID
+ * @param wealthboxClientId - Wealthbox client ID
+ * @param orionClientId - Orion client ID
+ * @returns The appropriate URL for viewing the client contact
+ */
+export function getClientContactUrl(
+  clientId?: string | number,
+  wealthboxClientId?: string,
+  orionClientId?: string
+): string {
+  if (wealthboxClientId) {
+    return `/crm/wealthbox/contact/${wealthboxClientId}`;
+  } else if (orionClientId) {
+    return `/crm/orion/contact/${orionClientId}`;
+  } else if (clientId) {
+    return `/crm/contact/${clientId}`;
+  }
+  
+  // If no ID is available, return a fallback URL
+  return '#';
+}

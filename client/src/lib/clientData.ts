@@ -326,6 +326,8 @@ export interface BookDevelopmentClient {
   sinceDateText: string;
   aum: number;
   advisor: string;
+  wealthboxClientId?: string;
+  orionClientId?: string;
 }
 
 export interface YearlySegmentDataPoint {
@@ -1215,9 +1217,11 @@ export interface StateMetric {
 export interface ClientInStateDetail {
   id: string;
   name: string;
-  segment: 'Ultra High Net Worth' | 'High Net Worth' | 'Mass Affluent' | string; // Allow for other segments
-  aum: number;
-  // inceptionDate?: string; // Optional, if needed
+  email: string;
+  segment: 'Platinum' | 'Gold' | 'Silver' | string;
+  inceptionDate: string;
+  wealthboxClientId?: string;
+  orionClientId?: string;
 }
 
 export interface ClientDistributionReportData {
@@ -1244,6 +1248,8 @@ export interface BirthdayClient {
   aum: number;
   clientTenure: string;
   advisorName: string;
+  wealthboxClientId?: string;
+  orionClientId?: string;
 }
 
 export interface BirthdayReportFilters {
