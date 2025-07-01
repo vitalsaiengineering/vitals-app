@@ -37,7 +37,7 @@ import { filtersToApiParams } from "@/utils/filter-utils";
 
 import { useAdvisor } from "@/contexts/AdvisorContext";
 import { TableSkeleton } from "@/components/ui/skeleton";
-import { getAdvisorReportTitle } from '@/lib/utils';
+import { getAdvisorReportTitle } from "@/lib/utils";
 
 // Define transformed interfaces for compatibility
 interface InceptionReportData {
@@ -78,42 +78,49 @@ const SEGMENT_COLORS: Record<string, string> = {
 };
 
 // Data transformation utilities
-const transformToInceptionClient = (client: StandardClient): InceptionClient => ({
+const transformToInceptionClient = (
+  client: StandardClient
+): InceptionClient => ({
   id: client.id,
   name: getPrettyClientName(client),
   firstName: client.firstName,
   lastName: client.lastName,
-  email: client.email || 'N/A',
+  email: client.email || "N/A",
   segment: getSegmentName(client.segment),
-  inceptionDate: client.inceptionDate || '', // Empty string for N/A dates
-  advisor: client.advisor || 'N/A'
+  inceptionDate: client.inceptionDate || "", // Empty string for N/A dates
+  advisor: client.advisor || "N/A",
 });
 
-const generateInceptionReportFromClients = (clients: StandardClient[]): InceptionReportData => {
+const generateInceptionReportFromClients = (
+  clients: StandardClient[]
+): InceptionReportData => {
   const currentYear = new Date().getFullYear();
-  
+
   // Get years where clients actually exist
-  const clientYears = Array.from(new Set(clients
-    .filter(client => client.inceptionDate) // Only include clients with valid inception dates
-    .map(client => new Date(client.inceptionDate).getFullYear())
-  ));
-  
+  const clientYears = Array.from(
+    new Set(
+      clients
+        .filter((client) => client.inceptionDate) // Only include clients with valid inception dates
+        .map((client) => new Date(client.inceptionDate).getFullYear())
+    )
+  );
+
   // Create a complete year range from earliest client to current year
   let startYear = currentYear;
   let endYear = currentYear;
-  
+
   if (clientYears.length > 0) {
     startYear = Math.min(...clientYears);
     endYear = Math.max(currentYear, Math.max(...clientYears));
-    
+
     // Reasonable bounds: don't go back more than 20 years or show more than 5 years in future
     const earliestReasonableYear = currentYear - 20;
     const latestReasonableYear = currentYear + 5;
-    
+
     startYear = Math.max(startYear, earliestReasonableYear);
     endYear = Math.min(endYear, latestReasonableYear);
   }
-  
+
   // Generate all years in the range (including empty years)
   const years = [];
   for (let year = startYear; year <= endYear; year++) {
@@ -121,9 +128,12 @@ const generateInceptionReportFromClients = (clients: StandardClient[]): Inceptio
   }
 
   // Generate chart data by year and segment (including empty years)
-  const chartData = years.map(year => {
-    const yearClients = clients.filter(client => {
-      return client.inceptionDate && new Date(client.inceptionDate).getFullYear() === year;
+  const chartData = years.map((year) => {
+    const yearClients = clients.filter((client) => {
+      return (
+        client.inceptionDate &&
+        new Date(client.inceptionDate).getFullYear() === year
+      );
     });
 
     const segmentCounts = yearClients.reduce((acc, client) => {
@@ -132,42 +142,64 @@ const generateInceptionReportFromClients = (clients: StandardClient[]): Inceptio
       return acc;
     }, {} as Record<string, number>);
 
-    return {
+    const yearData = {
       year,
       Platinum: segmentCounts.Platinum || 0,
       Gold: segmentCounts.Gold || 0,
       Silver: segmentCounts.Silver || 0,
       "N/A": segmentCounts["N/A"] || 0,
     };
+
+    return yearData;
   });
 
   // Generate legend data for current year (this will be updated dynamically in the component)
-  const currentYearData = chartData.find(data => data.year === currentYear) || {
+  const currentYearData = chartData.find(
+    (data) => data.year === currentYear
+  ) || {
     year: currentYear,
     Platinum: 0,
     Gold: 0,
     Silver: 0,
-    "N/A": 0
+    "N/A": 0,
   };
-  
+
   const chartLegend = [
     { segment: "Platinum", count: currentYearData.Platinum },
     { segment: "Gold", count: currentYearData.Gold },
     { segment: "Silver", count: currentYearData.Silver },
     { segment: "N/A", count: currentYearData["N/A"] },
-    { segment: "Total", count: currentYearData.Platinum + currentYearData.Gold + currentYearData.Silver + currentYearData["N/A"] }
+    {
+      segment: "Total",
+      count:
+        currentYearData.Platinum +
+        currentYearData.Gold +
+        currentYearData.Silver +
+        currentYearData["N/A"],
+    },
   ];
 
   // Calculate YTD metrics
-  const ytdNewClients = chartLegend.find(item => item.segment === "Total")?.count || 0;
-  
+  const ytdNewClients =
+    chartLegend.find((item) => item.segment === "Total")?.count || 0;
+
   // Calculate percentage change vs previous year
-  const previousYearData = chartData.find(data => data.year === currentYear - 1);
-  const previousYearTotal = previousYearData ? 
-    (previousYearData.Platinum + previousYearData.Gold + previousYearData.Silver + previousYearData["N/A"]) : 0;
-  
-  const percentageChangeVsPreviousYear = previousYearTotal > 0 ? 
-    Math.round(((ytdNewClients - previousYearTotal) / previousYearTotal) * 100) : 0;
+  const previousYearData = chartData.find(
+    (data) => data.year === currentYear - 1
+  );
+  const previousYearTotal = previousYearData
+    ? previousYearData.Platinum +
+      previousYearData.Gold +
+      previousYearData.Silver +
+      previousYearData["N/A"]
+    : 0;
+
+  const percentageChangeVsPreviousYear =
+    previousYearTotal > 0
+      ? Math.round(
+          ((ytdNewClients - previousYearTotal) / previousYearTotal) * 100
+        )
+      : 0;
 
   return {
     ytdNewClients,
@@ -175,7 +207,7 @@ const generateInceptionReportFromClients = (clients: StandardClient[]): Inceptio
     availableYears: years,
     chartData,
     chartLegend,
-    totalTableRecords: clients.length
+    totalTableRecords: clients.length,
   };
 };
 
@@ -229,8 +261,11 @@ export default function ClientInceptionView({
   globalSearch,
   setGlobalSearch,
 }: ClientInceptionViewProps) {
-  const [allInceptionData, setAllInceptionData] = useState<InceptionReportData | null>(null); // Store all data
-  const [filteredTableClients, setFilteredTableClients] = useState<InceptionClient[]>([]); // Store filtered table data
+  const [allInceptionData, setAllInceptionData] =
+    useState<InceptionReportData | null>(null); // Store all data
+  const [filteredTableClients, setFilteredTableClients] = useState<
+    InceptionClient[]
+  >([]); // Store filtered table data
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -252,20 +287,20 @@ export default function ClientInceptionView({
       try {
         // Build API parameters with filters from context
         const params = filtersToApiParams(filters, selectedAdvisor);
-        
+
         // Use the centralized getClients function
         const clients = await getClients(params);
-        
+
         // Transform clients data into inception report format
         const inceptionReportData = generateInceptionReportFromClients(clients);
         setAllInceptionData(inceptionReportData);
-        
+
         // Transform clients for table display
         const inceptionClients = clients.map(transformToInceptionClient);
         setFilteredTableClients(inceptionClients);
-        
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to load inception data";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load inception data";
         setError(errorMessage);
         console.error(err);
       } finally {
@@ -288,21 +323,24 @@ export default function ClientInceptionView({
     // Apply local search filter
     if (globalSearch.trim()) {
       const searchLower = globalSearch.toLowerCase();
-      displayClients = displayClients.filter(client =>
-        client.name.toLowerCase().includes(searchLower) ||
-        client.segment.toLowerCase().includes(searchLower) ||
-        client.email.toLowerCase().includes(searchLower) ||
-        client.advisor?.toLowerCase().includes(searchLower)
+      displayClients = displayClients.filter(
+        (client) =>
+          client.name.toLowerCase().includes(searchLower) ||
+          client.segment.toLowerCase().includes(searchLower) ||
+          client.email.toLowerCase().includes(searchLower) ||
+          client.advisor?.toLowerCase().includes(searchLower)
       );
     }
 
     // Apply segment filter
     if (selectedSegmentFilter !== "All Segments") {
-      displayClients = displayClients.filter(client => client.segment === selectedSegmentFilter);
+      displayClients = displayClients.filter(
+        (client) => client.segment === selectedSegmentFilter
+      );
     }
 
     // Apply year filter (filter by inception year)
-    displayClients = displayClients.filter(client => {
+    displayClients = displayClients.filter((client) => {
       // If client has no inception date, show them regardless of year (they don't belong to any specific year)
       if (!client.inceptionDate) return true;
       // If client has inception date, filter by year
@@ -319,21 +357,30 @@ export default function ClientInceptionView({
   // Get legend data for the selected year
   const getSelectedYearLegend = () => {
     if (!allInceptionData?.chartData) return [];
-    
-    const selectedYearData = allInceptionData.chartData.find(data => data.year === selectedYear) || {
+
+    const selectedYearData = allInceptionData.chartData.find(
+      (data) => data.year === selectedYear
+    ) || {
       year: selectedYear,
       Platinum: 0,
       Gold: 0,
       Silver: 0,
-      "N/A": 0
+      "N/A": 0,
     };
+
+    // Calculate total from individual segments to ensure accuracy
+    const totalCount =
+      selectedYearData.Platinum +
+      selectedYearData.Gold +
+      selectedYearData.Silver +
+      selectedYearData["N/A"];
 
     return [
       { segment: "Platinum", count: selectedYearData.Platinum },
       { segment: "Gold", count: selectedYearData.Gold },
       { segment: "Silver", count: selectedYearData.Silver },
       { segment: "N/A", count: selectedYearData["N/A"] },
-      { segment: "Total", count: selectedYearData.Platinum + selectedYearData.Gold + selectedYearData.Silver + selectedYearData["N/A"] }
+      { segment: "Total", count: totalCount },
     ];
   };
 
@@ -351,14 +398,15 @@ export default function ClientInceptionView({
    */
   const getFilteredChartData = () => {
     if (!allInceptionData?.chartData) return [];
-    
+
     if (selectedSegmentFilter === "All Segments") {
       return allInceptionData.chartData;
     }
 
-    return allInceptionData.chartData.map(item => ({
+    return allInceptionData.chartData.map((item) => ({
       ...item,
-      [selectedSegmentFilter]: item[selectedSegmentFilter as keyof typeof item] || 0,
+      [selectedSegmentFilter]:
+        item[selectedSegmentFilter as keyof typeof item] || 0,
       ...(selectedSegmentFilter !== "Platinum" && { Platinum: 0 }),
       ...(selectedSegmentFilter !== "Gold" && { Gold: 0 }),
       ...(selectedSegmentFilter !== "Silver" && { Silver: 0 }),
@@ -369,17 +417,32 @@ export default function ClientInceptionView({
   // Get percentage change for the selected year
   const getSelectedYearPercentageChange = () => {
     if (!allInceptionData?.chartData) return 0;
-    
-    const selectedYearData = allInceptionData.chartData.find(data => data.year === selectedYear);
-    const previousYearData = allInceptionData.chartData.find(data => data.year === selectedYear - 1);
-    
-    const selectedYearTotal = selectedYearData ? 
-      (selectedYearData.Platinum + selectedYearData.Gold + selectedYearData.Silver + selectedYearData["N/A"]) : 0;
-    const previousYearTotal = previousYearData ? 
-      (previousYearData.Platinum + previousYearData.Gold + previousYearData.Silver + previousYearData["N/A"]) : 0;
-    
-    return previousYearTotal > 0 ? 
-      Math.round(((selectedYearTotal - previousYearTotal) / previousYearTotal) * 100) : 0;
+
+    const selectedYearData = allInceptionData.chartData.find(
+      (data) => data.year === selectedYear
+    );
+    const previousYearData = allInceptionData.chartData.find(
+      (data) => data.year === selectedYear - 1
+    );
+
+    const selectedYearTotal = selectedYearData
+      ? selectedYearData.Platinum +
+        selectedYearData.Gold +
+        selectedYearData.Silver +
+        selectedYearData["N/A"]
+      : 0;
+    const previousYearTotal = previousYearData
+      ? previousYearData.Platinum +
+        previousYearData.Gold +
+        previousYearData.Silver +
+        previousYearData["N/A"]
+      : 0;
+
+    return previousYearTotal > 0
+      ? Math.round(
+          ((selectedYearTotal - previousYearTotal) / previousYearTotal) * 100
+        )
+      : 0;
   };
 
   if (error) {
@@ -399,30 +462,49 @@ export default function ClientInceptionView({
               <div className="flex items-center space-x-2 mb-4">
                 <Users className="h-5 w-5 text-blue-600" />
                 <h3 className="text-lg font-medium">
-                  {filters.advisorIds.length === 1 && filters.advisorIds[0] !== "All Advisors" 
-                    ? getAdvisorReportTitle("Clients by Inception Date", filters, filterOptions || undefined)
+                  {filters.advisorIds.length === 1 &&
+                  filters.advisorIds[0] !== "All Advisors"
+                    ? getAdvisorReportTitle(
+                        "Clients by Inception Date",
+                        filters,
+                        filterOptions || undefined
+                      )
                     : "Clients by Inception Date by Segmentation"}
                 </h3>
               </div>
               <div className="space-y-2">
                 <p className="text-4xl font-bold text-foreground">
-                  {getSelectedYearLegend().find(item => item.segment === "Total")?.count || 0}
+                  {(() => {
+                    const legendData = getSelectedYearLegend();
+                    const totalItem = legendData.find(
+                      (item) => item.segment === "Total"
+                    );
+                    return totalItem?.count || 0;
+                  })()}
                 </p>
-                <p className="text-sm text-muted-foreground">{selectedYear} New Clients</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedYear} New Clients
+                </p>
                 <div className="flex items-center space-x-1">
                   {getSelectedYearPercentageChange() >= 0 ? (
                     <TrendingUp className="h-4 w-4 text-green-600" />
                   ) : (
                     <TrendingDown className="h-4 w-4 text-red-600" />
                   )}
-                  <span className={`text-sm font-medium ${getSelectedYearPercentageChange() >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {getSelectedYearPercentageChange() >= 0 ? '+' : ''}{getSelectedYearPercentageChange()}%
-                    vs previous year
+                  <span
+                    className={`text-sm font-medium ${
+                      getSelectedYearPercentageChange() >= 0
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {getSelectedYearPercentageChange() >= 0 ? "+" : ""}
+                    {getSelectedYearPercentageChange()}% vs previous year
                   </span>
                 </div>
               </div>
             </div>
-            
+
             {/* Year selector */}
             <div className="w-32">
               <Select
@@ -456,10 +538,10 @@ export default function ClientInceptionView({
             <div className="lg:col-span-3">
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart 
-                    data={filteredChartData} 
+                  <BarChart
+                    data={filteredChartData}
                     onClick={handleBarClick}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: "pointer" }}
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="year" />
@@ -471,28 +553,28 @@ export default function ClientInceptionView({
                       stackId="a"
                       fill="hsl(222, 47%, 44%)"
                       onClick={handleBarClick}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: "pointer" }}
                     />
-                    <Bar 
-                      dataKey="Gold" 
-                      stackId="a" 
+                    <Bar
+                      dataKey="Gold"
+                      stackId="a"
                       fill="hsl(216, 65%, 58%)"
                       onClick={handleBarClick}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: "pointer" }}
                     />
                     <Bar
                       dataKey="Silver"
                       stackId="a"
                       fill="hsl(210, 55%, 78%)"
                       onClick={handleBarClick}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: "pointer" }}
                     />
                     <Bar
                       dataKey="N/A"
                       stackId="a"
                       fill="hsl(220, 14%, 60%)"
                       onClick={handleBarClick}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: "pointer" }}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -502,51 +584,75 @@ export default function ClientInceptionView({
             {/* Legend - 1/4 width - exact match to reference */}
             <div className="lg:col-span-1">
               <div className="bg-white border rounded-lg p-4 h-full">
-                <h4 className="text-sm font-medium mb-4">New Clients by Segment ({selectedYear})</h4>
+                <h4 className="text-sm font-medium mb-4">
+                  New Clients by Segment ({selectedYear})
+                </h4>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium">Segment</span>
                     <span className="text-sm font-medium">Clients</span>
                   </div>
-                  
+
                   {getSelectedYearLegend()
-                    .filter(item => 
-                      (selectedSegmentFilter === "All Segments" || 
-                      item.segment === selectedSegmentFilter) && item.segment !== "Total"
+                    .filter(
+                      (item) =>
+                        (selectedSegmentFilter === "All Segments" ||
+                          item.segment === selectedSegmentFilter) &&
+                        item.segment !== "Total"
                     )
                     .map((item, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <div className="flex items-center space-x-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{
-                            backgroundColor:
-                              item.segment === "Platinum"
-                                ? "hsl(222, 47%, 44%)"
-                                : item.segment === "Gold"
-                                ? "hsl(216, 65%, 58%)"
-                                : item.segment === "Silver"
-                                ? "hsl(210, 55%, 78%)"
-                                : item.segment === "N/A"
-                                ? "hsl(220, 14%, 60%)"
-                                : "#6b7280",
-                          }}
-                        />
-                        <span className="text-sm">{item.segment}</span>
+                      <div
+                        key={index}
+                        className="flex justify-between items-center"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{
+                              backgroundColor:
+                                item.segment === "Platinum"
+                                  ? "hsl(222, 47%, 44%)"
+                                  : item.segment === "Gold"
+                                  ? "hsl(216, 65%, 58%)"
+                                  : item.segment === "Silver"
+                                  ? "hsl(210, 55%, 78%)"
+                                  : item.segment === "N/A"
+                                  ? "hsl(220, 14%, 60%)"
+                                  : "#6b7280",
+                            }}
+                          />
+                          <span className="text-sm">{item.segment}</span>
+                        </div>
+                        <span className="text-sm font-semibold">
+                          {item.count}
+                        </span>
                       </div>
-                      <span className="text-sm font-semibold">{item.count}</span>
-                    </div>
-                  ))}
-                  
+                    ))}
+
                   <div className="border-t pt-2 flex justify-between items-center">
                     <span className="text-sm font-medium">Total</span>
                     <span className="text-sm font-bold">
-                      {getSelectedYearLegend()
-                        .filter(item => 
-                          selectedSegmentFilter === "All Segments" || 
-                          item.segment === selectedSegmentFilter
-                        )
-                        .reduce((sum, item) => sum + item.count, 0) || 0}
+                      {(() => {
+                        if (selectedSegmentFilter === "All Segments") {
+                          // Use the pre-calculated total from legend data
+                          return (
+                            getSelectedYearLegend().find(
+                              (item) => item.segment === "Total"
+                            )?.count || 0
+                          );
+                        } else {
+                          // For filtered segments, sum only the individual segments (exclude "Total")
+                          return (
+                            getSelectedYearLegend()
+                              .filter(
+                                (item) =>
+                                  item.segment === selectedSegmentFilter &&
+                                  item.segment !== "Total"
+                              )
+                              .reduce((sum, item) => sum + item.count, 0) || 0
+                          );
+                        }
+                      })()}
                     </span>
                   </div>
                 </div>
@@ -592,10 +698,10 @@ export default function ClientInceptionView({
           <div className="flex justify-between items-center">
             <CardTitle className="text-lg">Client Inception Year</CardTitle>
             <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+              <span>{displayClients.length} records</span>
               <span>
-                {allInceptionData ? `${allInceptionData.totalTableRecords} records` : "0 records"}
+                {selectedSegmentFilter} • {selectedYear}
               </span>
-              <span>{selectedSegmentFilter} • {selectedYear}</span>
             </div>
           </div>
         </CardHeader>
@@ -634,9 +740,7 @@ export default function ClientInceptionView({
                             <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
                               <Users className="w-4 h-4 text-gray-500" />
                             </div>
-                            <span className="font-medium">
-                              {client.name}
-                            </span>
+                            <span className="font-medium">{client.name}</span>
                           </div>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
@@ -650,9 +754,11 @@ export default function ClientInceptionView({
                           </span>
                         </TableCell>
                         <TableCell>
-                          {client.inceptionDate ? formatDate(client.inceptionDate) : 'N/A'}
+                          {client.inceptionDate
+                            ? formatDate(client.inceptionDate)
+                            : "N/A"}
                         </TableCell>
-                        <TableCell>{client.advisor || 'N/A'}</TableCell>
+                        <TableCell>{client.advisor || "N/A"}</TableCell>
                         <TableCell className="text-right">
                           <Button
                             variant="outline"
