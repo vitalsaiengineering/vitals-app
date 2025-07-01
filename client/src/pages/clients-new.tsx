@@ -9,24 +9,21 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Search, Users, Database, Mail, Phone, Calendar } from "lucide-react";
-import { useMockData } from "@/contexts/MockDataContext";
 import { useAdvisor } from "@/contexts/AdvisorContext";
 
-// Import mock data
-import {
-  getAllClients,
-  calculateAge,
-  calculateTenure,
-} from "@/utils/clientDataUtils.js";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/utils/dateFormatter";
 import { getPrettyClientName, formatAUM } from "@/utils/client-analytics";
+import { getClients } from "@/lib/clientData";
+import { StandardClient } from "@/types/client";
+// @ts-ignore - JavaScript utility file
+import { calculateTenure } from "@/utils/clientDataUtils.js";
 
 interface Client {
   title: any;
   firstName: any;
   lastName: any;
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone: string;
@@ -41,7 +38,6 @@ interface Client {
 }
 
 const Clients = () => {
-  const { useMock } = useMockData();
   const { selectedAdvisor } = useAdvisor();
   const [searchTerm, setSearchTerm] = useState("");
   const [allClientData, setAllClientData] = useState<Client[]>([]); // Store all data
@@ -52,12 +48,12 @@ const Clients = () => {
     const loadClients = async () => {
       setLoading(true);
       try {
-        if (useMock) {
-          // Use centralized mock data
-          const mockClients = getAllClients();
+        // Use centralized client data
+        const clients = await getClients();
 
-          // Transform mock data to match our client interface
-          const transformedClients: Client[] = mockClients.map((client: any) => ({
+        // Transform data to match our client interface
+        const transformedClients: Client[] = clients.map(
+          (client: StandardClient) => ({
             id: client.id,
             name: client.name,
             email: client.email,
@@ -65,7 +61,7 @@ const Clients = () => {
             advisor: client.advisor,
             aum: client.aum,
             segment: client.segment,
-            age: calculateAge(client.dateOfBirth),
+            age: client.age,
             tenure: calculateTenure(client.inceptionDate),
             inceptionDate: client.inceptionDate,
             state: client.state,
@@ -73,40 +69,10 @@ const Clients = () => {
             firstName: client.firstName,
             lastName: client.lastName,
             household: client.household,
-          }));
+          })
+        );
 
-          setAllClientData(transformedClients);
-        } else {
-          // In a real app, this would be an API call
-          // For now, fall back to mock data if API is not available
-          try {
-            // Simulate API call
-            const response = await fetch("/api/clients");
-            const apiData = await response.json();
-            setAllClientData(apiData);
-          } catch (apiError) {
-            console.warn("API not available, falling back to mock data");
-            const mockClients = getAllClients();
-            const transformedClients: Client[] = mockClients.map((client: any) => ({
-              id: client.id,
-              name: client.name,
-              email: client.email,
-              phone: client.phone,
-              advisor: client.advisor,
-              aum: client.aum,
-              segment: client.segment,
-              age: calculateAge(client.dateOfBirth),
-              tenure: calculateTenure(client.inceptionDate),
-              inceptionDate: client.inceptionDate,
-              state: client.state,
-              title: client.title,
-              firstName: client.firstName,
-              lastName: client.lastName,
-              household: client.household,
-            }));
-            setAllClientData(transformedClients);
-          }
-        }
+        setAllClientData(transformedClients);
       } catch (error) {
         console.error("Error loading clients:", error);
         setAllClientData([]);
@@ -116,26 +82,28 @@ const Clients = () => {
     };
 
     loadClients();
-  }, [useMock]);
+  }, []);
 
   // Filter clients by advisor and apply to clientData
   useEffect(() => {
     let filtered = Array.isArray(allClientData) ? allClientData : [];
-    
+
     // Apply advisor filter
-    if (selectedAdvisor !== 'All Advisors') {
-      filtered = filtered.filter(client => client.advisor === selectedAdvisor);
-      
+    if (selectedAdvisor !== "All Advisors") {
+      filtered = filtered.filter(
+        (client) => client.advisor === selectedAdvisor
+      );
+
       // Debug logging
       if (process.env.NODE_ENV === "development") {
         console.log("Clients page - Filtered by advisor:", {
           selectedAdvisor,
           beforeFilter: allClientData.length,
-          afterFilter: filtered.length
+          afterFilter: filtered.length,
         });
       }
     }
-    
+
     setClientData(filtered);
   }, [allClientData, selectedAdvisor]);
 
@@ -207,8 +175,8 @@ const Clients = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold">
-            {selectedAdvisor !== "All Advisors" 
-              ? `${selectedAdvisor}'s Clients` 
+            {selectedAdvisor !== "All Advisors"
+              ? `${selectedAdvisor}'s Clients`
               : "Clients"}
           </h1>
           {selectedAdvisor !== "All Advisors" && (
@@ -221,7 +189,8 @@ const Clients = () => {
           <div className="flex items-center">
             <Users className="mr-2 text-muted-foreground" size={20} />
             <span className="text-muted-foreground">
-              {clientData.length} {selectedAdvisor !== "All Advisors" ? "advisor" : "total"} clients
+              {clientData.length}{" "}
+              {selectedAdvisor !== "All Advisors" ? "advisor" : "total"} clients
             </span>
           </div>
           {/* {useMock && (
@@ -244,8 +213,8 @@ const Clients = () => {
         />
       </div>
 
-            {/* Summary Stats */}
-            {filteredClients.length > 0 && (
+      {/* Summary Stats */}
+      {filteredClients.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <div className="text-2xl font-bold text-blue-900">
@@ -311,7 +280,9 @@ const Clients = () => {
                   key={client.id}
                   className="cursor-pointer hover:bg-muted/50"
                 >
-                  <TableCell className="font-medium">{getPrettyClientName(client)}</TableCell>
+                  <TableCell className="font-medium">
+                    {getPrettyClientName(client)}
+                  </TableCell>
                   <TableCell>
                     <div className="space-y-1">
                       <div className="flex items-center text-sm text-muted-foreground">
@@ -336,7 +307,7 @@ const Clients = () => {
                   </TableCell>
                   <TableCell>
                     <span className="text-sm text-neutral-600">
-                      {client.household || 'N/A'}
+                      {client.household || "N/A"}
                     </span>
                   </TableCell>
                   <TableCell className="font-medium">
@@ -347,7 +318,7 @@ const Clients = () => {
                       <div className="text-sm">Age: {client.age || "N/A"}</div>
                       <div className="flex items-center text-sm text-muted-foreground">
                         <Calendar className="h-3 w-3 mr-1" />
-                        {client.tenure} year{client.tenure !== 1 ? "s" : ""}{" "} 
+                        {client.tenure} year{client.tenure !== 1 ? "s" : ""}{" "}
                         with firm {formatDate(client.inceptionDate) || "N/A"}
                       </div>
                     </div>
@@ -372,8 +343,6 @@ const Clients = () => {
           </TableBody>
         </Table>
       </div>
-
-
     </div>
   );
 };

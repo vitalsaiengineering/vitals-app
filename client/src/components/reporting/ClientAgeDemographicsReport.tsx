@@ -40,7 +40,12 @@ import * as RechartsPrimitive from "recharts";
 
 // Import standardized types and utilities
 import { StandardClient, FilterableClientResponse } from "@/types/client";
-import { calculateAgeDemographics, AgeDemographicsData, getPrettyClientName, formatAUM } from "@/utils/client-analytics";
+import {
+  calculateAgeDemographics,
+  AgeDemographicsData,
+  getPrettyClientName,
+  formatAUM,
+} from "@/utils/client-analytics";
 import { useReportFilters } from "@/contexts/ReportFiltersContext";
 import { filtersToApiParams } from "@/utils/filter-utils";
 import { getClients } from "@/lib/clientData";
@@ -99,8 +104,8 @@ const CustomChartTooltip = ({
           <p className="mb-1 text-muted-foreground">
             Total:{" "}
             <span className="font-semibold text-foreground">
-              {formatAUM(originalBracketData.aum)}{" "}
-              ({originalBracketData.aumPercentage.toFixed(1)}%)
+              {formatAUM(originalBracketData.aum)} (
+              {originalBracketData.aumPercentage.toFixed(1)}%)
             </span>
           </p>
         )}
@@ -148,7 +153,7 @@ const CustomChartTooltip = ({
 const getBracketDotColor = (bracket: string): string => {
   switch (bracket) {
     case "0-20":
-      return "hsl(var(--age-band-0-20))";
+      return "hsl(var(--age-band-under-20))";
     case "21-40":
       return "hsl(var(--age-band-21-40))";
     case "41-60":
@@ -156,7 +161,7 @@ const getBracketDotColor = (bracket: string): string => {
     case "61-80":
       return "hsl(var(--age-band-61-80))";
     case "81+":
-      return "hsl(var(--age-band-81-plus))";
+      return "hsl(var(--age-band-over-80))";
     default:
       return "hsl(var(--age-band-default))";
   }
@@ -176,7 +181,9 @@ export default function AgeDemographicsReport({
 
   // State for fetched data, loading, and error
   const [clients, setClients] = useState<StandardClient[]>([]);
-  const [reportData, setReportData] = useState<AgeDemographicsData | null>(null);
+  const [reportData, setReportData] = useState<AgeDemographicsData | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -192,25 +199,24 @@ export default function AgeDemographicsReport({
       try {
         // Build API parameters with filters from context
         const params = filtersToApiParams(filters, selectedAdvisor);
-        
+
         // Use the centralized getClients function
         const result = await getClients(params);
-        
+
         // Set clients and calculate analytics
         setClients(result);
         const calculatedData = calculateAgeDemographics(result);
         setReportData(calculatedData);
-        
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to fetch report data"
         );
-        console.error('Error fetching clients:', err);
+        console.error("Error fetching clients:", err);
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     fetchData();
   }, [reportId, selectedAdvisor, filters]);
 
@@ -253,9 +259,7 @@ export default function AgeDemographicsReport({
       averageClientAge: reportData.overall.averageClientAge,
       brackets: reportData.byAgeBracket.map((b) => ({
         ...b,
-        displayValue: !isAumView
-          ? b.clientCount
-          : formatAUM(b.aum),
+        displayValue: !isAumView ? b.clientCount : formatAUM(b.aum),
         displayPercentage: !isAumView ? b.clientPercentage : b.aumPercentage,
         valueLabel: !isAumView ? "Clients" : "AUM",
         isSelected: selectedAgeBracketForTable === b.bracket,
@@ -283,9 +287,7 @@ export default function AgeDemographicsReport({
         .sort((a, b) => a.age - b.age) // Sort youngest to oldest
         .map((client) => ({
           ...client,
-          aumDisplay: client.aum
-            ? formatAUM(client.aum)
-            : "N/A",
+          aumDisplay: client.aum ? formatAUM(client.aum) : "N/A",
         })),
     };
   }, [isAumView, reportData, selectedAgeBracketForTable, clients]);
@@ -441,20 +443,19 @@ export default function AgeDemographicsReport({
                       }
                     />
                   ))}
-                  {segmentsInChart.length === 0 &&
-                    reportData && (
-                      <Bar
-                        dataKey={!isAumView ? "totalClients" : "totalAum"}
-                        fill={`var(--color-${
-                          !isAumView ? "totalClients" : "totalAum"
-                        })`}
-                        name={
-                          chartConfig[!isAumView ? "totalClients" : "totalAum"]
-                            ?.label as string
-                        }
-                        radius={[4, 4, 0, 0]}
-                      />
-                    )}
+                  {segmentsInChart.length === 0 && reportData && (
+                    <Bar
+                      dataKey={!isAumView ? "totalClients" : "totalAum"}
+                      fill={`var(--color-${
+                        !isAumView ? "totalClients" : "totalAum"
+                      })`}
+                      name={
+                        chartConfig[!isAumView ? "totalClients" : "totalAum"]
+                          ?.label as string
+                      }
+                      radius={[4, 4, 0, 0]}
+                    />
+                  )}
                 </RechartsBarChart>
               </ChartContainer>
             </div>
@@ -527,15 +528,18 @@ export default function AgeDemographicsReport({
                             className="px-2.5 py-1 text-xs rounded-full font-medium"
                             style={{
                               backgroundColor:
-                                chartConfig[client.segment?.toLowerCase() || 'silver']
-                                  ?.color || SEGMENT_COLORS_HSL.DEFAULT,
+                                chartConfig[
+                                  client.segment?.toLowerCase() || "silver"
+                                ]?.color || SEGMENT_COLORS_HSL.DEFAULT,
                               color: "hsl(var(--primary-foreground))",
                             }}
                           >
-                            {client.segment || 'N/A'}
+                            {client.segment || "N/A"}
                           </span>
                         </TableCell>
-                        <TableCell>{formatDate(client.inceptionDate)}</TableCell>
+                        <TableCell>
+                          {formatDate(client.inceptionDate)}
+                        </TableCell>
                         {isAumView && (
                           <TableCell className="text-right">
                             {client.aumDisplay}

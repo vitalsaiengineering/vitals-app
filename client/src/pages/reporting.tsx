@@ -35,19 +35,17 @@ export interface Report {
   integrations?: string[]; // e.g., ["Wealthbox", "Orion"]
 }
 
-
-
-
 const initialMockReports: Report[] = [
-  {
-    id: "firm-activity-dashboard",
-    name: "Firm Activity Dashboard",
-    routePath: "firm-activity-dashboard",
-    description: "Monitor staff activities and performance across all departments.",
-    integrations: ["Data Sources"],
-    status: "Coming Soon",
-    isFavorite: false,
-  },
+  // TODO: Add back in when we have a way to get the data
+  // {
+  //   id: "firm-activity-dashboard",
+  //   name: "Firm Activity Dashboard",
+  //   routePath: "firm-activity-dashboard",
+  //   description: "Monitor staff activities and performance across all departments.",
+  //   integrations: ["Data Sources"],
+  //   status: "Coming Soon",
+  //   isFavorite: false,
+  // },
   {
     id: "age-demographics",
     name: "Age Demographics",
@@ -136,16 +134,18 @@ const initialMockReports: Report[] = [
 
 // Function to initialize reports with correct favorite status from localStorage
 const initializeReportsWithFavorites = (): Report[] => {
-  return initialMockReports.map(report => ({
+  return initialMockReports.map((report) => ({
     ...report,
-    isFavorite: isFavoriteReport(report.id)
+    isFavorite: isFavoriteReport(report.id),
   }));
 };
 
 export default function Reporting() {
   const [activeView, setActiveView] = useState<"card" | "table">("table");
   const [searchTerm, setSearchTerm] = useState("");
-  const [reports, setReports] = useState<Report[]>(initializeReportsWithFavorites());
+  const [reports, setReports] = useState<Report[]>(
+    initializeReportsWithFavorites()
+  );
   const { toast } = useToast();
   const [, navigate] = useLocation(); // Use wouter's useLocation for navigation
 
@@ -155,15 +155,20 @@ export default function Reporting() {
       const { reportId, isFavorite } = event.detail;
       setReports((prevReports) =>
         prevReports.map((report) =>
-          report.id === reportId
-            ? { ...report, isFavorite }
-            : report
+          report.id === reportId ? { ...report, isFavorite } : report
         )
       );
     };
 
-    window.addEventListener('reportFavoriteChanged', handleReportFavoriteChanged as EventListener);
-    return () => window.removeEventListener('reportFavoriteChanged', handleReportFavoriteChanged as EventListener);
+    window.addEventListener(
+      "reportFavoriteChanged",
+      handleReportFavoriteChanged as EventListener
+    );
+    return () =>
+      window.removeEventListener(
+        "reportFavoriteChanged",
+        handleReportFavoriteChanged as EventListener
+      );
   }, []);
 
   // Filtered reports based on search term
