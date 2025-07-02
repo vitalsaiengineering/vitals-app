@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Users } from 'lucide-react';
+import { Users, ChevronUp, ChevronDown } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 import { useReportFilters } from "@/contexts/ReportFiltersContext";
@@ -17,6 +17,12 @@ import { getAdvisorReportTitle } from '@/lib/utils';
 import { ViewContactButton } from "@/components/ui/view-contact-button";
 import { ExternalLink } from "lucide-react";
 
+
+// Define sort configuration type
+type SortConfig = {
+  key: keyof ReferralClient;
+  direction: 'asc' | 'desc';
+};
 
 // Define types locally
 interface ReferralClient {
@@ -189,6 +195,10 @@ export default function ReferralAnalyticsReport() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('sources');
   const [selectedReferralSource, setSelectedReferralSource] = useState<ReferralSource | null>(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: 'referralDate',
+    direction: 'desc'
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -211,6 +221,53 @@ export default function ReferralAnalyticsReport() {
     };
     fetchData();
   }, [filters, filterOptions]);
+
+  // Function to handle column sorting
+  const requestSort = (key: keyof ReferralClient) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+
+  // Get sort indicator for column header
+  const getSortDirectionIcon = (columnName: keyof ReferralClient) => {
+    if (sortConfig.key !== columnName) {
+      return null;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1" />;
+  };
+
+  // Apply sorting to referrals
+  const getSortedReferrals = () => {
+    if (!analyticsData) return [];
+    
+    return [...analyticsData.allReferrals].sort((a, b) => {
+      const key = sortConfig.key;
+      const direction = sortConfig.direction === 'asc' ? 1 : -1;
+      
+      // Handle date fields
+      if (key === 'referralDate') {
+        return (new Date(a[key]).getTime() - new Date(b[key]).getTime()) * direction;
+      }
+      
+      // Handle numeric fields
+      if (key === 'aum') {
+        return (a[key] - b[key]) * direction;
+      }
+      
+      // Handle string fields
+      const valueA = String(a[key] || '').toLowerCase();
+      const valueB = String(b[key] || '').toLowerCase();
+      return valueA.localeCompare(valueB) * direction;
+    });
+  };
 
   const handlePieClick = (data: any) => {
     const source = analyticsData?.referralSources.find(s => s.name === data.name);
@@ -251,8 +308,6 @@ export default function ReferralAnalyticsReport() {
     return null;
   };
 
-
-
   if (isLoading) {
     return <ReportSkeleton />;
   }
@@ -267,6 +322,8 @@ export default function ReferralAnalyticsReport() {
     percentage: source.percentage,
     totalAUM: source.totalAUM // Add AUM to chart data for tooltip
   })) || [];
+
+  const sortedReferrals = getSortedReferrals();
 
   return (
     <div className="space-y-6">
@@ -470,7 +527,7 @@ export default function ReferralAnalyticsReport() {
         <TabsContent value="all" className="space-y-6">
           <Card>
             <CardHeader>
-                              <CardTitle>
+                <CardTitle>
                   {getAdvisorReportTitle("All Referrals", filters, filterOptions || undefined)}
                 </CardTitle>
               {analyticsData && (
@@ -497,19 +554,47 @@ export default function ReferralAnalyticsReport() {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50/50">
-                        <TableHead className="font-medium text-gray-700">Client Name</TableHead>
-                        <TableHead className="font-medium text-gray-700">Segment</TableHead>
-                        <TableHead className="font-medium text-gray-700">Referred By</TableHead>
-                        <TableHead className="font-medium text-gray-700">Primary Advisor</TableHead>
-                        <TableHead className="text-right font-medium text-gray-700">AUM</TableHead>
-                        <TableHead className="font-medium text-gray-700">
-                          Client Inception Date <span className="ml-1 text-gray-400">↓</span>
+                        <TableHead 
+                          className="font-medium text-gray-700 cursor-pointer hover:bg-gray-100/50"
+                          onClick={() => requestSort('clientName')}
+                        >
+                          Client Name {getSortDirectionIcon('clientName')}
+                        </TableHead>
+                        <TableHead 
+                          className="font-medium text-gray-700 cursor-pointer hover:bg-gray-100/50"
+                          onClick={() => requestSort('segment')}
+                        >
+                          Segment {getSortDirectionIcon('segment')}
+                        </TableHead>
+                        <TableHead 
+                          className="font-medium text-gray-700 cursor-pointer hover:bg-gray-100/50"
+                          onClick={() => requestSort('referredBy')}
+                        >
+                          Referred By {getSortDirectionIcon('referredBy')}
+                        </TableHead>
+                        <TableHead 
+                          className="font-medium text-gray-700 cursor-pointer hover:bg-gray-100/50"
+                          onClick={() => requestSort('primaryAdvisor')}
+                        >
+                          Primary Advisor {getSortDirectionIcon('primaryAdvisor')}
+                        </TableHead>
+                        <TableHead 
+                          className="text-right font-medium text-gray-700 cursor-pointer hover:bg-gray-100/50"
+                          onClick={() => requestSort('aum')}
+                        >
+                          AUM {getSortDirectionIcon('aum')}
+                        </TableHead>
+                        <TableHead 
+                          className="font-medium text-gray-700 cursor-pointer hover:bg-gray-100/50"
+                          onClick={() => requestSort('referralDate')}
+                        >
+                          Client Inception Date {getSortDirectionIcon('referralDate')}
                         </TableHead>
                         <TableHead className="text-right font-medium text-gray-700">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {analyticsData.allReferrals.map((referral) => (
+                      {sortedReferrals.map((referral) => (
                         <TableRow key={referral.id} className="hover:bg-gray-50/50">
                           <TableCell className="font-medium text-gray-900">{referral.clientName}</TableCell>
                           <TableCell>

@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TrendingUp, TrendingDown, Users, Search, ExternalLink } from "lucide-react";
+import { TrendingUp, TrendingDown, Users, Search, ExternalLink, ChevronUp, ChevronDown } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -42,6 +42,12 @@ import { ViewContactButton } from "@/components/ui/view-contact-button";
 
 // Import mock data
 import mockData from "@/data/mockData.js";
+
+// Define type for sort configuration
+type SortConfig = {
+  key: keyof InceptionClient | '';
+  direction: 'asc' | 'desc';
+};
 
 // Define transformed interfaces for compatibility
 interface InceptionReportData {
@@ -276,11 +282,37 @@ export default function ClientInceptionView({
   >([]); // Store filtered table data
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: 'inceptionDate',
+    direction: 'desc'
+  });
 
   // Filter states
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedSegmentFilter, setSelectedSegmentFilter] =
     useState("All Segments");
+
+  // Function to handle column sorting
+  const requestSort = (key: keyof InceptionClient) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+
+  // Get sort indicator for column header
+  const getSortDirectionIcon = (columnName: keyof InceptionClient) => {
+    if (sortConfig.key !== columnName) {
+      return null;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1" />;
+  };
 
   // Get contexts
   const { selectedAdvisor } = useAdvisor();
@@ -355,6 +387,29 @@ export default function ClientInceptionView({
       const inceptionYear = new Date(client.inceptionDate).getFullYear();
       return inceptionYear === selectedYear;
     });
+
+    // Apply sorting
+    if (sortConfig.key) {
+      displayClients.sort((a, b) => {
+        const key = sortConfig.key as keyof InceptionClient;
+        const direction = sortConfig.direction === 'asc' ? 1 : -1;
+        
+        // Handle date fields
+        if (key === 'inceptionDate') {
+          // Handle empty dates
+          if (!a[key] && !b[key]) return 0;
+          if (!a[key]) return direction;
+          if (!b[key]) return -direction;
+          
+          return (new Date(a[key]).getTime() - new Date(b[key]).getTime()) * direction;
+        }
+        
+        // Handle string fields
+        const valueA = String(a[key] || '').toLowerCase();
+        const valueB = String(b[key] || '').toLowerCase();
+        return valueA.localeCompare(valueB) * direction;
+      });
+    }
 
     return displayClients;
   };
@@ -729,11 +784,36 @@ export default function ClientInceptionView({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Segment</TableHead>
-                    <TableHead>Inception Date</TableHead>
-                    <TableHead>Advisor</TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('name')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Client {getSortDirectionIcon('name')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('email')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Email {getSortDirectionIcon('email')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('segment')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Segment {getSortDirectionIcon('segment')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('inceptionDate')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Inception Date {getSortDirectionIcon('inceptionDate')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('advisor')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Advisor {getSortDirectionIcon('advisor')}
+                    </TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>

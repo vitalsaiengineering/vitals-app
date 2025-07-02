@@ -58,9 +58,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MoreVertical, Edit, Key, Ban } from "lucide-react";
+import { MoreVertical, Edit, Key, Ban, ChevronUp, ChevronDown } from "lucide-react";
 import EditUserDialog from "@/components/ui/edit-user-dialog";
 
+// Define type for user data
+type UserData = User & { 
+  role?: { name: string };
+  avatarUrl?: string;
+  lastLogin?: string;
+};
+
+// Define type for sort configuration
+type SortConfig = {
+  key: keyof UserData | 'fullName' | 'roleName';
+  direction: 'asc' | 'desc';
+};
 
 // Schema for the user form
 const userSchema = z.object({
@@ -81,6 +93,10 @@ export default function Users() {
   const queryClient = useQueryClient();
   // Add this to your Users() functional component
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: 'lastName',
+    direction: 'asc'
+  });
 
   
   // Fetch current user
@@ -89,11 +105,7 @@ export default function Users() {
   });
 
   // Fetch users
-  const { data: users = [], isLoading: isLoadingUsers } = useQuery<(User & { 
-    role?: { name: string };
-    avatarUrl?: string;
-    lastLogin?: string;
-  })[]>({
+  const { data: users = [], isLoading: isLoadingUsers } = useQuery<UserData[]>({
     queryKey: ['/api/users'],
   });
 
@@ -146,7 +158,71 @@ export default function Users() {
     },
   });
 
-  
+  // Function to handle column sorting
+  const requestSort = (key: SortConfig['key']) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+
+  // Get sort indicator for column header
+  const getSortDirectionIcon = (columnName: SortConfig['key']) => {
+    if (sortConfig.key !== columnName) {
+      return null;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1" />;
+  };
+
+  // Sort users based on current sort configuration
+  const sortedUsers = [...users].sort((a, b) => {
+    const direction = sortConfig.direction === 'asc' ? 1 : -1;
+    
+    // Special case for fullName (combined firstName and lastName)
+    if (sortConfig.key === 'fullName') {
+      const fullNameA = `${a.firstName || ''} ${a.lastName || ''}`.toLowerCase();
+      const fullNameB = `${b.firstName || ''} ${b.lastName || ''}`.toLowerCase();
+      return fullNameA.localeCompare(fullNameB) * direction;
+    }
+    
+    // Special case for role name
+    if (sortConfig.key === 'roleName') {
+      const roleA = a.role?.name || '';
+      const roleB = b.role?.name || '';
+      return roleA.localeCompare(roleB) * direction;
+    }
+    
+    // Handle date fields - null values should always be at the end
+    if (sortConfig.key === 'lastLogin' || sortConfig.key === 'createdAt') {
+      // If a is null/undefined and b is not, a should come after b
+      if (!a[sortConfig.key] && b[sortConfig.key]) return 1;
+      // If b is null/undefined and a is not, b should come after a
+      if (a[sortConfig.key] && !b[sortConfig.key]) return -1;
+      // If both are null/undefined, maintain original order
+      if (!a[sortConfig.key] && !b[sortConfig.key]) return 0;
+      
+      // Otherwise compare the dates
+      const dateA = new Date(a[sortConfig.key] as string).getTime();
+      const dateB = new Date(b[sortConfig.key] as string).getTime();
+      return (dateA - dateB) * direction;
+    }
+    
+    // Handle string fields
+    const valueA = String(a[sortConfig.key as keyof UserData] || '').toLowerCase();
+    const valueB = String(b[sortConfig.key as keyof UserData] || '').toLowerCase();
+    
+    // If one value is empty and the other isn't, empty values should be at the end
+    if (!valueA && valueB) return 1;
+    if (valueA && !valueB) return -1;
+    
+    return valueA.localeCompare(valueB) * direction;
+  });
 
   // Form setup
   const form = useForm<UserValues>({
@@ -420,18 +496,53 @@ export default function Users() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-blue-50">
-                    <TableHead className="w-[250px]">Full name</TableHead>
-                    <TableHead>Display name</TableHead>
-                    <TableHead>Email address</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Last login</TableHead>
-                    <TableHead>Date joined</TableHead>
+                    <TableHead 
+                      className="w-[250px] cursor-pointer hover:bg-blue-100"
+                      onClick={() => requestSort('fullName')}
+                    >
+                      Full name {getSortDirectionIcon('fullName')}
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-blue-100"
+                      onClick={() => requestSort('firstName')}
+                    >
+                      Display name {getSortDirectionIcon('firstName')}
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-blue-100"
+                      onClick={() => requestSort('email')}
+                    >
+                      Email address {getSortDirectionIcon('email')}
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-blue-100"
+                      onClick={() => requestSort('roleName')}
+                    >
+                      Role {getSortDirectionIcon('roleName')}
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-blue-100"
+                      onClick={() => requestSort('status')}
+                    >
+                      Status {getSortDirectionIcon('status')}
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-blue-100"
+                      onClick={() => requestSort('lastLogin')}
+                    >
+                      Last login {getSortDirectionIcon('lastLogin')}
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-blue-100"
+                      onClick={() => requestSort('createdAt')}
+                    >
+                      Date joined {getSortDirectionIcon('createdAt')}
+                    </TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users.map((user) => (
+                  {sortedUsers.map((user) => (
                     <TableRow key={user.id} className="hover:bg-blue-50">
                       <TableCell className="font-medium py-4">
                         <div className="flex items-center gap-3">

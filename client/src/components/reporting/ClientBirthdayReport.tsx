@@ -27,7 +27,9 @@ import {
   Users,
   ExternalLink,
   Star,
-} from "lucide-react"; // Added Star icon for milestones
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react"; // Added ChevronUp, ChevronDown for sorting indicators
 import {
   getClients,
   type BirthdayClient,
@@ -40,6 +42,12 @@ import { useReportFilters } from "@/contexts/ReportFiltersContext";
 import { filtersToApiParams } from "@/utils/filter-utils";
 import { FilteredReportSkeleton } from "@/components/ui/skeleton";
 import { ViewContactButton } from "@/components/ui/view-contact-button";
+
+// Define type for sort configuration
+type SortConfig = {
+  key: keyof BirthdayClient | '';
+  direction: 'asc' | 'desc';
+};
 
 // Define Grade colors - Updated for blue backgrounds and white text
 const GRADE_COLORS: Record<
@@ -154,6 +162,10 @@ const ClientBirthdayReport = () => {
   const [filteredReportData, setFilteredReportData] = useState<BirthdayClient[]>([]); // Store filtered data
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: 'nextBirthdayDisplay',
+    direction: 'asc'
+  });
 
   // Local filter states for birthday-specific filters ONLY
   // NOTE: Advisor and Segment filters are handled by the sidebar (useReportFilters)
@@ -161,6 +173,28 @@ const ClientBirthdayReport = () => {
   const [selectedMonth, setSelectedMonth] = useState("Any month");
   const [selectedTenure, setSelectedTenure] = useState("Any tenure");
   const [showMilestonesOnly, setShowMilestonesOnly] = useState(false);
+
+  // Function to handle column sorting
+  const requestSort = (key: keyof BirthdayClient) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+
+  // Get sort indicator for column header
+  const getSortDirectionIcon = (columnName: keyof BirthdayClient) => {
+    if (sortConfig.key !== columnName) {
+      return null;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1" />;
+  };
 
   // Note: Segment and Advisor filtering is handled by sidebar filters
   // No need for local dropdowns since they would conflict with global filters
@@ -215,6 +249,37 @@ const ClientBirthdayReport = () => {
       );
     }
 
+    // Apply sorting
+    if (sortConfig.key !== '') {
+      filtered.sort((a, b) => {
+        const key = sortConfig.key as keyof BirthdayClient;
+        const direction = sortConfig.direction === 'asc' ? 1 : -1;
+        
+        // Handle date fields
+        if (key === 'dateOfBirth' || key === 'nextBirthdayDisplay') {
+          return (new Date(a[key]).getTime() - new Date(b[key]).getTime()) * direction;
+        }
+        
+        // Handle numeric fields
+        if (typeof a[key] === 'number' && typeof b[key] === 'number') {
+          return ((a[key] as number) - (b[key] as number)) * direction;
+        }
+        
+        // Handle AUM which might need special formatting
+        if (key === 'aum') {
+          return ((a.aum || 0) - (b.aum || 0)) * direction;
+        }
+        
+        // Handle string fields
+        const valueA = String(a[key] || '').toLowerCase();
+        const valueB = String(b[key] || '').toLowerCase();
+        return valueA.localeCompare(valueB) * direction;
+      });
+    } else {
+      // Default sort by upcoming birthday if no sort specified
+      filtered = sortByUpcomingBirthday(filtered);
+    }
+
     setFilteredReportData(filtered);
   };
 
@@ -263,6 +328,7 @@ const ClientBirthdayReport = () => {
     selectedMonth,
     selectedTenure,
     showMilestonesOnly,
+    sortConfig, // Re-apply filters when sort changes
   ]);
 
   const handleResetFilters = () => {
@@ -270,6 +336,7 @@ const ClientBirthdayReport = () => {
     setSelectedMonth("Any month");
     setSelectedTenure("Any tenure");
     setShowMilestonesOnly(false);
+    setSortConfig({ key: 'nextBirthdayDisplay', direction: 'asc' }); // Reset sort to default
   };
 
   if (isLoading && allReportData.length === 0 && !error) {
@@ -378,20 +445,59 @@ const ClientBirthdayReport = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Grade</TableHead>
-                    <TableHead>Date of Birth</TableHead>
-                    <TableHead>Next Birthday</TableHead>
-                    <TableHead className="text-center">Turning Age</TableHead>
-                    <TableHead className="text-right">AUM</TableHead>
-                    <TableHead>Client Tenure</TableHead>
-                    <TableHead>Advisor</TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('clientName')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Client {getSortDirectionIcon('clientName')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('grade')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Grade {getSortDirectionIcon('grade')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('dateOfBirth')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Date of Birth {getSortDirectionIcon('dateOfBirth')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('nextBirthdayDisplay')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Next Birthday {getSortDirectionIcon('nextBirthdayDisplay')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('turningAge')}
+                      className="cursor-pointer hover:bg-muted/80 text-center"
+                    >
+                      Turning Age {getSortDirectionIcon('turningAge')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('aum')}
+                      className="cursor-pointer hover:bg-muted/80 text-right"
+                    >
+                      AUM {getSortDirectionIcon('aum')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('clientTenure')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Client Tenure {getSortDirectionIcon('clientTenure')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('advisorName')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Advisor {getSortDirectionIcon('advisorName')}
+                    </TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortByUpcomingBirthday(filteredReportData)
-                    .map((client) => {
+                  {filteredReportData.map((client) => {
                     const gradeClasses = getGradeBadgeClasses(client.grade);
                     return (
                       <TableRow key={client.id}>

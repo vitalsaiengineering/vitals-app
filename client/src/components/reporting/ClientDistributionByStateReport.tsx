@@ -31,7 +31,7 @@ const GEO_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 type MapViewType = "clientDensity" | "totalAssets";
 
 type SortConfig = {
-  key: string | null;
+  key: keyof ClientInStateDetail;
   direction: 'asc' | 'desc';
 };
 
@@ -40,6 +40,8 @@ interface ClientInStateDetail {
   name: string;
   segment: string;
   aum: number;
+  wealthboxClientId?: string;
+  orionClientId?: string;
 }
 
 interface StateMetric {
@@ -67,7 +69,9 @@ const transformToClientInStateDetail = (client: StandardClient): ClientInStateDe
   id: client.id,
   name: getPrettyClientName(client),
   segment: getSegmentName(client.segment),
-  aum: client.aum || 0
+  aum: client.aum || 0,
+  wealthboxClientId: client.wealthboxClientId,
+  orionClientId: client.orionClientId
 });
 
 const generateDistributionReportFromClients = (clients: StandardClient[]): ClientDistributionReportData => {
@@ -246,22 +250,18 @@ const ClientDistributionByStateReport = () => {
     // Apply sorting
     if (sortConfig.key) {
       filteredClients = [...filteredClients].sort((a, b) => {
-        const aValue = a[sortConfig.key as keyof typeof a];
-        const bValue = b[sortConfig.key as keyof typeof b];
+        const key = sortConfig.key as keyof ClientInStateDetail;
+        const direction = sortConfig.direction === 'asc' ? 1 : -1;
         
-        if (sortConfig.key === 'aum') {
-          return sortConfig.direction === 'asc' 
-            ? (aValue as number) - (bValue as number)
-            : (bValue as number) - (aValue as number);
-        } else {
-          const aString = String(aValue).toLowerCase();
-          const bString = String(bValue).toLowerCase();
-          if (sortConfig.direction === 'asc') {
-            return aString < bString ? -1 : aString > bString ? 1 : 0;
-          } else {
-            return bString < aString ? -1 : bString > aString ? 1 : 0;
-          }
+        // Handle numeric fields
+        if (key === 'aum') {
+          return (a[key] - b[key]) * direction;
         }
+        
+        // Handle string fields
+        const valueA = String(a[key] || '').toLowerCase();
+        const valueB = String(b[key] || '').toLowerCase();
+        return valueA.localeCompare(valueB) * direction;
       });
     }
 
@@ -286,11 +286,22 @@ const ClientDistributionByStateReport = () => {
     setSearchTerm("");
   };
 
-  const handleSort = (key: string) => {
+  const handleSort = (key: keyof ClientInStateDetail) => {
     setSortConfig(prevConfig => ({
       key,
       direction: prevConfig.key === key && prevConfig.direction === 'desc' ? 'asc' : 'desc'
     }));
+  };
+
+  // Get sort indicator for column header
+  const getSortDirectionIcon = (columnName: keyof ClientInStateDetail) => {
+    if (sortConfig.key !== columnName) {
+      return null;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1" />;
   };
 
   const getHoveredStateData = () => {
@@ -564,19 +575,31 @@ const ClientDistributionByStateReport = () => {
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
-                    <TableHead>Client Name</TableHead>
-                    <TableHead>Segment</TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/50 select-none"
+                      onClick={() => handleSort('name')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Client Name
+                        {getSortDirectionIcon('name')}
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/50 select-none"
+                      onClick={() => handleSort('segment')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Segment
+                        {getSortDirectionIcon('segment')}
+                      </div>
+                    </TableHead>
                     <TableHead 
                       className="text-right cursor-pointer hover:bg-muted/50 select-none"
                       onClick={() => handleSort('aum')}
                     >
                       <div className="flex items-center justify-end gap-1">
                         AUM
-                        {sortConfig.key === 'aum' && (
-                          sortConfig.direction === 'desc' ? 
-                            <ChevronDown className="h-4 w-4" /> : 
-                            <ChevronUp className="h-4 w-4" />
-                        )}
+                        {getSortDirectionIcon('aum')}
                       </div>
                     </TableHead>
                     <TableHead className="text-right">Actions</TableHead>

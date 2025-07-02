@@ -219,7 +219,7 @@ export const AskVitals = () => {
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg">Ask Vitals AI</CardTitle>
+        <CardTitle className="text-lg">Ask Vitals Intelligence</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col">
         <div className="flex-1 overflow-auto mb-4 space-y-4">
