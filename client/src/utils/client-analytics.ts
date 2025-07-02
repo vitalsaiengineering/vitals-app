@@ -253,7 +253,7 @@ export function getBirthdayClients(clients: StandardClient[], targetMonth?: numb
         aum: client.aum,
         clientTenure: `${tenureYears} years`,
         advisorName: client.advisor,
-        daysUntilNextBirthday: daysUntil
+        daysUntilNextBirthday: daysUntil ? daysUntil : 0
       };
     })
     .sort((a, b) => (a.daysUntilNextBirthday || 0) - (b.daysUntilNextBirthday || 0));

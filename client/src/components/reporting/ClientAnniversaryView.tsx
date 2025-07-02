@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ExternalLink, User, Search, Filter } from "lucide-react";
+import { ExternalLink, User, Search, Filter, ChevronUp, ChevronDown } from "lucide-react";
 import { StandardClient } from "@/types/client";
 import { getClients } from "@/lib/clientData";
 import { useReportFilters } from "@/contexts/ReportFiltersContext";
@@ -30,6 +30,12 @@ import { useAdvisor } from "@/contexts/AdvisorContext";
 import { ViewContactButton } from "@/components/ui/view-contact-button";
 
 import { getAdvisorReportTitle } from "@/lib/utils";
+
+// Define type for sort configuration
+type SortConfig = {
+  key: keyof AnniversaryClient | '';
+  direction: 'asc' | 'desc';
+};
 
 // Define transformed interfaces for compatibility
 interface AnniversaryClient {
@@ -62,8 +68,8 @@ const transformToAnniversaryClient = (client: StandardClient): AnniversaryClient
       anniversaryDate: '', // Empty for N/A
       daysUntilNextAnniversary: 0, // No meaningful anniversary
       yearsWithFirm: 0, // No meaningful tenure
-      advisorName: client.advisor,
-      advisorId: client.advisorId
+      advisorName: client.advisor || 'N/A',
+      advisorId: client.advisor || 'N/A'
     };
   }
 
@@ -93,8 +99,8 @@ const transformToAnniversaryClient = (client: StandardClient): AnniversaryClient
     anniversaryDate: client.inceptionDate,
     daysUntilNextAnniversary: daysUntil,
     yearsWithFirm: Math.max(yearsWithFirm, 1), // Minimum 1 year
-    advisorName: client.advisor,
-    advisorId: client.advisorId,
+    advisorName: client.advisor || 'N/A',
+    advisorId: client.advisor || 'N/A',
     wealthboxClientId: client.wealthboxClientId,
     orionClientId: client.orionClientId
   };
@@ -102,7 +108,7 @@ const transformToAnniversaryClient = (client: StandardClient): AnniversaryClient
 
 const generateFilterOptions = (clients: StandardClient[]): AnniversaryFilterOptions => {
   const segments = Array.from(new Set(clients.map(c => getSegmentName(c.segment))));
-  const advisors = Array.from(new Set(clients.map(c => ({ id: c.advisorId, name: c.advisor }))))
+  const advisors = Array.from(new Set(clients.map(c => ({ id: c.advisor || 'N/A', name: c.advisor || 'N/A' }))))
     .filter(a => a.id && a.name);
   
   return {
@@ -177,6 +183,10 @@ export default function ClientAnniversaryView({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: 'daysUntilNextAnniversary',
+    direction: 'asc'
+  });
 
   // Filter states
   const [selectedSegment, setSelectedSegment] = useState("All Segments");
@@ -221,6 +231,28 @@ export default function ClientAnniversaryView({
     fetchData();
   }, [filters, selectedAdvisor]);
 
+  // Function to handle column sorting
+  const requestSort = (key: keyof AnniversaryClient) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+
+  // Get sort indicator for column header
+  const getSortDirectionIcon = (columnName: keyof AnniversaryClient) => {
+    if (sortConfig.key !== columnName) {
+      return null;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1" />;
+  };
+
   // Client-side filtering function (now for display filters only since server handles main filtering)
   const applyDisplayFilters = () => {
     let filtered = [...allAnniversaryData];
@@ -261,6 +293,34 @@ export default function ClientAnniversaryView({
     // Apply upcoming milestones filter
     if (showUpcomingMilestones) {
       filtered = filtered.filter(client => isMilestoneAnniversary(client.yearsWithFirm));
+    }
+
+    // Apply sorting
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        const key = sortConfig.key as keyof AnniversaryClient;
+        const direction = sortConfig.direction === 'asc' ? 1 : -1;
+        
+        // Handle numeric fields
+        if (key === 'daysUntilNextAnniversary' || key === 'yearsWithFirm') {
+          return (a[key] - b[key]) * direction;
+        }
+        
+        // Handle date fields
+        if (key === 'anniversaryDate') {
+          // Handle empty dates
+          if (!a[key] && !b[key]) return 0;
+          if (!a[key]) return direction;
+          if (!b[key]) return -direction;
+          
+          return (new Date(a[key]).getTime() - new Date(b[key]).getTime()) * direction;
+        }
+        
+        // Handle string fields
+        const valueA = String(a[key] || '').toLowerCase();
+        const valueB = String(b[key] || '').toLowerCase();
+        return valueA.localeCompare(valueB) * direction;
+      });
     }
 
     return filtered;
@@ -379,19 +439,47 @@ export default function ClientAnniversaryView({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead>Client</TableHead>
-                    <TableHead>Segment</TableHead>
-                    <TableHead>Anniversary Date</TableHead>
-                    <TableHead>Days Until</TableHead>
-                    <TableHead>Years with Firm</TableHead>
-                    <TableHead>Advisor</TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('clientName')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Client {getSortDirectionIcon('clientName')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('segment')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Segment {getSortDirectionIcon('segment')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('anniversaryDate')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Anniversary Date {getSortDirectionIcon('anniversaryDate')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('daysUntilNextAnniversary')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Days Until {getSortDirectionIcon('daysUntilNextAnniversary')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('yearsWithFirm')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Years with Firm {getSortDirectionIcon('yearsWithFirm')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('advisorName')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Advisor {getSortDirectionIcon('advisorName')}
+                    </TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredClients
-                    .sort((a, b) => a.daysUntilNextAnniversary - b.daysUntilNextAnniversary)
-                    .map((client) => {
+                  {filteredClients.map((client) => {
                     const gradeClasses = getGradeBadgeClasses(client.segment);
                     const isHighlighted = highlightedRowId === client.id;
                     const isMilestone = isMilestoneAnniversary(client.yearsWithFirm);

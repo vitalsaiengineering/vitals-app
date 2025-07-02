@@ -37,6 +37,7 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import * as RechartsPrimitive from "recharts";
+import { ChevronUp, ChevronDown } from "lucide-react";
 
 // Import standardized types and utilities
 import { StandardClient, FilterableClientResponse } from "@/types/client";
@@ -72,6 +73,12 @@ const chartConfig: { [key: string]: { label: string; color: string } } = {
   platinum: { label: "Platinum", color: SEGMENT_COLORS_HSL.platinum },
   totalClients: { label: "Total Clients", color: SEGMENT_COLORS_HSL.DEFAULT },
   totalAum: { label: "Total AUM", color: SEGMENT_COLORS_HSL.DEFAULT },
+};
+
+// Define type for sort configuration
+type SortConfig = {
+  key: keyof StandardClient | 'aumDisplay';
+  direction: 'asc' | 'desc';
 };
 
 // Custom Tooltip Component
@@ -180,6 +187,10 @@ export default function AgeDemographicsReport({
   const [selectedAgeBracketForTable, setSelectedAgeBracketForTable] = useState<
     string | null
   >(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: 'age',
+    direction: 'asc'
+  });
 
   // State for fetched data, loading, and error
   const [clients, setClients] = useState<StandardClient[]>([]);
@@ -192,6 +203,28 @@ export default function AgeDemographicsReport({
   // Contexts
   const { selectedAdvisor } = useAdvisor();
   const { filters } = useReportFilters();
+
+  // Function to handle column sorting
+  const requestSort = (key: keyof StandardClient | 'aumDisplay') => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+
+  // Get sort indicator for column header
+  const getSortDirectionIcon = (columnName: keyof StandardClient | 'aumDisplay') => {
+    if (sortConfig.key !== columnName) {
+      return null;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1" />;
+  };
 
   // Fetch data from unified API endpoint
   useEffect(() => {
@@ -253,6 +286,55 @@ export default function AgeDemographicsReport({
 
   const displayData = useMemo(() => {
     if (!reportData) return null;
+    
+    // Filter clients by selected age bracket
+    const filteredClients = clients.filter((client) => {
+      if (!selectedAgeBracketForTable) return true;
+      const age = client.age;
+      switch (selectedAgeBracketForTable) {
+        case "0-20":
+          return age >= 0 && age <= 20;
+        case "21-40":
+          return age >= 21 && age <= 40;
+        case "41-60":
+          return age >= 41 && age <= 60;
+        case "61-80":
+          return age >= 61 && age <= 80;
+        case "81+":
+          return age >= 81;
+        default:
+          return true;
+      }
+    });
+    
+    // Apply sorting to the filtered clients
+    const sortedClients = [...filteredClients].sort((a, b) => {
+      const key = sortConfig.key;
+      const direction = sortConfig.direction === 'asc' ? 1 : -1;
+      
+      // Special case for aumDisplay which is a derived field
+      if (key === 'aumDisplay') {
+        return ((a.aum || 0) - (b.aum || 0)) * direction;
+      }
+      
+      // Handle name which is a composite field
+      if (key === 'name' || key === 'firstName' || key === 'lastName') {
+        const nameA = getPrettyClientName(a).toLowerCase();
+        const nameB = getPrettyClientName(b).toLowerCase();
+        return nameA.localeCompare(nameB) * direction;
+      }
+      
+      // Handle numeric fields
+      if (typeof a[key] === 'number' && typeof b[key] === 'number') {
+        return ((a[key] as number) - (b[key] as number)) * direction;
+      }
+      
+      // Handle string fields
+      const valueA = String(a[key] || '').toLowerCase();
+      const valueB = String(b[key] || '').toLowerCase();
+      return valueA.localeCompare(valueB) * direction;
+    });
+    
     return {
       totalValue: !isAumView
         ? reportData.overall.totalClients
@@ -267,7 +349,7 @@ export default function AgeDemographicsReport({
         isSelected: selectedAgeBracketForTable === b.bracket,
         dotColor: getBracketDotColor(b.bracket),
       })),
-      tableData: clients
+      tableData: sortedClients
         .filter((client) => {
           if (!selectedAgeBracketForTable) return true;
           const age = client.age;
@@ -292,7 +374,7 @@ export default function AgeDemographicsReport({
           aumDisplay: client.aum ? formatAUM(client.aum) : "N/A",
         })),
     };
-  }, [isAumView, reportData, selectedAgeBracketForTable, clients]);
+  }, [isAumView, reportData, selectedAgeBracketForTable, clients, sortConfig]);
 
   const segmentsInChart = useMemo(() => {
     if (!reportData) return [];
@@ -507,12 +589,37 @@ export default function AgeDemographicsReport({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Age</TableHead>
-                    <TableHead>Segment</TableHead>
-                    <TableHead>Inception Date</TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('firstName')} 
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Name {getSortDirectionIcon('firstName')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('age')} 
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Age {getSortDirectionIcon('age')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('segment')} 
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Segment {getSortDirectionIcon('segment')}
+                    </TableHead>
+                    <TableHead 
+                      onClick={() => requestSort('inceptionDate')} 
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Inception Date {getSortDirectionIcon('inceptionDate')}
+                    </TableHead>
                     {isAumView && (
-                      <TableHead className="text-right">AUM</TableHead>
+                      <TableHead 
+                        onClick={() => requestSort('aumDisplay')} 
+                        className="cursor-pointer hover:bg-muted/80 text-right"
+                      >
+                        AUM {getSortDirectionIcon('aumDisplay')}
+                      </TableHead>
                     )}
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>

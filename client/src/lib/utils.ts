@@ -66,7 +66,7 @@ export function getClientContactUrl(
   orionClientId?: string
 ): string {
   if (wealthboxClientId) {
-    return `/crm/wealthbox/contact/${wealthboxClientId}`;
+    return `https://app.crmworkspace.com/${clientId}/contacts/${wealthboxClientId}`;
   } else if (orionClientId) {
     return `/crm/orion/contact/${orionClientId}`;
   } else if (clientId) {
