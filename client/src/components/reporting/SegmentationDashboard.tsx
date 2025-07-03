@@ -33,7 +33,7 @@ import { ViewContactButton } from "@/components/ui/view-contact-button";
 
 // Define type for sort configuration
 type SortConfig = {
-  key: keyof SegmentClient;
+  key: keyof SegmentClient | 'segment';
   direction: 'asc' | 'desc';
 };
 
@@ -77,6 +77,7 @@ interface SegmentClient {
   yearsWithFirm: number | null;
   assets: number;
   advisor: string;
+  segment?: string; // Add segment field
   wealthboxClientId: string;
   orionClientId: string;
 }
@@ -136,6 +137,7 @@ const transformToSegmentClient = (
     yearsWithFirm: calculateYearsWithFirm(client.inceptionDate),
     assets: Number(client.aum) || 0,
     advisor: advisorName,
+    segment: client.segment,
     wealthboxClientId: client.wealthboxClientId || '',
     orionClientId: client.orionClientId || ''
   };
@@ -258,7 +260,7 @@ export default function SegmentationDashboard() {
   };
 
   // Function to handle column sorting
-  const requestSort = (key: keyof SegmentClient) => {
+  const requestSort = (key: keyof SegmentClient | 'segment') => {
     let direction: 'asc' | 'desc' = 'asc';
     
     if (sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -269,7 +271,7 @@ export default function SegmentationDashboard() {
   };
 
   // Get sort indicator for column header
-  const getSortDirectionIcon = (columnName: keyof SegmentClient) => {
+  const getSortDirectionIcon = (columnName: keyof SegmentClient | 'segment') => {
     if (sortConfig.key !== columnName) {
       return null;
     }
@@ -629,10 +631,10 @@ export default function SegmentationDashboard() {
               {!isLoading && currentSegmentClients.length > 0 && (
                 <div className="border-0">
                   <Table>
-        <TableHeader className="sticky top-0 bg-white z-10 border-b border-gray-200">
+                    <TableHeader className="sticky top-0 bg-white z-10 border-b border-gray-200">
                       <TableRow className="hover:bg-transparent">
-                      <TableHead 
-                          className="font-semibold text-gray-700 py-4"
+                        <TableHead 
+                          className="font-semibold text-gray-700 py-4 cursor-pointer hover:bg-blue-50"
                           onClick={() => requestSort('name')}
                         >
                           <div className="flex items-center gap-1">
@@ -641,7 +643,7 @@ export default function SegmentationDashboard() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="font-semibold text-gray-700 py-4"
+                          className="font-semibold text-gray-700 py-4 cursor-pointer hover:bg-blue-50"
                           onClick={() => requestSort('age')}
                         >
                           <div className="flex items-center gap-1">
@@ -650,7 +652,7 @@ export default function SegmentationDashboard() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="font-semibold text-gray-700 py-4"
+                          className="font-semibold text-gray-700 py-4 cursor-pointer hover:bg-blue-50"
                           onClick={() => requestSort('yearsWithFirm')}
                         >
                           <div className="flex items-center gap-1">
@@ -659,7 +661,7 @@ export default function SegmentationDashboard() {
                           </div>
                         </TableHead>
                         <TableHead 
-                          className="font-semibold text-gray-700 py-4"
+                          className="font-semibold text-gray-700 py-4 text-right cursor-pointer hover:bg-blue-50"
                           onClick={() => requestSort('assets')}
                         >
                           <div className="flex items-center justify-end gap-1">
@@ -745,18 +747,6 @@ export default function SegmentationDashboard() {
                               {client.yearsWithFirm !== null
                                 ? `${client.yearsWithFirm} years`
                                 : "N/A"}
-                            </TableCell>
-                            <TableCell className="py-4">
-                              <span
-                                className="px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 group-hover:scale-105 group-hover:shadow-md border"
-                                style={{
-                                  backgroundColor: segmentStyle.backgroundColor,
-                                  color: segmentStyle.color,
-                                  borderColor: segmentStyle.borderColor,
-                                }}
-                              >
-                                {clientSegment}
-                              </span>
                             </TableCell>
                             <TableCell className="text-right font-semibold text-gray-900 py-4 group-hover:text-blue-700 transition-colors duration-200">
                               {formatAUM(client.assets)}

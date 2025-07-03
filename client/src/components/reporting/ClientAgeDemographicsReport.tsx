@@ -314,6 +314,11 @@ export default function AgeDemographicsReport({
       
       // Special case for aumDisplay which is a derived field
       if (key === 'aumDisplay') {
+        // Handle null or undefined values - always put them at the end
+        if (!a.aum && b.aum) return 1;
+        if (a.aum && !b.aum) return -1;
+        if (!a.aum && !b.aum) return 0;
+        
         return ((a.aum || 0) - (b.aum || 0)) * direction;
       }
       
@@ -324,6 +329,25 @@ export default function AgeDemographicsReport({
         return nameA.localeCompare(nameB) * direction;
       }
       
+      // Handle date fields
+      if (key === 'inceptionDate' || key === 'dateOfBirth') {
+        // If one value is null/undefined and the other isn't, null values should be at the end
+        if (!a[key] && b[key]) return 1;
+        if (a[key] && !b[key]) return -1;
+        if (!a[key] && !b[key]) return 0;
+        
+        // Otherwise compare the dates
+        const dateA = new Date(a[key] as string).getTime();
+        const dateB = new Date(b[key] as string).getTime();
+        
+        // Handle invalid dates
+        if (isNaN(dateA) && !isNaN(dateB)) return 1;
+        if (!isNaN(dateA) && isNaN(dateB)) return -1;
+        if (isNaN(dateA) && isNaN(dateB)) return 0;
+        
+        return (dateA - dateB) * direction;
+      }
+      
       // Handle numeric fields
       if (typeof a[key] === 'number' && typeof b[key] === 'number') {
         return ((a[key] as number) - (b[key] as number)) * direction;
@@ -332,6 +356,11 @@ export default function AgeDemographicsReport({
       // Handle string fields
       const valueA = String(a[key] || '').toLowerCase();
       const valueB = String(b[key] || '').toLowerCase();
+      
+      // If one value is empty and the other isn't, empty values should be at the end
+      if (!valueA && valueB) return 1;
+      if (valueA && !valueB) return -1;
+      
       return valueA.localeCompare(valueB) * direction;
     });
     
@@ -368,7 +397,6 @@ export default function AgeDemographicsReport({
               return true;
           }
         })
-        .sort((a, b) => a.age - b.age) // Sort youngest to oldest
         .map((client) => ({
           ...client,
           aumDisplay: client.aum ? formatAUM(client.aum) : "N/A",
