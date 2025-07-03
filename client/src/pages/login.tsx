@@ -75,9 +75,9 @@ const Login = () => {
 
       <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6">
         <div className="fixed top-6 left-6">
-          <Link to="/login">
+          <a href="https://advisorvitals.com/" target="_blank" rel="noopener noreferrer">
             <VitalsLogo variant="extra-large" showText={false} />
-          </Link>
+          </a>
         </div>
 
         <motion.div

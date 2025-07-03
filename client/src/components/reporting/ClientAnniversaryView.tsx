@@ -69,7 +69,7 @@ const transformToAnniversaryClient = (client: StandardClient): AnniversaryClient
       daysUntilNextAnniversary: 0, // No meaningful anniversary
       yearsWithFirm: 0, // No meaningful tenure
       advisorName: client.advisor || 'N/A',
-      advisorId: client.advisor || 'N/A'
+      advisorId: client.primaryAdvisorId || 'N/A'
     };
   }
 
@@ -100,7 +100,7 @@ const transformToAnniversaryClient = (client: StandardClient): AnniversaryClient
     daysUntilNextAnniversary: daysUntil,
     yearsWithFirm: Math.max(yearsWithFirm, 1), // Minimum 1 year
     advisorName: client.advisor || 'N/A',
-    advisorId: client.advisor || 'N/A',
+    advisorId: client.primaryAdvisorId || 'N/A',
     wealthboxClientId: client.wealthboxClientId,
     orionClientId: client.orionClientId
   };
@@ -108,7 +108,7 @@ const transformToAnniversaryClient = (client: StandardClient): AnniversaryClient
 
 const generateFilterOptions = (clients: StandardClient[]): AnniversaryFilterOptions => {
   const segments = Array.from(new Set(clients.map(c => getSegmentName(c.segment))));
-  const advisors = Array.from(new Set(clients.map(c => ({ id: c.advisor || 'N/A', name: c.advisor || 'N/A' }))))
+  const advisors = Array.from(new Set(clients.map(c => ({ id: c.primaryAdvisorId || 'N/A', name: c.advisor || 'N/A' }))))
     .filter(a => a.id && a.name);
   
   return {
