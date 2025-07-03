@@ -1178,7 +1178,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const redirectUri = "https://moved-repeatedly-mongrel.ngrok-free.app/settings";
+      const redirectUri = "https://app.advisorvitals.com/settings";
 
       // Exchange authorization code for access token using query parameters
       const tokenUrl = new URL("https://app.crmworkspace.com/oauth/token");

@@ -661,6 +661,16 @@ export default function SegmentationDashboard() {
                           </div>
                         </TableHead>
                         <TableHead 
+                          className="font-semibold text-gray-700 py-4 cursor-pointer hover:bg-blue-50"
+                          onClick={() => requestSort('segment')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Segment
+                            {getSortDirectionIcon('segment')}
+                          </div>
+                        </TableHead>  
+
+                        <TableHead 
                           className="font-semibold text-gray-700 py-4 text-right cursor-pointer hover:bg-blue-50"
                           onClick={() => requestSort('assets')}
                         >
@@ -742,11 +752,23 @@ export default function SegmentationDashboard() {
                               {client.age !== null
                                 ? `${client.age} years`
                                 : "N/A"}
-                            </TableCell>
+                            </TableCell>    
                             <TableCell className="py-4 text-gray-600 group-hover:text-gray-700 transition-colors duration-200">
                               {client.yearsWithFirm !== null
                                 ? `${client.yearsWithFirm} years`
                                 : "N/A"}
+                            </TableCell>
+                            <TableCell className="py-4 text-gray-600 group-hover:text-gray-700 transition-colors duration-200">
+                              <span
+                                className="px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 group-hover:scale-105 group-hover:shadow-md border"
+                                style={{
+                                  backgroundColor: segmentStyle.backgroundColor,
+                                  color: segmentStyle.color,
+                                  borderColor: segmentStyle.borderColor,
+                                }}
+                              >
+                                {clientSegment}
+                              </span>
                             </TableCell>
                             <TableCell className="text-right font-semibold text-gray-900 py-4 group-hover:text-blue-700 transition-colors duration-200">
                               {formatAUM(client.assets)}
