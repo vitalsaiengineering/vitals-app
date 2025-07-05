@@ -551,7 +551,7 @@ const ClientBirthdayReport = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortByUpcomingBirthday(filteredReportData).map((client) => {
+                  {filteredReportData.map((client) => {
                     const gradeClasses = getGradeBadgeClasses(client.grade);
                     return (
                       <TableRow

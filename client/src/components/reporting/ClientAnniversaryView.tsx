@@ -530,113 +530,108 @@ export default function ClientAnniversaryView({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredClients
-                    .sort(
-                      (a, b) =>
-                        a.daysUntilNextAnniversary - b.daysUntilNextAnniversary
-                    )
-                    .map((client) => {
-                      const gradeClasses = getGradeBadgeClasses(client.segment);
-                      const isHighlighted = highlightedRowId === client.id;
-                      const isMilestone = isMilestoneAnniversary(
-                        client.yearsWithFirm
-                      );
+                  {filteredClients.map((client) => {
+                    const gradeClasses = getGradeBadgeClasses(client.segment);
+                    const isHighlighted = highlightedRowId === client.id;
+                    const isMilestone = isMilestoneAnniversary(
+                      client.yearsWithFirm
+                    );
 
-                      return (
-                        <TableRow
-                          key={client.id}
-                          className={
-                            isMilestone
-                              ? "bg-yellow-50 hover:bg-yellow-100 border-yellow-200 transition-all duration-200 group"
-                              : isHighlighted
-                              ? "bg-blue-50 hover:bg-blue-100 transition-all duration-200 group"
-                              : "hover:bg-blue-50/50 transition-all duration-200 group"
-                          }
-                          onMouseEnter={() => setHighlightedRowId(client.id)}
-                          onMouseLeave={() => setHighlightedRowId(null)}
-                        >
-                          <TableCell>
-                            <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
-                                <User className="w-4 h-4 text-blue-600" />
-                              </div>
-                              <span className="font-medium text-gray-900 group-hover:text-blue-900">
-                                {client.clientName}
-                              </span>
+                    return (
+                      <TableRow
+                        key={client.id}
+                        className={
+                          isMilestone
+                            ? "bg-yellow-50 hover:bg-yellow-100 border-yellow-200 transition-all duration-200 group"
+                            : isHighlighted
+                            ? "bg-blue-50 hover:bg-blue-100 transition-all duration-200 group"
+                            : "hover:bg-blue-50/50 transition-all duration-200 group"
+                        }
+                        onMouseEnter={() => setHighlightedRowId(client.id)}
+                        onMouseLeave={() => setHighlightedRowId(null)}
+                      >
+                        <TableCell>
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
+                              <User className="w-4 h-4 text-blue-600" />
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={`px-3 py-1 text-xs font-medium rounded-full border ${gradeClasses.badgeBg} ${gradeClasses.badgeText}`}
-                            >
-                              {client.segment}
+                            <span className="font-medium text-gray-900 group-hover:text-blue-900">
+                              {client.clientName}
                             </span>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center space-x-2">
-                              <div className="p-1 bg-gray-100 rounded-full">
-                                <svg
-                                  className="w-3.5 h-3.5 text-gray-500"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                                  />
-                                </svg>
-                              </div>
-                              <span className="text-gray-700">
-                                {client.anniversaryDate
-                                  ? formatDateToUS(client.anniversaryDate)
-                                  : "N/A"}
-                              </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`px-3 py-1 text-xs font-medium rounded-full border ${gradeClasses.badgeBg} ${gradeClasses.badgeText}`}
+                          >
+                            {client.segment}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-2">
+                            <div className="p-1 bg-gray-100 rounded-full">
+                              <svg
+                                className="w-3.5 h-3.5 text-gray-500"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                              </svg>
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className="font-medium text-gray-900">
+                            <span className="text-gray-700">
                               {client.anniversaryDate
-                                ? client.daysUntilNextAnniversary === 1
-                                  ? "1 day"
-                                  : `${client.daysUntilNextAnniversary} days`
+                                ? formatDateToUS(client.anniversaryDate)
                                 : "N/A"}
                             </span>
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={
-                                isMilestone
-                                  ? "font-bold text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full text-xs"
-                                  : "font-medium text-gray-900"
-                              }
-                            >
-                              {client.anniversaryDate
-                                ? client.yearsWithFirm === 1
-                                  ? "1 year"
-                                  : `${client.yearsWithFirm} years`
-                                : "N/A"}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <span className="font-medium text-gray-700">
-                              {client.advisorName}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="opacity-70 group-hover:opacity-100 transition-all duration-200">
-                              <ViewContactButton
-                                clientId={client.id}
-                                wealthboxClientId={client.wealthboxClientId}
-                                orionClientId={client.orionClientId}
-                              />
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium text-gray-900">
+                            {client.anniversaryDate
+                              ? client.daysUntilNextAnniversary === 1
+                                ? "1 day"
+                                : `${client.daysUntilNextAnniversary} days`
+                              : "N/A"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={
+                              isMilestone
+                                ? "font-bold text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full text-xs"
+                                : "font-medium text-gray-900"
+                            }
+                          >
+                            {client.anniversaryDate
+                              ? client.yearsWithFirm === 1
+                                ? "1 year"
+                                : `${client.yearsWithFirm} years`
+                              : "N/A"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium text-gray-700">
+                            {client.advisorName}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="opacity-70 group-hover:opacity-100 transition-all duration-200">
+                            <ViewContactButton
+                              clientId={client.id}
+                              wealthboxClientId={client.wealthboxClientId}
+                              orionClientId={client.orionClientId}
+                            />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>
