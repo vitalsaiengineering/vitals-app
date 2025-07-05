@@ -517,14 +517,16 @@ export default function ClientInceptionView({
 
   return (
     <div className="space-y-6">
-      {/* KPI Card - exact match to reference */}
-      <Card className="border shadow-sm">
+      {/* KPI Card - enhanced modern design */}
+      <Card className="border-gray-100 hover:shadow-lg transition-shadow duration-300">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-4">
-                <Users className="h-5 w-5 text-blue-600" />
-                <h3 className="text-lg font-medium">
+                <div className="p-2 bg-blue-50 rounded-lg">
+                  <Users className="h-5 w-5 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">
                   {filters.advisorIds.length === 1 &&
                   filters.advisorIds[0] !== "All Advisors"
                     ? getAdvisorReportTitle(
@@ -535,8 +537,8 @@ export default function ClientInceptionView({
                     : "Clients by Inception Date by Segmentation"}
                 </h3>
               </div>
-              <div className="space-y-2">
-                <p className="text-4xl font-bold text-foreground">
+              <div className="space-y-3">
+                <p className="text-4xl font-bold text-blue-600">
                   {(() => {
                     const legendData = getSelectedYearLegend();
                     const totalItem = legendData.find(
@@ -545,15 +547,23 @@ export default function ClientInceptionView({
                     return totalItem?.count || 0;
                   })()}
                 </p>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-gray-600 font-medium">
                   {selectedYear} New Clients
                 </p>
-                <div className="flex items-center space-x-1">
-                  {getSelectedYearPercentageChange() >= 0 ? (
-                    <TrendingUp className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <TrendingDown className="h-4 w-4 text-red-600" />
-                  )}
+                <div className="flex items-center space-x-2">
+                  <div
+                    className={`p-1 rounded-full ${
+                      getSelectedYearPercentageChange() >= 0
+                        ? "bg-green-50"
+                        : "bg-red-50"
+                    }`}
+                  >
+                    {getSelectedYearPercentageChange() >= 0 ? (
+                      <TrendingUp className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4 text-red-600" />
+                    )}
+                  </div>
                   <span
                     className={`text-sm font-medium ${
                       getSelectedYearPercentageChange() >= 0
@@ -568,13 +578,13 @@ export default function ClientInceptionView({
               </div>
             </div>
 
-            {/* Year selector */}
-            <div className="w-32">
+            {/* Year selector - enhanced design */}
+            <div className="w-36">
               <Select
                 value={String(selectedYear)}
                 onValueChange={(value) => setSelectedYear(Number(value))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -590,10 +600,12 @@ export default function ClientInceptionView({
         </CardContent>
       </Card>
 
-      {/* Chart and Legend */}
-      <Card className="border shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-xl">Client Inception by Year</CardTitle>
+      {/* Chart and Legend - enhanced design */}
+      <Card className="border-gray-100 hover:shadow-lg transition-shadow duration-300">
+        <CardHeader className="pb-6">
+          <CardTitle className="text-xl font-bold text-gray-900">
+            Client Inception by Year
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -606,9 +618,9 @@ export default function ClientInceptionView({
                     onClick={handleBarClick}
                     style={{ cursor: "pointer" }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="year" />
-                    <YAxis />
+                    <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.15} />
+                    <XAxis dataKey="year" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
                     <Bar
@@ -644,16 +656,20 @@ export default function ClientInceptionView({
               </div>
             </div>
 
-            {/* Legend - 1/4 width - exact match to reference */}
+            {/* Legend - enhanced design */}
             <div className="lg:col-span-1">
-              <div className="bg-white border rounded-lg p-4 h-full">
-                <h4 className="text-sm font-medium mb-4">
+              <div className="bg-gradient-to-br from-blue-50 to-gray-50 border border-gray-100 rounded-lg p-4 h-full">
+                <h4 className="text-sm font-semibold mb-4 text-gray-900">
                   New Clients by Segment ({selectedYear})
                 </h4>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Segment</span>
-                    <span className="text-sm font-medium">Clients</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Segment
+                    </span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Clients
+                    </span>
                   </div>
 
                   {getSelectedYearLegend()
@@ -666,11 +682,11 @@ export default function ClientInceptionView({
                     .map((item, index) => (
                       <div
                         key={index}
-                        className="flex justify-between items-center"
+                        className="flex justify-between items-center py-1 px-2 rounded-md hover:bg-white/50 transition-colors"
                       >
                         <div className="flex items-center space-x-2">
                           <div
-                            className="w-3 h-3 rounded-full"
+                            className="w-3 h-3 rounded-full shadow-sm"
                             style={{
                               backgroundColor:
                                 item.segment === "Platinum"
@@ -684,17 +700,21 @@ export default function ClientInceptionView({
                                   : "#6b7280",
                             }}
                           />
-                          <span className="text-sm">{item.segment}</span>
+                          <span className="text-sm font-medium text-gray-700">
+                            {item.segment}
+                          </span>
                         </div>
-                        <span className="text-sm font-semibold">
+                        <span className="text-sm font-bold text-gray-900">
                           {item.count}
                         </span>
                       </div>
                     ))}
 
-                  <div className="border-t pt-2 flex justify-between items-center">
-                    <span className="text-sm font-medium">Total</span>
-                    <span className="text-sm font-bold">
+                  <div className="border-t border-gray-200 pt-3 mt-3 flex justify-between items-center">
+                    <span className="text-sm font-semibold text-gray-900">
+                      Total
+                    </span>
+                    <span className="text-sm font-bold text-blue-600">
                       {(() => {
                         if (selectedSegmentFilter === "All Segments") {
                           // Use the pre-calculated total from legend data
@@ -723,8 +743,8 @@ export default function ClientInceptionView({
             </div>
           </div>
 
-          {/* Segment filter buttons - centered below chart */}
-          <div className="flex space-x-2 mt-6 justify-center">
+          {/* Segment filter buttons - enhanced design */}
+          <div className="flex flex-wrap gap-2 mt-6 justify-center">
             {segmentButtons.map((segment) => (
               <Button
                 key={segment}
@@ -733,7 +753,11 @@ export default function ClientInceptionView({
                 }
                 size="sm"
                 onClick={() => setSelectedSegmentFilter(segment)}
-                className="px-4"
+                className={`px-4 py-2 font-medium transition-all duration-200 ${
+                  selectedSegmentFilter === segment
+                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                    : "border-gray-200 hover:bg-gray-50 text-gray-700 hover:border-gray-300"
+                }`}
               >
                 {segment}
               </Button>
@@ -742,28 +766,34 @@ export default function ClientInceptionView({
         </CardContent>
       </Card>
 
-      {/* Search bar - positioned between chart and table */}
+      {/* Search bar - enhanced design */}
       <div className="max-w-md">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Search contacts..."
-            className="pl-10"
+            className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
             value={globalSearch}
             onChange={(e) => setGlobalSearch(e.target.value)}
           />
         </div>
       </div>
 
-      {/* Client Table - exact match to reference */}
-      <Card className="border shadow-sm">
-        <CardHeader className="pb-3">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-lg">Client Inception Year</CardTitle>
-            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-              <span>{displayClients.length} records</span>
-              <span>
+      {/* Client Table - enhanced design */}
+      <Card className="border-gray-100 hover:shadow-lg transition-shadow duration-300">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <CardTitle className="text-xl font-bold text-gray-900">
+                Client Inception Year
+              </CardTitle>
+              <p className="text-sm text-gray-600 mt-1">
                 {selectedSegmentFilter} • {selectedYear}
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm font-medium bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-200">
+                {displayClients.length} records
               </span>
             </div>
           </div>
@@ -775,12 +805,12 @@ export default function ClientInceptionView({
             </div>
           )}
           {!isLoading && displayClients.length === 0 && (
-            <div className="text-center text-muted-foreground py-10">
+            <div className="text-center text-gray-500 py-12">
               No clients match the current filters.
             </div>
           )}
           {!isLoading && displayClients.length > 0 && (
-            <div className="rounded-md border">
+            <div className="rounded-lg border border-gray-100 overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -822,31 +852,38 @@ export default function ClientInceptionView({
                     const gradeClasses = getGradeBadgeClasses(client.segment);
 
                     return (
-                      <TableRow key={client.id}>
+                      <TableRow
+                        key={client.id}
+                        className="hover:bg-blue-50/50 transition-all duration-200 group"
+                      >
                         <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                              <Users className="w-4 h-4 text-gray-500" />
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
+                              <Users className="w-4 h-4 text-blue-600" />
                             </div>
-                            <span className="font-medium">{client.name}</span>
+                            <span className="font-medium text-gray-900 group-hover:text-blue-900">
+                              {client.name}
+                            </span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">
+                        <TableCell className="text-gray-600">
                           {client.email}
                         </TableCell>
                         <TableCell>
                           <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${gradeClasses.badgeBg} ${gradeClasses.badgeText}`}
+                            className={`px-3 py-1 text-xs font-medium rounded-full ${gradeClasses.badgeBg} ${gradeClasses.badgeText}`}
                           >
                             {client.segment}
                           </span>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-gray-700">
                           {client.inceptionDate
                             ? formatDate(client.inceptionDate)
                             : "N/A"}
                         </TableCell>
-                        <TableCell>{client.advisor || "N/A"}</TableCell>
+                        <TableCell className="text-gray-700">
+                          {client.advisor || "N/A"}
+                        </TableCell>
                         <TableCell className="text-right">
                           <ViewContactButton 
                             clientId={client.id} 
