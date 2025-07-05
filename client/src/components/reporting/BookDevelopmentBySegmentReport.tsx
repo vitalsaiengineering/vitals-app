@@ -19,7 +19,13 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ArrowUpDown, Search, TrendingUp, TrendingDown, ExternalLink } from "lucide-react";
+import {
+  ArrowUpDown,
+  Search,
+  TrendingUp,
+  TrendingDown,
+  ExternalLink,
+} from "lucide-react";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -828,7 +834,7 @@ export default function BookDevelopmentBySegmentReport() {
           {/* Chart Container with Toggle in Top Right */}
           <div className="relative">
             {/* Chart View Toggle - Top Right */}
-            <div className="absolute top-2 right-4 z-10 flex items-center space-x-2 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-md border border-gray-100">
+            <div className="absolute top-2 right-4 z-10 flex items-center space-x-2 bg-white/90  rounded-full px-4 py-2">
               <Label
                 htmlFor="chart-toggle-switch"
                 className={`text-xs font-medium transition-colors ${
@@ -1077,8 +1083,8 @@ export default function BookDevelopmentBySegmentReport() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="opacity-70 group-hover:opacity-100 transition-all duration-200">
-                          <ViewContactButton 
-                            clientId={client.id} 
+                          <ViewContactButton
+                            clientId={client.id}
                             wealthboxClientId={client.wealthboxClientId}
                             orionClientId={client.orionClientId}
                           />

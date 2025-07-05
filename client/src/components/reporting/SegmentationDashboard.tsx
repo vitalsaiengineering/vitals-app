@@ -9,7 +9,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, Database, TrendingUp, ExternalLink, ChevronUp, ChevronDown } from "lucide-react";
+import {
+  Users,
+  Database,
+  TrendingUp,
+  ExternalLink,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 import {
   PieChart,
   Pie,
@@ -33,8 +40,8 @@ import { ViewContactButton } from "@/components/ui/view-contact-button";
 
 // Define type for sort configuration
 type SortConfig = {
-  key: keyof SegmentClient | 'segment';
-  direction: 'asc' | 'desc';
+  key: keyof SegmentClient | "segment";
+  direction: "asc" | "desc";
 };
 
 // Chart colors for segments
@@ -138,8 +145,8 @@ const transformToSegmentClient = (
     assets: Number(client.aum) || 0,
     advisor: advisorName,
     segment: client.segment,
-    wealthboxClientId: client.wealthboxClientId || '',
-    orionClientId: client.orionClientId || ''
+    wealthboxClientId: client.wealthboxClientId || "",
+    orionClientId: client.orionClientId || "",
   };
 };
 
@@ -218,10 +225,9 @@ export default function SegmentationDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [selectedSegment, setSelectedSegment] = useState("All");
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(null);
-  const [hoveredClient, setHoveredClient] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: 'assets',
-    direction: 'desc'
+    key: "assets",
+    direction: "desc",
   });
 
   useEffect(() => {
@@ -260,25 +266,29 @@ export default function SegmentationDashboard() {
   };
 
   // Function to handle column sorting
-  const requestSort = (key: keyof SegmentClient | 'segment') => {
-    let direction: 'asc' | 'desc' = 'asc';
-    
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+  const requestSort = (key: keyof SegmentClient | "segment") => {
+    let direction: "asc" | "desc" = "asc";
+
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
     }
-    
+
     setSortConfig({ key, direction });
   };
 
   // Get sort indicator for column header
-  const getSortDirectionIcon = (columnName: keyof SegmentClient | 'segment') => {
+  const getSortDirectionIcon = (
+    columnName: keyof SegmentClient | "segment"
+  ) => {
     if (sortConfig.key !== columnName) {
       return null;
     }
-    
-    return sortConfig.direction === 'asc' 
-      ? <ChevronUp className="h-4 w-4 inline ml-1 text-blue-600" /> 
-      : <ChevronDown className="h-4 w-4 inline ml-1 text-blue-600" />;
+
+    return sortConfig.direction === "asc" ? (
+      <ChevronUp className="h-4 w-4 inline ml-1 text-blue-600" />
+    ) : (
+      <ChevronDown className="h-4 w-4 inline ml-1 text-blue-600" />
+    );
   };
 
   // Dynamic table data based on selected segment
@@ -294,8 +304,12 @@ export default function SegmentationDashboard() {
     } else {
       // Filter clients by the selected segment using actual segment field
       filtered = dashboardData.allClients.filter((client: SegmentClient) => {
-        const originalClient = dashboardData.originalClients.find((c: StandardClient) => c.id === client.id);
-        const clientSegment = originalClient?.segment ? getSegmentName(originalClient.segment) : 'N/A';
+        const originalClient = dashboardData.originalClients.find(
+          (c: StandardClient) => c.id === client.id
+        );
+        const clientSegment = originalClient?.segment
+          ? getSegmentName(originalClient.segment)
+          : "N/A";
         return clientSegment === selectedSegment;
       });
     }
@@ -304,21 +318,21 @@ export default function SegmentationDashboard() {
     if (sortConfig.key) {
       filtered = [...filtered].sort((a, b) => {
         const key = sortConfig.key;
-        const direction = sortConfig.direction === 'asc' ? 1 : -1;
-        
+        const direction = sortConfig.direction === "asc" ? 1 : -1;
+
         // Handle null values
         if (a[key] === null && b[key] === null) return 0;
         if (a[key] === null) return direction; // Nulls last when ascending
         if (b[key] === null) return -direction; // Nulls last when descending
-        
+
         // Handle numeric fields
-        if (key === 'age' || key === 'yearsWithFirm' || key === 'assets') {
+        if (key === "age" || key === "yearsWithFirm" || key === "assets") {
           return ((a[key] as number) - (b[key] as number)) * direction;
         }
-        
+
         // Handle string fields
-        const valueA = String(a[key] || '').toLowerCase();
-        const valueB = String(b[key] || '').toLowerCase();
+        const valueA = String(a[key] || "").toLowerCase();
+        const valueB = String(b[key] || "").toLowerCase();
         return valueA.localeCompare(valueB) * direction;
       });
     }
@@ -526,20 +540,8 @@ export default function SegmentationDashboard() {
                       <Cell
                         key={`cell-${index}`}
                         fill={entry.color}
-                        stroke={
-                          selectedSegment === entry.name
-                            ? "#1f2937"
-                            : hoveredSegment === entry.name
-                            ? "#374151"
-                            : "transparent"
-                        }
-                        strokeWidth={
-                          selectedSegment === entry.name
-                            ? 3
-                            : hoveredSegment === entry.name
-                            ? 2
-                            : 0
-                        }
+                        stroke="transparent"
+                        strokeWidth={0}
                         className="transition-all duration-300"
                         style={{
                           filter:
@@ -633,53 +635,55 @@ export default function SegmentationDashboard() {
                   <Table>
                     <TableHeader className="sticky top-0 bg-white z-10 border-b border-gray-200">
                       <TableRow className="hover:bg-transparent">
-                        <TableHead 
-                          className="font-semibold text-gray-700 py-4 cursor-pointer hover:bg-blue-50"
-                          onClick={() => requestSort('name')}
+                        <TableHead
+                          className="font-semibold text-gray-700 py-4 cursor-pointer"
+                          onClick={() => requestSort("name")}
                         >
                           <div className="flex items-center gap-1">
                             Name
-                            {getSortDirectionIcon('name')}
+                            {getSortDirectionIcon("name")}
                           </div>
                         </TableHead>
-                        <TableHead 
-                          className="font-semibold text-gray-700 py-4 cursor-pointer hover:bg-blue-50"
-                          onClick={() => requestSort('age')}
+                        <TableHead
+                          className="font-semibold text-gray-700 py-4 cursor-pointer"
+                          onClick={() => requestSort("age")}
                         >
                           <div className="flex items-center gap-1">
                             Age
-                            {getSortDirectionIcon('age')}
+                            {getSortDirectionIcon("age")}
                           </div>
                         </TableHead>
-                        <TableHead 
-                          className="font-semibold text-gray-700 py-4 cursor-pointer hover:bg-blue-50"
-                          onClick={() => requestSort('yearsWithFirm')}
+                        <TableHead
+                          className="font-semibold text-gray-700 py-4 cursor-pointer"
+                          onClick={() => requestSort("yearsWithFirm")}
                         >
                           <div className="flex items-center gap-1">
                             Years with Firm
-                            {getSortDirectionIcon('yearsWithFirm')}
+                            {getSortDirectionIcon("yearsWithFirm")}
                           </div>
                         </TableHead>
-                        <TableHead 
-                          className="font-semibold text-gray-700 py-4 cursor-pointer hover:bg-blue-50"
-                          onClick={() => requestSort('segment')}
+                        <TableHead
+                          className="font-semibold text-gray-700 py-4 cursor-pointer"
+                          onClick={() => requestSort("segment")}
                         >
                           <div className="flex items-center gap-1">
                             Segment
-                            {getSortDirectionIcon('segment')}
+                            {getSortDirectionIcon("segment")}
                           </div>
-                        </TableHead>  
+                        </TableHead>
 
-                        <TableHead 
-                          className="font-semibold text-gray-700 py-4 text-right cursor-pointer hover:bg-blue-50"
-                          onClick={() => requestSort('assets')}
+                        <TableHead
+                          className="font-semibold text-gray-700 py-4 text-right cursor-pointer"
+                          onClick={() => requestSort("assets")}
                         >
                           <div className="flex items-center justify-end gap-1">
                             Assets
-                            {getSortDirectionIcon('assets')}
+                            {getSortDirectionIcon("assets")}
                           </div>
                         </TableHead>
-                        <TableHead className="font-semibold text-gray-700 py-4">Actions</TableHead>
+                        <TableHead className="font-semibold text-gray-700 py-4">
+                          Actions
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -727,21 +731,9 @@ export default function SegmentationDashboard() {
                         return (
                           <TableRow
                             key={client.id}
-                            className="hover:bg-blue-50 border-b border-gray-100 transition-all duration-200 hover:shadow-sm group cursor-pointer"
-                            onMouseEnter={() => setHoveredClient(client.id)}
-                            onMouseLeave={() => setHoveredClient(null)}
-                            style={{
-                              backgroundColor:
-                                hoveredClient === client.id
-                                  ? "#eff6ff"
-                                  : "transparent",
-                              transform:
-                                hoveredClient === client.id
-                                  ? "translateX(4px)"
-                                  : "translateX(0px)",
-                            }}
+                            className="hover:bg-blue-50/50 transition-all duration-200 group"
                           >
-                            <TableCell className="font-medium text-gray-900 py-4 group-hover:text-blue-700 transition-colors duration-200">
+                            <TableCell className="font-medium text-gray-900 py-4 group-hover:text-blue-900 transition-colors duration-200">
                               {client.name}
                             </TableCell>
                             <TableCell
@@ -752,7 +744,7 @@ export default function SegmentationDashboard() {
                               {client.age !== null
                                 ? `${client.age} years`
                                 : "N/A"}
-                            </TableCell>    
+                            </TableCell>
                             <TableCell className="py-4 text-gray-600 group-hover:text-gray-700 transition-colors duration-200">
                               {client.yearsWithFirm !== null
                                 ? `${client.yearsWithFirm} years`
@@ -770,13 +762,13 @@ export default function SegmentationDashboard() {
                                 {clientSegment}
                               </span>
                             </TableCell>
-                            <TableCell className="text-right font-semibold text-gray-900 py-4 group-hover:text-blue-700 transition-colors duration-200">
+                            <TableCell className="text-right font-medium text-gray-900 py-4 group-hover:text-blue-900 transition-colors duration-200">
                               {formatAUM(client.assets)}
                             </TableCell>
                             <TableCell className="text-right py-4">
                               <div className="opacity-70 group-hover:opacity-100 transition-all duration-200">
-                                <ViewContactButton 
-                                  clientId={client.id} 
+                                <ViewContactButton
+                                  clientId={client.id}
                                   wealthboxClientId={client.wealthboxClientId}
                                   orionClientId={client.orionClientId}
                                 />

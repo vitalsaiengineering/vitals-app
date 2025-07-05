@@ -45,8 +45,8 @@ import { ViewContactButton } from "@/components/ui/view-contact-button";
 
 // Define type for sort configuration
 type SortConfig = {
-  key: keyof BirthdayClient | '';
-  direction: 'asc' | 'desc';
+  key: keyof BirthdayClient | "";
+  direction: "asc" | "desc";
 };
 
 // Define Grade colors - Updated for light backgrounds and dark text
@@ -179,8 +179,8 @@ const ClientBirthdayReport = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortConfig, setSortConfig] = useState<SortConfig>({
-    key: 'nextBirthdayDisplay',
-    direction: 'asc'
+    key: "nextBirthdayDisplay",
+    direction: "asc",
   });
 
   // Local filter states for birthday-specific filters ONLY
@@ -192,12 +192,12 @@ const ClientBirthdayReport = () => {
 
   // Function to handle column sorting
   const requestSort = (key: keyof BirthdayClient) => {
-    let direction: 'asc' | 'desc' = 'asc';
-    
-    if (sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
+    let direction: "asc" | "desc" = "asc";
+
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
     }
-    
+
     setSortConfig({ key, direction });
   };
 
@@ -206,10 +206,12 @@ const ClientBirthdayReport = () => {
     if (sortConfig.key !== columnName) {
       return null;
     }
-    
-    return sortConfig.direction === 'asc' 
-      ? <ChevronUp className="h-4 w-4 inline ml-1 text-blue-600" /> 
-      : <ChevronDown className="h-4 w-4 inline ml-1 text-blue-600" />;
+
+    return sortConfig.direction === "asc" ? (
+      <ChevronUp className="h-4 w-4 inline ml-1 text-blue-600" />
+    ) : (
+      <ChevronDown className="h-4 w-4 inline ml-1 text-blue-600" />
+    );
   };
 
   // Note: Segment and Advisor filtering is handled by sidebar filters
@@ -282,60 +284,32 @@ const ClientBirthdayReport = () => {
     }
 
     // Apply sorting
-    if (sortConfig.key !== '') {
+    if (sortConfig.key !== "") {
       filtered.sort((a, b) => {
         const key = sortConfig.key as keyof BirthdayClient;
-        const direction = sortConfig.direction === 'asc' ? 1 : -1;
-        
-        // Handle date fields
-        if (key === 'dateOfBirth' || key === 'nextBirthdayDisplay') {
-          return (new Date(a[key]).getTime() - new Date(b[key]).getTime()) * direction;
-        }
-        
-        // Handle numeric fields
-        if (typeof a[key] === 'number' && typeof b[key] === 'number') {
-          return ((a[key] as number) - (b[key] as number)) * direction;
-        }
-        
-        // Handle AUM which might need special formatting
-        if (key === 'aum') {
-          return ((a.aum || 0) - (b.aum || 0)) * direction;
-        }
-        
-        // Handle string fields
-        const valueA = String(a[key] || '').toLowerCase();
-        const valueB = String(b[key] || '').toLowerCase();
-        return valueA.localeCompare(valueB) * direction;
-      });
-    } else {
-      // Default sort by upcoming birthday if no sort specified
-      filtered = sortByUpcomingBirthday(filtered);
-    }
+        const direction = sortConfig.direction === "asc" ? 1 : -1;
 
-    // Apply sorting
-    if (sortConfig.key !== '') {
-      filtered.sort((a, b) => {
-        const key = sortConfig.key as keyof BirthdayClient;
-        const direction = sortConfig.direction === 'asc' ? 1 : -1;
-        
         // Handle date fields
-        if (key === 'dateOfBirth' || key === 'nextBirthdayDisplay') {
-          return (new Date(a[key]).getTime() - new Date(b[key]).getTime()) * direction;
+        if (key === "dateOfBirth" || key === "nextBirthdayDisplay") {
+          return (
+            (new Date(a[key]).getTime() - new Date(b[key]).getTime()) *
+            direction
+          );
         }
-        
+
         // Handle numeric fields
-        if (typeof a[key] === 'number' && typeof b[key] === 'number') {
+        if (typeof a[key] === "number" && typeof b[key] === "number") {
           return ((a[key] as number) - (b[key] as number)) * direction;
         }
-        
+
         // Handle AUM which might need special formatting
-        if (key === 'aum') {
+        if (key === "aum") {
           return ((a.aum || 0) - (b.aum || 0)) * direction;
         }
-        
+
         // Handle string fields
-        const valueA = String(a[key] || '').toLowerCase();
-        const valueB = String(b[key] || '').toLowerCase();
+        const valueA = String(a[key] || "").toLowerCase();
+        const valueB = String(b[key] || "").toLowerCase();
         return valueA.localeCompare(valueB) * direction;
       });
     } else {
@@ -399,7 +373,7 @@ const ClientBirthdayReport = () => {
     setSelectedMonth("Any month");
     setSelectedTenure("Any tenure");
     setShowMilestonesOnly(false);
-    setSortConfig({ key: 'nextBirthdayDisplay', direction: 'asc' }); // Reset sort to default
+    setSortConfig({ key: "nextBirthdayDisplay", direction: "asc" }); // Reset sort to default
   };
 
   if (isLoading && allReportData.length === 0 && !error) {
@@ -524,53 +498,54 @@ const ClientBirthdayReport = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead 
-                      onClick={() => requestSort('clientName')}
+                    <TableHead
+                      onClick={() => requestSort("clientName")}
                       className="cursor-pointer hover:bg-muted/80"
                     >
-                      Client {getSortDirectionIcon('clientName')}
+                      Client {getSortDirectionIcon("clientName")}
                     </TableHead>
-                    <TableHead 
-                      onClick={() => requestSort('grade')}
+                    <TableHead
+                      onClick={() => requestSort("grade")}
                       className="cursor-pointer hover:bg-muted/80"
                     >
-                      Grade {getSortDirectionIcon('grade')}
+                      Grade {getSortDirectionIcon("grade")}
                     </TableHead>
-                    <TableHead 
-                      onClick={() => requestSort('dateOfBirth')}
+                    <TableHead
+                      onClick={() => requestSort("dateOfBirth")}
                       className="cursor-pointer hover:bg-muted/80"
                     >
-                      Date of Birth {getSortDirectionIcon('dateOfBirth')}
+                      Date of Birth {getSortDirectionIcon("dateOfBirth")}
                     </TableHead>
-                    <TableHead 
-                      onClick={() => requestSort('nextBirthdayDisplay')}
+                    <TableHead
+                      onClick={() => requestSort("nextBirthdayDisplay")}
                       className="cursor-pointer hover:bg-muted/80"
                     >
-                      Next Birthday {getSortDirectionIcon('nextBirthdayDisplay')}
+                      Next Birthday{" "}
+                      {getSortDirectionIcon("nextBirthdayDisplay")}
                     </TableHead>
-                    <TableHead 
-                      onClick={() => requestSort('turningAge')}
+                    <TableHead
+                      onClick={() => requestSort("turningAge")}
                       className="cursor-pointer hover:bg-muted/80 text-center"
                     >
-                      Turning Age {getSortDirectionIcon('turningAge')}
+                      Turning Age {getSortDirectionIcon("turningAge")}
                     </TableHead>
-                    <TableHead 
-                      onClick={() => requestSort('aum')}
+                    <TableHead
+                      onClick={() => requestSort("aum")}
                       className="cursor-pointer hover:bg-muted/80 text-right"
                     >
-                      AUM {getSortDirectionIcon('aum')}
+                      AUM {getSortDirectionIcon("aum")}
                     </TableHead>
-                    <TableHead 
-                      onClick={() => requestSort('clientTenure')}
+                    <TableHead
+                      onClick={() => requestSort("clientTenure")}
                       className="cursor-pointer hover:bg-muted/80"
                     >
-                      Client Tenure {getSortDirectionIcon('clientTenure')}
+                      Client Tenure {getSortDirectionIcon("clientTenure")}
                     </TableHead>
-                    <TableHead 
-                      onClick={() => requestSort('advisorName')}
+                    <TableHead
+                      onClick={() => requestSort("advisorName")}
                       className="cursor-pointer hover:bg-muted/80"
                     >
-                      Advisor {getSortDirectionIcon('advisorName')}
+                      Advisor {getSortDirectionIcon("advisorName")}
                     </TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -665,8 +640,8 @@ const ClientBirthdayReport = () => {
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
-                          <ViewContactButton 
-                            clientId={client.id} 
+                          <ViewContactButton
+                            clientId={client.id}
                             wealthboxClientId={client.wealthboxClientId}
                             orionClientId={client.orionClientId}
                           />
