@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ArrowUpDown, Search, TrendingUp, TrendingDown } from "lucide-react";
+import { ArrowUpDown, Search, TrendingUp, TrendingDown, ExternalLink } from "lucide-react";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -42,6 +42,7 @@ import { useReportFilters } from "@/contexts/ReportFiltersContext";
 import { filtersToApiParams } from "@/utils/filter-utils";
 import { getSegmentName, getPrettyClientName } from "@/utils/client-analytics";
 import { FilteredReportSkeleton } from "@/components/ui/skeleton";
+import { ViewContactButton } from "@/components/ui/view-contact-button";
 
 // Define types that work with StandardClient
 interface BookDevelopmentClient extends Omit<StandardClient, "segment"> {
@@ -1075,13 +1076,11 @@ export default function BookDevelopmentBySegmentReport() {
                         }) || ""}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="default"
-                          className="bg-blue-600 hover:bg-blue-700 text-white opacity-70 group-hover:opacity-100 transition-all duration-200"
-                        >
-                          View Contact
-                        </Button>
+                        <ViewContactButton 
+                          clientId={client.id} 
+                          wealthboxClientId={client.wealthboxClientId}
+                          orionClientId={client.orionClientId}
+                        />
                       </TableCell>
                     </TableRow>
                   ))

@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TrendingUp, TrendingDown, Users, Search } from "lucide-react";
+import { TrendingUp, TrendingDown, Users, Search, ExternalLink, ChevronUp, ChevronDown } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -37,7 +37,17 @@ import { filtersToApiParams } from "@/utils/filter-utils";
 
 import { useAdvisor } from "@/contexts/AdvisorContext";
 import { TableSkeleton } from "@/components/ui/skeleton";
-import { getAdvisorReportTitle } from "@/lib/utils";
+import { getAdvisorReportTitle } from '@/lib/utils';
+import { ViewContactButton } from "@/components/ui/view-contact-button";
+
+// Import mock data
+import mockData from "@/data/mockData.js";
+
+// Define type for sort configuration
+type SortConfig = {
+  key: keyof InceptionClient | '';
+  direction: 'asc' | 'desc';
+};
 
 // Define transformed interfaces for compatibility
 interface InceptionReportData {
@@ -67,6 +77,8 @@ interface InceptionClient {
   segment: string;
   inceptionDate: string;
   advisor: string;
+  wealthboxClientId?: string;
+  orionClientId?: string;
 }
 
 // Segment colors including N/A
@@ -87,8 +99,10 @@ const transformToInceptionClient = (
   lastName: client.lastName,
   email: client.email || "N/A",
   segment: getSegmentName(client.segment),
-  inceptionDate: client.inceptionDate || "", // Empty string for N/A dates
-  advisor: client.advisor || "N/A",
+  inceptionDate: client.inceptionDate || '', // Empty string for N/A dates
+  advisor: client.advisor || 'N/A',
+  wealthboxClientId: client.wealthboxClientId,
+  orionClientId: client.orionClientId
 });
 
 const generateInceptionReportFromClients = (
@@ -268,11 +282,37 @@ export default function ClientInceptionView({
   >([]); // Store filtered table data
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: 'inceptionDate',
+    direction: 'desc'
+  });
 
   // Filter states
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedSegmentFilter, setSelectedSegmentFilter] =
     useState("All Segments");
+
+  // Function to handle column sorting
+  const requestSort = (key: keyof InceptionClient) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+
+  // Get sort indicator for column header
+  const getSortDirectionIcon = (columnName: keyof InceptionClient) => {
+    if (sortConfig.key !== columnName) {
+      return null;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1" />;
+  };
 
   // Get contexts
   const { selectedAdvisor } = useAdvisor();
@@ -347,6 +387,29 @@ export default function ClientInceptionView({
       const inceptionYear = new Date(client.inceptionDate).getFullYear();
       return inceptionYear === selectedYear;
     });
+
+    // Apply sorting
+    if (sortConfig.key) {
+      displayClients.sort((a, b) => {
+        const key = sortConfig.key as keyof InceptionClient;
+        const direction = sortConfig.direction === 'asc' ? 1 : -1;
+        
+        // Handle date fields
+        if (key === 'inceptionDate') {
+          // Handle empty dates
+          if (!a[key] && !b[key]) return 0;
+          if (!a[key]) return direction;
+          if (!b[key]) return -direction;
+          
+          return (new Date(a[key]).getTime() - new Date(b[key]).getTime()) * direction;
+        }
+        
+        // Handle string fields
+        const valueA = String(a[key] || '').toLowerCase();
+        const valueB = String(b[key] || '').toLowerCase();
+        return valueA.localeCompare(valueB) * direction;
+      });
+    }
 
     return displayClients;
   };
@@ -750,25 +813,38 @@ export default function ClientInceptionView({
             <div className="rounded-lg border border-gray-100 overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-gray-50/50">
-                    <TableHead className="font-semibold text-gray-900">
-                      Client
+                  <TableRow>
+                    <TableHead 
+                      onClick={() => requestSort('name')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Client {getSortDirectionIcon('name')}
                     </TableHead>
-                    <TableHead className="font-semibold text-gray-900">
-                      Email
+                    <TableHead 
+                      onClick={() => requestSort('email')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Email {getSortDirectionIcon('email')}
                     </TableHead>
-                    <TableHead className="font-semibold text-gray-900">
-                      Segment
+                    <TableHead 
+                      onClick={() => requestSort('segment')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Segment {getSortDirectionIcon('segment')}
                     </TableHead>
-                    <TableHead className="font-semibold text-gray-900">
-                      Inception Date
+                    <TableHead 
+                      onClick={() => requestSort('inceptionDate')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Inception Date {getSortDirectionIcon('inceptionDate')}
                     </TableHead>
-                    <TableHead className="font-semibold text-gray-900">
-                      Advisor
+                    <TableHead 
+                      onClick={() => requestSort('advisor')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Advisor {getSortDirectionIcon('advisor')}
                     </TableHead>
-                    <TableHead className="text-right font-semibold text-gray-900">
-                      Actions
-                    </TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -809,13 +885,11 @@ export default function ClientInceptionView({
                           {client.advisor || "N/A"}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-8 px-3 text-xs bg-blue-600 hover:bg-blue-700 text-white border-blue-600 hover:border-blue-700 opacity-70 group-hover:opacity-100 transition-all duration-200"
-                          >
-                            View Client
-                          </Button>
+                          <ViewContactButton 
+                            clientId={client.id} 
+                            wealthboxClientId={client.wealthboxClientId}
+                            orionClientId={client.orionClientId}
+                          />
                         </TableCell>
                       </TableRow>
                     );

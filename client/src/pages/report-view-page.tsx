@@ -33,7 +33,7 @@ import { Star } from 'lucide-react';
 
 // Define a registry for report components
 const reportRegistry: { [key: string]: { component: React.FC<any>, title: string } } = {
-  'firm-activity-dashboard': { component: FirmActivityDashboard, title: 'Firm Activity Dashboard' },
+  // 'firm-activity-dashboard': { component: FirmActivityDashboard, title: 'Firm Activity Dashboard' },
   'age-demographics': { component: AgeDemographicsReport, title: 'Age Demographics' },
   'birthday-report': { component: ClientBirthdayReport, title: 'Birthday Report' },
   'clients-aum-overtime': { component: BookDevelopmentBySegmentReport, title: 'Book Development' },

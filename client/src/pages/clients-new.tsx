@@ -8,16 +8,16 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-import { Search, Users, Database, Mail, Phone, Calendar } from "lucide-react";
+import { Search, Users, Database, Mail, Phone, Calendar, ExternalLink, ChevronUp, ChevronDown } from "lucide-react";
 import { useAdvisor } from "@/contexts/AdvisorContext";
 
-import { Button } from "@/components/ui/button";
 import { formatDate } from "@/utils/dateFormatter";
 import { getPrettyClientName, formatAUM } from "@/utils/client-analytics";
 import { getClients } from "@/lib/clientData";
 import { StandardClient } from "@/types/client";
 // @ts-ignore - JavaScript utility file
 import { calculateTenure } from "@/utils/clientDataUtils.js";
+import { ViewContactButton } from "@/components/ui/view-contact-button";
 
 interface Client {
   title: any;
@@ -35,7 +35,15 @@ interface Client {
   inceptionDate: string;
   state: string;
   household?: string;
+  wealthboxClientId?: string;
+  orionClientId?: string;
 }
+
+// Define type for sort configuration
+type SortConfig = {
+  key: keyof Client;
+  direction: 'asc' | 'desc';
+};
 
 const Clients = () => {
   const { selectedAdvisor } = useAdvisor();
@@ -43,6 +51,10 @@ const Clients = () => {
   const [allClientData, setAllClientData] = useState<Client[]>([]); // Store all data
   const [clientData, setClientData] = useState<Client[]>([]); // Store filtered data
   const [loading, setLoading] = useState(true);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: 'aum',
+    direction: 'desc'
+  });
 
   useEffect(() => {
     const loadClients = async () => {
@@ -107,9 +119,31 @@ const Clients = () => {
     setClientData(filtered);
   }, [allClientData, selectedAdvisor]);
 
-  // Filter clients based on search term and sort by AUM (highest to lowest)
-  const filteredClients = clientData
-    .filter(
+  // Function to handle column sorting
+  const requestSort = (key: keyof Client) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+
+  // Get sort indicator for column header
+  const getSortDirectionIcon = (columnName: keyof Client) => {
+    if (sortConfig.key !== columnName) {
+      return null;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1" />;
+  };
+
+  // Apply sorting and filtering to clients
+  const sortedAndFilteredClients = React.useMemo(() => {
+    let filteredClients = clientData.filter(
       (client) =>
         client?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         client?.advisor?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -119,8 +153,47 @@ const Clients = () => {
         client?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         client?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         client?.lastName?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .sort((a, b) => b.aum - a.aum); // Sort by AUM descending (highest to lowest)
+    );
+
+    filteredClients.sort((a, b) => {
+      const key = sortConfig.key;
+      
+      // Handle special case for name which is a composite field
+      if (key === 'name') {
+        const nameA = getPrettyClientName(a).toLowerCase();
+        const nameB = getPrettyClientName(b).toLowerCase();
+        if (nameA < nameB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (nameA > nameB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      }
+
+      // Handle special case for contact info which isn't a direct field
+      if (key === 'email' || key === 'phone') {
+        const valueA = (a[key] || '').toLowerCase();
+        const valueB = (b[key] || '').toLowerCase();
+        if (valueA < valueB) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (valueA > valueB) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      }
+
+      // Handle numeric fields
+      if (typeof a[key] === 'number' && typeof b[key] === 'number') {
+        return sortConfig.direction === 'asc' 
+          ? (a[key] as number) - (b[key] as number)
+          : (b[key] as number) - (a[key] as number);
+      }
+
+      // Handle string fields
+      const valueA = String(a[key] || '').toLowerCase();
+      const valueB = String(b[key] || '').toLowerCase();
+      
+      if (valueA < valueB) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (valueA > valueB) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return filteredClients;
+  }, [clientData, searchTerm, sortConfig]);
 
   // Format currency for AUM
   const formatCurrency = (amount: number) => {
@@ -213,12 +286,12 @@ const Clients = () => {
         />
       </div>
 
-      {/* Summary Stats */}
-      {filteredClients.length > 0 && (
+            {/* Summary Stats */}
+            {sortedAndFilteredClients.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-4">
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
             <div className="text-2xl font-bold text-blue-900">
-              {filteredClients.length}
+              {sortedAndFilteredClients.length}
             </div>
             <div className="text-sm text-blue-700">
               {searchTerm ? "Filtered" : "Total"} Clients
@@ -227,7 +300,7 @@ const Clients = () => {
           <div className="bg-green-50 p-4 rounded-lg border border-green-200">
             <div className="text-2xl font-bold text-green-900">
               {formatAUM(
-                filteredClients.reduce((sum, client) => sum + client.aum, 0)
+                sortedAndFilteredClients.reduce((sum, client) => sum + client.aum, 0)
               )}
             </div>
             <div className="text-sm text-green-700">Total AUM</div>
@@ -235,8 +308,8 @@ const Clients = () => {
           <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
             <div className="text-2xl font-bold text-purple-900">
               {Math.round(
-                filteredClients.reduce((sum, client) => sum + client.age, 0) /
-                  filteredClients.length
+                sortedAndFilteredClients.reduce((sum, client) => sum + client.age, 0) /
+                  sortedAndFilteredClients.length
               )}
             </div>
             <div className="text-sm text-purple-700">Average Age</div>
@@ -244,10 +317,10 @@ const Clients = () => {
           <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
             <div className="text-2xl font-bold text-orange-900">
               {Math.round(
-                filteredClients.reduce(
+                sortedAndFilteredClients.reduce(
                   (sum, client) => sum + client.tenure,
                   0
-                ) / filteredClients.length
+                ) / sortedAndFilteredClients.length
               )}
             </div>
             <div className="text-sm text-orange-700">
@@ -262,20 +335,60 @@ const Clients = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Client Name</TableHead>
-              <TableHead>Contact Info</TableHead>
-              <TableHead>Advisor</TableHead>
-              <TableHead>Segment</TableHead>
-              <TableHead>Household</TableHead>
-              <TableHead>Assets Under Management</TableHead>
-              <TableHead>Client Details</TableHead>
-              <TableHead>Location</TableHead>
+              <TableHead 
+                onClick={() => requestSort('name')} 
+                className="cursor-pointer hover:bg-muted/80"
+              >
+                Client Name {getSortDirectionIcon('name')}
+              </TableHead>
+              <TableHead 
+                onClick={() => requestSort('email')} 
+                className="cursor-pointer hover:bg-muted/80"
+              >
+                Contact Info {getSortDirectionIcon('email')}
+              </TableHead>
+              <TableHead 
+                onClick={() => requestSort('advisor')} 
+                className="cursor-pointer hover:bg-muted/80"
+              >
+                Advisor {getSortDirectionIcon('advisor')}
+              </TableHead>
+              <TableHead 
+                onClick={() => requestSort('segment')} 
+                className="cursor-pointer hover:bg-muted/80"
+              >
+                Segment {getSortDirectionIcon('segment')}
+              </TableHead>
+              <TableHead 
+                onClick={() => requestSort('household')} 
+                className="cursor-pointer hover:bg-muted/80"
+              >
+                Household {getSortDirectionIcon('household')}
+              </TableHead>
+              <TableHead 
+                onClick={() => requestSort('aum')} 
+                className="cursor-pointer hover:bg-muted/80"
+              >
+                Assets Under Management {getSortDirectionIcon('aum')}
+              </TableHead>
+              <TableHead 
+                onClick={() => requestSort('age')} 
+                className="cursor-pointer hover:bg-muted/80"
+              >
+                Client Details {getSortDirectionIcon('age')}
+              </TableHead>
+              <TableHead 
+                onClick={() => requestSort('state')} 
+                className="cursor-pointer hover:bg-muted/80"
+              >
+                Location {getSortDirectionIcon('state')}
+              </TableHead>
               <TableHead>View Contact</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredClients.length > 0 ? (
-              filteredClients.map((client) => (
+            {sortedAndFilteredClients.length > 0 ? (
+              sortedAndFilteredClients.map((client) => (
                 <TableRow
                   key={client.id}
                   className="cursor-pointer hover:bg-muted/50"
@@ -325,9 +438,11 @@ const Clients = () => {
                   </TableCell>
                   <TableCell>{client.state || "N/A"}</TableCell>
                   <TableCell>
-                    <Button variant="default" size="sm">
-                      View Contact
-                    </Button>
+                    <ViewContactButton 
+                      clientId={client.id} 
+                      wealthboxClientId={client.wealthboxClientId}
+                      orionClientId={client.orionClientId}
+                    />
                   </TableCell>
                 </TableRow>
               ))

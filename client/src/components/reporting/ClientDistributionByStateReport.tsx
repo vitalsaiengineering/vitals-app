@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Users, DollarSign, Search, Building, ChevronUp, ChevronDown, ExternalLink } from "lucide-react";
 import {
   Users,
   DollarSign,
@@ -29,7 +30,8 @@ import {
   getSegmentName,
 } from "@/utils/client-analytics";
 import { ReportSkeleton } from "@/components/ui/skeleton";
-
+import { useMockData } from "@/contexts/MockDataContext";
+import { ViewContactButton } from "@/components/ui/view-contact-button";
 import { getAdvisorReportTitle, getAdvisorName } from "@/lib/utils";
 
 const GEO_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
@@ -37,8 +39,8 @@ const GEO_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
 type MapViewType = "clientDensity" | "totalAssets";
 
 type SortConfig = {
-  key: string | null;
-  direction: "asc" | "desc";
+  key: keyof ClientInStateDetail;
+  direction: 'asc' | 'desc';
 };
 
 interface ClientInStateDetail {
@@ -46,6 +48,8 @@ interface ClientInStateDetail {
   name: string;
   segment: string;
   aum: number;
+  wealthboxClientId?: string;
+  orionClientId?: string;
 }
 
 interface StateMetric {
@@ -76,6 +80,8 @@ const transformToClientInStateDetail = (
   name: getPrettyClientName(client),
   segment: getSegmentName(client.segment),
   aum: client.aum || 0,
+  wealthboxClientId: client.wealthboxClientId,
+  orionClientId: client.orionClientId,
 });
 
 const generateDistributionReportFromClients = (
@@ -275,22 +281,18 @@ const ClientDistributionByStateReport = () => {
     // Apply sorting
     if (sortConfig.key) {
       filteredClients = [...filteredClients].sort((a, b) => {
-        const aValue = a[sortConfig.key as keyof typeof a];
-        const bValue = b[sortConfig.key as keyof typeof b];
-
-        if (sortConfig.key === "aum") {
-          return sortConfig.direction === "asc"
-            ? (aValue as number) - (bValue as number)
-            : (bValue as number) - (aValue as number);
-        } else {
-          const aString = String(aValue).toLowerCase();
-          const bString = String(bValue).toLowerCase();
-          if (sortConfig.direction === "asc") {
-            return aString < bString ? -1 : aString > bString ? 1 : 0;
-          } else {
-            return bString < aString ? -1 : bString > aString ? 1 : 0;
-          }
+        const key = sortConfig.key as keyof ClientInStateDetail;
+        const direction = sortConfig.direction === 'asc' ? 1 : -1;
+        
+        // Handle numeric fields
+        if (key === 'aum') {
+          return (a[key] - b[key]) * direction;
         }
+        
+        // Handle string fields
+        const valueA = String(a[key] || '').toLowerCase();
+        const valueB = String(b[key] || '').toLowerCase();
+        return valueA.localeCompare(valueB) * direction;
       });
     }
 
@@ -315,7 +317,7 @@ const ClientDistributionByStateReport = () => {
     setSearchTerm("");
   };
 
-  const handleSort = (key: string) => {
+  const handleSort = (key: keyof ClientInStateDetail) => {
     setSortConfig((prevConfig) => ({
       key,
       direction:
@@ -323,6 +325,17 @@ const ClientDistributionByStateReport = () => {
           ? "asc"
           : "desc",
     }));
+  };
+
+  // Get sort indicator for column header
+  const getSortDirectionIcon = (columnName: keyof ClientInStateDetail) => {
+    if (sortConfig.key !== columnName) {
+      return null;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1" />;
   };
 
   const getHoveredStateData = () => {
@@ -608,117 +621,110 @@ const ClientDistributionByStateReport = () => {
           </CardContent>
         </Card>
 
-        {/* Client List Table Card - enhanced design */}
-        <Card className="flex flex-col h-[calc(100vh-300px)] border-gray-100 hover:shadow-lg transition-shadow duration-300">
-          <CardHeader className="flex-shrink-0 pb-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <CardTitle className="text-xl font-bold text-gray-900">
-                  {tableTitle}
-                </CardTitle>
-                <div className="flex items-center space-x-4 text-sm text-gray-600 mt-2">
-                  <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-full text-xs border border-blue-200">
-                    <Users className="inline h-3 w-3 mr-1" />{" "}
-                    {summaryClientCount} Clients
-                  </span>
-                  <span className="bg-green-50 text-green-700 px-2 py-1 rounded-full text-xs border border-green-200">
-                    <DollarSign className="inline h-3 w-3 mr-1" />{" "}
-                    {formatAUM(summaryTotalAum)}
-                  </span>
-                </div>
-              </div>
+        {/* Client List Table Card - Always rendered, content changes */}
+        <Card className="flex flex-col h-[calc(100vh-300px)]">
+        <CardHeader className="flex-shrink-0">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <CardTitle>{tableTitle}</CardTitle>
+            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+              <span>
+                <Users className="inline h-4 w-4 mr-1" /> {summaryClientCount}{" "}
+                Clients
+              </span>
+              <span>
+                <DollarSign className="inline h-4 w-4 mr-1" />{" "}
+                {formatAUM(summaryTotalAum)}
+              </span>
             </div>
-            <div className="relative mt-4">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                type="search"
-                placeholder="Search by name, segment, or AUM..."
-                className="pl-10 w-full sm:w-[300px] border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-hidden p-0">
-            <div className="h-full overflow-auto">
-              <div className="rounded-lg border border-gray-100 m-6 overflow-hidden">
-                <Table>
-                  <TableHeader className="sticky top-0 bg-gray-50/50 z-10">
-                    <TableRow>
-                      <TableHead className="font-semibold text-gray-900">
+          </div>
+          <div className="relative mt-4">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search by name, segment, or AUM..."
+              className="pl-8 w-full sm:w-[300px]"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="flex-1 overflow-hidden p-0">
+          <div className="h-full overflow-auto">
+            <div className="rounded-md border m-6">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableRow>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/50 select-none"
+                      onClick={() => handleSort('name')}
+                    >
+                      <div className="flex items-center gap-1">
                         Client Name
-                      </TableHead>
-                      <TableHead className="font-semibold text-gray-900">
+                        {getSortDirectionIcon('name')}
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:bg-muted/50 select-none"
+                      onClick={() => handleSort('segment')}
+                    >
+                      <div className="flex items-center gap-1">
                         Segment
-                      </TableHead>
-                      <TableHead
-                        className="text-right cursor-pointer hover:bg-gray-100 select-none font-semibold text-gray-900 transition-colors duration-200"
-                        onClick={() => handleSort("aum")}
-                      >
-                        <div className="flex items-center justify-end gap-1">
-                          AUM
-                          {sortConfig.key === "aum" &&
-                            (sortConfig.direction === "desc" ? (
-                              <ChevronDown className="h-4 w-4 text-blue-600" />
-                            ) : (
-                              <ChevronUp className="h-4 w-4 text-blue-600" />
-                            ))}
-                        </div>
-                      </TableHead>
-                      <TableHead className="text-right font-semibold text-gray-900">
-                        Actions
-                      </TableHead>
+                        {getSortDirectionIcon('segment')}
+                      </div>
+                    </TableHead>
+                    <TableHead 
+                      className="text-right cursor-pointer hover:bg-muted/50 select-none"
+                      onClick={() => handleSort('aum')}
+                    >
+                      <div className="flex items-center justify-end gap-1">
+                        AUM
+                        {getSortDirectionIcon('aum')}
+                      </div>
+                    </TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                {clientsInSelectedState.length > 0 ? (
+                  clientsInSelectedState.map((client) => (
+                    <TableRow key={client.id}>
+                      <TableCell className="font-medium">
+                        {client.name}
+                      </TableCell>
+                      <TableCell>
+                        <span
+                          className={`px-2 py-0.5 text-xs rounded-full border whitespace-nowrap ${getSegmentClass(
+                            client.segment
+                          )}`}
+                        >
+                          {client.segment}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatAUM(client.aum)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <ViewContactButton 
+                          clientId={client.id} 
+                          wealthboxClientId={client.wealthboxClientId}
+                          orionClientId={client.orionClientId}
+                        />
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {clientsInSelectedState.length > 0 ? (
-                      clientsInSelectedState.map((client) => (
-                        <TableRow
-                          key={client.id}
-                          className="hover:bg-blue-50/50 transition-all duration-200 group"
-                        >
-                          <TableCell className="font-medium text-gray-900 group-hover:text-blue-900">
-                            {client.name}
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={`px-3 py-1 text-xs font-medium rounded-full border whitespace-nowrap ${getSegmentClass(
-                                client.segment
-                              )}`}
-                            >
-                              {client.segment}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-right font-medium text-gray-900">
-                            {formatAUM(client.aum)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="default"
-                              size="sm"
-                              className="bg-blue-600 hover:bg-blue-700 text-white opacity-70 group-hover:opacity-100 transition-all duration-200"
-                            >
-                              View Client
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell
-                          colSpan={4}
-                          className="text-center h-24 text-gray-500"
-                        >
-                          {emptyTableMessage}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center h-24">
+                      {emptyTableMessage}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
       </div>
     </div>
   );

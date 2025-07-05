@@ -144,7 +144,7 @@ export const AumChart = ({ showViewFullReport = true, selectedAdvisor = "All Adv
       };
 
              // Find data for this year from the API response
-       const yearData = realData.find((item: { period: string; aum: number; date: string; dataPoints: number }) => new Date(item.date).getFullYear() === year);
+       const yearData = realData.find((item: { period: string; aum: number; date: string; dataPoints: number }) => item.period === String(year));
       
       if (yearData) {
         // Distribute the total AUM across segments based on typical patterns

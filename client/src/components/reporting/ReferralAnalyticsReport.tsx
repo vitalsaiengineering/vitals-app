@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Users } from "lucide-react";
+import { Users, ChevronUp, ChevronDown } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 import { useReportFilters } from "@/contexts/ReportFiltersContext";
@@ -24,7 +24,16 @@ import {
   getSegmentName,
 } from "@/utils/client-analytics";
 import { ReportSkeleton } from "@/components/ui/skeleton";
-import { getAdvisorReportTitle } from "@/lib/utils";
+import { getAdvisorReportTitle } from '@/lib/utils';
+import { ViewContactButton } from "@/components/ui/view-contact-button";
+import { ExternalLink } from "lucide-react";
+
+
+// Define sort configuration type
+type SortConfig = {
+  key: keyof ReferralClient;
+  direction: 'asc' | 'desc';
+};
 
 // Define types locally
 interface ReferralClient {
@@ -35,6 +44,8 @@ interface ReferralClient {
   aum: number;
   referralDate: string;
   referredBy: string;
+  wealthboxClientId?: string;
+  orionClientId?: string;
 }
 
 interface ReferralSource {
@@ -106,6 +117,8 @@ const transformToReferralClient = (
   aum: Number(client.aum) || 0,
   referralDate: client.inceptionDate || new Date().toISOString(),
   referredBy: getAdvisorDisplayName(client.referredBy || "direct", advisors),
+  wealthboxClientId: client.wealthboxClientId,
+  orionClientId: client.orionClientId,
 });
 
 // Helper function to convert advisor ID to advisor name
@@ -231,6 +244,10 @@ export default function ReferralAnalyticsReport() {
   const [activeTab, setActiveTab] = useState("sources");
   const [selectedReferralSource, setSelectedReferralSource] =
     useState<ReferralSource | null>(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: 'referralDate',
+    direction: 'desc'
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -256,6 +273,53 @@ export default function ReferralAnalyticsReport() {
     };
     fetchData();
   }, [filters, filterOptions]);
+
+  // Function to handle column sorting
+  const requestSort = (key: keyof ReferralClient) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+
+  // Get sort indicator for column header
+  const getSortDirectionIcon = (columnName: keyof ReferralClient) => {
+    if (sortConfig.key !== columnName) {
+      return null;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1" />;
+  };
+
+  // Apply sorting to referrals
+  const getSortedReferrals = () => {
+    if (!analyticsData) return [];
+    
+    return [...analyticsData.allReferrals].sort((a, b) => {
+      const key = sortConfig.key;
+      const direction = sortConfig.direction === 'asc' ? 1 : -1;
+      
+      // Handle date fields
+      if (key === 'referralDate') {
+        return (new Date(a[key]).getTime() - new Date(b[key]).getTime()) * direction;
+      }
+      
+      // Handle numeric fields
+      if (key === 'aum') {
+        return (a[key] - b[key]) * direction;
+      }
+      
+      // Handle string fields
+      const valueA = String(a[key] || '').toLowerCase();
+      const valueB = String(b[key] || '').toLowerCase();
+      return valueA.localeCompare(valueB) * direction;
+    });
+  };
 
   const handlePieClick = (data: any) => {
     const source = analyticsData?.referralSources.find(
@@ -320,6 +384,8 @@ export default function ReferralAnalyticsReport() {
       percentage: source.percentage,
       totalAUM: source.totalAUM, // Add AUM to chart data for tooltip
     })) || [];
+
+  const sortedReferrals = getSortedReferrals();
 
   return (
     <div className="space-y-6 p-4 md:p-6">
@@ -623,32 +689,46 @@ export default function ReferralAnalyticsReport() {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50/50">
-                        <TableHead className="font-semibold text-gray-900">
-                          Client Name
+                        <TableHead 
+                          className="font-medium text-gray-700 cursor-pointer hover:bg-gray-100/50"
+                          onClick={() => requestSort('clientName')}
+                        >
+                          Client Name {getSortDirectionIcon('clientName')}
                         </TableHead>
-                        <TableHead className="font-semibold text-gray-900">
-                          Segment
+                        <TableHead 
+                          className="font-medium text-gray-700 cursor-pointer hover:bg-gray-100/50"
+                          onClick={() => requestSort('segment')}
+                        >
+                          Segment {getSortDirectionIcon('segment')}
                         </TableHead>
-                        <TableHead className="font-semibold text-gray-900">
-                          Referred By
+                        <TableHead 
+                          className="font-medium text-gray-700 cursor-pointer hover:bg-gray-100/50"
+                          onClick={() => requestSort('referredBy')}
+                        >
+                          Referred By {getSortDirectionIcon('referredBy')}
                         </TableHead>
-                        <TableHead className="font-semibold text-gray-900">
-                          Primary Advisor
+                        <TableHead 
+                          className="font-medium text-gray-700 cursor-pointer hover:bg-gray-100/50"
+                          onClick={() => requestSort('primaryAdvisor')}
+                        >
+                          Primary Advisor {getSortDirectionIcon('primaryAdvisor')}
                         </TableHead>
-                        <TableHead className="text-right font-semibold text-gray-900">
-                          AUM
+                        <TableHead 
+                          className="text-right font-medium text-gray-700 cursor-pointer hover:bg-gray-100/50"
+                          onClick={() => requestSort('aum')}
+                        >
+                          AUM {getSortDirectionIcon('aum')}
                         </TableHead>
-                        <TableHead className="font-semibold text-gray-900">
-                          Client Inception Date{" "}
-                          <span className="ml-1 text-blue-600">↓</span>
-                        </TableHead>
-                        <TableHead className="text-right font-semibold text-gray-900">
-                          Actions
+                        <TableHead 
+                          className="font-medium text-gray-700 cursor-pointer hover:bg-gray-100/50"
+                          onClick={() => requestSort('referralDate')}
+                        >
+                          Client Inception Date {getSortDirectionIcon('referralDate')}
                         </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {analyticsData.allReferrals.map((referral) => (
+                      {sortedReferrals.map((referral) => (
                         <TableRow
                           key={referral.id}
                           className="hover:bg-blue-50/50 transition-all duration-200 group"
@@ -678,13 +758,11 @@ export default function ReferralAnalyticsReport() {
                             {formatDate(referral.referralDate)}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button
-                              variant="default"
-                              size="sm"
-                              className="bg-blue-600 hover:bg-blue-700 text-white opacity-70 group-hover:opacity-100 transition-all duration-200"
-                            >
-                              View Contact
-                            </Button>
+                            <ViewContactButton 
+                              clientId={referral.id} 
+                              wealthboxClientId={referral.wealthboxClientId}
+                              orionClientId={referral.orionClientId}
+                            />
                           </TableCell>
                         </TableRow>
                       ))}

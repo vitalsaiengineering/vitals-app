@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, Database, TrendingUp } from "lucide-react";
+import { Users, Database, TrendingUp, ExternalLink, ChevronUp, ChevronDown } from "lucide-react";
 import {
   PieChart,
   Pie,
@@ -29,8 +29,15 @@ import {
   getSegmentName,
 } from "@/utils/client-analytics";
 import { ReportSkeleton } from "@/components/ui/skeleton";
+import { ViewContactButton } from "@/components/ui/view-contact-button";
 
-// Chart colors for segments - matching the blue theme from the UI
+// Define type for sort configuration
+type SortConfig = {
+  key: keyof SegmentClient | 'segment';
+  direction: 'asc' | 'desc';
+};
+
+// Chart colors for segments
 const SEGMENT_COLORS = {
   Platinum: "#1e40af", // blue-800 (darkest blue)
   Gold: "#3b82f6", // blue-500 (medium blue)
@@ -70,6 +77,9 @@ interface SegmentClient {
   yearsWithFirm: number | null;
   assets: number;
   advisor: string;
+  segment?: string; // Add segment field
+  wealthboxClientId: string;
+  orionClientId: string;
 }
 
 interface DonutSegmentData {
@@ -127,6 +137,9 @@ const transformToSegmentClient = (
     yearsWithFirm: calculateYearsWithFirm(client.inceptionDate),
     assets: Number(client.aum) || 0,
     advisor: advisorName,
+    segment: client.segment,
+    wealthboxClientId: client.wealthboxClientId || '',
+    orionClientId: client.orionClientId || ''
   };
 };
 
@@ -206,6 +219,10 @@ export default function SegmentationDashboard() {
   const [selectedSegment, setSelectedSegment] = useState("All");
   const [hoveredSegment, setHoveredSegment] = useState<string | null>(null);
   const [hoveredClient, setHoveredClient] = useState<string | null>(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: 'assets',
+    direction: 'desc'
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -242,6 +259,28 @@ export default function SegmentationDashboard() {
     }
   };
 
+  // Function to handle column sorting
+  const requestSort = (key: keyof SegmentClient | 'segment') => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+
+  // Get sort indicator for column header
+  const getSortDirectionIcon = (columnName: keyof SegmentClient | 'segment') => {
+    if (sortConfig.key !== columnName) {
+      return null;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1" />;
+  };
+
   // Dynamic table data based on selected segment
   const currentSegmentClients = useMemo(() => {
     if (!dashboardData?.allClients) {
@@ -249,25 +288,43 @@ export default function SegmentationDashboard() {
     }
 
     // Show all clients if "All" is selected
+    let filtered;
     if (selectedSegment === "All") {
-      return dashboardData.allClients.sort((a, b) => b.assets - a.assets);
+      filtered = dashboardData.allClients;
+    } else {
+      // Filter clients by the selected segment using actual segment field
+      filtered = dashboardData.allClients.filter((client: SegmentClient) => {
+        const originalClient = dashboardData.originalClients.find((c: StandardClient) => c.id === client.id);
+        const clientSegment = originalClient?.segment ? getSegmentName(originalClient.segment) : 'N/A';
+        return clientSegment === selectedSegment;
+      });
     }
 
-    // Filter clients by the selected segment using actual segment field
-    const filtered = dashboardData.allClients.filter(
-      (client: SegmentClient) => {
-        const originalClient = dashboardData.originalClients.find(
-          (c: StandardClient) => c.id === client.id
-        );
-        const clientSegment = originalClient?.segment
-          ? getSegmentName(originalClient.segment)
-          : "N/A";
-        return clientSegment === selectedSegment;
-      }
-    );
+    // Apply sorting
+    if (sortConfig.key) {
+      filtered = [...filtered].sort((a, b) => {
+        const key = sortConfig.key;
+        const direction = sortConfig.direction === 'asc' ? 1 : -1;
+        
+        // Handle null values
+        if (a[key] === null && b[key] === null) return 0;
+        if (a[key] === null) return direction; // Nulls last when ascending
+        if (b[key] === null) return -direction; // Nulls last when descending
+        
+        // Handle numeric fields
+        if (key === 'age' || key === 'yearsWithFirm' || key === 'assets') {
+          return ((a[key] as number) - (b[key] as number)) * direction;
+        }
+        
+        // Handle string fields
+        const valueA = String(a[key] || '').toLowerCase();
+        const valueB = String(b[key] || '').toLowerCase();
+        return valueA.localeCompare(valueB) * direction;
+      });
+    }
 
-    return filtered.sort((a, b) => b.assets - a.assets);
-  }, [dashboardData, selectedSegment]);
+    return filtered;
+  }, [dashboardData, selectedSegment, sortConfig]);
 
   // Dynamic KPIs based on selected segment
   const currentKPIs = useMemo(() => {
@@ -576,24 +633,53 @@ export default function SegmentationDashboard() {
                   <Table>
                     <TableHeader className="sticky top-0 bg-white z-10 border-b border-gray-200">
                       <TableRow className="hover:bg-transparent">
-                        <TableHead className="font-semibold text-gray-700 py-4">
-                          Name
+                        <TableHead 
+                          className="font-semibold text-gray-700 py-4 cursor-pointer hover:bg-blue-50"
+                          onClick={() => requestSort('name')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Name
+                            {getSortDirectionIcon('name')}
+                          </div>
                         </TableHead>
-                        <TableHead className="font-semibold text-gray-700 py-4">
-                          Age
+                        <TableHead 
+                          className="font-semibold text-gray-700 py-4 cursor-pointer hover:bg-blue-50"
+                          onClick={() => requestSort('age')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Age
+                            {getSortDirectionIcon('age')}
+                          </div>
                         </TableHead>
-                        <TableHead className="font-semibold text-gray-700 py-4">
-                          Years with Firm
+                        <TableHead 
+                          className="font-semibold text-gray-700 py-4 cursor-pointer hover:bg-blue-50"
+                          onClick={() => requestSort('yearsWithFirm')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Years with Firm
+                            {getSortDirectionIcon('yearsWithFirm')}
+                          </div>
                         </TableHead>
-                        <TableHead className="font-semibold text-gray-700 py-4">
-                          Segment
+                        <TableHead 
+                          className="font-semibold text-gray-700 py-4 cursor-pointer hover:bg-blue-50"
+                          onClick={() => requestSort('segment')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Segment
+                            {getSortDirectionIcon('segment')}
+                          </div>
+                        </TableHead>  
+
+                        <TableHead 
+                          className="font-semibold text-gray-700 py-4 text-right cursor-pointer hover:bg-blue-50"
+                          onClick={() => requestSort('assets')}
+                        >
+                          <div className="flex items-center justify-end gap-1">
+                            Assets
+                            {getSortDirectionIcon('assets')}
+                          </div>
                         </TableHead>
-                        <TableHead className="font-semibold text-gray-700 py-4 text-right">
-                          AUM
-                        </TableHead>
-                        <TableHead className="font-semibold text-gray-700 py-4 text-right">
-                          Actions
-                        </TableHead>
+                        <TableHead className="font-semibold text-gray-700 py-4">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -666,13 +752,13 @@ export default function SegmentationDashboard() {
                               {client.age !== null
                                 ? `${client.age} years`
                                 : "N/A"}
-                            </TableCell>
+                            </TableCell>    
                             <TableCell className="py-4 text-gray-600 group-hover:text-gray-700 transition-colors duration-200">
                               {client.yearsWithFirm !== null
                                 ? `${client.yearsWithFirm} years`
                                 : "N/A"}
                             </TableCell>
-                            <TableCell className="py-4">
+                            <TableCell className="py-4 text-gray-600 group-hover:text-gray-700 transition-colors duration-200">
                               <span
                                 className="px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 group-hover:scale-105 group-hover:shadow-md border"
                                 style={{
@@ -688,13 +774,11 @@ export default function SegmentationDashboard() {
                               {formatAUM(client.assets)}
                             </TableCell>
                             <TableCell className="text-right py-4">
-                              <Button
-                                variant="default"
-                                size="sm"
-                                className="bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all duration-200 hover:scale-105 hover:shadow-md opacity-70 group-hover:opacity-100"
-                              >
-                                View Contact
-                              </Button>
+                            <ViewContactButton 
+                            clientId={client.id} 
+                            wealthboxClientId={client.wealthboxClientId}
+                            orionClientId={client.orionClientId}
+                          />
                             </TableCell>
                           </TableRow>
                         );

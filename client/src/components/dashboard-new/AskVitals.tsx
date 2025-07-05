@@ -7,7 +7,7 @@ import axios from "axios";
 import { useMockData } from "@/contexts/MockDataContext";
 
 // Import mock data
-import { getAllClients } from "@/utils/clientDataUtils.js";
+import { getAllClients, Client } from "@/utils/clientDataUtils";
 
 interface Message {
   id: string;
@@ -32,7 +32,7 @@ export const AskVitals = () => {
   const getHighestGrossingClient = () => {
     try {
       const clients = getAllClients();
-      const highestAumClient = clients.reduce((highest, current) => {
+      const highestAumClient = clients.reduce((highest: Client, current: Client) => {
         return current.aum > highest.aum ? current : highest;
       });
       return {
@@ -44,6 +44,57 @@ export const AskVitals = () => {
       return {
         name: "John Anderson",
         aum: 2500000, // Fallback values
+      };
+    }
+  };
+
+  // Function to get the fastest growing segment
+  const getFastestGrowingSegment = () => {
+    try {
+      const clients = getAllClients();
+      
+      // For this mock implementation, we'll just return a hardcoded result
+      // In a real implementation, we would calculate growth rates from historical data
+      const segments = {
+        "Platinum": 18.5,
+        "Gold": 12.3,
+        "Silver": 7.8
+      };
+      
+      // Find the segment with the highest growth rate
+      const fastestSegment = Object.entries(segments).reduce(
+        (fastest, [segment, growth]) => 
+          growth > fastest.growth ? { segment, growth } : fastest,
+        { segment: "", growth: 0 }
+      );
+      
+      return {
+        segment: fastestSegment.segment,
+        growthRate: fastestSegment.growth
+      };
+    } catch (error) {
+      console.error("Error getting fastest growing segment:", error);
+      return {
+        segment: "Platinum",
+        growthRate: 15.2
+      };
+    }
+  };
+  
+  // Function to get average client age
+  const getAverageClientAge = () => {
+    try {
+      const clients = getAllClients();
+      const totalAge = clients.reduce((sum: number, client: Client) => sum + client.age, 0);
+      const averageAge = totalAge / clients.length;
+      
+      return {
+        averageAge: Math.round(averageAge * 10) / 10 // Round to 1 decimal place
+      };
+    } catch (error) {
+      console.error("Error calculating average client age:", error);
+      return {
+        averageAge: 52.7 // Fallback value
       };
     }
   };
@@ -71,40 +122,65 @@ export const AskVitals = () => {
     setLoading(true);
 
     try {
-      if (useMock) {
+      // if (useMock) {
         // Mock interaction with 2-3 second delay
         const delay = 2000 + Math.random() * 1000; // 2-3 seconds
 
         await new Promise((resolve) => setTimeout(resolve, delay));
 
-        // Get highest grossing client data
-        const highestClient = getHighestGrossingClient();
+        // Check for specific questions and provide appropriate responses
+        const lowerCaseQuery = userMessage.content.toLowerCase();
+        let responseContent = "";
+        
+        if (lowerCaseQuery.includes("highest grossing") || lowerCaseQuery.includes("top client")) {
+          // Get highest grossing client data
+          const highestClient = getHighestGrossingClient();
+          responseContent = `Your highest grossing client is ${
+            highestClient.name
+          } with an AUM of ${formatCurrency(highestClient.aum)}.`;
+        } 
+        else if (lowerCaseQuery.includes("segment") && 
+                (lowerCaseQuery.includes("growing") || lowerCaseQuery.includes("fastest"))) {
+          // Get fastest growing segment
+          const fastestSegment = getFastestGrowingSegment();
+          responseContent = `Your ${fastestSegment.segment} segment is growing the fastest at ${fastestSegment.growthRate}% year-over-year.`;
+        }
+        else if (lowerCaseQuery.includes("average") && lowerCaseQuery.includes("age")) {
+          // Get average client age
+          const ageData = getAverageClientAge();
+          responseContent = `The average age of your clients is ${ageData.averageAge} years.`;
+        }
+        else {
+          // Default response for other queries
+          const highestClient = getHighestGrossingClient();
+          responseContent = `Your highest grossing client is ${
+            highestClient.name
+          } with an AUM of ${formatCurrency(highestClient.aum)}.`;
+        }
 
         const mockResponse: Message = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: `Your highest grossing client is ${
-            highestClient.name
-          } with an AUM of ${formatCurrency(highestClient.aum)}.`,
+          content: responseContent,
         };
 
         setMessages((prev) => [...prev, mockResponse]);
-      } else {
-        // Attempt to send the query to the backend
-        const response = await axios.post("/api/ai/query", {
-          query: userMessage.content,
-        });
+      // } else {
+      //   // Attempt to send the query to the backend
+      //   const response = await axios.post("/api/ai/query", {
+      //     query: userMessage.content,
+      //   });
 
-        const aiMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content:
-            response.data.response ||
-            "I apologize, but I couldn't process that request.",
-        };
+      //   const aiMessage: Message = {
+      //     id: (Date.now() + 1).toString(),
+      //     role: "assistant",
+      //     content:
+      //       response.data.response ||
+      //       "I apologize, but I couldn't process that request.",
+      //   };
 
-        setMessages((prev) => [...prev, aiMessage]);
-      }
+      //   setMessages((prev) => [...prev, aiMessage]);
+      // }
     } catch (error) {
       console.error("Error querying AI:", error);
 
@@ -143,7 +219,7 @@ export const AskVitals = () => {
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg">Ask Vitals AI</CardTitle>
+        <CardTitle className="text-lg">Ask Vitals Intelligence</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col">
         <div className="flex-1 overflow-auto mb-4 space-y-4">

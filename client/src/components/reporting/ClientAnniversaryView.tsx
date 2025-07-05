@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { ExternalLink, User, Search, Filter } from "lucide-react";
+import { ExternalLink, User, Search, Filter, ChevronUp, ChevronDown } from "lucide-react";
 import { StandardClient } from "@/types/client";
 import { getClients } from "@/lib/clientData";
 import { useReportFilters } from "@/contexts/ReportFiltersContext";
@@ -27,8 +27,15 @@ import { filtersToApiParams } from "@/utils/filter-utils";
 import { getPrettyClientName, getSegmentName } from "@/utils/client-analytics";
 
 import { useAdvisor } from "@/contexts/AdvisorContext";
+import { ViewContactButton } from "@/components/ui/view-contact-button";
 
 import { getAdvisorReportTitle } from "@/lib/utils";
+
+// Define type for sort configuration
+type SortConfig = {
+  key: keyof AnniversaryClient | '';
+  direction: 'asc' | 'desc';
+};
 
 // Define transformed interfaces for compatibility
 interface AnniversaryClient {
@@ -40,6 +47,8 @@ interface AnniversaryClient {
   yearsWithFirm: number;
   advisorName: string;
   advisorId: string;
+  wealthboxClientId?: string;
+  orionClientId?: string;
 }
 
 interface AnniversaryFilterOptions {
@@ -61,8 +70,8 @@ const transformToAnniversaryClient = (
       anniversaryDate: "", // Empty for N/A
       daysUntilNextAnniversary: 0, // No meaningful anniversary
       yearsWithFirm: 0, // No meaningful tenure
-      advisorName: client.advisor,
-      advisorId: client.primaryAdvisorId,
+      advisorName: client.advisor || 'N/A',
+      advisorId: client.primaryAdvisorId || 'N/A'
     };
   }
 
@@ -104,8 +113,10 @@ const transformToAnniversaryClient = (
     anniversaryDate: client.inceptionDate,
     daysUntilNextAnniversary: daysUntil,
     yearsWithFirm: Math.max(yearsWithFirm, 1), // Minimum 1 year
-    advisorName: client.advisor,
-    advisorId: client.primaryAdvisorId,
+    advisorName: client.advisor || 'N/A',
+    advisorId: client.primaryAdvisorId || 'N/A',
+    wealthboxClientId: client.wealthboxClientId,
+    orionClientId: client.orionClientId
   };
 };
 
@@ -202,6 +213,10 @@ export default function ClientAnniversaryView({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: 'daysUntilNextAnniversary',
+    direction: 'asc'
+  });
 
   // Filter states
   const [selectedSegment, setSelectedSegment] = useState("All Segments");
@@ -245,6 +260,28 @@ export default function ClientAnniversaryView({
 
     fetchData();
   }, [filters, selectedAdvisor]);
+
+  // Function to handle column sorting
+  const requestSort = (key: keyof AnniversaryClient) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    
+    setSortConfig({ key, direction });
+  };
+
+  // Get sort indicator for column header
+  const getSortDirectionIcon = (columnName: keyof AnniversaryClient) => {
+    if (sortConfig.key !== columnName) {
+      return null;
+    }
+    
+    return sortConfig.direction === 'asc' 
+      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1" />;
+  };
 
   // Client-side filtering function (now for display filters only since server handles main filtering)
   const applyDisplayFilters = () => {
@@ -291,6 +328,62 @@ export default function ClientAnniversaryView({
       filtered = filtered.filter((client) =>
         isMilestoneAnniversary(client.yearsWithFirm)
       );
+    }
+
+    // Apply sorting
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        const key = sortConfig.key as keyof AnniversaryClient;
+        const direction = sortConfig.direction === 'asc' ? 1 : -1;
+        
+        // Handle numeric fields
+        if (key === 'daysUntilNextAnniversary' || key === 'yearsWithFirm') {
+          return (a[key] - b[key]) * direction;
+        }
+        
+        // Handle date fields
+        if (key === 'anniversaryDate') {
+          // Handle empty dates
+          if (!a[key] && !b[key]) return 0;
+          if (!a[key]) return direction;
+          if (!b[key]) return -direction;
+          
+          return (new Date(a[key]).getTime() - new Date(b[key]).getTime()) * direction;
+        }
+        
+        // Handle string fields
+        const valueA = String(a[key] || '').toLowerCase();
+        const valueB = String(b[key] || '').toLowerCase();
+        return valueA.localeCompare(valueB) * direction;
+      });
+    }
+
+    // Apply sorting
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        const key = sortConfig.key as keyof AnniversaryClient;
+        const direction = sortConfig.direction === 'asc' ? 1 : -1;
+        
+        // Handle numeric fields
+        if (key === 'daysUntilNextAnniversary' || key === 'yearsWithFirm') {
+          return (a[key] - b[key]) * direction;
+        }
+        
+        // Handle date fields
+        if (key === 'anniversaryDate') {
+          // Handle empty dates
+          if (!a[key] && !b[key]) return 0;
+          if (!a[key]) return direction;
+          if (!b[key]) return -direction;
+          
+          return (new Date(a[key]).getTime() - new Date(b[key]).getTime()) * direction;
+        }
+        
+        // Handle string fields
+        const valueA = String(a[key] || '').toLowerCase();
+        const valueB = String(b[key] || '').toLowerCase();
+        return valueA.localeCompare(valueB) * direction;
+      });
     }
 
     return filtered;
@@ -411,28 +504,44 @@ export default function ClientAnniversaryView({
             <div className="rounded-lg border-0 overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-gray-50/50">
-                    <TableHead className="font-semibold text-gray-900">
-                      Client
+                  <TableRow className="bg-muted/50">
+                    <TableHead 
+                      onClick={() => requestSort('clientName')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Client {getSortDirectionIcon('clientName')}
                     </TableHead>
-                    <TableHead className="font-semibold text-gray-900">
-                      Segment
+                    <TableHead 
+                      onClick={() => requestSort('segment')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Segment {getSortDirectionIcon('segment')}
                     </TableHead>
-                    <TableHead className="font-semibold text-gray-900">
-                      Anniversary Date
+                    <TableHead 
+                      onClick={() => requestSort('anniversaryDate')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Anniversary Date {getSortDirectionIcon('anniversaryDate')}
                     </TableHead>
-                    <TableHead className="font-semibold text-gray-900">
-                      Days Until
+                    <TableHead 
+                      onClick={() => requestSort('daysUntilNextAnniversary')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Days Until {getSortDirectionIcon('daysUntilNextAnniversary')}
                     </TableHead>
-                    <TableHead className="font-semibold text-gray-900">
-                      Years with Firm
+                    <TableHead 
+                      onClick={() => requestSort('yearsWithFirm')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Years with Firm {getSortDirectionIcon('yearsWithFirm')}
                     </TableHead>
-                    <TableHead className="font-semibold text-gray-900">
-                      Advisor
+                    <TableHead 
+                      onClick={() => requestSort('advisorName')}
+                      className="cursor-pointer hover:bg-muted/80"
+                    >
+                      Advisor {getSortDirectionIcon('advisorName')}
                     </TableHead>
-                    <TableHead className="text-right font-semibold text-gray-900">
-                      Actions
-                    </TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

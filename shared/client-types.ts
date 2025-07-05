@@ -28,6 +28,9 @@ export interface StandardClient {
   contactType?: string;
   title?: string;
   status: 'active' | 'inactive' | 'archived' | 'pending' | 'suspended';
+  // External system IDs
+  wealthboxClientId?: string;
+  orionClientId?: string;
 }
 
 export interface ClientFilters {
