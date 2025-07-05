@@ -118,7 +118,7 @@ const initialMockReports: Report[] = [
     routePath: "net-new-assets",
     description: "Track growth of assets under management over time.",
     integrations: ["Data Sources"],
-    status: "Coming Soon",
+    // status: "Coming Soon",
     isFavorite: false,
   },
   // {

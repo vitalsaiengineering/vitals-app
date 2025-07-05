@@ -40,41 +40,41 @@ import { useReportFilters } from "@/contexts/ReportFiltersContext";
 import { filtersToApiParams } from "@/utils/filter-utils";
 import { FilteredReportSkeleton } from "@/components/ui/skeleton";
 
-// Define Grade colors - Updated for blue backgrounds and white text
+// Define Grade colors - Updated for light backgrounds and dark text
 const GRADE_COLORS: Record<
   string,
   { badgeBg: string; badgeText: string; badgeBorder: string }
 > = {
   Platinum: {
-    badgeBg: "bg-blue-700",
-    badgeText: "text-white",
-    badgeBorder: "border-blue-700",
-  }, // Darker blue
+    badgeBg: "bg-blue-100",
+    badgeText: "text-blue-800",
+    badgeBorder: "border-blue-300",
+  },
   Gold: {
-    badgeBg: "bg-blue-600",
-    badgeText: "text-white",
-    badgeBorder: "border-blue-600",
-  }, // Medium blue
+    badgeBg: "bg-amber-100",
+    badgeText: "text-amber-600",
+    badgeBorder: "border-amber-300",
+  },
   Silver: {
-    badgeBg: "bg-blue-500",
-    badgeText: "text-white",
-    badgeBorder: "border-blue-500",
-  }, // Lighter blue
+    badgeBg: "bg-gray-100",
+    badgeText: "text-gray-700",
+    badgeBorder: "border-gray-300",
+  },
   Bronze: {
     badgeBg: "bg-orange-100",
     badgeText: "text-orange-700",
     badgeBorder: "border-orange-200",
-  }, // Kept for completeness
+  },
   "N/A": {
-    badgeBg: "bg-gray-400",
-    badgeText: "text-white",
-    badgeBorder: "border-gray-400",
-  }, // Gray for missing segments
+    badgeBg: "bg-gray-50",
+    badgeText: "text-gray-500",
+    badgeBorder: "border-gray-200",
+  },
   Default: {
-    badgeBg: "bg-gray-500",
-    badgeText: "text-white",
-    badgeBorder: "border-gray-500",
-  }, // Default fallback
+    badgeBg: "bg-gray-50",
+    badgeText: "text-gray-500",
+    badgeBorder: "border-gray-200",
+  },
 };
 
 const getGradeBadgeClasses = (grade: string) => {
@@ -98,25 +98,39 @@ const isMilestoneAge = (age: number): boolean => {
  * @param clients - Array of birthday clients
  * @returns Sorted array with upcoming birthdays first
  */
-const sortByUpcomingBirthday = (clients: BirthdayClient[]): BirthdayClient[] => {
+const sortByUpcomingBirthday = (
+  clients: BirthdayClient[]
+): BirthdayClient[] => {
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
-  
+
   return clients.sort((a, b) => {
     // Parse the date of birth to get month and day
     const dateA = new Date(a.dateOfBirth);
     const dateB = new Date(b.dateOfBirth);
-    
+
     // Create this year's birthday dates
-    const thisYearBirthdayA = new Date(today.getFullYear(), dateA.getMonth(), dateA.getDate());
-    const thisYearBirthdayB = new Date(today.getFullYear(), dateB.getMonth(), dateB.getDate());
-    
+    const thisYearBirthdayA = new Date(
+      today.getFullYear(),
+      dateA.getMonth(),
+      dateA.getDate()
+    );
+    const thisYearBirthdayB = new Date(
+      today.getFullYear(),
+      dateB.getMonth(),
+      dateB.getDate()
+    );
+
     // If birthday has passed this year, use next year's date
-    const upcomingBirthdayA = thisYearBirthdayA >= today ? thisYearBirthdayA : 
-      new Date(today.getFullYear() + 1, dateA.getMonth(), dateA.getDate());
-    const upcomingBirthdayB = thisYearBirthdayB >= today ? thisYearBirthdayB : 
-      new Date(today.getFullYear() + 1, dateB.getMonth(), dateB.getDate());
-    
+    const upcomingBirthdayA =
+      thisYearBirthdayA >= today
+        ? thisYearBirthdayA
+        : new Date(today.getFullYear() + 1, dateA.getMonth(), dateA.getDate());
+    const upcomingBirthdayB =
+      thisYearBirthdayB >= today
+        ? thisYearBirthdayB
+        : new Date(today.getFullYear() + 1, dateB.getMonth(), dateB.getDate());
+
     return upcomingBirthdayA.getTime() - upcomingBirthdayB.getTime();
   });
 };
@@ -148,9 +162,11 @@ const TENURE_OPTIONS = [
 const ClientBirthdayReport = () => {
   const { selectedAdvisor } = useAdvisor();
   const { filters } = useReportFilters();
-  
+
   const [allReportData, setAllReportData] = useState<BirthdayClient[]>([]); // Store all data
-  const [filteredReportData, setFilteredReportData] = useState<BirthdayClient[]>([]); // Store filtered data
+  const [filteredReportData, setFilteredReportData] = useState<
+    BirthdayClient[]
+  >([]); // Store filtered data
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -172,7 +188,7 @@ const ClientBirthdayReport = () => {
     // Apply name search filter
     if (nameSearch.trim()) {
       const searchLower = nameSearch.toLowerCase();
-      filtered = filtered.filter(client =>
+      filtered = filtered.filter((client) =>
         client.clientName.toLowerCase().includes(searchLower)
       );
     }
@@ -180,7 +196,7 @@ const ClientBirthdayReport = () => {
     // Apply month filter (birthday-specific)
     if (selectedMonth !== "Any month") {
       const monthNumber = parseInt(selectedMonth);
-      filtered = filtered.filter(client => {
+      filtered = filtered.filter((client) => {
         const birthMonth = new Date(client.dateOfBirth).getMonth() + 1; // getMonth() is 0-based
         return birthMonth === monthNumber;
       });
@@ -188,18 +204,34 @@ const ClientBirthdayReport = () => {
 
     // Apply tenure filter (birthday-specific)
     if (selectedTenure !== "Any tenure") {
-      filtered = filtered.filter(client => {
+      filtered = filtered.filter((client) => {
         const tenure = client.clientTenure;
         switch (selectedTenure) {
           case "1-2 years":
             return tenure.includes("1 year") || tenure.includes("2 year");
           case "2-5 years":
-            return ["2", "3", "4", "5"].some(year => tenure.includes(`${year} year`));
+            return ["2", "3", "4", "5"].some((year) =>
+              tenure.includes(`${year} year`)
+            );
           case "5-10 years":
-            return ["5", "6", "7", "8", "9", "10"].some(year => tenure.includes(`${year} year`));
+            return ["5", "6", "7", "8", "9", "10"].some((year) =>
+              tenure.includes(`${year} year`)
+            );
           case "10+ years":
-            return ["10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"].some(year => 
-              tenure.includes(`${year} year`) || parseInt(tenure) > 10
+            return [
+              "10",
+              "11",
+              "12",
+              "13",
+              "14",
+              "15",
+              "16",
+              "17",
+              "18",
+              "19",
+              "20",
+            ].some(
+              (year) => tenure.includes(`${year} year`) || parseInt(tenure) > 10
             );
           default:
             return true;
@@ -209,8 +241,8 @@ const ClientBirthdayReport = () => {
 
     // Apply milestone filter (birthday-specific)
     if (showMilestonesOnly) {
-      filtered = filtered.filter(client =>
-        client.turningAge > 0 && isMilestoneAge(client.turningAge)
+      filtered = filtered.filter(
+        (client) => client.turningAge > 0 && isMilestoneAge(client.turningAge)
       );
     }
 
@@ -225,16 +257,16 @@ const ClientBirthdayReport = () => {
       try {
         // Build API parameters with global filters
         const params = filtersToApiParams(filters, selectedAdvisor);
-        
+
         // Use the centralized getClients function
         const clients = await getClients(params);
-        
+
         if (clients && clients.length > 0) {
           // Use the frontend analytics utility to calculate birthday data
           const birthdayClients = getBirthdayClients(clients);
           setAllReportData(birthdayClients);
         } else {
-          console.warn('No clients data received, using empty array');
+          console.warn("No clients data received, using empty array");
           setAllReportData([]);
         }
       } catch (err) {
@@ -279,57 +311,67 @@ const ClientBirthdayReport = () => {
     return <div className="p-6 text-red-500 text-center">Error: {error}</div>;
   }
 
-  const iconClasses = "mr-1.5 h-4 w-4 text-blue-600"; // Common class for blue icons
-
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Client Birthday Dashboard</CardTitle>
-          <p className="text-muted-foreground">
+      <Card className="border border-gray-100 shadow-sm bg-white">
+        <CardHeader className="pb-6">
+          <CardTitle className="text-3xl font-bold text-gray-900">
+            Client Birthday Dashboard
+          </CardTitle>
+          <p className="text-gray-600 mt-3 text-base">
             View your clients' upcoming birthdays in a sortable table format.
             Filter by client details to find the information you need.
           </p>
         </CardHeader>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Birthday-Specific Filters</CardTitle>
+      <Card className="border border-gray-100 shadow-sm bg-white">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl font-semibold text-gray-900">
+            Birthday-Specific Filters
+          </CardTitle>
           <div className="flex justify-between items-center">
-            <p className="text-sm text-muted-foreground">
-              Use the sidebar for Advisor and Segment filters. Additional birthday-specific filters below:
+            <p className="text-sm text-gray-600">
+              Use the sidebar for Advisor and Segment filters. Additional
+              birthday-specific filters below:
             </p>
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3 bg-gray-50 rounded-lg p-2">
                 <Switch
                   id="show-milestones"
                   checked={showMilestonesOnly}
                   onCheckedChange={setShowMilestonesOnly}
                 />
-                <Label htmlFor="show-milestones" className="text-sm">
+                <Label
+                  htmlFor="show-milestones"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Show Milestones
                 </Label>
               </div>
-              <Button variant="outline" onClick={handleResetFilters}>
+              <Button
+                variant="outline"
+                onClick={handleResetFilters}
+                className="border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+              >
                 Reset
               </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 text-gray-400 transform -translate-y-1/2" />
               <Input
                 placeholder="Search by name..."
-                className="pl-8"
+                className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
                 value={nameSearch}
                 onChange={(e) => setNameSearch(e.target.value)}
               />
             </div>
             <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger>
+              <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200">
                 <SelectValue placeholder="Any month" />
               </SelectTrigger>
               <SelectContent>
@@ -341,7 +383,7 @@ const ClientBirthdayReport = () => {
               </SelectContent>
             </Select>
             <Select value={selectedTenure} onValueChange={setSelectedTenure}>
-              <SelectTrigger>
+              <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200">
                 <SelectValue placeholder="Any tenure" />
               </SelectTrigger>
               <SelectContent>
@@ -356,122 +398,157 @@ const ClientBirthdayReport = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Upcoming Client Birthdays</CardTitle>
+      <Card className="border border-gray-100 shadow-sm bg-white">
+        <CardHeader className="pb-4 border-b border-gray-100">
+          <CardTitle className="text-xl font-semibold text-gray-900">
+            Upcoming Client Birthdays
+          </CardTitle>
+          <p className="text-sm text-gray-500 mt-2">
+            {filteredReportData.length} client
+            {filteredReportData.length !== 1 ? "s" : ""} found
+          </p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {isLoading && (
-            <div className="p-4 text-center text-muted-foreground">
+            <div className="p-6 text-center text-gray-500">
               Updating results...
             </div>
           )}
           {!isLoading && filteredReportData.length === 0 && (
-            <div className="text-center text-muted-foreground py-10">
+            <div className="text-center text-gray-500 py-12 px-6">
               No clients match the current filters or no birthday data
               available.
             </div>
           )}
           {!isLoading && filteredReportData.length > 0 && (
-            <div className="rounded-md border">
+            <div className="border-0">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Grade</TableHead>
-                    <TableHead>Date of Birth</TableHead>
-                    <TableHead>Next Birthday</TableHead>
-                    <TableHead className="text-center">Turning Age</TableHead>
-                    <TableHead className="text-right">AUM</TableHead>
-                    <TableHead>Client Tenure</TableHead>
-                    <TableHead>Advisor</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                <TableHeader className="bg-gray-50 border-b border-gray-200">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="font-semibold text-gray-700 py-4">
+                      Client
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4">
+                      Grade
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4">
+                      Date of Birth
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4">
+                      Next Birthday
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 text-center">
+                      Turning Age
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 text-right">
+                      AUM
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4">
+                      Client Tenure
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4">
+                      Advisor
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 text-right">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortByUpcomingBirthday(filteredReportData)
-                    .map((client) => {
+                  {sortByUpcomingBirthday(filteredReportData).map((client) => {
                     const gradeClasses = getGradeBadgeClasses(client.grade);
                     return (
-                      <TableRow key={client.id}>
-                        <TableCell className="font-medium">
+                      <TableRow
+                        key={client.id}
+                        className="hover:bg-blue-50 border-b border-gray-100 transition-all duration-200 hover:shadow-sm group cursor-pointer"
+                      >
+                        <TableCell className="font-medium text-gray-900 py-4 group-hover:text-blue-700 transition-colors duration-200">
                           {client.clientName}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="py-4">
                           <span
-                            className={`px-2.5 py-1 text-xs font-semibold rounded-md ${gradeClasses.badgeBg} ${gradeClasses.badgeText}`}
+                            className={`px-3 py-1 text-xs font-medium rounded-full border transition-all duration-200 group-hover:scale-105 group-hover:shadow-md ${gradeClasses.badgeBg} ${gradeClasses.badgeText} ${gradeClasses.badgeBorder}`}
                           >
-                            {" "}
-                            {/* Removed border, adjusted padding */}
                             {client.grade}
                           </span>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <CalendarDays className={iconClasses} />
+                        <TableCell className="py-4">
+                          <div className="flex items-center text-gray-600 group-hover:text-gray-700 transition-colors duration-200">
+                            <CalendarDays className="mr-2 h-4 w-4 text-blue-600" />
                             {formatDate(client.dateOfBirth)}
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="py-4">
                           <div className="flex flex-col">
-                            <span className="font-medium">{client.nextBirthdayDisplay}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(client.nextBirthdayDate).toLocaleDateString('en-US', { 
-                                month: 'short', 
-                                day: 'numeric' 
+                            <span className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors duration-200">
+                              {client.nextBirthdayDisplay}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(
+                                client.nextBirthdayDate
+                              ).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
                               })}
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center py-4">
                           <div className="flex items-center justify-center">
                             {client.turningAge === 0 ? (
-                              <span className="text-gray-500 font-medium">N/A</span>
+                              <span className="text-gray-500 font-medium">
+                                N/A
+                              </span>
                             ) : (
                               <>
-                                {client.turningAge > 0 && isMilestoneAge(client.turningAge) && (
-                                  <Star className="mr-1.5 h-4 w-4 text-yellow-500" />
-                                )}
-                                <span 
+                                {client.turningAge > 0 &&
+                                  isMilestoneAge(client.turningAge) && (
+                                    <Star className="mr-1.5 h-4 w-4 text-yellow-500" />
+                                  )}
+                                <span
                                   className={`font-medium ${
-                                    client.turningAge > 0 && isMilestoneAge(client.turningAge) 
-                                      ? 'text-yellow-600 font-bold' 
-                                      : 'text-blue-600'
+                                    client.turningAge > 0 &&
+                                    isMilestoneAge(client.turningAge)
+                                      ? "text-yellow-600 font-bold"
+                                      : "text-blue-600"
                                   }`}
                                 >
                                   {client.turningAge}
                                 </span>
-                                {client.turningAge > 0 && isMilestoneAge(client.turningAge) && (
-                                  <span className="ml-1.5 text-xs text-yellow-600 font-semibold">
-                                    MILESTONE
-                                  </span>
-                                )}
+                                {client.turningAge > 0 &&
+                                  isMilestoneAge(client.turningAge) && (
+                                    <span className="ml-1.5 text-xs text-yellow-600 font-semibold">
+                                      MILESTONE
+                                    </span>
+                                  )}
                               </>
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end">
-                            <DollarSign className={iconClasses} />
+                        <TableCell className="text-right py-4">
+                          <div className="flex items-center justify-end font-semibold text-gray-900 group-hover:text-blue-700 transition-colors duration-200">
+                            <DollarSign className="mr-2 h-4 w-4 text-blue-600" />
                             {formatAUM(client.aum)}
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <Users className={iconClasses} />{" "}
-                            {/* People icon for tenure */}
+                        <TableCell className="py-4">
+                          <div className="flex items-center text-gray-600 group-hover:text-gray-700 transition-colors duration-200">
+                            <Users className="mr-2 h-4 w-4 text-blue-600" />
                             {client.clientTenure}
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <Users className={iconClasses} />{" "}
-                            {/* People icon for advisor */}
+                        <TableCell className="py-4">
+                          <div className="flex items-center text-gray-600 group-hover:text-gray-700 transition-colors duration-200">
+                            <Users className="mr-2 h-4 w-4 text-blue-600" />
                             {client.advisorName}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right">
-                        <Button variant="default" size="sm">
+                        <TableCell className="text-right py-4">
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all duration-200 hover:scale-105 hover:shadow-md opacity-70 group-hover:opacity-100"
+                          >
                             View Contact
                           </Button>
                         </TableCell>

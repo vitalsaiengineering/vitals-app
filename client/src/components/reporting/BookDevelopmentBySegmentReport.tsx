@@ -44,7 +44,8 @@ import { getSegmentName, getPrettyClientName } from "@/utils/client-analytics";
 import { FilteredReportSkeleton } from "@/components/ui/skeleton";
 
 // Define types that work with StandardClient
-interface BookDevelopmentClient extends StandardClient {
+interface BookDevelopmentClient extends Omit<StandardClient, "segment"> {
+  segment: SegmentName;
   yearsWithFirm: number;
   yearsWithFirmText: string;
   sinceDateText: string;
@@ -57,7 +58,7 @@ interface YearlySegmentDataPoint {
 }
 
 interface BookDevelopmentSegmentData {
-  name: 'Platinum' | 'Gold' | 'Silver' | 'N/A';
+  name: "Platinum" | "Gold" | "Silver" | "N/A";
   color: string;
   fillColor?: string;
   dataAUM: YearlySegmentDataPoint[];
@@ -130,12 +131,15 @@ const CustomTooltipContent = ({
 
         // Use the actual chart data to get previous year value
         // Find the previous year in the chart data
-        const previousYearValue = chartData.find((d: SegmentChartData) => d.year === year - 1)?.[segmentName];
-        
+        const previousYearValue = chartData.find(
+          (d: SegmentChartData) => d.year === year - 1
+        )?.[segmentName];
+
         let yoy: number | null | typeof Infinity = null;
         if (previousYearValue !== undefined && previousYearValue !== null) {
           if (previousYearValue !== 0) {
-            yoy = ((currentValue - previousYearValue) / previousYearValue) * 100;
+            yoy =
+              ((currentValue - previousYearValue) / previousYearValue) * 100;
           } else if (currentValue > 0) {
             yoy = Infinity;
           } else {
@@ -147,7 +151,9 @@ const CustomTooltipContent = ({
 
         return {
           name: segmentName,
-          color: originalSeriesData.find((s) => s.name === segmentName)?.color || pld.color,
+          color:
+            originalSeriesData.find((s) => s.name === segmentName)?.color ||
+            pld.color,
           value: currentValue,
           yoy: yoy,
         };
@@ -161,7 +167,8 @@ const CustomTooltipContent = ({
     if (hasAnyPreviousValueForTotal && totalPreviousYearValue !== 0) {
       if (totalPreviousYearValue !== 0) {
         totalYoY =
-          ((totalValue - totalPreviousYearValue) / totalPreviousYearValue) * 100;
+          ((totalValue - totalPreviousYearValue) / totalPreviousYearValue) *
+          100;
       } else if (totalValue > 0) {
         totalYoY = Infinity;
       } else {
@@ -175,13 +182,17 @@ const CustomTooltipContent = ({
         : Math.round(val).toLocaleString();
 
     const formatGrowthRate = (value: number) => {
-      return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
+      return `${value > 0 ? "+" : ""}${value.toFixed(1)}%`;
     };
 
     // Helper function for creating growth rate indicator
-    const GrowthIndicator = ({ value }: { value: number | null | typeof Infinity }) => {
+    const GrowthIndicator = ({
+      value,
+    }: {
+      value: number | null | typeof Infinity;
+    }) => {
       if (value === null || value === 0) return null;
-      
+
       if (value === Infinity) {
         return (
           <span className="text-green-600 flex items-center justify-end whitespace-nowrap text-[11px]">
@@ -190,49 +201,65 @@ const CustomTooltipContent = ({
           </span>
         );
       }
-      
+
       return (
-        <span className={`${value > 0 ? 'text-green-600' : 'text-red-600'} flex items-center justify-end whitespace-nowrap text-[11px]`}>
+        <span
+          className={`${
+            value > 0 ? "text-green-600" : "text-red-600"
+          } flex items-center justify-end whitespace-nowrap text-[11px]`}
+        >
           {formatGrowthRate(value)}
-          {value > 0 ? 
-            <TrendingUp className="inline ml-0.5 w-3 h-3" /> : 
+          {value > 0 ? (
+            <TrendingUp className="inline ml-0.5 w-3 h-3" />
+          ) : (
             <TrendingDown className="inline ml-0.5 w-3 h-3" />
-          }
+          )}
         </span>
       );
     };
 
-    const isFirstYear = originalSeriesData.length > 0 && 
-      originalSeriesData[0].dataClientCount.length > 0 && 
-      year === Math.min(...originalSeriesData[0].dataClientCount.map(d => d.year));
+    const isFirstYear =
+      originalSeriesData.length > 0 &&
+      originalSeriesData[0].dataClientCount.length > 0 &&
+      year ===
+        Math.min(...originalSeriesData[0].dataClientCount.map((d) => d.year));
 
     return (
       <div className="bg-white shadow-lg rounded-lg border border-gray-200 p-3 min-w-[240px]">
-        <div className="font-medium text-sm mb-3 pb-1 border-b border-gray-200">{year}</div>
-        
+        <div className="font-medium text-sm mb-3 pb-1 border-b border-gray-200">
+          {year}
+        </div>
+
         <div className="space-y-2.5 text-xs">
           {items.map((item) => (
-            <div key={item.name} className="grid grid-cols-[100px_1fr_1fr] gap-x-2 items-center">
+            <div
+              key={item.name}
+              className="grid grid-cols-[100px_1fr_1fr] gap-x-2 items-center"
+            >
               <div className="flex items-center gap-1.5">
-                <div 
-                  className="w-2.5 h-2.5 rounded-full shrink-0" 
-                  style={{ backgroundColor: item.color }} 
+                <div
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={{ backgroundColor: item.color }}
                 />
                 <span className="whitespace-nowrap">{item.name}</span>
               </div>
               <div className="text-right flex justify-end items-center">
-                <span className="font-medium tabular-nums">{formatDisplayValue(item.value)}</span>
+                <span className="font-medium tabular-nums">
+                  {formatDisplayValue(item.value)}
+                </span>
               </div>
               <div className="text-right">
                 {!isFirstYear && <GrowthIndicator value={item.yoy} />}
               </div>
             </div>
           ))}
-          
+
           <div className="border-t border-gray-200 pt-2 mt-1 grid grid-cols-[100px_1fr_1fr] gap-x-2 items-center">
             <span className="font-medium whitespace-nowrap">Total</span>
             <div className="text-right flex justify-end items-center">
-              <span className="font-medium tabular-nums">{formatDisplayValue(totalValue)}</span>
+              <span className="font-medium tabular-nums">
+                {formatDisplayValue(totalValue)}
+              </span>
             </div>
             <div className="text-right">
               {!isFirstYear && <GrowthIndicator value={totalYoY} />}
@@ -255,25 +282,44 @@ interface SegmentChartData {
 }
 
 // Helper function to transform StandardClient to BookDevelopmentClient
-const transformToBookDevelopmentClient = (client: StandardClient): BookDevelopmentClient => {
-  const today = new Date();
-  const inceptionDate = client.inceptionDate ? new Date(client.inceptionDate) : today;
-  const yearsWithFirm = Math.floor((today.getTime() - inceptionDate.getTime()) / (1000 * 60 * 60 * 24 * 365));
-  
+const transformToBookDevelopmentClient = (
+  client: StandardClient
+): BookDevelopmentClient => {
+  const inceptionDate = client.inceptionDate
+    ? new Date(client.inceptionDate)
+    : new Date();
+  const yearsWithFirm = Math.floor(
+    (Date.now() - inceptionDate.getTime()) / (1000 * 60 * 60 * 24 * 365)
+  );
+
+  // Map lowercase segment names to capitalized ones
+  const segmentMap: Record<string, SegmentName> = {
+    platinum: "Platinum",
+    gold: "Gold",
+    silver: "Silver",
+  };
+
+  const mappedSegment = segmentMap[client.segment] || "N/A";
+
   return {
     ...client,
     name: getPrettyClientName(client), // Use getPrettyClientName function
     yearsWithFirm,
     yearsWithFirmText: `${yearsWithFirm} years`,
-    sinceDateText: inceptionDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-    segment: getSegmentName(client.segment) as 'Platinum' | 'Gold' | 'Silver' | 'N/A'
+    sinceDateText: inceptionDate.toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    }),
+    segment: mappedSegment,
   };
 };
 
 // Helper function to generate mock segment data from clients
-const generateSegmentDataFromClients = (clients: StandardClient[]): BookDevelopmentReportData => {
+const generateSegmentDataFromClients = (
+  clients: StandardClient[]
+): BookDevelopmentReportData => {
   const transformedClients = clients.map(transformToBookDevelopmentClient);
-  
+
   // Group clients by segment (including N/A)
   const clientsBySegment = transformedClients.reduce((acc, client) => {
     const segmentName = client.segment as SegmentName; // Already normalized by getSegmentName
@@ -285,23 +331,34 @@ const generateSegmentDataFromClients = (clients: StandardClient[]): BookDevelopm
   // Generate yearly data for each segment (mock data for now)
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i);
-  
-  const allSegmentsData: BookDevelopmentSegmentData[] = (['Platinum', 'Gold', 'Silver', 'N/A'] as SegmentName[]).map(segmentName => {
+
+  const allSegmentsData: BookDevelopmentSegmentData[] = (
+    ["Platinum", "Gold", "Silver", "N/A"] as SegmentName[]
+  ).map((segmentName) => {
     const segmentClients = clientsBySegment[segmentName] || [];
     const segmentAUM = segmentClients.reduce((sum, c) => sum + c.aum, 0);
-    
+
     // Generate mock yearly progression
     const baseClientCount = segmentClients.length;
     const baseAUM = segmentAUM;
-    
-    const dataClientCount = years.map(year => ({
+
+    const dataClientCount = years.map((year) => ({
       year,
-      value: baseClientCount > 0 ? Math.max(1, Math.floor(baseClientCount * (0.6 + Math.random() * 0.4))) : 0,
+      value:
+        baseClientCount > 0
+          ? Math.max(
+              1,
+              Math.floor(baseClientCount * (0.6 + Math.random() * 0.4))
+            )
+          : 0,
     }));
-    
-    const dataAUM = years.map(year => ({
+
+    const dataAUM = years.map((year) => ({
       year,
-      value: baseAUM > 0 ? Math.max(100000, Math.floor(baseAUM * (0.6 + Math.random() * 0.4))) : 0,
+      value:
+        baseAUM > 0
+          ? Math.max(100000, Math.floor(baseAUM * (0.6 + Math.random() * 0.4)))
+          : 0,
     }));
 
     return {
@@ -310,7 +367,7 @@ const generateSegmentDataFromClients = (clients: StandardClient[]): BookDevelopm
       fillColor: SEGMENT_COLORS[segmentName].base,
       dataClientCount,
       dataAUM,
-      clients: segmentClients
+      clients: segmentClients,
     };
   }); // Show all segments even if they have no clients
 
@@ -326,9 +383,9 @@ export default function BookDevelopmentBySegmentReport() {
   const [chartView, setChartView] = useState<ChartView>("clientCount");
   const [selectedSegments, setSelectedSegments] = useState<SegmentName[]>([
     "Platinum",
-    "Gold", 
+    "Gold",
     "Silver",
-    "N/A"
+    "N/A",
   ]);
   const [filterSearchTerm, setFilterSearchTerm] = useState("");
 
@@ -364,17 +421,19 @@ export default function BookDevelopmentBySegmentReport() {
   // Filter clients based on search term and selected segments (now using server-filtered data)
   const filteredClients = useMemo(() => {
     if (!reportData) return [];
-    
+
     // Extract all clients from the segment data
     let allClients: BookDevelopmentClient[] = [];
     if (reportData.allSegmentsData) {
-      reportData.allSegmentsData.forEach((segment: BookDevelopmentSegmentData) => {
-        if (segment.clients && Array.isArray(segment.clients)) {
-          allClients.push(...segment.clients);
+      reportData.allSegmentsData.forEach(
+        (segment: BookDevelopmentSegmentData) => {
+          if (segment.clients && Array.isArray(segment.clients)) {
+            allClients.push(...segment.clients);
+          }
         }
-      });
+      );
     }
-    
+
     // Client data is now pre-filtered by advisor/date/segment from server
     // Only apply local search term filtering
     let filtered = allClients;
@@ -387,34 +446,34 @@ export default function BookDevelopmentBySegmentReport() {
           client.aum.toString().includes(searchLower)
       );
     }
-    
+
     // Filter by selected segments (for chart display)
     if (selectedSegments.length > 0) {
       filtered = filtered.filter((client) =>
         selectedSegments.includes(client.segment as SegmentName)
       );
     }
-    
+
     return filtered;
   }, [reportData, filterSearchTerm, selectedSegments]);
 
   // Sort clients based on sort config
   const sortedClients = useMemo(() => {
     if (!sortConfig.key) return filteredClients;
-    
+
     return [...filteredClients].sort((a, b) => {
       const aValue = a[sortConfig.key!];
       const bValue = b[sortConfig.key!];
-      
+
       // Handle undefined values
       if (aValue === undefined && bValue === undefined) return 0;
-      if (aValue === undefined) return sortConfig.direction === "ascending" ? 1 : -1;
-      if (bValue === undefined) return sortConfig.direction === "ascending" ? -1 : 1;
-      
-      if (aValue < bValue)
-        return sortConfig.direction === "ascending" ? -1 : 1;
-      if (aValue > bValue)
+      if (aValue === undefined)
         return sortConfig.direction === "ascending" ? 1 : -1;
+      if (bValue === undefined)
+        return sortConfig.direction === "ascending" ? -1 : 1;
+
+      if (aValue < bValue) return sortConfig.direction === "ascending" ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === "ascending" ? 1 : -1;
       return 0;
     });
   }, [filteredClients, sortConfig]);
@@ -473,6 +532,14 @@ export default function BookDevelopmentBySegmentReport() {
       clientsToShow.sort((a, b) => {
         const valA = a[sortConfig.key!];
         const valB = b[sortConfig.key!];
+
+        // Handle undefined values
+        if (valA === undefined && valB === undefined) return 0;
+        if (valA === undefined)
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        if (valB === undefined)
+          return sortConfig.direction === "ascending" ? -1 : 1;
+
         if (valA < valB) {
           return sortConfig.direction === "ascending" ? -1 : 1;
         }
@@ -509,7 +576,7 @@ export default function BookDevelopmentBySegmentReport() {
   const activeChartSeries = useMemo(() => {
     if (!reportData) return [];
     const order: SegmentName[] = ["Platinum", "Gold", "Silver", "N/A"];
-    
+
     return reportData.allSegmentsData
       .filter((segment) => selectedSegments.includes(segment.name))
       .sort((a, b) => {
@@ -537,55 +604,67 @@ export default function BookDevelopmentBySegmentReport() {
 
   // Add this function to match AumChart's data transformation
   const getMockSegmentData = (): SegmentChartData[] => {
-    try {
-      const segmentReport = mockData.BookDevelopmentBySegmentReport;
-      const years = [2019, 2020, 2021, 2022, 2023, 2024, 2025];
-
-      return years.map((year) => {
-        const dataPoint: SegmentChartData = {
-          year,
-          Platinum: 0,
-          Gold: 0,
-          Silver: 0,
-          "N/A": 0,
-        };
-
-        segmentReport.allSegmentsData.forEach((segment: any) => {
-          const yearData = segment.dataAUM.find(
-            (data: any) => data.year === year
-          );
-          if (yearData) {
-            dataPoint[segment.name as keyof Omit<SegmentChartData, "year">] =
-              yearData.value;
-          }
-        });
-
-        return dataPoint;
-      });
-    } catch (error) {
-      console.error("Error loading mock segment data:", error);
-      // Fallback data
-      return [
-        { year: 2019, Platinum: 40000000, Gold: 25000000, Silver: 12000000, "N/A": 2000000 },
-        { year: 2020, Platinum: 43000000, Gold: 27000000, Silver: 13000000, "N/A": 2200000 },
-        { year: 2021, Platinum: 46000000, Gold: 29000000, Silver: 14000000, "N/A": 2400000 },
-        { year: 2022, Platinum: 50000000, Gold: 31000000, Silver: 15000000, "N/A": 2600000 },
-        { year: 2023, Platinum: 54000000, Gold: 33000000, Silver: 16000000, "N/A": 2800000 },
-        { year: 2024, Platinum: 58000000, Gold: 36000000, Silver: 17000000, "N/A": 3000000 },
-        { year: 2025, Platinum: 63000000, Gold: 39000000, Silver: 18000000, "N/A": 3200000 },
-      ];
-    }
+    // Fallback data - removed mockData reference
+    return [
+      {
+        year: 2019,
+        Platinum: 40000000,
+        Gold: 25000000,
+        Silver: 12000000,
+        "N/A": 2000000,
+      },
+      {
+        year: 2020,
+        Platinum: 43000000,
+        Gold: 27000000,
+        Silver: 13000000,
+        "N/A": 2200000,
+      },
+      {
+        year: 2021,
+        Platinum: 46000000,
+        Gold: 29000000,
+        Silver: 14000000,
+        "N/A": 2400000,
+      },
+      {
+        year: 2022,
+        Platinum: 50000000,
+        Gold: 31000000,
+        Silver: 15000000,
+        "N/A": 2600000,
+      },
+      {
+        year: 2023,
+        Platinum: 54000000,
+        Gold: 33000000,
+        Silver: 16000000,
+        "N/A": 2800000,
+      },
+      {
+        year: 2024,
+        Platinum: 58000000,
+        Gold: 36000000,
+        Silver: 17000000,
+        "N/A": 3000000,
+      },
+      {
+        year: 2025,
+        Platinum: 63000000,
+        Gold: 39000000,
+        Silver: 18000000,
+        "N/A": 3200000,
+      },
+    ];
   };
 
   // Update the rechartsFormattedData to exactly match AumChart's transformation
   const rechartsFormattedData = useMemo(() => {
     if (!reportData) return [];
-    
-
 
     // For real data, transform it to match the same format as AumChart
     const years = [2019, 2020, 2021, 2022, 2023, 2024, 2025];
-    
+
     let baseData = years.map((year) => {
       const dataPoint: SegmentChartData = {
         year,
@@ -596,10 +675,11 @@ export default function BookDevelopmentBySegmentReport() {
       };
 
       reportData.allSegmentsData.forEach((segment) => {
-        const yearData = chartView === "assetsUnderManagement"
-          ? segment.dataAUM.find((data) => data.year === year)
-          : segment.dataClientCount.find((data) => data.year === year);
-          
+        const yearData =
+          chartView === "assetsUnderManagement"
+            ? segment.dataAUM.find((data) => data.year === year)
+            : segment.dataClientCount.find((data) => data.year === year);
+
         if (yearData) {
           dataPoint[segment.name as keyof Omit<SegmentChartData, "year">] =
             yearData.value;
@@ -612,35 +692,61 @@ export default function BookDevelopmentBySegmentReport() {
     // Apply advisor filtering to real data as well
     if (filters.advisorIds.length > 0) {
       // Create advisor-specific distribution patterns
-      const advisorDistributionPatterns: Record<string, {Platinum: number, Gold: number, Silver: number, "N/A": number}> = {
-        "Jackson Miller": { Platinum: 0.40, Gold: 0.35, Silver: 0.20, "N/A": 0.05 }, // First advisor has more Platinum
-        "Sarah Johnson": { Platinum: 0.30, Gold: 0.45, Silver: 0.20, "N/A": 0.05 },  // Second advisor has more Gold
-        "Thomas Chen": { Platinum: 0.25, Gold: 0.35, Silver: 0.35, "N/A": 0.05 },    // Third advisor has more Silver
-        "Maria Reynolds": { Platinum: 0.30, Gold: 0.30, Silver: 0.30, "N/A": 0.10 }  // Fourth advisor is balanced with more N/A
+      const advisorDistributionPatterns: Record<
+        string,
+        { Platinum: number; Gold: number; Silver: number; "N/A": number }
+      > = {
+        "Jackson Miller": {
+          Platinum: 0.4,
+          Gold: 0.35,
+          Silver: 0.2,
+          "N/A": 0.05,
+        }, // First advisor has more Platinum
+        "Sarah Johnson": {
+          Platinum: 0.3,
+          Gold: 0.45,
+          Silver: 0.2,
+          "N/A": 0.05,
+        }, // Second advisor has more Gold
+        "Thomas Chen": {
+          Platinum: 0.25,
+          Gold: 0.35,
+          Silver: 0.35,
+          "N/A": 0.05,
+        }, // Third advisor has more Silver
+        "Maria Reynolds": { Platinum: 0.3, Gold: 0.3, Silver: 0.3, "N/A": 0.1 }, // Fourth advisor is balanced with more N/A
       };
-      
+
       // Use the pattern for this advisor (or a default pattern as fallback)
       const advisorName = filters.advisorIds[0]; // Assuming single advisor selection for now
-      const pattern = advisorDistributionPatterns[advisorName] || 
-        { Platinum: 0.30, Gold: 0.30, Silver: 0.30, "N/A": 0.10 };
-      
+      const pattern = advisorDistributionPatterns[advisorName] || {
+        Platinum: 0.3,
+        Gold: 0.3,
+        Silver: 0.3,
+        "N/A": 0.1,
+      };
+
       // Assume each advisor manages roughly 25% of the total
       const ratio = 0.25;
-      
-      baseData = baseData.map(dataPoint => {
+
+      baseData = baseData.map((dataPoint) => {
         // Calculate total for this year including N/A
-        const totalValue = dataPoint.Platinum + dataPoint.Gold + dataPoint.Silver + dataPoint["N/A"];
-        
+        const totalValue =
+          dataPoint.Platinum +
+          dataPoint.Gold +
+          dataPoint.Silver +
+          dataPoint["N/A"];
+
         // Apply the ratio to get this advisor's portion
         const advisorTotal = totalValue * ratio;
-        
+
         // Distribute according to this advisor's pattern
         return {
           year: dataPoint.year,
           Platinum: advisorTotal * pattern.Platinum,
           Gold: advisorTotal * pattern.Gold,
           Silver: advisorTotal * pattern.Silver,
-          "N/A": advisorTotal * pattern["N/A"]
+          "N/A": advisorTotal * pattern["N/A"],
         };
       });
     }
@@ -667,8 +773,7 @@ export default function BookDevelopmentBySegmentReport() {
     setCurrentPage(1);
   }, [selectedSegments, filterSearchTerm, filters.advisorIds]);
 
-  if (isLoading)
-    return <FilteredReportSkeleton />;
+  if (isLoading) return <FilteredReportSkeleton />;
   if (error) return <div className="p-6 text-red-500">Error: {error}</div>;
   if (!reportData)
     return <div className="p-6 text-center">No data available.</div>;
@@ -680,8 +785,10 @@ export default function BookDevelopmentBySegmentReport() {
 
   const formatPeriodValue = (value: number) => {
     if (chartView === "assetsUnderManagement") {
-      if (Math.abs(value) >= 1000000000) return `$${(value / 1000000000).toFixed(1)}B`;
-      if (Math.abs(value) >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+      if (Math.abs(value) >= 1000000000)
+        return `$${(value / 1000000000).toFixed(1)}B`;
+      if (Math.abs(value) >= 1000000)
+        return `$${(value / 1000000).toFixed(1)}M`;
       if (Math.abs(value) >= 1000) return `$${(value / 1000).toFixed(0)}K`;
       return `$${value.toFixed(0)}`;
     }
@@ -690,36 +797,43 @@ export default function BookDevelopmentBySegmentReport() {
 
   const formatGrowthRate = (rate: number | typeof Infinity) => {
     if (rate === Infinity) return "New";
-    return `${rate >= 0 ? '+' : ''}${rate.toFixed(1)}%`;
+    return `${rate >= 0 ? "+" : ""}${rate.toFixed(1)}%`;
   };
 
   return (
     <div className="space-y-6 p-4 md:p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            {filters.advisorIds.length === 1 
-              ? `${filterOptions?.advisors.find(a => a.id === filters.advisorIds[0])?.name}'s Book Development by Segment` 
+      <Card className="border-gray-100 hover:shadow-lg transition-shadow duration-300">
+        <CardHeader className="pb-6">
+          <CardTitle className="text-2xl font-bold text-gray-900 mb-2">
+            {filters.advisorIds.length === 1
+              ? `${
+                  filterOptions?.advisors.find(
+                    (a) => a.id === filters.advisorIds[0]
+                  )?.name
+                }'s Book Development by Segment`
               : "Book Development by Segment"}
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             Track cumulative client growth and AUM by segment over time
-            {filters.advisorIds.length === 1 && ` for ${filterOptions?.advisors.find(a => a.id === filters.advisorIds[0])?.name}`}
+            {filters.advisorIds.length === 1 &&
+              ` for ${
+                filterOptions?.advisors.find(
+                  (a) => a.id === filters.advisorIds[0]
+                )?.name
+              }`}
           </p>
         </CardHeader>
         <CardContent>
-
-
           {/* Chart Container with Toggle in Top Right */}
           <div className="relative">
             {/* Chart View Toggle - Top Right */}
-            <div className="absolute top-2 right-4 z-10 flex items-center space-x-2 bg-background/80 backdrop-blur-sm rounded-full px-3 py-1.5 ">
+            <div className="absolute top-2 right-4 z-10 flex items-center space-x-2 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-md border border-gray-100">
               <Label
                 htmlFor="chart-toggle-switch"
-                className={`text-xs ${
+                className={`text-xs font-medium transition-colors ${
                   chartView === "clientCount"
-                    ? "font-medium text-foreground"
-                    : "text-muted-foreground"
+                    ? "text-blue-600"
+                    : "text-gray-600"
                 }`}
               >
                 Client Count
@@ -732,21 +846,21 @@ export default function BookDevelopmentBySegmentReport() {
                     checked ? "assetsUnderManagement" : "clientCount"
                   )
                 }
-                className="scale-75"
+                className="scale-90 data-[state=checked]:bg-blue-600"
               />
               <Label
                 htmlFor="chart-toggle-switch"
-                className={`text-xs ${
+                className={`text-xs font-medium transition-colors ${
                   chartView === "assetsUnderManagement"
-                    ? "font-medium text-foreground"
-                    : "text-muted-foreground"
+                    ? "text-blue-600"
+                    : "text-gray-600"
                 }`}
               >
                 Assets Under Management
               </Label>
             </div>
 
-              {/* {chartView === "assetsUnderManagement" ? (
+            {/* {chartView === "assetsUnderManagement" ? (
                 <AumChart showViewFullReport={false} selectedAdvisor={selectedAdvisor} />
               ) : ( */}
             <div className="h-[400px] w-full">
@@ -768,7 +882,7 @@ export default function BookDevelopmentBySegmentReport() {
                     width={80}
                     axisLine={{ strokeOpacity: 0.3 }}
                     tickLine={{ strokeOpacity: 0.3 }}
-                    domain={['auto', 'auto']}
+                    domain={["auto", "auto"]}
                     allowDataOverflow={false}
                   />
                   <Tooltip
@@ -803,19 +917,19 @@ export default function BookDevelopmentBySegmentReport() {
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-          {/* )} */}
-        </div>
+            {/* )} */}
+          </div>
 
           {/* Segment Legend Below Chart */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             {reportData.allSegmentsData.map((segment) => (
               <button
                 key={segment.name}
                 onClick={() => handleSegmentToggle(segment.name)}
-                className={`flex items-center space-x-2 text-sm transition-opacity ${
-                  selectedSegments.includes(segment.name) 
-                    ? 'opacity-100' 
-                    : 'opacity-50 hover:opacity-75'
+                className={`flex items-center space-x-2 px-3 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                  selectedSegments.includes(segment.name)
+                    ? "opacity-100 bg-blue-50 text-blue-700 shadow-sm scale-105"
+                    : "opacity-70 hover:opacity-100 hover:bg-gray-50 hover:scale-105"
                 }`}
               >
                 <span
@@ -830,7 +944,7 @@ export default function BookDevelopmentBySegmentReport() {
                 variant="ghost"
                 onClick={handleClearSegmentFilters}
                 size="sm"
-                className="text-muted-foreground hover:text-foreground ml-2"
+                className="text-muted-foreground hover:text-foreground ml-2 hover:bg-gray-50 transition-colors"
               >
                 Clear filter
               </Button>
@@ -839,23 +953,25 @@ export default function BookDevelopmentBySegmentReport() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+      <Card className="border-gray-100 hover:shadow-lg transition-shadow duration-300">
+        <CardHeader className="pb-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <CardTitle>Clients as of 2025</CardTitle>
+              <CardTitle className="text-xl font-bold text-gray-900 mb-2">
+                Clients as of 2025
+              </CardTitle>
               <p className="text-sm text-muted-foreground">
                 {selectedSegments.length === 4
                   ? "All segments"
                   : `Filtered by ${selectedSegments.join(", ")} segments`}
               </p>
             </div>
-            <div className="flex items-center gap-2 w-full md:w-auto">
+            <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative flex-grow md:flex-grow-0">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Search households..."
-                  className="pl-8 w-full md:w-[250px]"
+                  className="pl-10 w-full md:w-[280px] border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                   value={filterSearchTerm}
                   onChange={(e) => {
                     setFilterSearchTerm(e.target.value);
@@ -864,10 +980,14 @@ export default function BookDevelopmentBySegmentReport() {
                 />
               </div>
               <Select
-                value={selectedSegments.length === 4 ? "All Segments" : selectedSegments[0]}
+                value={
+                  selectedSegments.length === 4
+                    ? "All Segments"
+                    : selectedSegments[0]
+                }
                 onValueChange={handleTableSegmentChange}
               >
-                <SelectTrigger className="w-full md:w-[180px]">
+                <SelectTrigger className="w-full md:w-[180px] border-gray-200 focus:border-blue-500 focus:ring-blue-500">
                   <SelectValue placeholder="Select Segment" />
                 </SelectTrigger>
                 <SelectContent>
@@ -879,40 +999,44 @@ export default function BookDevelopmentBySegmentReport() {
                   ))}
                 </SelectContent>
               </Select>
-              <span className="text-sm font-medium bg-muted px-3 py-1.5 rounded-md whitespace-nowrap">
+              <span className="text-sm font-medium bg-blue-50 text-blue-700 px-4 py-2 rounded-full whitespace-nowrap border border-blue-200">
                 {filteredClients.length} clients
               </span>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-lg border border-gray-100 overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-gray-50/50">
                   <TableHead
                     onClick={() => handleSort("name")}
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    className="cursor-pointer hover:bg-gray-100 transition-colors duration-200 font-semibold"
                   >
                     Client Name{" "}
                     <ArrowUpDown className="inline h-3 w-3 ml-1 opacity-50 group-hover:opacity-100" />
                   </TableHead>
                   <TableHead
                     onClick={() => handleSort("segment")}
-                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    className="cursor-pointer hover:bg-gray-100 transition-colors duration-200 font-semibold"
                   >
                     Segment{" "}
                     <ArrowUpDown className="inline h-3 w-3 ml-1 opacity-50 group-hover:opacity-100" />
                   </TableHead>
-                  <TableHead>Years with Firm</TableHead>
+                  <TableHead className="font-semibold">
+                    Years with Firm
+                  </TableHead>
                   <TableHead
                     onClick={() => handleSort("aum")}
-                    className="text-right cursor-pointer hover:bg-muted/50 transition-colors"
+                    className="text-right cursor-pointer hover:bg-gray-100 transition-colors duration-200 font-semibold"
                   >
                     AUM{" "}
                     <ArrowUpDown className="inline h-3 w-3 ml-1 opacity-50 group-hover:opacity-100" />
                   </TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right font-semibold">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -920,27 +1044,29 @@ export default function BookDevelopmentBySegmentReport() {
                   paginatedClients.map((client) => (
                     <TableRow
                       key={client?.id}
-                      className="hover:bg-muted/30 transition-colors"
+                      className="hover:bg-blue-50/50 transition-all duration-200 group"
                     >
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium text-gray-900 group-hover:text-blue-900">
                         {client?.name || ""}
                       </TableCell>
                       <TableCell>
                         <span
-                          className={`px-2 py-0.5 text-[11px] font-medium rounded-full border ${getSegmentBadgeClasses(
-                            client?.segment
+                          className={`px-3 py-1 text-xs font-medium rounded-full border ${getSegmentBadgeClasses(
+                            (client?.segment || "N/A") as SegmentName
                           )}`}
                         >
                           {client?.segment || ""}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <div>{client?.yearsWithFirmText || ""}</div>
-                        <div className="text-xs text-muted-foreground">
+                        <div className="font-medium text-gray-900">
+                          {client?.yearsWithFirmText || ""}
+                        </div>
+                        <div className="text-xs text-gray-500">
                           {client?.sinceDateText || ""}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right font-medium text-gray-900">
                         {client?.aum?.toLocaleString("en-US", {
                           style: "currency",
                           currency: "USD",
@@ -949,7 +1075,11 @@ export default function BookDevelopmentBySegmentReport() {
                         }) || ""}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button size="sm" variant="default">
+                        <Button
+                          size="sm"
+                          variant="default"
+                          className="bg-blue-600 hover:bg-blue-700 text-white opacity-70 group-hover:opacity-100 transition-all duration-200"
+                        >
                           View Contact
                         </Button>
                       </TableCell>
@@ -957,7 +1087,10 @@ export default function BookDevelopmentBySegmentReport() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
+                    <TableCell
+                      colSpan={5}
+                      className="h-24 text-center text-gray-500"
+                    >
                       No clients match the current filters.
                     </TableCell>
                   </TableRow>
@@ -972,6 +1105,7 @@ export default function BookDevelopmentBySegmentReport() {
                 size="sm"
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
+                className="border-gray-200 hover:bg-gray-50"
               >
                 Previous
               </Button>
@@ -985,6 +1119,7 @@ export default function BookDevelopmentBySegmentReport() {
                   setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                 }
                 disabled={currentPage === totalPages}
+                className="border-gray-200 hover:bg-gray-50"
               >
                 Next
               </Button>
@@ -995,4 +1130,3 @@ export default function BookDevelopmentBySegmentReport() {
     </div>
   );
 }
-

@@ -341,24 +341,22 @@ export default function AgeDemographicsReport({
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
+      <Card className="border border-gray-100 shadow-sm bg-white">
+        <CardHeader className="pb-6">
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle className="text-2xl">
+              <CardTitle className="text-3xl font-bold text-gray-900">
                 Client Age Demographics
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-gray-600 mt-3 text-base">
                 {displayData.totalLabel}: {displayData.totalValue}
               </CardDescription>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3 bg-gray-50 rounded-lg p-2">
               <Label
                 htmlFor="aum-toggle"
                 className={
-                  !isAumView
-                    ? "text-primary font-semibold"
-                    : "text-muted-foreground"
+                  !isAumView ? "text-blue-600 font-semibold" : "text-gray-500"
                 }
               >
                 Clients
@@ -372,9 +370,7 @@ export default function AgeDemographicsReport({
               <Label
                 htmlFor="aum-toggle"
                 className={
-                  isAumView
-                    ? "text-primary font-semibold"
-                    : "text-muted-foreground"
+                  isAumView ? "text-blue-600 font-semibold" : "text-gray-500"
                 }
               >
                 AUM
@@ -384,14 +380,14 @@ export default function AgeDemographicsReport({
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-col lg:flex-row gap-6">
-            <div className="lg:w-1/4 space-y-1">
-              <h3 className="text-base font-medium text-muted-foreground">
+            <div className="lg:w-1/4 space-y-2 p-6 bg-blue-50 rounded-lg border border-blue-100">
+              <h3 className="text-base font-medium text-gray-600">
                 Average Client Age
               </h3>
-              <p className="text-4xl font-bold">
+              <p className="text-4xl font-bold text-blue-600">
                 {displayData.averageClientAge.toFixed(1)}
               </p>
-              <p className="text-sm text-muted-foreground">years</p>
+              <p className="text-sm text-gray-500">years</p>
             </div>
             <div className="lg:w-3/4 h-[300px] lg:h-[350px] bg-muted/20 p-4 rounded-lg">
               <ChartContainer config={chartConfig} className="w-full h-full">
@@ -466,26 +462,26 @@ export default function AgeDemographicsReport({
               <Card
                 key={bracket.bracket}
                 onClick={() => handleSummaryCardClick(bracket.bracket)}
-                className={`cursor-pointer transition-all ${
+                className={`cursor-pointer transition-all duration-300 border border-gray-100 hover:shadow-lg hover:scale-[1.02] group ${
                   bracket.isSelected
-                    ? "ring-2 ring-primary shadow-lg"
-                    : "hover:shadow-md"
+                    ? "ring-2 ring-blue-500 shadow-lg bg-blue-50"
+                    : "hover:shadow-md bg-white"
                 }`}
               >
                 <CardHeader className="pb-2 pt-4 text-center">
-                  <CardDescription className="flex items-center justify-center">
+                  <CardDescription className="flex items-center justify-center group-hover:text-blue-600 transition-colors duration-300">
                     <span
-                      className="w-2.5 h-2.5 rounded-full mr-2"
+                      className="w-2.5 h-2.5 rounded-full mr-2 transition-all duration-300 group-hover:scale-125"
                       style={{ backgroundColor: bracket.dotColor }}
                     ></span>
                     {bracket.bracket}
                   </CardDescription>
-                  <CardTitle className="text-xl sm:text-2xl">
+                  <CardTitle className="text-xl sm:text-2xl group-hover:text-blue-600 transition-colors duration-300">
                     {bracket.displayValue}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pb-4 text-center">
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-gray-500 group-hover:text-gray-600 transition-colors duration-300">
                     {bracket.displayPercentage.toFixed(1)}% of{" "}
                     {!isAumView ? "total clients" : "total AUM"}
                   </p>
@@ -495,68 +491,121 @@ export default function AgeDemographicsReport({
           </div>
 
           <div>
-            <h3 className="text-lg font-medium mb-2">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">
               Clients{" "}
               {selectedAgeBracketForTable
                 ? `(${selectedAgeBracketForTable})`
                 : "(All)"}
             </h3>
-            <div className="rounded-md border">
+            <div className="rounded-lg border border-gray-100 bg-white shadow-sm">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Age</TableHead>
-                    <TableHead>Segment</TableHead>
-                    <TableHead>Inception Date</TableHead>
+                <TableHeader className="bg-gray-50 border-b border-gray-200">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="font-semibold text-gray-700 py-4">
+                      Name
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4">
+                      Age
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4">
+                      Segment
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4">
+                      Inception Date
+                    </TableHead>
                     {isAumView && (
-                      <TableHead className="text-right">AUM</TableHead>
+                      <TableHead className="font-semibold text-gray-700 py-4 text-right">
+                        AUM
+                      </TableHead>
                     )}
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="font-semibold text-gray-700 py-4 text-right">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {displayData.tableData.length > 0 ? (
-                    displayData.tableData.map((client) => (
-                      <TableRow key={client.id}>
-                        <TableCell className="font-medium">
-                          {getPrettyClientName(client)}
-                        </TableCell>
-                        <TableCell>{client.age}</TableCell>
-                        <TableCell>
-                          <span
-                            className="px-2.5 py-1 text-xs rounded-full font-medium"
-                            style={{
-                              backgroundColor:
-                                chartConfig[
-                                  client.segment?.toLowerCase() || "silver"
-                                ]?.color || SEGMENT_COLORS_HSL.DEFAULT,
-                              color: "hsl(var(--primary-foreground))",
-                            }}
-                          >
-                            {client.segment || "N/A"}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {formatDate(client.inceptionDate)}
-                        </TableCell>
-                        {isAumView && (
-                          <TableCell className="text-right">
-                            {client.aumDisplay}
+                    displayData.tableData.map((client) => {
+                      // Enhanced segment styling with proper colors and text contrast
+                      const getSegmentStyle = (segment: string) => {
+                        switch (segment?.toLowerCase()) {
+                          case "platinum":
+                            return {
+                              backgroundColor: "#dbeafe", // blue-100
+                              color: "#1e40af", // blue-800
+                              borderColor: "#93c5fd", // blue-300
+                            };
+                          case "gold":
+                            return {
+                              backgroundColor: "#fef3c7", // amber-100
+                              color: "#d97706", // amber-600
+                              borderColor: "#fcd34d", // amber-300
+                            };
+                          case "silver":
+                            return {
+                              backgroundColor: "#f3f4f6", // gray-100
+                              color: "#374151", // gray-700
+                              borderColor: "#d1d5db", // gray-300
+                            };
+                          default:
+                            return {
+                              backgroundColor: "#f9fafb", // gray-50
+                              color: "#6b7280", // gray-500
+                              borderColor: "#e5e7eb", // gray-200
+                            };
+                        }
+                      };
+
+                      const segmentStyle = getSegmentStyle(client.segment);
+
+                      return (
+                        <TableRow
+                          key={client.id}
+                          className="hover:bg-blue-50 border-b border-gray-100 transition-all duration-200 hover:shadow-sm group cursor-pointer"
+                        >
+                          <TableCell className="font-medium text-gray-900 py-4 group-hover:text-blue-700 transition-colors duration-200">
+                            {getPrettyClientName(client)}
                           </TableCell>
-                        )}
-                        <TableCell className="text-right">
-                          <Button variant="default" size="sm">
-                            View Contact
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                          <TableCell className="py-4 text-gray-600 group-hover:text-gray-700 transition-colors duration-200">
+                            {client.age}
+                          </TableCell>
+                          <TableCell className="py-4">
+                            <span
+                              className="px-3 py-1 text-xs rounded-full font-medium transition-all duration-200 group-hover:scale-105 group-hover:shadow-md border"
+                              style={{
+                                backgroundColor: segmentStyle.backgroundColor,
+                                color: segmentStyle.color,
+                                borderColor: segmentStyle.borderColor,
+                              }}
+                            >
+                              {client.segment || "N/A"}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-4 text-gray-600 group-hover:text-gray-700 transition-colors duration-200">
+                            {formatDate(client.inceptionDate)}
+                          </TableCell>
+                          {isAumView && (
+                            <TableCell className="text-right font-semibold text-gray-900 py-4 group-hover:text-blue-700 transition-colors duration-200">
+                              {client.aumDisplay}
+                            </TableCell>
+                          )}
+                          <TableCell className="text-right py-4">
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all duration-200 hover:scale-105 hover:shadow-md opacity-70 group-hover:opacity-100"
+                            >
+                              View Contact
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   ) : (
                     <TableRow>
                       <TableCell
                         colSpan={isAumView ? 6 : 5}
-                        className="text-center text-muted-foreground py-10"
+                        className="text-center text-gray-500 py-12"
                       >
                         No clients match the current filter.
                       </TableCell>

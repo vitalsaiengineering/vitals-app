@@ -49,39 +49,53 @@ interface AnniversaryFilterOptions {
 }
 
 // Data transformation utilities
-const transformToAnniversaryClient = (client: StandardClient): AnniversaryClient => {
+const transformToAnniversaryClient = (
+  client: StandardClient
+): AnniversaryClient => {
   // Handle case where inception date is not available
   if (!client.inceptionDate) {
     return {
       id: client.id,
       clientName: getPrettyClientName(client),
       segment: getSegmentName(client.segment),
-      anniversaryDate: '', // Empty for N/A
+      anniversaryDate: "", // Empty for N/A
       daysUntilNextAnniversary: 0, // No meaningful anniversary
       yearsWithFirm: 0, // No meaningful tenure
       advisorName: client.advisor,
-      advisorId: client.advisorId
+      advisorId: client.primaryAdvisorId,
     };
   }
 
   const inceptionDate = new Date(client.inceptionDate);
   const today = new Date();
   const currentYear = today.getFullYear();
-  
+
   // Calculate anniversary date for this year
-  const anniversaryThisYear = new Date(currentYear, inceptionDate.getMonth(), inceptionDate.getDate());
-  
+  const anniversaryThisYear = new Date(
+    currentYear,
+    inceptionDate.getMonth(),
+    inceptionDate.getDate()
+  );
+
   // If anniversary already passed this year, calculate for next year
   let nextAnniversary = anniversaryThisYear;
   if (anniversaryThisYear < today) {
-    nextAnniversary = new Date(currentYear + 1, inceptionDate.getMonth(), inceptionDate.getDate());
+    nextAnniversary = new Date(
+      currentYear + 1,
+      inceptionDate.getMonth(),
+      inceptionDate.getDate()
+    );
   }
-  
+
   // Calculate days until next anniversary
-  const daysUntil = Math.ceil((nextAnniversary.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  
+  const daysUntil = Math.ceil(
+    (nextAnniversary.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
   // Calculate years with firm
-  const yearsWithFirm = Math.floor((today.getTime() - inceptionDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25));
+  const yearsWithFirm = Math.floor(
+    (today.getTime() - inceptionDate.getTime()) / (1000 * 60 * 60 * 24 * 365.25)
+  );
 
   return {
     id: client.id,
@@ -91,29 +105,40 @@ const transformToAnniversaryClient = (client: StandardClient): AnniversaryClient
     daysUntilNextAnniversary: daysUntil,
     yearsWithFirm: Math.max(yearsWithFirm, 1), // Minimum 1 year
     advisorName: client.advisor,
-    advisorId: client.advisorId
+    advisorId: client.primaryAdvisorId,
   };
 };
 
-const generateFilterOptions = (clients: StandardClient[]): AnniversaryFilterOptions => {
-  const segments = Array.from(new Set(clients.map(c => getSegmentName(c.segment))));
-  const advisors = Array.from(new Set(clients.map(c => ({ id: c.advisorId, name: c.advisor }))))
-    .filter(a => a.id && a.name);
-  
+const generateFilterOptions = (
+  clients: StandardClient[]
+): AnniversaryFilterOptions => {
+  const segments = Array.from(
+    new Set(clients.map((c) => getSegmentName(c.segment)))
+  );
+  const advisors = Array.from(
+    new Set(clients.map((c) => ({ id: c.primaryAdvisorId, name: c.advisor })))
+  ).filter((a) => a.id && a.name);
+
   return {
     segments: ["All Segments", ...segments.sort()],
-    tenures: ["Any Tenure", "1-2 years", "3-5 years", "6-10 years", "10+ years"],
-    advisors: [{ id: "all", name: "All Advisors" }, ...advisors]
+    tenures: [
+      "Any Tenure",
+      "1-2 years",
+      "3-5 years",
+      "6-10 years",
+      "10+ years",
+    ],
+    advisors: [{ id: "all", name: "All Advisors" }, ...advisors],
   };
 };
 
-// Grade badge colors
+// Grade badge colors - updated to modern light backgrounds
 const getGradeBadgeClasses = (grade: string) => {
   const GRADE_COLORS: Record<string, { badgeBg: string; badgeText: string }> = {
-    Platinum: { badgeBg: "bg-blue-700", badgeText: "text-white" },
-    Gold: { badgeBg: "bg-blue-600", badgeText: "text-white" },
-    Silver: { badgeBg: "bg-blue-500", badgeText: "text-white" },
-    Default: { badgeBg: "bg-gray-500", badgeText: "text-white" },
+    Platinum: { badgeBg: "bg-blue-100", badgeText: "text-blue-700" },
+    Gold: { badgeBg: "bg-amber-100", badgeText: "text-amber-700" },
+    Silver: { badgeBg: "bg-gray-100", badgeText: "text-gray-700" },
+    Default: { badgeBg: "bg-gray-100", badgeText: "text-gray-600" },
   };
   return GRADE_COLORS[grade] || GRADE_COLORS.Default;
 };
@@ -134,8 +159,8 @@ const formatDateToUS = (dateString: string): string => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       month: "2-digit",
-      day: "2-digit", 
-      year: "numeric"
+      day: "2-digit",
+      year: "numeric",
     });
   } catch (error) {
     console.warn("Date formatting error:", error);
@@ -153,7 +178,7 @@ interface ClientAnniversaryViewProps {
 
 /**
  * ClientAnniversaryView Component
- * 
+ *
  * Displays client anniversary tracking with exact layout matching reference image
  * Features search bar at top, filter dropdowns, milestone toggle, and yellow highlighting
  * for milestone anniversaries using original data sources
@@ -162,13 +187,18 @@ export default function ClientAnniversaryView({
   globalSearch,
   setGlobalSearch,
 }: ClientAnniversaryViewProps) {
-  const [allAnniversaryData, setAllAnniversaryData] = useState<AnniversaryClient[]>([]); // Store all data
-  const [filteredAnniversaryData, setFilteredAnniversaryData] = useState<AnniversaryClient[]>([]); // Store filtered data
-  const [localFilterOptions, setLocalFilterOptions] = useState<AnniversaryFilterOptions>({
-    segments: [],
-    tenures: [],
-    advisors: [],
-  });
+  const [allAnniversaryData, setAllAnniversaryData] = useState<
+    AnniversaryClient[]
+  >([]); // Store all data
+  const [filteredAnniversaryData, setFilteredAnniversaryData] = useState<
+    AnniversaryClient[]
+  >([]); // Store filtered data
+  const [localFilterOptions, setLocalFilterOptions] =
+    useState<AnniversaryFilterOptions>({
+      segments: [],
+      tenures: [],
+      advisors: [],
+    });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
@@ -182,8 +212,6 @@ export default function ClientAnniversaryView({
   const { selectedAdvisor } = useAdvisor();
   const { filters, filterOptions } = useReportFilters();
 
-
-
   // Fetch data using centralized approach
   useEffect(() => {
     const fetchData = async () => {
@@ -192,20 +220,22 @@ export default function ClientAnniversaryView({
       try {
         // Build API parameters with filters from context
         const params = filtersToApiParams(filters, selectedAdvisor);
-        
+
         // Use the centralized getClients function
         const clients = await getClients(params);
-        
+
         // Transform clients data into anniversary format
         const anniversaryClients = clients.map(transformToAnniversaryClient);
         setAllAnniversaryData(anniversaryClients);
-        
+
         // Generate filter options from the client data
         const options = generateFilterOptions(clients);
         setLocalFilterOptions(options);
-        
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to load anniversary data";
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to load anniversary data";
         setError(errorMessage);
         console.error(err);
       } finally {
@@ -223,20 +253,23 @@ export default function ClientAnniversaryView({
     // Apply global search filter
     if (globalSearch.trim()) {
       const searchLower = globalSearch.toLowerCase();
-      filtered = filtered.filter(client =>
-        client.clientName.toLowerCase().includes(searchLower) ||
-        client.advisorName.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(
+        (client) =>
+          client.clientName.toLowerCase().includes(searchLower) ||
+          client.advisorName.toLowerCase().includes(searchLower)
       );
     }
 
     // Apply segment filter
     if (selectedSegment !== "All Segments") {
-      filtered = filtered.filter(client => client.segment === selectedSegment);
+      filtered = filtered.filter(
+        (client) => client.segment === selectedSegment
+      );
     }
 
     // Apply tenure filter
     if (selectedTenure !== "Any Tenure") {
-      filtered = filtered.filter(client => {
+      filtered = filtered.filter((client) => {
         const years = client.yearsWithFirm;
         switch (selectedTenure) {
           case "1-2 years":
@@ -255,7 +288,9 @@ export default function ClientAnniversaryView({
 
     // Apply upcoming milestones filter
     if (showUpcomingMilestones) {
-      filtered = filtered.filter(client => isMilestoneAnniversary(client.yearsWithFirm));
+      filtered = filtered.filter((client) =>
+        isMilestoneAnniversary(client.yearsWithFirm)
+      );
     }
 
     return filtered;
@@ -273,51 +308,67 @@ export default function ClientAnniversaryView({
 
   return (
     <div className="space-y-6">
-      {/* Search bar at top - exact positioning from reference */}
+      {/* Search bar at top - enhanced design */}
       <div className="max-w-md">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Search contacts..."
-            className="pl-10"
+            className="pl-10 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
             value={globalSearch}
             onChange={(e) => setGlobalSearch(e.target.value)}
           />
         </div>
       </div>
 
-      {/* Main card with table - exact layout match */}
-      <Card className="border shadow-sm">
-        <CardHeader className="pb-3">
-          <div className="flex justify-between items-start">
+      {/* Main card with table - enhanced design */}
+      <Card className="border-gray-100 hover:shadow-lg transition-shadow duration-300">
+        <CardHeader className="pb-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <CardTitle className="text-xl">
-                  {getAdvisorReportTitle("Client Anniversary Dates", filters, filterOptions || undefined)}
-                </CardTitle>              
-              <p className="text-sm text-muted-foreground mt-1">
-                {displayClients.length} records
-                {showUpcomingMilestones && " • Milestone anniversaries (5+ year increments)"}
+              <CardTitle className="text-xl font-bold text-gray-900">
+                {getAdvisorReportTitle(
+                  "Client Anniversary Dates",
+                  filters,
+                  filterOptions || undefined
+                )}
+              </CardTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                <span className="font-medium bg-blue-50 text-blue-700 px-2 py-1 rounded-full text-xs border border-blue-200">
+                  {displayClients.length} records
+                </span>
+                {showUpcomingMilestones && (
+                  <span className="ml-2 text-yellow-700">
+                    • Milestone anniversaries (5+ year increments)
+                  </span>
+                )}
               </p>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
               <Switch
                 id="upcoming-milestones"
                 checked={showUpcomingMilestones}
                 onCheckedChange={setShowUpcomingMilestones}
+                className="data-[state=checked]:bg-amber-500"
               />
-              <Label htmlFor="upcoming-milestones" className="text-sm whitespace-nowrap">
+              <Label
+                htmlFor="upcoming-milestones"
+                className="text-sm whitespace-nowrap text-amber-700 font-medium"
+              >
                 Show Upcoming Milestones
               </Label>
             </div>
           </div>
         </CardHeader>
 
-        {/* Filter row */}
+        {/* Filter row - enhanced design */}
         <div className="px-6 pb-4">
-          <div className="flex items-center space-x-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <div className="p-1 bg-blue-50 rounded-md">
+              <Filter className="h-4 w-4 text-blue-600" />
+            </div>
             <Select value={selectedSegment} onValueChange={setSelectedSegment}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-36 border-gray-200 focus:border-blue-500 focus:ring-blue-500">
                 <SelectValue placeholder="Segment" />
               </SelectTrigger>
               <SelectContent>
@@ -330,7 +381,7 @@ export default function ClientAnniversaryView({
             </Select>
 
             <Select value={selectedTenure} onValueChange={setSelectedTenure}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-36 border-gray-200 focus:border-blue-500 focus:ring-blue-500">
                 <SelectValue placeholder="Tenure" />
               </SelectTrigger>
               <SelectContent>
@@ -341,133 +392,163 @@ export default function ClientAnniversaryView({
                 ))}
               </SelectContent>
             </Select>
-
-            {/* <Select value={selectedAdvisor} onValueChange={setSelectedAdvisor}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="Advisor" />
-              </SelectTrigger>
-              <SelectContent>
-                {anniversaryData?.filterOptions.advisors.map((advisor) => (
-                  <SelectItem key={advisor.id} value={advisor.id}>
-                    {advisor.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select> */}
           </div>
         </div>
 
         <CardContent className="p-0">
-          {/* Table */}
+          {/* Table - enhanced design */}
           {isLoading && (
-            <div className="p-4 text-center text-muted-foreground">
+            <div className="p-8 text-center text-gray-500">
               Loading anniversary data...
             </div>
           )}
           {!isLoading && filteredClients.length === 0 && (
-            <div className="text-center text-muted-foreground py-10">
+            <div className="text-center text-gray-500 py-12">
               No clients match the current filters.
             </div>
           )}
           {!isLoading && filteredClients.length > 0 && (
-            <div className="rounded-md border-0">
+            <div className="rounded-lg border-0 overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead>Client</TableHead>
-                    <TableHead>Segment</TableHead>
-                    <TableHead>Anniversary Date</TableHead>
-                    <TableHead>Days Until</TableHead>
-                    <TableHead>Years with Firm</TableHead>
-                    <TableHead>Advisor</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                  <TableRow className="bg-gray-50/50">
+                    <TableHead className="font-semibold text-gray-900">
+                      Client
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-900">
+                      Segment
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-900">
+                      Anniversary Date
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-900">
+                      Days Until
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-900">
+                      Years with Firm
+                    </TableHead>
+                    <TableHead className="font-semibold text-gray-900">
+                      Advisor
+                    </TableHead>
+                    <TableHead className="text-right font-semibold text-gray-900">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredClients
-                    .sort((a, b) => a.daysUntilNextAnniversary - b.daysUntilNextAnniversary)
+                    .sort(
+                      (a, b) =>
+                        a.daysUntilNextAnniversary - b.daysUntilNextAnniversary
+                    )
                     .map((client) => {
-                    const gradeClasses = getGradeBadgeClasses(client.segment);
-                    const isHighlighted = highlightedRowId === client.id;
-                    const isMilestone = isMilestoneAnniversary(client.yearsWithFirm);
+                      const gradeClasses = getGradeBadgeClasses(client.segment);
+                      const isHighlighted = highlightedRowId === client.id;
+                      const isMilestone = isMilestoneAnniversary(
+                        client.yearsWithFirm
+                      );
 
-                    return (
-                      <TableRow
-                        key={client.id}
-                        className={
-                          isMilestone 
-                            ? "bg-[#FEF7CD] hover:bg-[#FEF1A4] border-yellow-300" 
-                            : isHighlighted
-                            ? "bg-gray-50 hover:bg-gray-100"
-                            : "hover:bg-gray-50"
-                        }
-                        onMouseEnter={() => setHighlightedRowId(client.id)}
-                        onMouseLeave={() => setHighlightedRowId(null)}
-                      >
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                              <User className="w-4 h-4 text-primary" />
+                      return (
+                        <TableRow
+                          key={client.id}
+                          className={
+                            isMilestone
+                              ? "bg-yellow-50 hover:bg-yellow-100 border-yellow-200 transition-all duration-200 group"
+                              : isHighlighted
+                              ? "bg-blue-50 hover:bg-blue-100 transition-all duration-200 group"
+                              : "hover:bg-blue-50/50 transition-all duration-200 group"
+                          }
+                          onMouseEnter={() => setHighlightedRowId(client.id)}
+                          onMouseLeave={() => setHighlightedRowId(null)}
+                        >
+                          <TableCell>
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center">
+                                <User className="w-4 h-4 text-blue-600" />
+                              </div>
+                              <span className="font-medium text-gray-900 group-hover:text-blue-900">
+                                {client.clientName}
+                              </span>
                             </div>
-                            <span className="font-medium">
-                              {client.clientName}
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={`px-3 py-1 text-xs font-medium rounded-full border ${gradeClasses.badgeBg} ${gradeClasses.badgeText}`}
+                            >
+                              {client.segment}
                             </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <div 
-                              className="w-3 h-3 rounded-sm"
-                              style={{ 
-                                backgroundColor: client.segment === 'Platinum' ? '#1e40af' : 
-                                                client.segment === 'Gold' ? '#3b82f6' : '#93c5fd'
-                              }}
-                            />
-                            <span>{client.segment}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <svg className="w-3.5 h-3.5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            {client.anniversaryDate ? formatDateToUS(client.anniversaryDate) : 'N/A'}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-medium">
-                            {client.anniversaryDate ? (
-                              client.daysUntilNextAnniversary === 1
-                                ? "1 day"
-                                : `${client.daysUntilNextAnniversary} days`
-                            ) : 'N/A'}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className={isMilestone ? "font-semibold text-yellow-700" : "font-medium"}>
-                            {client.anniversaryDate ? (
-                              client.yearsWithFirm === 1
-                                ? "1 year"
-                                : `${client.yearsWithFirm} years`
-                            ) : 'N/A'}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-medium">{client.advisorName}</span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            size="sm" 
-                            className="gap-1 bg-blue-500 text-white hover:bg-blue-600"
-                            onClick={() => window.open(`/crm/contact/${client.id}`, '_blank')}
-                          >
-                            View Contact
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <div className="p-1 bg-gray-100 rounded-full">
+                                <svg
+                                  className="w-3.5 h-3.5 text-gray-500"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                  />
+                                </svg>
+                              </div>
+                              <span className="text-gray-700">
+                                {client.anniversaryDate
+                                  ? formatDateToUS(client.anniversaryDate)
+                                  : "N/A"}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-medium text-gray-900">
+                              {client.anniversaryDate
+                                ? client.daysUntilNextAnniversary === 1
+                                  ? "1 day"
+                                  : `${client.daysUntilNextAnniversary} days`
+                                : "N/A"}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={
+                                isMilestone
+                                  ? "font-bold text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full text-xs"
+                                  : "font-medium text-gray-900"
+                              }
+                            >
+                              {client.anniversaryDate
+                                ? client.yearsWithFirm === 1
+                                  ? "1 year"
+                                  : `${client.yearsWithFirm} years`
+                                : "N/A"}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="font-medium text-gray-700">
+                              {client.advisorName}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              className="gap-1 bg-blue-600 hover:bg-blue-700 text-white opacity-70 group-hover:opacity-100 transition-all duration-200"
+                              onClick={() =>
+                                window.open(
+                                  `/crm/contact/${client.id}`,
+                                  "_blank"
+                                )
+                              }
+                            >
+                              View Contact
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                 </TableBody>
               </Table>
             </div>
