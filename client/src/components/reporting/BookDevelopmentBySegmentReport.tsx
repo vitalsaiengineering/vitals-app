@@ -306,7 +306,7 @@ const transformToBookDevelopmentClient = (
     silver: "Silver",
   };
 
-  const mappedSegment = segmentMap[client.segment] || "N/A";
+  const mappedSegment = segmentMap[client.segment?.toLowerCase()] || "N/A";
 
   return {
     ...client,
