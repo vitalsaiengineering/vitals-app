@@ -55,33 +55,33 @@ const GRADE_COLORS: Record<
   { badgeBg: string; badgeText: string; badgeBorder: string }
 > = {
   Platinum: {
-    badgeBg: "bg-blue-100",
+    badgeBg: "bg-blue-50",
     badgeText: "text-blue-800",
-    badgeBorder: "border-blue-300",
+    badgeBorder: "border-blue-200",
   },
   Gold: {
-    badgeBg: "bg-amber-100",
-    badgeText: "text-amber-600",
-    badgeBorder: "border-amber-300",
+    badgeBg: "bg-yellow-50",
+    badgeText: "text-yellow-800",
+    badgeBorder: "border-yellow-200",
   },
   Silver: {
-    badgeBg: "bg-gray-100",
-    badgeText: "text-gray-700",
-    badgeBorder: "border-gray-300",
+    badgeBg: "bg-gray-50",
+    badgeText: "text-gray-800",
+    badgeBorder: "border-gray-200",
   },
   Bronze: {
-    badgeBg: "bg-orange-100",
-    badgeText: "text-orange-700",
+    badgeBg: "bg-orange-50",
+    badgeText: "text-orange-800",
     badgeBorder: "border-orange-200",
   },
   "N/A": {
     badgeBg: "bg-gray-50",
-    badgeText: "text-gray-500",
+    badgeText: "text-gray-800",
     badgeBorder: "border-gray-200",
   },
   Default: {
     badgeBg: "bg-gray-50",
-    badgeText: "text-gray-500",
+    badgeText: "text-gray-800",
     badgeBorder: "border-gray-200",
   },
 };
@@ -208,8 +208,8 @@ const ClientBirthdayReport = () => {
     }
     
     return sortConfig.direction === 'asc' 
-      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
-      : <ChevronDown className="h-4 w-4 inline ml-1" />;
+      ? <ChevronUp className="h-4 w-4 inline ml-1 text-blue-600" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1 text-blue-600" />;
   };
 
   // Note: Segment and Advisor filtering is handled by sidebar filters

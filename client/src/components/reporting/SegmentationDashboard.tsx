@@ -277,8 +277,8 @@ export default function SegmentationDashboard() {
     }
     
     return sortConfig.direction === 'asc' 
-      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
-      : <ChevronDown className="h-4 w-4 inline ml-1" />;
+      ? <ChevronUp className="h-4 w-4 inline ml-1 text-blue-600" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1 text-blue-600" />;
   };
 
   // Dynamic table data based on selected segment
@@ -697,26 +697,26 @@ export default function SegmentationDashboard() {
                           switch (segment) {
                             case "Platinum":
                               return {
-                                backgroundColor: "#dbeafe", // blue-100
+                                backgroundColor: "#eff6ff", // blue-50
                                 color: "#1e40af", // blue-800
-                                borderColor: "#93c5fd", // blue-300
+                                borderColor: "#bfdbfe", // blue-200
                               };
                             case "Gold":
                               return {
-                                backgroundColor: "#fef3c7", // amber-100
-                                color: "#d97706", // amber-600
-                                borderColor: "#fcd34d", // amber-300
+                                backgroundColor: "#fefce8", // yellow-50
+                                color: "#a16207", // yellow-800
+                                borderColor: "#fde68a", // yellow-200
                               };
                             case "Silver":
                               return {
-                                backgroundColor: "#f3f4f6", // gray-100
-                                color: "#374151", // gray-700
-                                borderColor: "#d1d5db", // gray-300
+                                backgroundColor: "#f9fafb", // gray-50
+                                color: "#1f2937", // gray-800
+                                borderColor: "#e5e7eb", // gray-200
                               };
                             default:
                               return {
                                 backgroundColor: "#f9fafb", // gray-50
-                                color: "#6b7280", // gray-500
+                                color: "#1f2937", // gray-800
                                 borderColor: "#e5e7eb", // gray-200
                               };
                           }
@@ -774,11 +774,13 @@ export default function SegmentationDashboard() {
                               {formatAUM(client.assets)}
                             </TableCell>
                             <TableCell className="text-right py-4">
-                            <ViewContactButton 
-                            clientId={client.id} 
-                            wealthboxClientId={client.wealthboxClientId}
-                            orionClientId={client.orionClientId}
-                          />
+                              <div className="opacity-70 group-hover:opacity-100 transition-all duration-200">
+                                <ViewContactButton 
+                                  clientId={client.id} 
+                                  wealthboxClientId={client.wealthboxClientId}
+                                  orionClientId={client.orionClientId}
+                                />
+                              </div>
                             </TableCell>
                           </TableRow>
                         );

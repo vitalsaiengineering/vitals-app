@@ -11,14 +11,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Users, DollarSign, Search, Building, ChevronUp, ChevronDown, ExternalLink } from "lucide-react";
-import {
-  Users,
-  DollarSign,
-  Search,
-  Building,
-  ChevronUp,
-  ChevronDown,
-} from "lucide-react";
 import { ComposableMap, Geographies, Geography } from "react-simple-maps";
 import { StandardClient } from "@/types/client";
 import { getClients } from "@/lib/clientData";
@@ -334,8 +326,8 @@ const ClientDistributionByStateReport = () => {
     }
     
     return sortConfig.direction === 'asc' 
-      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
-      : <ChevronDown className="h-4 w-4 inline ml-1" />;
+      ? <ChevronUp className="h-4 w-4 inline ml-1 text-blue-600" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1 text-blue-600" />;
   };
 
   const getHoveredStateData = () => {
@@ -621,28 +613,28 @@ const ClientDistributionByStateReport = () => {
           </CardContent>
         </Card>
 
-        {/* Client List Table Card - Always rendered, content changes */}
-        <Card className="flex flex-col h-[calc(100vh-300px)]">
-        <CardHeader className="flex-shrink-0">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-            <CardTitle>{tableTitle}</CardTitle>
-            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-              <span>
-                <Users className="inline h-4 w-4 mr-1" /> {summaryClientCount}{" "}
-                Clients
-              </span>
-              <span>
-                <DollarSign className="inline h-4 w-4 mr-1" />{" "}
-                {formatAUM(summaryTotalAum)}
-              </span>
+        {/* Client List Table Card - enhanced design */}
+        <Card className="flex flex-col h-[calc(100vh-300px)] border-gray-100 hover:shadow-lg transition-shadow duration-300">
+        <CardHeader className="flex-shrink-0 pb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <CardTitle className="text-xl font-bold text-gray-900">{tableTitle}</CardTitle>
+              <div className="flex items-center space-x-4 text-sm text-gray-600 mt-2">
+                <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-full text-xs border border-blue-200">
+                  <Users className="inline h-3 w-3 mr-1" /> {summaryClientCount} Clients
+                </span>
+                <span className="bg-green-50 text-green-700 px-2 py-1 rounded-full text-xs border border-green-200">
+                  <DollarSign className="inline h-3 w-3 mr-1" /> {formatAUM(summaryTotalAum)}
+                </span>
+              </div>
             </div>
           </div>
           <div className="relative mt-4">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="search"
               placeholder="Search by name, segment, or AUM..."
-              className="pl-8 w-full sm:w-[300px]"
+              className="pl-10 w-full sm:w-[300px] border-gray-200 focus:border-blue-500 focus:ring-blue-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -650,12 +642,12 @@ const ClientDistributionByStateReport = () => {
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden p-0">
           <div className="h-full overflow-auto">
-            <div className="rounded-md border m-6">
+            <div className="rounded-lg border border-gray-100 m-6 overflow-hidden">
               <Table>
-                <TableHeader className="sticky top-0 bg-background z-10">
+                <TableHeader className="sticky top-0 bg-gray-50/50 z-10">
                   <TableRow>
                     <TableHead 
-                      className="cursor-pointer hover:bg-muted/50 select-none"
+                      className="font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none transition-colors duration-200"
                       onClick={() => handleSort('name')}
                     >
                       <div className="flex items-center gap-1">
@@ -664,7 +656,7 @@ const ClientDistributionByStateReport = () => {
                       </div>
                     </TableHead>
                     <TableHead 
-                      className="cursor-pointer hover:bg-muted/50 select-none"
+                      className="font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none transition-colors duration-200"
                       onClick={() => handleSort('segment')}
                     >
                       <div className="flex items-center gap-1">
@@ -673,7 +665,7 @@ const ClientDistributionByStateReport = () => {
                       </div>
                     </TableHead>
                     <TableHead 
-                      className="text-right cursor-pointer hover:bg-muted/50 select-none"
+                      className="text-right font-semibold text-gray-900 cursor-pointer hover:bg-gray-100 select-none transition-colors duration-200"
                       onClick={() => handleSort('aum')}
                     >
                       <div className="flex items-center justify-end gap-1">
@@ -681,40 +673,42 @@ const ClientDistributionByStateReport = () => {
                         {getSortDirectionIcon('aum')}
                       </div>
                     </TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right font-semibold text-gray-900">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                 {clientsInSelectedState.length > 0 ? (
                   clientsInSelectedState.map((client) => (
-                    <TableRow key={client.id}>
-                      <TableCell className="font-medium">
+                    <TableRow key={client.id} className="hover:bg-blue-50/50 transition-all duration-200 group">
+                      <TableCell className="font-medium text-gray-900 group-hover:text-blue-900">
                         {client.name}
                       </TableCell>
                       <TableCell>
                         <span
-                          className={`px-2 py-0.5 text-xs rounded-full border whitespace-nowrap ${getSegmentClass(
+                          className={`px-3 py-1 text-xs font-medium rounded-full border whitespace-nowrap ${getSegmentClass(
                             client.segment
                           )}`}
                         >
                           {client.segment}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right font-medium text-gray-900">
                         {formatAUM(client.aum)}
                       </TableCell>
                       <TableCell className="text-right">
-                        <ViewContactButton 
-                          clientId={client.id} 
-                          wealthboxClientId={client.wealthboxClientId}
-                          orionClientId={client.orionClientId}
-                        />
+                        <div className="opacity-70 group-hover:opacity-100 transition-all duration-200">
+                          <ViewContactButton 
+                            clientId={client.id} 
+                            wealthboxClientId={client.wealthboxClientId}
+                            orionClientId={client.orionClientId}
+                          />
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center h-24">
+                    <TableCell colSpan={4} className="text-center h-24 text-gray-500">
                       {emptyTableMessage}
                     </TableCell>
                   </TableRow>

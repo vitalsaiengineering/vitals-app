@@ -79,26 +79,26 @@ type SegmentSelection = SegmentName | "All Segments";
 const SEGMENT_COLORS = {
   Platinum: {
     base: "hsl(222, 47%, 44%)",
-    badgeBg: "bg-blue-100",
-    badgeText: "text-blue-700",
+    badgeBg: "bg-blue-50",
+    badgeText: "text-blue-800",
     badgeBorder: "border-blue-200",
   },
   Gold: {
     base: "hsl(216, 65%, 58%)",
-    badgeBg: "bg-sky-100",
-    badgeText: "text-sky-700",
-    badgeBorder: "border-sky-200",
+    badgeBg: "bg-yellow-50",
+    badgeText: "text-yellow-800",
+    badgeBorder: "border-yellow-200",
   },
   Silver: {
     base: "hsl(210, 55%, 78%)",
-    badgeBg: "bg-slate-100",
-    badgeText: "text-slate-600",
-    badgeBorder: "border-slate-200",
+    badgeBg: "bg-gray-50",
+    badgeText: "text-gray-800",
+    badgeBorder: "border-gray-200",
   },
   "N/A": {
     base: "hsl(0, 0%, 60%)",
-    badgeBg: "bg-gray-100",
-    badgeText: "text-gray-600",
+    badgeBg: "bg-gray-50",
+    badgeText: "text-gray-800",
     badgeBorder: "border-gray-200",
   },
 };
@@ -1016,14 +1016,14 @@ export default function BookDevelopmentBySegmentReport() {
                     className="cursor-pointer hover:bg-gray-100 transition-colors duration-200 font-semibold"
                   >
                     Client Name{" "}
-                    <ArrowUpDown className="inline h-3 w-3 ml-1 opacity-50 group-hover:opacity-100" />
+                    <ArrowUpDown className="inline h-3 w-3 ml-1 opacity-50 group-hover:opacity-100 text-blue-600" />
                   </TableHead>
                   <TableHead
                     onClick={() => handleSort("segment")}
                     className="cursor-pointer hover:bg-gray-100 transition-colors duration-200 font-semibold"
                   >
                     Segment{" "}
-                    <ArrowUpDown className="inline h-3 w-3 ml-1 opacity-50 group-hover:opacity-100" />
+                    <ArrowUpDown className="inline h-3 w-3 ml-1 opacity-50 group-hover:opacity-100 text-blue-600" />
                   </TableHead>
                   <TableHead className="font-semibold">
                     Years with Firm
@@ -1033,7 +1033,7 @@ export default function BookDevelopmentBySegmentReport() {
                     className="text-right cursor-pointer hover:bg-gray-100 transition-colors duration-200 font-semibold"
                   >
                     AUM{" "}
-                    <ArrowUpDown className="inline h-3 w-3 ml-1 opacity-50 group-hover:opacity-100" />
+                    <ArrowUpDown className="inline h-3 w-3 ml-1 opacity-50 group-hover:opacity-100 text-blue-600" />
                   </TableHead>
                   <TableHead className="text-right font-semibold">
                     Actions
@@ -1076,11 +1076,13 @@ export default function BookDevelopmentBySegmentReport() {
                         }) || ""}
                       </TableCell>
                       <TableCell className="text-right">
-                        <ViewContactButton 
-                          clientId={client.id} 
-                          wealthboxClientId={client.wealthboxClientId}
-                          orionClientId={client.orionClientId}
-                        />
+                        <div className="opacity-70 group-hover:opacity-100 transition-all duration-200">
+                          <ViewContactButton 
+                            clientId={client.id} 
+                            wealthboxClientId={client.wealthboxClientId}
+                            orionClientId={client.orionClientId}
+                          />
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))

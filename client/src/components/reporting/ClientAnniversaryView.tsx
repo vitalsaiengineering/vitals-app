@@ -146,10 +146,10 @@ const generateFilterOptions = (
 // Grade badge colors - updated to modern light backgrounds
 const getGradeBadgeClasses = (grade: string) => {
   const GRADE_COLORS: Record<string, { badgeBg: string; badgeText: string }> = {
-    Platinum: { badgeBg: "bg-blue-100", badgeText: "text-blue-700" },
-    Gold: { badgeBg: "bg-amber-100", badgeText: "text-amber-700" },
-    Silver: { badgeBg: "bg-gray-100", badgeText: "text-gray-700" },
-    Default: { badgeBg: "bg-gray-100", badgeText: "text-gray-600" },
+    Platinum: { badgeBg: "bg-blue-50", badgeText: "text-blue-800" },
+    Gold: { badgeBg: "bg-yellow-50", badgeText: "text-yellow-800" },
+    Silver: { badgeBg: "bg-gray-50", badgeText: "text-gray-800" },
+    Default: { badgeBg: "bg-gray-50", badgeText: "text-gray-800" },
   };
   return GRADE_COLORS[grade] || GRADE_COLORS.Default;
 };
@@ -279,8 +279,8 @@ export default function ClientAnniversaryView({
     }
     
     return sortConfig.direction === 'asc' 
-      ? <ChevronUp className="h-4 w-4 inline ml-1" /> 
-      : <ChevronDown className="h-4 w-4 inline ml-1" />;
+      ? <ChevronUp className="h-4 w-4 inline ml-1 text-blue-600" /> 
+      : <ChevronDown className="h-4 w-4 inline ml-1 text-blue-600" />;
   };
 
   // Client-side filtering function (now for display filters only since server handles main filtering)
